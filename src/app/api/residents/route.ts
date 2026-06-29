@@ -1,0 +1,102 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { requirePermission } from "@/lib/session";
+import { logAudit } from "@/lib/audit";
+
+export async function GET(req: NextRequest) {
+  const auth = await requirePermission("residents:read");
+  if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+  const { searchParams } = new URL(req.url);
+  const search = searchParams.get("search") || "";
+  const purok_id = searchParams.get("purok_id");
+  const sex = searchParams.get("sex");
+  const civil_status = searchParams.get("civil_status");
+  const is_archived = searchParams.get("is_archived") === "true";
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "20");
+  const skip = (page - 1) * limit;
+
+  const where: any = {
+    is_archived,
+    AND: [
+      search ? {
+        OR: [
+          { fname: { contains: search, mode: "insensitive" } },
+          { lname: { contains: search, mode: "insensitive" } },
+          { mname: { contains: search, mode: "insensitive" } },
+        ],
+      } : {},
+      purok_id ? { purok_id: parseInt(purok_id) } : {},
+      sex ? { sex } : {},
+      civil_status ? { civil_status } : {},
+    ],
+  };
+
+  const [residents, total] = await Promise.all([
+    prisma.resident.findMany({
+      where,
+      skip,
+      take: limit,
+      include: {
+        purok: true,
+        household: true,
+      },
+      orderBy: { lname: "asc" },
+    }),
+    prisma.resident.count({ where }),
+  ]);
+
+  return NextResponse.json({ residents, total, page, limit });
+}
+
+export async function POST(req: NextRequest) {
+  const auth = await requirePermission("residents:write");
+  if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+  const body = await req.json();
+
+  // duplicate check
+  const existing = await prisma.resident.findFirst({
+    where: {
+      fname: { equals: body.fname, mode: "insensitive" },
+      lname: { equals: body.lname, mode: "insensitive" },
+      birthdate: new Date(body.birthdate),
+    },
+  });
+
+  if (existing) {
+    return NextResponse.json(
+      { error: "DUPLICATE", message: "A resident with the same name and birthdate already exists.", existing },
+      { status: 409 }
+    );
+  }
+
+  const resident = await prisma.resident.create({
+    data: {
+      fname: body.fname,
+      lname: body.lname,
+      mname: body.mname,
+      birthdate: new Date(body.birthdate),
+      sex: body.sex,
+      civil_status: body.civil_status,
+      religion: body.religion,
+      nationality: body.nationality || "Filipino",
+      employment_status: body.employment_status,
+      educational_attainment: body.educational_attainment,
+      income_bracket: body.income_bracket,
+      purok_id: body.purok_id,
+      household_id: body.household_id,
+    },
+  });
+
+  await logAudit({
+    user_id: parseInt(auth.session.user.id),
+    action: "CREATE",
+    table_affected: "Resident",
+    record_id: resident.id,
+    details: `Created resident: ${resident.fname} ${resident.lname}`,
+  });
+
+  return NextResponse.json(resident, { status: 201 });
+}

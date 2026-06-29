@@ -1,0 +1,361 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── USERS & AUTH ───────────────────────────────────────────
+
+model User {
+  id            Int      @id @default(autoincrement())
+  username      String   @unique
+  password_hash String
+  role          Role     @default(ENCODER)
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+
+  // relations
+  certificates_issued  Certificate[]
+  blotter_updates      BlotterUpdate[]
+  meeting_records      MeetingRecord[]
+  audit_logs           AuditLog[]
+  backups              Backup[]
+  equipment_borrowings EquipmentBorrowing[]
+  financial_records    FinancialRecord[]
+  health_records       HealthRecord[]
+  vaccinations         Vaccination[]
+  barangay_ids         BarangayId[]
+}
+
+enum Role {
+  ADMIN
+  CAPTAIN
+  SECRETARY
+  KAGAWAD
+  BHW
+  ENCODER
+}
+
+// ─── PUROKS ─────────────────────────────────────────────────
+
+model Purok {
+  id         Int         @id @default(autoincrement())
+  name       String      @unique
+  households Household[]
+  residents  Resident[]
+}
+
+// ─── HOUSEHOLDS ─────────────────────────────────────────────
+
+model Household {
+  id                Int       @id @default(autoincrement())
+  purok_id          Int
+  household_head_id Int?      @unique
+  address           String
+  created_at        DateTime  @default(now())
+
+  purok             Purok      @relation(fields: [purok_id], references: [id])
+  household_head    Resident?  @relation("HouseholdHead", fields: [household_head_id], references: [id])
+  members           Resident[] @relation("HouseholdMembers")
+}
+
+// ─── RESIDENTS ──────────────────────────────────────────────
+
+model Resident {
+  id                    Int      @id @default(autoincrement())
+  household_id          Int?
+  purok_id              Int?
+  fname                 String
+  lname                 String
+  mname                 String?
+  birthdate             DateTime
+  sex                   String
+  civil_status          CivilStatus
+  religion              String?
+  nationality           String   @default("Filipino")
+  employment_status     String?
+  educational_attainment String?
+  income_bracket        String?
+  is_archived           Boolean  @default(false)
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  // relations
+  household             Household?          @relation("HouseholdMembers", fields: [household_id], references: [id])
+  purok                 Purok?              @relation(fields: [purok_id], references: [id])
+  headed_household      Household?          @relation("HouseholdHead")
+  certificates          Certificate[]
+  special_registries    SpecialRegistry[]
+  blotter_as_complainant BlotterCase[]      @relation("Complainant")
+  blotter_as_respondent  BlotterCase[]      @relation("Respondent")
+  official              BrgyOfficial?
+  health_records        HealthRecord[]
+  vaccinations          Vaccination[]
+  equipment_borrowings  EquipmentBorrowing[]
+  barangay_ids          BarangayId[]
+}
+
+enum CivilStatus {
+  SINGLE
+  MARRIED
+  WIDOWED
+  SEPARATED
+  LIVE_IN
+}
+
+// ─── CERTIFICATES ────────────────────────────────────────────
+
+model Certificate {
+  id               Int             @id @default(autoincrement())
+  resident_id      Int?
+  issued_by        Int
+  certificate_type CertificateType
+  purpose          String
+  issued_at        DateTime        @default(now())
+  flagged_manual   Boolean         @default(false)
+
+  // manual entry fields (when resident not in system)
+  manual_name      String?
+  manual_address   String?
+
+  resident         Resident? @relation(fields: [resident_id], references: [id])
+  issuer           User      @relation(fields: [issued_by], references: [id])
+}
+
+enum CertificateType {
+  RESIDENCY
+  INDIGENCY
+  CLEARANCE
+  GOOD_MORAL
+  BUSINESS_PERMIT
+  COHABITATION
+  SOLO_PARENT
+  FIRST_TIME_JOB_SEEKER
+  LATE_REGISTRATION
+}
+
+// ─── BLOTTER ─────────────────────────────────────────────────
+
+model BlotterCase {
+  id                 Int      @id @default(autoincrement())
+  case_number        String   @unique
+  complainant_id     Int?
+  complainant_name   String
+  complainant_contact String?
+  complainant_address String?
+  respondent_id      Int?
+  respondent_name    String
+  incident_narrative String
+  incident_date      DateTime
+  hearing_date       DateTime?
+  status             BlotterStatus @default(FILED)
+  escalated          Boolean  @default(false)
+  created_at         DateTime @default(now())
+
+  complainant        Resident? @relation("Complainant", fields: [complainant_id], references: [id])
+  respondent         Resident? @relation("Respondent", fields: [respondent_id], references: [id])
+  updates            BlotterUpdate[]
+}
+
+enum BlotterStatus {
+  FILED
+  ONGOING
+  RESOLVED
+  DISMISSED
+}
+
+model BlotterUpdate {
+  id              Int      @id @default(autoincrement())
+  blotter_case_id Int
+  updated_by      Int
+  notes           String
+  new_status      BlotterStatus?
+  updated_at      DateTime @default(now())
+
+  blotter_case    BlotterCase @relation(fields: [blotter_case_id], references: [id])
+  updater         User        @relation(fields: [updated_by], references: [id])
+}
+
+// ─── BARANGAY OFFICIALS ──────────────────────────────────────
+
+model BrgyOfficial {
+  id               Int      @id @default(autoincrement())
+  resident_id      Int      @unique
+  position         String
+  purok_assignment String?
+  term_start       DateTime
+  term_end         DateTime?
+  is_active        Boolean  @default(true)
+
+  resident         Resident @relation(fields: [resident_id], references: [id])
+}
+
+// ─── SPECIAL REGISTRIES ──────────────────────────────────────
+
+model SpecialRegistry {
+  id                 Int          @id @default(autoincrement())
+  resident_id        Int
+  registry_type      RegistryType
+  disability_type    String?
+  is_4ps_beneficiary Boolean      @default(false)
+  registered_at      DateTime     @default(now())
+
+  resident           Resident @relation(fields: [resident_id], references: [id])
+}
+
+enum RegistryType {
+  SENIOR_CITIZEN
+  PWD
+  FOUR_PS
+}
+
+// ─── HEALTH RECORDS ──────────────────────────────────────────
+
+model HealthRecord {
+  id          Int      @id @default(autoincrement())
+  resident_id Int
+  record_type String
+  notes       String?
+  recorded_by Int
+  recorded_at DateTime @default(now())
+
+  resident    Resident @relation(fields: [resident_id], references: [id])
+  recorder    User     @relation(fields: [recorded_by], references: [id])
+}
+
+model Vaccination {
+  id           Int      @id @default(autoincrement())
+  resident_id  Int
+  vaccine_name String
+  date_given   DateTime
+  recorded_by  Int
+  created_at   DateTime @default(now())
+
+  resident     Resident @relation(fields: [resident_id], references: [id])
+  recorder     User     @relation(fields: [recorded_by], references: [id])
+}
+
+// ─── FINANCIAL RECORDS ───────────────────────────────────────
+
+model FinancialRecord {
+  id               Int             @id @default(autoincrement())
+  transaction_type FinancialType
+  amount           Decimal         @db.Decimal(12, 2)
+  description      String
+  transaction_date DateTime
+  recorded_by      Int
+  created_at       DateTime        @default(now())
+
+  recorder         User @relation(fields: [recorded_by], references: [id])
+}
+
+enum FinancialType {
+  INCOME
+  EXPENSE
+}
+
+// ─── EQUIPMENT ───────────────────────────────────────────────
+
+model Equipment {
+  id            Int              @id @default(autoincrement())
+  name          String
+  quantity      Int              @default(1)
+  condition     String?
+  status        EquipmentStatus  @default(SERVICEABLE)
+  date_acquired DateTime?
+  created_at    DateTime         @default(now())
+
+  borrowings    EquipmentBorrowing[]
+}
+
+enum EquipmentStatus {
+  SERVICEABLE
+  UNSERVICEABLE
+  MISSING
+}
+
+model EquipmentBorrowing {
+  id               Int      @id @default(autoincrement())
+  equipment_id     Int
+  resident_id      Int?
+  borrower_name    String
+  date_borrowed    DateTime
+  expected_return  DateTime
+  actual_return    DateTime?
+  return_condition String?
+  is_overdue       Boolean  @default(false)
+  recorded_by      Int
+  created_at       DateTime @default(now())
+
+  equipment        Equipment @relation(fields: [equipment_id], references: [id])
+  resident         Resident? @relation(fields: [resident_id], references: [id])
+  recorder         User      @relation(fields: [recorded_by], references: [id])
+}
+
+// ─── MEETING RECORDS ─────────────────────────────────────────
+
+model MeetingRecord {
+  id           Int         @id @default(autoincrement())
+  meeting_type MeetingType
+  meeting_date DateTime
+  minutes      String?
+  recorded_by  Int
+  created_at   DateTime    @default(now())
+
+  recorder     User @relation(fields: [recorded_by], references: [id])
+}
+
+enum MeetingType {
+  SB_MEETING
+  BARANGAY_ASSEMBLY
+}
+
+// ─── BARANGAY ID ─────────────────────────────────────────────
+
+model BarangayId {
+  id          Int      @id @default(autoincrement())
+  resident_id Int
+  id_number   String   @unique
+  issued_date DateTime @default(now())
+  issued_by   Int
+
+  resident    Resident @relation(fields: [resident_id], references: [id])
+  issuer      User     @relation(fields: [issued_by], references: [id])
+}
+
+// ─── AUDIT LOGS ──────────────────────────────────────────────
+
+model AuditLog {
+  id             Int      @id @default(autoincrement())
+  user_id        Int
+  action         String
+  table_affected String
+  record_id      Int?
+  details        String?
+  performed_at   DateTime @default(now())
+
+  user           User @relation(fields: [user_id], references: [id])
+}
+
+// ─── BACKUPS ─────────────────────────────────────────────────
+
+model Backup {
+  id             Int      @id @default(autoincrement())
+  triggered_by   Int
+  backup_date    DateTime @default(now())
+  file_reference String?
+
+  trigger        User @relation(fields: [triggered_by], references: [id])
+}
+
+// ─── SYSTEM SETTINGS ─────────────────────────────────────────
+
+model SystemSetting {
+  id         Int      @id @default(autoincrement())
+  key        String   @unique
+  value      String
+  updated_at DateTime @updatedAt
+}
