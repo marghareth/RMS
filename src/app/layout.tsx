@@ -1,4 +1,19 @@
-import { Geist } from "next/font/google";
+import type { Metadata } from "next";
+import "./globals.css";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+export const metadata: Metadata = {
+  title: "Brgy-RMS",
+  description: "Barangay Records Management System",
+};
 
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
