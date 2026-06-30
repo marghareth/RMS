@@ -3,9 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Users, Package, DollarSign,
-  Users2, UserCheck, FileText, BarChart2,
-  Settings, Menu
+  LayoutDashboard,
+  Users,
+  Package,
+  DollarSign,
+  Users2,
+  UserCheck,
+  FileText,
+  BarChart2,
+  Settings,
+  Shield,
 } from "lucide-react";
 
 const mainNav = [
@@ -15,6 +22,7 @@ const mainNav = [
   { label: "Financial", href: "/financial", icon: DollarSign },
   { label: "Assembly", href: "/meetings", icon: Users2 },
   { label: "Officials", href: "/officials", icon: UserCheck },
+  { label: "Blotter", href: "/blotter", icon: Shield },
   { label: "Certificate", href: "/certificates", icon: FileText },
   { label: "Report", href: "/reports", icon: BarChart2 },
 ];
@@ -26,7 +34,6 @@ const bottomNav = [
 
 export default function Sidebar({
   collapsed,
-  onToggle,
 }: {
   collapsed: boolean;
   onToggle: () => void;
@@ -39,27 +46,31 @@ export default function Sidebar({
 
   return (
     <aside
-      style={{ width: collapsed ? 0 : 280 }}
-      className="bg-white border-r border-gray-100 flex flex-col shrink-0 h-screen overflow-hidden transition-all duration-200"
+      className={`flex h-screen shrink-0 flex-col overflow-hidden border-r border-[#E9EAEC] bg-white transition-[width] duration-200 ease-in-out ${
+        collapsed ? "w-0 border-r-0" : "w-[240px]"
+      }`}
     >
-      {/* Brand header */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-100">
-        <button
-          onClick={onToggle}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 transition shrink-0"
-        >
-          <Menu size={18} />
-        </button>
-        <div className="w-9 h-9 rounded-full bg-linear-to-br from-blue-400 to-teal-400 flex items-center justify-center text-white text-xs font-bold shrink-0">
-          BQ
+      {/* Brand */}
+      <div className="flex shrink-0 items-center gap-3 border-b border-[#E9EAEC] px-5 py-5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#3B82F6] shadow-sm">
+          <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+            <path
+              d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"
+              fill="white"
+            />
+            <rect x="9" y="12" width="6" height="10" fill="#3B82F6" />
+          </svg>
         </div>
-        <span className="text-sm font-bold text-gray-800 whitespace-nowrap">
-          BARANGAY NAME
-        </span>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold leading-tight text-[#1F2937]">
+            Brgy. Quisol
+          </p>
+          <p className="truncate text-[11px] text-[#9CA3AF]">Danao City, Cebu</p>
+        </div>
       </div>
 
-      {/* Nav items */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 flex flex-col">
+      {/* Nav */}
+      <nav className="flex flex-1 flex-col overflow-y-auto px-3 py-4">
         <div className="flex flex-col gap-1">
           {mainNav.map((item) => {
             const Icon = item.icon;
@@ -68,23 +79,28 @@ export default function Sidebar({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap
-                  ${active
-                    ? "bg-blue-500 text-white shadow-md shadow-blue-200"
-                    : "text-gray-400 hover:bg-gray-50 hover:text-gray-700"
-                  }`}
+                className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-colors ${
+                  active
+                    ? "bg-[#3B82F6] text-white shadow-sm"
+                    : "text-[#6B7280] hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                }`}
               >
-                <Icon size={18} className="shrink-0" />
-                {item.label}
+                <Icon
+                  size={18}
+                  strokeWidth={active ? 2.25 : 2}
+                  className={`shrink-0 ${
+                    active
+                      ? "text-white"
+                      : "text-[#9CA3AF] group-hover:text-[#374151]"
+                  }`}
+                />
+                <span className="truncate">{item.label}</span>
               </Link>
             );
           })}
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-gray-100 my-4" />
-
-        <div className="flex flex-col gap-1">
+        <div className="mt-auto flex flex-col gap-1 border-t border-[#E9EAEC] pt-4">
           {bottomNav.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -92,14 +108,22 @@ export default function Sidebar({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap
-                  ${active
-                    ? "bg-blue-500 text-white shadow-md shadow-blue-200"
-                    : "text-gray-400 hover:bg-gray-50 hover:text-gray-700"
-                  }`}
+                className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-colors ${
+                  active
+                    ? "bg-[#3B82F6] text-white shadow-sm"
+                    : "text-[#6B7280] hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                }`}
               >
-                <Icon size={18} className="shrink-0" />
-                {item.label}
+                <Icon
+                  size={18}
+                  strokeWidth={active ? 2.25 : 2}
+                  className={`shrink-0 ${
+                    active
+                      ? "text-white"
+                      : "text-[#9CA3AF] group-hover:text-[#374151]"
+                  }`}
+                />
+                <span className="truncate">{item.label}</span>
               </Link>
             );
           })}

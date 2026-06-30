@@ -1,75 +1,63 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, Search, Bell, ChevronRight } from "lucide-react";
-import { usePathname } from "next/navigation";
-
-const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/residents": "RBI",
-  "/households": "Households",
-  "/certificates": "Certificate",
-  "/blotter": "Blotter",
-  "/officials": "Officials",
-  "/registries": "Special Registries",
-  "/health": "Health Records",
-  "/equipment": "Inventory",
-  "/financial": "Financial",
-  "/meetings": "Assembly",
-  "/barangay-id": "Barangay ID",
-  "/reports": "Report",
-  "/admin/users": "Account",
-  "/admin/settings": "Setting",
-};
+import { Menu, Search, Bell } from "lucide-react";
 
 export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
-  const pathname = usePathname();
   const [search, setSearch] = useState("");
 
-  const title = Object.entries(pageTitles).find(([key]) =>
-    pathname === key || pathname.startsWith(key + "/")
-  )?.[1] ?? "Dashboard";
-
   return (
-    <header className="bg-white border-b border-gray-100 h-16 flex items-center px-6 gap-4 shrink-0">
-
+    <header className="flex h-[60px] shrink-0 items-center gap-4 border-b border-[#E9EAEC] bg-white px-5 sm:px-6">
       <button
+        type="button"
         onClick={onMenuClick}
-        className="text-gray-400 hover:text-gray-700 transition lg:hidden"
+        aria-label="Toggle sidebar"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#6B7280] transition-colors hover:bg-[#F4F5F7] hover:text-[#1F2937]"
       >
         <Menu size={20} />
       </button>
 
-      {/* Search bar */}
-      <div className="flex-1 max-w-md">
-        <div className="relative">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+      <div className="flex min-w-0 flex-1 items-center">
+        <div className="relative w-full max-w-md">
+          <Search
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+          />
           <input
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Search..."
-            className="w-full pl-10 pr-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 focus:bg-white transition placeholder:text-gray-400"
+            className="h-10 w-full rounded-lg border border-[#E9EAEC] bg-[#F4F5F7] pl-10 pr-4 text-[13px] text-[#1F2937] transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/15"
           />
         </div>
       </div>
 
-      <div className="flex items-center gap-3 ml-auto">
-        {/* Notification bell */}
-        <button className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-500 transition">
-          <Bell size={17} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full border border-white"></span>
+      <div className="ml-auto flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          aria-label="Notifications"
+          className="relative flex h-9 w-9 items-center justify-center rounded-lg text-[#6B7280] transition-colors hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+        >
+          <Bell size={18} />
+          <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-[#3B82F6]" />
         </button>
 
-        {/* User avatar */}
-        <div className="flex items-center gap-2.5 cursor-pointer group">
-          <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-white text-xs font-bold">
+        <div className="mx-1 hidden h-6 w-px bg-[#E9EAEC] sm:block" />
+
+        <button
+          type="button"
+          className="flex items-center gap-2.5 rounded-lg px-1.5 py-1 transition-colors hover:bg-[#F4F5F7]"
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1F2937] text-[11px] font-bold text-white">
             N
           </div>
-          <div className="hidden sm:block">
-            <div className="text-xs font-semibold text-gray-800 leading-tight">Admin</div>
-            <div className="text-[10px] text-gray-400">Administrator</div>
+          <div className="hidden text-left sm:block">
+            <p className="text-[13px] font-semibold leading-tight text-[#1F2937]">
+              Admin
+            </p>
+            <p className="text-[11px] text-[#9CA3AF]">Administrator</p>
           </div>
-        </div>
+        </button>
       </div>
     </header>
   );

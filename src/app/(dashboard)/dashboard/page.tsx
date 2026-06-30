@@ -3,7 +3,6 @@ import {
   Package, TrendingUp, ArrowUpRight, ArrowDownRight
 } from "lucide-react";
 import Link from "next/link";
-import StatusBadge from "@/components/shared/StatusBadge";
 
 // ── MOCK DATA ──────────────────────────────────────────
 const stats = [
@@ -15,7 +14,11 @@ const stats = [
     sub: "Trending up this month",
     desc: "Active registered residents",
     icon: Users,
-    color: "blue",
+    valueColor: "text-[#2563EB]",
+    trendColor: "text-[#2563EB]",
+    trendBg: "bg-[#EBF3FF]",
+    iconBg: "bg-[#EBF3FF]",
+    iconColor: "text-[#2563EB]",
   },
   {
     label: "Households",
@@ -25,7 +28,11 @@ const stats = [
     sub: "Growth this quarter",
     desc: "Registered households",
     icon: Home,
-    color: "green",
+    valueColor: "text-[#059669]",
+    trendColor: "text-[#059669]",
+    trendBg: "bg-[#D1FAE5]",
+    iconBg: "bg-[#D1FAE5]",
+    iconColor: "text-[#059669]",
   },
   {
     label: "Active Blotter Cases",
@@ -35,7 +42,11 @@ const stats = [
     sub: "Down from last month",
     desc: "Filed and ongoing cases",
     icon: Shield,
-    color: "red",
+    valueColor: "text-[#DC2626]",
+    trendColor: "text-[#DC2626]",
+    trendBg: "bg-[#FEE2E2]",
+    iconBg: "bg-[#FEE2E2]",
+    iconColor: "text-[#DC2626]",
   },
   {
     label: "Certs This Month",
@@ -45,7 +56,11 @@ const stats = [
     sub: "Strong issuance rate",
     desc: "Certificates issued June 2026",
     icon: FileText,
-    color: "amber",
+    valueColor: "text-[#D97706]",
+    trendColor: "text-[#D97706]",
+    trendBg: "bg-[#FEF3C7]",
+    iconBg: "bg-[#FEF3C7]",
+    iconColor: "text-[#D97706]",
   },
   {
     label: "Borrowed Equipment",
@@ -55,7 +70,11 @@ const stats = [
     sub: "Steady borrowing rate",
     desc: "Items currently out",
     icon: Package,
-    color: "amber",
+    valueColor: "text-[#D97706]",
+    trendColor: "text-[#D97706]",
+    trendBg: "bg-[#FEF3C7]",
+    iconBg: "bg-[#FEF3C7]",
+    iconColor: "text-[#D97706]",
   },
   {
     label: "Certs This Year",
@@ -65,7 +84,11 @@ const stats = [
     sub: "Meets service targets",
     desc: "Total issued in 2026",
     icon: TrendingUp,
-    color: "blue",
+    valueColor: "text-[#2563EB]",
+    trendColor: "text-[#2563EB]",
+    trendBg: "bg-[#EBF3FF]",
+    iconBg: "bg-[#EBF3FF]",
+    iconColor: "text-[#2563EB]",
   },
 ];
 
@@ -76,62 +99,73 @@ const recentBlotter = [
 ];
 
 const recentActivity = [
-  { id: 1, action: "New resident added",            module: "RBI",         user: "Secretary", time: "2 min ago"  },
+  { id: 1, action: "New resident added",             module: "RBI",         user: "Secretary", time: "2 min ago"  },
   { id: 2, action: "Certificate issued (Residency)", module: "Certificate", user: "Encoder",   time: "15 min ago" },
   { id: 3, action: "Blotter case filed",             module: "Blotter",     user: "Secretary", time: "1 hr ago"   },
   { id: 4, action: "Equipment borrowed",             module: "Inventory",   user: "Admin",     time: "2 hrs ago"  },
   { id: 5, action: "Resident archived",              module: "RBI",         user: "Secretary", time: "3 hrs ago"  },
 ];
 
-const colorMap: Record<string, { icon: string; value: string; trend: string; trendBg: string }> = {
-  blue:  { icon: "text-blue-500 bg-blue-50",   value: "text-blue-600",  trend: "text-blue-600",  trendBg: "bg-blue-50"  },
-  green: { icon: "text-green-500 bg-green-50", value: "text-green-600", trend: "text-green-600", trendBg: "bg-green-50" },
-  amber: { icon: "text-amber-500 bg-amber-50", value: "text-amber-600", trend: "text-amber-600", trendBg: "bg-amber-50" },
-  red:   { icon: "text-red-500 bg-red-50",     value: "text-red-600",   trend: "text-red-600",   trendBg: "bg-red-50"   },
+const blotterStatus: Record<string, { dot: string; text: string; label: string }> = {
+  FILED:     { dot: "bg-[#2563EB]", text: "text-[#2563EB]", label: "Filed"     },
+  ONGOING:   { dot: "bg-[#D97706]", text: "text-[#D97706]", label: "Ongoing"   },
+  RESOLVED:  { dot: "bg-[#059669]", text: "text-[#059669]", label: "Resolved"  },
+  DISMISSED: { dot: "bg-[#6B7280]", text: "text-[#6B7280]", label: "Dismissed" },
 };
 // ──────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   return (
-    <div className="max-w-screen-xl mx-auto">
+    <div className="flex flex-col gap-8">
 
-      {/* Page title */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-400 mt-1">Barangay Quisol · Danao City, Cebu · June 30, 2026</p>
+      {/* Page header */}
+      <div>
+        <h1 className="text-[26px] font-bold leading-tight tracking-tight text-[#1F2937]">
+          Dashboard
+        </h1>
+        <p className="mt-1.5 text-sm text-[#9CA3AF]">
+          Barangay Quisol · Danao City, Cebu · June 30, 2026
+        </p>
       </div>
 
-      {/* Stat cards — 2 columns like the inspo */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      {/* Stat cards grid — 2 cols */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         {stats.map((s) => {
           const Icon = s.icon;
-          const c = colorMap[s.color];
           return (
-            <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col gap-4">
-              {/* Top row */}
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-gray-400 font-medium mb-1">{s.label}</p>
-                  <p className={`text-4xl font-bold ${c.value} leading-none`}>{s.value}</p>
+            <div
+              key={s.label}
+              className="flex flex-col gap-4 rounded-xl border border-[#E9EAEC] bg-white px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]"
+            >
+              {/* Top: label + trend */}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-1 min-w-0">
+                  <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wider">
+                    {s.label}
+                  </p>
+                  <p className={`text-4xl font-bold leading-none ${s.valueColor}`}>
+                    {s.value}
+                  </p>
                 </div>
-                {/* Trend badge */}
-                <span className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-xl ${c.trendBg} ${c.trend}`}>
+                <span
+                  className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${s.trendBg} ${s.trendColor}`}
+                >
                   {s.trendUp
-                    ? <ArrowUpRight size={13} />
-                    : <ArrowDownRight size={13} />
+                    ? <ArrowUpRight size={12} />
+                    : <ArrowDownRight size={12} />
                   }
                   {s.trend}
                 </span>
               </div>
 
-              {/* Bottom row */}
-              <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">{s.sub}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{s.desc}</p>
+              {/* Bottom: sub text + icon */}
+              <div className="flex items-center justify-between pt-4 border-t border-[#F4F5F7]">
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <p className="text-sm font-medium text-[#374151]">{s.sub}</p>
+                  <p className="text-xs text-[#9CA3AF]">{s.desc}</p>
                 </div>
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${c.icon}`}>
-                  <Icon size={18} />
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ml-4 ${s.iconBg}`}>
+                  <Icon size={18} className={s.iconColor} />
                 </div>
               </div>
             </div>
@@ -139,62 +173,61 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* Bottom section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Bottom panels */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
 
-        {/* Recent blotter */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-5">
+        {/* Recent Blotter */}
+        <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+          <div className="flex items-start justify-between mb-5">
             <div>
-              <h2 className="text-base font-bold text-gray-900">Recent Blotter Cases</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Latest filed and ongoing cases</p>
+              <h2 className="text-base font-semibold text-[#1F2937]">Recent Blotter Cases</h2>
+              <p className="text-xs text-[#9CA3AF] mt-0.5">Latest filed and ongoing cases</p>
             </div>
             <Link
               href="/blotter"
-              className="text-xs font-semibold text-blue-500 hover:text-blue-600 flex items-center gap-1 transition"
+              className="flex items-center gap-1 text-xs font-semibold text-[#3B82F6] hover:text-[#2563EB] transition shrink-0 mt-0.5"
             >
               View all <ArrowUpRight size={12} />
             </Link>
           </div>
 
-          <div className="flex flex-col gap-3">
-            {recentBlotter.map((b) => (
-              <div
-                key={b.id}
-                className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50 hover:bg-blue-50 transition cursor-pointer group"
-              >
-                <div>
-                  <p className="text-sm font-bold text-gray-800 group-hover:text-blue-700 transition">{b.case_number}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{b.complainant} vs {b.respondent}</p>
+          <div className="flex flex-col divide-y divide-[#F4F5F7]">
+            {recentBlotter.map((b) => {
+              const s = blotterStatus[b.status];
+              return (
+                <div key={b.id} className="flex items-center justify-between py-3 gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-[#1F2937] truncate">{b.case_number}</p>
+                    <p className="text-xs text-[#9CA3AF] mt-0.5 truncate">
+                      {b.complainant} vs {b.respondent}
+                    </p>
+                  </div>
+                  <span className={`flex items-center gap-1.5 text-xs font-semibold shrink-0 ${s.text}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
+                    {s.label}
+                  </span>
                 </div>
-                <StatusBadge status={b.status} />
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
-        {/* Recent activity */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        {/* Recent Activity */}
+        <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
           <div className="mb-5">
-            <h2 className="text-base font-bold text-gray-900">Recent Activity</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Latest actions across all modules</p>
+            <h2 className="text-base font-semibold text-[#1F2937]">Recent Activity</h2>
+            <p className="text-xs text-[#9CA3AF] mt-0.5">Latest actions across all modules</p>
           </div>
 
-          <div className="flex flex-col gap-1">
-            {recentActivity.map((a, i) => (
-              <div
-                key={a.id}
-                className={`flex items-start gap-4 p-3.5 rounded-xl transition hover:bg-gray-50
-                  ${i !== recentActivity.length - 1 ? "border-b border-gray-50" : ""}`}
-              >
-                <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
-                  <div className="w-2 h-2 rounded-full bg-blue-400" />
-                </div>
+          <div className="flex flex-col divide-y divide-[#F4F5F7]">
+            {recentActivity.map((a) => (
+              <div key={a.id} className="flex items-start gap-3 py-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] shrink-0 mt-1.5" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 leading-snug">{a.action}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{a.user} · {a.time}</p>
+                  <p className="text-sm font-medium text-[#1F2937] leading-snug">{a.action}</p>
+                  <p className="text-xs text-[#9CA3AF] mt-0.5">{a.user} · {a.time}</p>
                 </div>
-                <span className="text-[10px] font-semibold bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full whitespace-nowrap shrink-0">
+                <span className="text-[11px] font-semibold bg-[#F4F5F7] text-[#6B7280] px-2.5 py-1 rounded-full whitespace-nowrap shrink-0">
                   {a.module}
                 </span>
               </div>
