@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/USER/OneDrive/Documents/lab/RMS/src/app/globals.css"],"sourcesContent":["@import \"tailwindcss\";\n\n@custom-variant dark (&:is(.dark *));\n\n:root {\n  --background: #ffffff;\n  --foreground: #111827;\n  --primary: #3B82F6;\n  --primary-foreground: #ffffff;\n  --secondary: #F4F5F7;\n  --secondary-foreground: #1F2937;\n  --muted: #F4F5F7;\n  --muted-foreground: #6B7280;\n  --border: #E9EAEC;\n  --input: #E9EAEC;\n  --ring: #3B82F6;\n  --radius: 0.5rem;\n}\n\n* {\n  box-sizing: border-box;\n  margin: 0;\n  padding: 0;\n}\n\nbody {\n  background: var(--background);\n  color: var(--foreground);\n  font-family: 'Inter', system-ui, sans-serif;\n  -webkit-font-smoothing: antialiased;\n}"],"names":[],"mappings":"AAEA;;AAEA;;;;;;;;;;;;;;;AAeA;;;;;;AAMA"}}]
-}
