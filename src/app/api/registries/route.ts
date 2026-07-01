@@ -21,7 +21,12 @@ export async function GET(req: NextRequest) {
   const registries = await prisma.specialRegistry.findMany({
     where,
     include: {
-      resident: { include: { purok: true } },
+      resident: {
+        include: {
+          purok: true,
+          household: { include: { _count: { select: { members: true } } } },
+        },
+      },
     },
     orderBy: { registered_at: "desc" },
   });

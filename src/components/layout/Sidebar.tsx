@@ -1,35 +1,144 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
+  IdCard,
+  FileText,
+  ScrollText,
+  HeartPulse,
   Package,
   DollarSign,
   Users2,
   UserCheck,
-  FileText,
   BarChart2,
+  ShieldCheck,
   Settings,
-  Shield,
 } from "lucide-react";
+import NavItem from "./NavItem";
+import NavGroup from "./NavGroup";
 
+// Grouped + single items, in display order
 const mainNav = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "RBI", href: "/residents", icon: Users },
-  { label: "Inventory", href: "/equipment", icon: Package },
-  { label: "Financial", href: "/financial", icon: DollarSign },
-  { label: "Assembly", href: "/meetings", icon: Users2 },
-  { label: "Officials", href: "/officials", icon: UserCheck },
-  { label: "Blotter", href: "/blotter", icon: Shield },
-  { label: "Certificate", href: "/certificates", icon: FileText },
-  { label: "Report", href: "/reports", icon: BarChart2 },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, type: "link" as const },
+  {
+    label: "RBI",
+    icon: Users,
+    basePath: "/residents",
+    type: "group" as const,
+    children: [
+      { label: "Residents", href: "/residents", addHref: "/residents/new" },
+      { label: "Households", href: "/households", addHref: "/households/new" },
+    ],
+  },
+  {
+    label: "Registries",
+    icon: IdCard,
+    basePath: "/registries",
+    type: "group" as const,
+    children: [
+      { label: "Senior Citizens", href: "/registries/senior-citizens" },
+      { label: "PWD", href: "/registries/pwd" },
+      { label: "4Ps Beneficiaries", href: "/registries/four-ps" },
+    ],
+  },
+  {
+    label: "Certificates",
+    icon: FileText,
+    basePath: "/certificates",
+    type: "group" as const,
+    children: [
+      { label: "All Certificates", href: "/certificates", addHref: "/certificates/new" },
+      { label: "Barangay ID", href: "/barangay_id", addHref: "/barangay_id/new" },
+    ],
+  },
+  {
+    label: "Blotter",
+    href: "/blotter",
+    icon: ScrollText,
+    addHref: "/blotter/new",
+    type: "link" as const,
+  },
+  {
+    label: "Health",
+    icon: HeartPulse,
+    basePath: "/health",
+    type: "group" as const,
+    children: [
+      { label: "Health Records", href: "/health", addHref: "/health/new" },
+      { label: "Vaccinations", href: "/health/vaccinations", addHref: "/health/vaccinations/new" },
+    ],
+  },
+  {
+    label: "Inventory",
+    icon: Package,
+    basePath: "/equipment",
+    type: "group" as const,
+    children: [
+      { label: "Equipment", href: "/equipment", addHref: "/equipment/new" },
+      { label: "Borrow Item", href: "/equipment/borrow" },
+      { label: "Return Item", href: "/equipment/return" },
+    ],
+  },
+  {
+    label: "Financial",
+    icon: DollarSign,
+    basePath: "/financial",
+    type: "group" as const,
+    children: [
+      { label: "Records", href: "/financial", addHref: "/financial/new" },
+      { label: "Summary", href: "/financial/summary" },
+    ],
+  },
+  {
+    label: "Assembly",
+    href: "/meetings",
+    icon: Users2,
+    addHref: "/meetings/new",
+    type: "link" as const,
+  },
+  {
+    label: "Officials",
+    href: "/officials",
+    icon: UserCheck,
+    addHref: "/officials/new",
+    type: "link" as const,
+  },
+  {
+    label: "Reports",
+    icon: BarChart2,
+    basePath: "/reports",
+    type: "group" as const,
+    children: [
+      { label: "Overview", href: "/reports" },
+      { label: "Population", href: "/reports/population" },
+      { label: "Registries", href: "/reports/registries" },
+      { label: "Certificates", href: "/reports/certificates" },
+      { label: "Blotter", href: "/reports/blotter" },
+      { label: "Financial", href: "/reports/financial" },
+      { label: "Inventory", href: "/reports/inventory" },
+    ],
+  },
 ];
 
 const bottomNav = [
-  { label: "Account", href: "/admin/users", icon: Users },
-  { label: "Setting", href: "/admin/settings", icon: Settings },
+  {
+    label: "Admin",
+    icon: ShieldCheck,
+    basePath: "/admin",
+    type: "group" as const,
+    children: [
+      { label: "Users", href: "/admin/users", addHref: "/admin/users/new" },
+      { label: "Audit Logs", href: "/admin/audit-logs" },
+      { label: "Backup", href: "/admin/backup" },
+    ],
+  },
+  {
+    label: "Settings",
+    href: "/admin/settings",
+    icon: Settings,
+    type: "link" as const,
+  },
 ];
 
 export default function Sidebar({
@@ -38,16 +147,10 @@ export default function Sidebar({
   collapsed: boolean;
   onToggle: () => void;
 }) {
-  const pathname = usePathname();
-
-  function isActive(href: string) {
-    return pathname === href || pathname.startsWith(href + "/");
-  }
-
   return (
     <aside
       className={`flex h-screen shrink-0 flex-col overflow-hidden border-r border-[#E9EAEC] bg-white transition-[width] duration-200 ease-in-out ${
-        collapsed ? "w-0 border-r-0" : "w-[240px]"
+        collapsed ? "w-0 border-r-0" : "w-60"
       }`}
     >
       {/* Brand */}
@@ -72,61 +175,46 @@ export default function Sidebar({
       {/* Nav */}
       <nav className="flex flex-1 flex-col overflow-y-auto px-3 py-4">
         <div className="flex flex-col gap-1">
-          {mainNav.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
+          {mainNav.map((item) =>
+            item.type === "group" ? (
+              <NavGroup
+                key={item.label}
+                label={item.label}
+                icon={item.icon}
+                basePath={item.basePath}
+                items={item.children}
+              />
+            ) : (
+              <NavItem
+                key={item.label}
+                label={item.label}
                 href={item.href}
-                className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-colors ${
-                  active
-                    ? "bg-[#3B82F6] text-white shadow-sm"
-                    : "text-[#6B7280] hover:bg-[#F4F5F7] hover:text-[#1F2937]"
-                }`}
-              >
-                <Icon
-                  size={18}
-                  strokeWidth={active ? 2.25 : 2}
-                  className={`shrink-0 ${
-                    active
-                      ? "text-white"
-                      : "text-[#9CA3AF] group-hover:text-[#374151]"
-                  }`}
-                />
-                <span className="truncate">{item.label}</span>
-              </Link>
-            );
-          })}
+                icon={item.icon}
+                addHref={item.addHref}
+              />
+            )
+          )}
         </div>
 
         <div className="mt-auto flex flex-col gap-1 border-t border-[#E9EAEC] pt-4">
-          {bottomNav.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
+          {bottomNav.map((item) =>
+            item.type === "group" ? (
+              <NavGroup
+                key={item.label}
+                label={item.label}
+                icon={item.icon}
+                basePath={item.basePath}
+                items={item.children}
+              />
+            ) : (
+              <NavItem
+                key={item.label}
+                label={item.label}
                 href={item.href}
-                className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-colors ${
-                  active
-                    ? "bg-[#3B82F6] text-white shadow-sm"
-                    : "text-[#6B7280] hover:bg-[#F4F5F7] hover:text-[#1F2937]"
-                }`}
-              >
-                <Icon
-                  size={18}
-                  strokeWidth={active ? 2.25 : 2}
-                  className={`shrink-0 ${
-                    active
-                      ? "text-white"
-                      : "text-[#9CA3AF] group-hover:text-[#374151]"
-                  }`}
-                />
-                <span className="truncate">{item.label}</span>
-              </Link>
-            );
-          })}
+                icon={item.icon}
+              />
+            )
+          )}
         </div>
       </nav>
     </aside>

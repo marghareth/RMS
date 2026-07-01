@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Pencil, Archive } from "lucide-react";
+import { getMockResidents, type Resident as MockResident } from "@/lib/mockResidents";
 
 // ── TYPES ─────────────────────────────────────────────────────────────────────
 interface Purok     { id: number; name: string }
@@ -17,17 +18,7 @@ interface HealthRecord { id: number; record_type: string; notes: string | null; 
 interface Vaccination { id: number; vaccine_name: string; date_given: string }
 interface BarangayId  { id: number; id_number: string; issued_date: string }
 
-interface Resident {
-  id: number; fname: string; lname: string; mname: string | null; name_extension: string | null;
-  birthdate: string; place_of_birth: string | null; sex: string; civil_status: string;
-  citizenship: string; religion: string | null; nationality: string;
-  employment_status: string | null; educational_attainment: string | null;
-  occupation: string | null; income_bracket: string | null; sector: string | null;
-  is_archived: boolean; created_at: string; updated_at: string;
-  purok: Purok | null; household: Household | null;
-  certificates: Certificate[]; special_registries: SpecialRegistry[];
-  health_records: HealthRecord[]; vaccinations: Vaccination[]; barangay_ids: BarangayId[];
-}
+interface Resident extends MockResident {}
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function calcAge(birthdate: string) {
@@ -79,17 +70,25 @@ export default function ResidentDetailPage() {
   const [archiving, setArchiving] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/residents/${id}`)
-      .then(r => { if (!r.ok) throw new Error("Not found"); return r.json(); })
-      .then(setResident)
-      .catch(() => router.push("/residents"))
-      .finally(() => setLoading(false));
-  }, [id]);
+    // fetch(`/api/residents/${id}`)
+    //   .then(r => { if (!r.ok) throw new Error("Not found"); return r.json(); })
+    //   .then(setResident)
+    //   .catch(() => router.push("/residents"))
+    //   .finally(() => setLoading(false));
+
+    const found = getMockResidents().find((item) => String(item.id) === String(id));
+    if (found) {
+      setResident(found);
+    } else {
+      router.push("/residents");
+    }
+    setLoading(false);
+  }, [id, router]);
 
   async function handleArchive() {
     if (!confirm("Archive this resident? They will be hidden from the main list.")) return;
     setArchiving(true);
-    await fetch(`/api/residents/${id}`, { method: "DELETE" });
+    // await fetch(`/api/residents/${id}`, { method: "DELETE" });
     router.push("/residents");
   }
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { addMockResidents, getMockPuroks, type Resident as MockResident } from "@/lib/mockResidents";
 
 // ── TYPES ─────────────────────────────────────────────────────────────────────
 interface Purok { id: number; name: string }
@@ -228,10 +229,11 @@ export default function NewRBIPage() {
   const [hhNoPreview] = useState("HHNP1XXXXXXXXX");
 
   useEffect(() => {
-    fetch("/api/puroks")
-      .then(r => r.json())
-      .then(setPuroks)
-      .catch(console.error);
+    // fetch("/api/puroks")
+    //   .then(r => r.json())
+    //   .then(setPuroks)
+    //   .catch(console.error);
+    setPuroks(getMockPuroks());
   }, []);
 
   // ── Step 1 validation ────────────────────────────────────────────────────
@@ -280,67 +282,55 @@ export default function NewRBIPage() {
     setError("");
 
     try {
-      // 1. Create household
-      const hhRes = await fetch("/api/households", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          address:      hh.address,
-          purok_id:     parseInt(hh.purok_id),
-          housing_type: hh.housing_type,
-          water_source: hh.water_source,
-          comfort_room: hh.comfort_room,
-        }),
+      // 1. Create household locally
+      const householdId = 1000 + Date.now();
+      const household = {
+        id: householdId,
+        household_no: `HH-${String(householdId).slice(-3)}`,
+        address: hh.address,
+        housing_type: hh.housing_type,
+        water_source: hh.water_source,
+        comfort_room: hh.comfort_room,
+        members: [] as MockResident[],
+      };
+
+      // 2. Create each member locally
+      const createdResidents: MockResident[] = members.map((m, index) => {
+        const residentId = 100 + index + Date.now();
+        return {
+          id: residentId,
+          fname: m.fname,
+          lname: m.lname,
+          mname: m.mname || null,
+          name_extension: m.name_extension || null,
+          birthdate: m.birthdate,
+          place_of_birth: m.place_of_birth || null,
+          sex: m.sex,
+          civil_status: m.civil_status,
+          citizenship: m.citizenship || "Filipino",
+          religion: null,
+          nationality: "Filipino",
+          employment_status: null,
+          educational_attainment: m.educational_attainment || null,
+          occupation: m.occupation || null,
+          income_bracket: null,
+          sector: m.sector || null,
+          is_archived: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          purok: getMockPuroks().find((item) => item.id === Number(hh.purok_id)) ?? null,
+          household,
+          certificates: [],
+          special_registries: [],
+          health_records: [],
+          vaccinations: [],
+          barangay_ids: [],
+          purok_id: Number(hh.purok_id),
+          household_id: householdId,
+        };
       });
 
-      if (!hhRes.ok) throw new Error("Failed to create household");
-      const household = await hhRes.json();
-
-      // 2. Create each member
-      const created: number[] = [];
-      for (const m of members) {
-        const rRes = await fetch("/api/residents", {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fname:                  m.fname,
-            lname:                  m.lname,
-            mname:                  m.mname  || null,
-            name_extension:         m.name_extension || null,
-            birthdate:              m.birthdate,
-            place_of_birth:         m.place_of_birth || null,
-            sex:                    m.sex,
-            civil_status:           m.civil_status,
-            citizenship:            m.citizenship || "Filipino",
-            educational_attainment: m.educational_attainment || null,
-            occupation:             m.occupation || null,
-            sector:                 m.sector || null,
-            purok_id:               parseInt(hh.purok_id),
-            household_id:           household.id,
-          }),
-        });
-
-        if (rRes.status === 409) {
-          const dup = await rRes.json();
-          setError(`Duplicate detected: ${m.fname} ${m.lname} already exists in the system.`);
-          setSubmitting(false);
-          return;
-        }
-
-        if (!rRes.ok) throw new Error(`Failed to create resident: ${m.fname} ${m.lname}`);
-        const r = await rRes.json();
-        created.push(r.id);
-      }
-
-      // 3. Set first member as household head
-      if (created.length > 0) {
-        await fetch(`/api/households/${household.id}`, {
-          method:  "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ household_head_id: created[0] }),
-        });
-      }
-
+      addMockResidents(createdResidents);
       router.push("/residents");
     } catch (e: any) {
       setError(e.message || "Something went wrong. Please try again.");

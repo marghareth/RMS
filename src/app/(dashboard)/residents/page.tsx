@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, SlidersHorizontal, ChevronRight, Plus, X } from "lucide-react";
+import { getMockPuroks, getMockResidents, type Resident as MockResident } from "@/lib/mockResidents";
 
 // ── TYPES ─────────────────────────────────────────────────────────────────────
 interface Purok  { id: number; name: string }
@@ -15,23 +16,7 @@ interface Household {
   comfort_room: string | null;
   members:     Resident[];
 }
-interface Resident {
-  id:                     number;
-  fname:                  string;
-  lname:                  string;
-  mname:                  string | null;
-  name_extension:         string | null;
-  birthdate:              string;
-  place_of_birth:         string | null;
-  sex:                    string;
-  civil_status:           string;
-  citizenship:            string;
-  educational_attainment: string | null;
-  occupation:             string | null;
-  sector:                 string | null;
-  purok:                  Purok | null;
-  household:              Household | null;
-}
+interface Resident extends MockResident {}
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function calcAge(birthdate: string) {
@@ -165,32 +150,42 @@ export default function ResidentsPage() {
 
   // Load puroks once
   useEffect(() => {
-    fetch("/api/puroks")
-      .then(r => r.json())
-      .then(setPuroks)
-      .catch(console.error);
+    // const res = await fetch("/api/puroks");
+    // const data = await res.json();
+    // setPuroks(data);
+    setPuroks(getMockPuroks());
   }, []);
 
   // Load residents when search/filters change
   const loadResidents = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ limit: "50" });
-      if (search)            params.set("search",       search);
-      if (filters.sex)       params.set("sex",          filters.sex);
-      if (filters.civil_status) params.set("civil_status", filters.civil_status);
-      if (filters.purok_id)  params.set("purok_id",     filters.purok_id);
+      // const params = new URLSearchParams({ limit: "50" });
+      // if (search) params.set("search", search);
+      // if (filters.sex) params.set("sex", filters.sex);
+      // if (filters.civil_status) params.set("civil_status", filters.civil_status);
+      // if (filters.purok_id) params.set("purok_id", filters.purok_id);
+      // const res = await fetch(`/api/residents?${params}`);
+      // const data = await res.json();
+      // setResidents(data.residents ?? []);
+      // if (!selected && data.residents?.length) setSelected(data.residents[0]);
 
-      const res  = await fetch(`/api/residents?${params}`);
-      const data = await res.json();
-      setResidents(data.residents ?? []);
-      if (!selected && data.residents?.length) setSelected(data.residents[0]);
+      const data = getMockResidents().filter((resident) => {
+        const matchesSearch = !search || `${resident.fname} ${resident.lname}`.toLowerCase().includes(search.toLowerCase());
+        const matchesSex = !filters.sex || resident.sex === filters.sex;
+        const matchesCivil = !filters.civil_status || resident.civil_status === filters.civil_status;
+        const matchesPurok = !filters.purok_id || resident.purok_id === Number(filters.purok_id);
+        return matchesSearch && matchesSex && matchesCivil && matchesPurok;
+      });
+
+      setResidents(data);
+      if (!selected && data.length) setSelected(data[0]);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  }, [search, filters]);
+  }, [search, filters, selected]);
 
   useEffect(() => {
     const t = setTimeout(loadResidents, 300);
