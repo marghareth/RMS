@@ -17,7 +17,6 @@ model User {
   is_active     Boolean  @default(true)
   created_at    DateTime @default(now())
 
-  // relations
   certificates_issued  Certificate[]
   blotter_updates      BlotterUpdate[]
   meeting_records      MeetingRecord[]
@@ -51,51 +50,60 @@ model Purok {
 // ─── HOUSEHOLDS ─────────────────────────────────────────────
 
 model Household {
-  id                Int       @id @default(autoincrement())
+  id                Int      @id @default(autoincrement())
+  household_no      String   @unique  // e.g. HHNP100000001
   purok_id          Int
-  household_head_id Int?      @unique
+  household_head_id Int?     @unique
   address           String
-  created_at        DateTime  @default(now())
+  housing_type      String?  // OWN, RENT, SHARED, INFORMAL
+  water_source      String?  // INDIVIDUAL, COMMUNAL, WELL, OTHER
+  comfort_room      String?  // OWN, SHARED, NONE
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
 
-  purok             Purok      @relation(fields: [purok_id], references: [id])
-  household_head    Resident?  @relation("HouseholdHead", fields: [household_head_id], references: [id])
-  members           Resident[] @relation("HouseholdMembers")
+  purok          Purok      @relation(fields: [purok_id], references: [id])
+  household_head Resident?  @relation("HouseholdHead", fields: [household_head_id], references: [id])
+  members        Resident[] @relation("HouseholdMembers")
 }
 
 // ─── RESIDENTS ──────────────────────────────────────────────
 
 model Resident {
-  id                    Int      @id @default(autoincrement())
-  household_id          Int?
-  purok_id              Int?
-  fname                 String
-  lname                 String
-  mname                 String?
-  birthdate             DateTime
-  sex                   String
-  civil_status          CivilStatus
-  religion              String?
-  nationality           String   @default("Filipino")
-  employment_status     String?
+  id                     Int         @id @default(autoincrement())
+  household_id           Int?
+  purok_id               Int?
+  fname                  String
+  lname                  String
+  mname                  String?
+  name_extension         String?     // Jr., Sr., III, etc.
+  birthdate              DateTime
+  place_of_birth         String?
+  sex                    String
+  civil_status           CivilStatus
+  citizenship            String      @default("Filipino")
+  religion               String?
+  nationality            String      @default("Filipino")
+  employment_status      String?
   educational_attainment String?
-  income_bracket        String?
-  is_archived           Boolean  @default(false)
-  created_at            DateTime @default(now())
-  updated_at            DateTime @updatedAt
+  occupation             String?
+  income_bracket         String?
+  sector                 String?     // SENIOR, PWD, YOUTH, 4PS, N/A
+  is_archived            Boolean     @default(false)
+  created_at             DateTime    @default(now())
+  updated_at             DateTime    @updatedAt
 
-  // relations
-  household             Household?          @relation("HouseholdMembers", fields: [household_id], references: [id])
-  purok                 Purok?              @relation(fields: [purok_id], references: [id])
-  headed_household      Household?          @relation("HouseholdHead")
-  certificates          Certificate[]
-  special_registries    SpecialRegistry[]
-  blotter_as_complainant BlotterCase[]      @relation("Complainant")
-  blotter_as_respondent  BlotterCase[]      @relation("Respondent")
-  official              BrgyOfficial?
-  health_records        HealthRecord[]
-  vaccinations          Vaccination[]
-  equipment_borrowings  EquipmentBorrowing[]
-  barangay_ids          BarangayId[]
+  household              Household?          @relation("HouseholdMembers", fields: [household_id], references: [id])
+  purok                  Purok?              @relation(fields: [purok_id], references: [id])
+  headed_household       Household?          @relation("HouseholdHead")
+  certificates           Certificate[]
+  special_registries     SpecialRegistry[]
+  blotter_as_complainant BlotterCase[]       @relation("Complainant")
+  blotter_as_respondent  BlotterCase[]       @relation("Respondent")
+  official               BrgyOfficial?
+  health_records         HealthRecord[]
+  vaccinations           Vaccination[]
+  equipment_borrowings   EquipmentBorrowing[]
+  barangay_ids           BarangayId[]
 }
 
 enum CivilStatus {
@@ -116,13 +124,11 @@ model Certificate {
   purpose          String
   issued_at        DateTime        @default(now())
   flagged_manual   Boolean         @default(false)
-
-  // manual entry fields (when resident not in system)
   manual_name      String?
   manual_address   String?
 
-  resident         Resident? @relation(fields: [resident_id], references: [id])
-  issuer           User      @relation(fields: [issued_by], references: [id])
+  resident Resident? @relation(fields: [resident_id], references: [id])
+  issuer   User      @relation(fields: [issued_by], references: [id])
 }
 
 enum CertificateType {
@@ -140,24 +146,24 @@ enum CertificateType {
 // ─── BLOTTER ─────────────────────────────────────────────────
 
 model BlotterCase {
-  id                 Int      @id @default(autoincrement())
-  case_number        String   @unique
-  complainant_id     Int?
-  complainant_name   String
+  id                  Int           @id @default(autoincrement())
+  case_number         String        @unique
+  complainant_id      Int?
+  complainant_name    String
   complainant_contact String?
   complainant_address String?
-  respondent_id      Int?
-  respondent_name    String
-  incident_narrative String
-  incident_date      DateTime
-  hearing_date       DateTime?
-  status             BlotterStatus @default(FILED)
-  escalated          Boolean  @default(false)
-  created_at         DateTime @default(now())
+  respondent_id       Int?
+  respondent_name     String
+  incident_narrative  String
+  incident_date       DateTime
+  hearing_date        DateTime?
+  status              BlotterStatus @default(FILED)
+  escalated           Boolean       @default(false)
+  created_at          DateTime      @default(now())
 
-  complainant        Resident? @relation("Complainant", fields: [complainant_id], references: [id])
-  respondent         Resident? @relation("Respondent", fields: [respondent_id], references: [id])
-  updates            BlotterUpdate[]
+  complainant Resident?     @relation("Complainant", fields: [complainant_id], references: [id])
+  respondent  Resident?     @relation("Respondent", fields: [respondent_id], references: [id])
+  updates     BlotterUpdate[]
 }
 
 enum BlotterStatus {
@@ -168,15 +174,15 @@ enum BlotterStatus {
 }
 
 model BlotterUpdate {
-  id              Int      @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   blotter_case_id Int
   updated_by      Int
   notes           String
   new_status      BlotterStatus?
-  updated_at      DateTime @default(now())
+  updated_at      DateTime      @default(now())
 
-  blotter_case    BlotterCase @relation(fields: [blotter_case_id], references: [id])
-  updater         User        @relation(fields: [updated_by], references: [id])
+  blotter_case BlotterCase @relation(fields: [blotter_case_id], references: [id])
+  updater      User        @relation(fields: [updated_by], references: [id])
 }
 
 // ─── BARANGAY OFFICIALS ──────────────────────────────────────
@@ -185,12 +191,14 @@ model BrgyOfficial {
   id               Int      @id @default(autoincrement())
   resident_id      Int      @unique
   position         String
+  contact_no       String?
+  photo_url        String?
   purok_assignment String?
   term_start       DateTime
   term_end         DateTime?
   is_active        Boolean  @default(true)
 
-  resident         Resident @relation(fields: [resident_id], references: [id])
+  resident Resident @relation(fields: [resident_id], references: [id])
 }
 
 // ─── SPECIAL REGISTRIES ──────────────────────────────────────
@@ -203,7 +211,7 @@ model SpecialRegistry {
   is_4ps_beneficiary Boolean      @default(false)
   registered_at      DateTime     @default(now())
 
-  resident           Resident @relation(fields: [resident_id], references: [id])
+  resident Resident @relation(fields: [resident_id], references: [id])
 }
 
 enum RegistryType {
@@ -222,8 +230,8 @@ model HealthRecord {
   recorded_by Int
   recorded_at DateTime @default(now())
 
-  resident    Resident @relation(fields: [resident_id], references: [id])
-  recorder    User     @relation(fields: [recorded_by], references: [id])
+  resident Resident @relation(fields: [resident_id], references: [id])
+  recorder User     @relation(fields: [recorded_by], references: [id])
 }
 
 model Vaccination {
@@ -234,22 +242,22 @@ model Vaccination {
   recorded_by  Int
   created_at   DateTime @default(now())
 
-  resident     Resident @relation(fields: [resident_id], references: [id])
-  recorder     User     @relation(fields: [recorded_by], references: [id])
+  resident Resident @relation(fields: [resident_id], references: [id])
+  recorder User     @relation(fields: [recorded_by], references: [id])
 }
 
 // ─── FINANCIAL RECORDS ───────────────────────────────────────
 
 model FinancialRecord {
-  id               Int             @id @default(autoincrement())
+  id               Int           @id @default(autoincrement())
   transaction_type FinancialType
-  amount           Decimal         @db.Decimal(12, 2)
+  amount           Decimal       @db.Decimal(12, 2)
   description      String
   transaction_date DateTime
   recorded_by      Int
-  created_at       DateTime        @default(now())
+  created_at       DateTime      @default(now())
 
-  recorder         User @relation(fields: [recorded_by], references: [id])
+  recorder User @relation(fields: [recorded_by], references: [id])
 }
 
 enum FinancialType {
@@ -260,15 +268,15 @@ enum FinancialType {
 // ─── EQUIPMENT ───────────────────────────────────────────────
 
 model Equipment {
-  id            Int              @id @default(autoincrement())
+  id            Int             @id @default(autoincrement())
   name          String
-  quantity      Int              @default(1)
+  quantity      Int             @default(1)
   condition     String?
-  status        EquipmentStatus  @default(SERVICEABLE)
+  status        EquipmentStatus @default(SERVICEABLE)
   date_acquired DateTime?
-  created_at    DateTime         @default(now())
+  created_at    DateTime        @default(now())
 
-  borrowings    EquipmentBorrowing[]
+  borrowings EquipmentBorrowing[]
 }
 
 enum EquipmentStatus {
@@ -290,9 +298,9 @@ model EquipmentBorrowing {
   recorded_by      Int
   created_at       DateTime @default(now())
 
-  equipment        Equipment @relation(fields: [equipment_id], references: [id])
-  resident         Resident? @relation(fields: [resident_id], references: [id])
-  recorder         User      @relation(fields: [recorded_by], references: [id])
+  equipment Equipment @relation(fields: [equipment_id], references: [id])
+  resident  Resident? @relation(fields: [resident_id], references: [id])
+  recorder  User      @relation(fields: [recorded_by], references: [id])
 }
 
 // ─── MEETING RECORDS ─────────────────────────────────────────
@@ -305,7 +313,7 @@ model MeetingRecord {
   recorded_by  Int
   created_at   DateTime    @default(now())
 
-  recorder     User @relation(fields: [recorded_by], references: [id])
+  recorder User @relation(fields: [recorded_by], references: [id])
 }
 
 enum MeetingType {
@@ -322,8 +330,8 @@ model BarangayId {
   issued_date DateTime @default(now())
   issued_by   Int
 
-  resident    Resident @relation(fields: [resident_id], references: [id])
-  issuer      User     @relation(fields: [issued_by], references: [id])
+  resident Resident @relation(fields: [resident_id], references: [id])
+  issuer   User     @relation(fields: [issued_by], references: [id])
 }
 
 // ─── AUDIT LOGS ──────────────────────────────────────────────
@@ -337,7 +345,7 @@ model AuditLog {
   details        String?
   performed_at   DateTime @default(now())
 
-  user           User @relation(fields: [user_id], references: [id])
+  user User @relation(fields: [user_id], references: [id])
 }
 
 // ─── BACKUPS ─────────────────────────────────────────────────
@@ -348,7 +356,7 @@ model Backup {
   backup_date    DateTime @default(now())
   file_reference String?
 
-  trigger        User @relation(fields: [triggered_by], references: [id])
+  trigger User @relation(fields: [triggered_by], references: [id])
 }
 
 // ─── SYSTEM SETTINGS ─────────────────────────────────────────

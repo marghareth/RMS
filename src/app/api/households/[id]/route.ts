@@ -12,7 +12,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     include: {
       purok: true,
       household_head: true,
-      members: true,
+      members: {
+        where: { is_archived: false },
+        orderBy: { lname: "asc" },
+      },
     },
   });
 
@@ -31,8 +34,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     where: { id },
     data: {
       purok_id: body.purok_id,
-      household_head_id: body.household_head_id,
+      household_head_id: body.household_head_id ?? null,
       address: body.address,
+      housing_type: body.housing_type ?? null,
+      water_source: body.water_source ?? null,
+      comfort_room: body.comfort_room ?? null,
     },
   });
 
@@ -41,7 +47,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     action: "UPDATE",
     table_affected: "Household",
     record_id: id,
-    details: `Updated household: ${household.address}`,
+    details: `Updated household ${household.household_no}`,
   });
 
   return NextResponse.json(household);
@@ -52,14 +58,14 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const id = parseInt(params.id);
-  await prisma.household.delete({ where: { id } });
+  const household = await prisma.household.delete({ where: { id } });
 
   await logAudit({
     user_id: parseInt(auth.session.user.id),
     action: "DELETE",
     table_affected: "Household",
     record_id: id,
-    details: `Deleted household ID: ${id}`,
+    details: `Deleted household ${household.household_no}`,
   });
 
   return NextResponse.json({ message: "Household deleted" });

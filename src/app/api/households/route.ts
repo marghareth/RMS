@@ -3,6 +3,13 @@ import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 
+// ── Generate household number e.g. HHNP100000001 ──────────────────────────────
+async function generateHouseholdNo(): Promise<string> {
+  const count = await prisma.household.count();
+  const padded = String(count + 1).padStart(9, "0");
+  return `HHNP1${padded}`;
+}
+
 export async function GET(req: NextRequest) {
   const auth = await requirePermission("households:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
@@ -38,12 +45,17 @@ export async function POST(req: NextRequest) {
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await req.json();
+  const household_no = await generateHouseholdNo();
 
   const household = await prisma.household.create({
     data: {
+      household_no,
       purok_id: body.purok_id,
-      household_head_id: body.household_head_id,
+      household_head_id: body.household_head_id ?? null,
       address: body.address,
+      housing_type: body.housing_type ?? null,
+      water_source: body.water_source ?? null,
+      comfort_room: body.comfort_room ?? null,
     },
   });
 
@@ -52,7 +64,7 @@ export async function POST(req: NextRequest) {
     action: "CREATE",
     table_affected: "Household",
     record_id: household.id,
-    details: `Created household at: ${household.address}`,
+    details: `Created household ${household.household_no} at: ${household.address}`,
   });
 
   return NextResponse.json(household, { status: 201 });
