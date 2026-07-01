@@ -9,7 +9,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const registry = await prisma.specialRegistry.findUnique({
     where: { id: parseInt(params.id) },
-    include: { resident: { include: { purok: true } } },
+    include: {
+      resident: {
+        include: {
+          purok: true,
+          household: { include: { _count: { select: { members: true } } } },
+        },
+      },
+    },
   });
 
   if (!registry) return NextResponse.json({ error: "Not found" }, { status: 404 });
