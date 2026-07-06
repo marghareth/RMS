@@ -127,7 +127,7 @@ export default function CertificateDetailPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
         {/* ── Left: certificate details ── */}
         <div className="space-y-5 lg:col-span-2">
           <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
@@ -138,7 +138,7 @@ export default function CertificateDetailPage() {
               <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937]">Applicant</p>
             </div>
             {certificate.resident ? (
-              <>
+              <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
                 <InfoRow icon={User} label="Full Name" value={residentFullName(certificate.resident)} />
                 <InfoRow
                   icon={Calendar}
@@ -147,13 +147,13 @@ export default function CertificateDetailPage() {
                 />
                 <InfoRow icon={ShieldCheck} label="Purok" value={certificate.resident.purok_name} />
                 <InfoRow icon={FileText} label="Resident Record" value={`Linked · RBI #${certificate.resident.id}`} />
-              </>
+              </div>
             ) : (
-              <>
+              <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
                 <InfoRow icon={User} label="Full Name" value={certificate.manual_name} />
                 <InfoRow icon={ShieldCheck} label="Address" value={certificate.manual_address} />
                 <InfoRow icon={FileText} label="Resident Record" value="Not linked / walk-in entry" />
-              </>
+              </div>
             )}
           </div>
 
@@ -172,7 +172,7 @@ export default function CertificateDetailPage() {
             </div>
             {!certificate.resident ? (
               <p className="py-3 text-center text-[12px] text-[#9CA3AF]">
-                Walk-in entries aren't linked to a resident record, so no issuance history is available.
+                Walk-in entries aren&apos;t linked to a resident record, so no issuance history is available.
               </p>
             ) : residentHistory.length === 0 ? (
               <p className="py-3 text-center text-[12px] text-[#9CA3AF]">No other certificates issued yet.</p>

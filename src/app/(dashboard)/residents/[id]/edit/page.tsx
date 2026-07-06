@@ -140,7 +140,7 @@ export default function EditResidentPage() {
       setHouseholds(hhData.households ?? []);
     }).catch(() => router.push("/residents"))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, router]);
 
   async function handleSave() {
     if (!form.fname || !form.lname || !form.birthdate || !form.sex || !form.civil_status) {

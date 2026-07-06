@@ -7,16 +7,17 @@ import type { LucideIcon } from "lucide-react";
 import NavItem from "./NavItem";
 
 interface NavChild {
-  label: string;
-  href: string;
+  label:    string;
+  href:     string;
   addHref?: string;
+  exact?:   boolean;
 }
 
 interface NavGroupProps {
-  label: string;
-  icon: LucideIcon;
-  basePath: string;
-  items: NavChild[];
+  label:        string;
+  icon:         LucideIcon;
+  basePath:     string;
+  items:        NavChild[];
   defaultOpen?: boolean;
 }
 
@@ -27,12 +28,12 @@ export default function NavGroup({
   items,
   defaultOpen = false,
 }: NavGroupProps) {
-  const pathname = usePathname();
+  const pathname       = usePathname();
   const hasActiveChild = pathname === basePath || pathname.startsWith(basePath + "/");
-  const [open, setOpen] = useState(hasActiveChild || defaultOpen);
+  const [open, setOpen] = useState(() => hasActiveChild || defaultOpen);
 
-  // Auto-expand the group whenever navigation lands on one of its children.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (hasActiveChild) setOpen(true);
   }, [hasActiveChild]);
 
@@ -78,6 +79,7 @@ export default function NavGroup({
                 label={child.label}
                 href={child.href}
                 addHref={child.addHref}
+                exact={child.exact}
                 indent
               />
             ))}

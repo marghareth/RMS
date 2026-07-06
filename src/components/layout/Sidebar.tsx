@@ -27,8 +27,8 @@ const mainNav = [
     basePath: "/residents",
     type: "group" as const,
     children: [
-      { label: "Residents", href: "/residents", addHref: "/residents/new" },
-      { label: "Households", href: "/households", addHref: "/households/new" },
+      { label: "Residents", href: "/residents", addHref: "/residents/new", exact: true },
+      { label: "Households", href: "/households", addHref: "/households/new", exact: true },
     ],
   },
   {
@@ -48,7 +48,7 @@ const mainNav = [
     basePath: "/certificates",
     type: "group" as const,
     children: [
-      { label: "All Certificates", href: "/certificates", addHref: "/certificates/new" },
+      { label: "All Certificates", href: "/certificates", addHref: "/certificates/new", exact: true },
       { label: "Barangay ID", href: "/barangay_id", addHref: "/barangay_id/new" },
     ],
   },
@@ -65,7 +65,7 @@ const mainNav = [
     basePath: "/health",
     type: "group" as const,
     children: [
-      { label: "Health Records", href: "/health", addHref: "/health/new" },
+      { label: "Health Records", href: "/health", addHref: "/health/new", exact: true },
       { label: "Vaccinations", href: "/health/vaccinations", addHref: "/health/vaccinations/new" },
     ],
   },
@@ -75,7 +75,7 @@ const mainNav = [
     basePath: "/equipment",
     type: "group" as const,
     children: [
-      { label: "Equipment", href: "/equipment", addHref: "/equipment/new" },
+      { label: "Equipment", href: "/equipment", addHref: "/equipment/new", exact: true },
       { label: "Borrow Item", href: "/equipment/borrow" },
       { label: "Return Item", href: "/equipment/return" },
     ],
@@ -86,7 +86,7 @@ const mainNav = [
     basePath: "/financial",
     type: "group" as const,
     children: [
-      { label: "Records", href: "/financial", addHref: "/financial/new" },
+      { label: "Records", href: "/financial", addHref: "/financial/new", exact: true },
       { label: "Summary", href: "/financial/summary" },
     ],
   },
@@ -110,7 +110,7 @@ const mainNav = [
     basePath: "/reports",
     type: "group" as const,
     children: [
-      { label: "Overview", href: "/reports" },
+      { label: "Overview", href: "/reports", exact: true },
       { label: "Population", href: "/reports/population" },
       { label: "Registries", href: "/reports/registries" },
       { label: "Certificates", href: "/reports/certificates" },
