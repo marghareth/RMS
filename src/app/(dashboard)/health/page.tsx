@@ -7,6 +7,7 @@ import {
   ChevronRight, User, CalendarDays,
   Activity, ShieldCheck,
 } from "lucide-react";
+import StatCard from "@/components/shared/StatCard";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Resident { id: number; fname: string; lname: string; purok?: { name: string } | null }
@@ -58,24 +59,6 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 function fullName(r: Resident) { return `${r.lname}, ${r.fname}`; }
-
-// ─── STAT CARD ────────────────────────────────────────────────────────────────
-function StatCard({ label, value, icon: Icon, accent, bg }: {
-  label: string; value: number | string;
-  icon: any; accent: string; bg: string;
-}) {
-  return (
-    <div className="bg-white rounded-xl border border-[#E9EAEC] px-5 py-4 flex items-center gap-4">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${bg}`}>
-        <Icon size={18} className={accent} />
-      </div>
-      <div>
-        <p className="text-[24px] font-black leading-none text-[#1F2937]">{value}</p>
-        <p className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-widest mt-0.5">{label}</p>
-      </div>
-    </div>
-  );
-}
 
 // ─── RECORD TYPE BADGE ────────────────────────────────────────────────────────
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
@@ -182,10 +165,10 @@ export default function HealthPage() {
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-4 gap-4">
-        <StatCard label="Total Health Records" value={MOCK_HEALTH.length}       icon={Heart}       accent="text-red-500"    bg="bg-red-50"    />
-        <StatCard label="Vaccinations Given"   value={MOCK_VACCINATIONS.length} icon={Syringe}     accent="text-[#3B82F6]" bg="bg-blue-50"   />
-        <StatCard label="Active Cases"         value={5}                         icon={Activity}    accent="text-amber-600" bg="bg-amber-50"  />
-        <StatCard label="Residents Covered"    value={8}                         icon={ShieldCheck} accent="text-green-600" bg="bg-green-50"  />
+        <StatCard label="Total Health Records" value={MOCK_HEALTH.length}       sub="All recorded conditions" icon={Heart}       color="red" />
+        <StatCard label="Vaccinations Given"    value={MOCK_VACCINATIONS.length} sub="Doses administered"      icon={Syringe}     color="blue" />
+        <StatCard label="Active Cases"          value={5}                        sub="Ongoing treatment"       icon={Activity}    color="amber" />
+        <StatCard label="Residents Covered"     value={8}                        sub="Unique residents"        icon={ShieldCheck} color="green" />
       </div>
 
       {/* ── Main content ── */}

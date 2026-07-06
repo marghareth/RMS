@@ -77,6 +77,11 @@ export function getMockRegistries(): RegistryEntry[] {
   return readRegistriesFromStorage();
 }
 
+export function nextMockRegistryId(): number {
+  const registries = getMockRegistries();
+  return registries.reduce((max, entry) => Math.max(max, entry.id), 0) + 1;
+}
+
 export function getMockRegistryById(id: number) {
   return getMockRegistries().find((entry) => entry.id === id) ?? null;
 }
