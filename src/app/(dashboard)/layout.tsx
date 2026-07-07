@@ -17,7 +17,7 @@ export default function DashboardLayout({
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Topbar onMenuClick={() => setCollapsed(!collapsed)} />
         <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-[1280px] px-6 py-6 sm:px-8 sm:py-8">
+          <div className="mx-auto w-full max-w-7xl px-6 py-6 sm:px-8 sm:py-8">
             {children}
           </div>
         </main>

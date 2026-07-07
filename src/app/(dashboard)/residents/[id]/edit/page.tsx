@@ -3,11 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
+import {
+  getMockResidents,
+  getMockPuroks,
+  updateMockResident,
+  type Resident,
+} from "@/lib/mockResidents";
 
-// ── TYPES ─────────────────────────────────────────────────────────────────────
-interface Purok { id: number; name: string }
-interface Household { id: number; household_no: string; address: string }
-
+// ─── TYPES ────────────────────────────────────────────────────────────────────
 interface ResidentForm {
   fname:                  string;
   lname:                  string;
@@ -29,6 +32,29 @@ interface ResidentForm {
   household_id:           string;
 }
 
+function buildForm(r: Resident): ResidentForm {
+  return {
+    fname:                  r.fname                  ?? "",
+    lname:                  r.lname                  ?? "",
+    mname:                  r.mname                  ?? "",
+    name_extension:         r.name_extension         ?? "",
+    birthdate:              r.birthdate ? r.birthdate.split("T")[0] : "",
+    place_of_birth:         r.place_of_birth         ?? "",
+    sex:                    r.sex                    ?? "",
+    civil_status:           r.civil_status           ?? "",
+    citizenship:            r.citizenship            ?? "Filipino",
+    religion:               r.religion               ?? "",
+    nationality:            r.nationality            ?? "Filipino",
+    employment_status:      r.employment_status      ?? "",
+    educational_attainment: r.educational_attainment ?? "",
+    occupation:             r.occupation             ?? "",
+    income_bracket:         r.income_bracket         ?? "",
+    sector:                 r.sector                 ?? "",
+    purok_id:               r.purok_id     ? String(r.purok_id)     : "",
+    household_id:           r.household_id ? String(r.household_id) : "",
+  };
+}
+
 const EMPTY: ResidentForm = {
   fname: "", lname: "", mname: "", name_extension: "",
   birthdate: "", place_of_birth: "", sex: "", civil_status: "",
@@ -37,7 +63,7 @@ const EMPTY: ResidentForm = {
   income_bracket: "", sector: "", purok_id: "", household_id: "",
 };
 
-// ── FIELD COMPONENTS ──────────────────────────────────────────────────────────
+// ─── FIELD COMPONENTS ─────────────────────────────────────────────────────────
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
     <label className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wide block mb-1">
@@ -46,7 +72,9 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
   );
 }
 
-function TextInput({ label, value, onChange, placeholder, required, type = "text" }: {
+function TextInput({
+  label, value, onChange, placeholder, required, type = "text",
+}: {
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; required?: boolean; type?: string;
 }) {
@@ -58,13 +86,15 @@ function TextInput({ label, value, onChange, placeholder, required, type = "text
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
-        className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] text-[#1F2937] placeholder:text-[#D1D5DB]"
+        className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] placeholder:text-[#D1D5DB] transition bg-white"
       />
     </div>
   );
 }
 
-function SelectInput({ label, value, onChange, options, required }: {
+function SelectInput({
+  label, value, onChange, options, required,
+}: {
   label: string; value: string; onChange: (v: string) => void;
   options: { value: string; label: string }[]; required?: boolean;
 }) {
@@ -75,7 +105,7 @@ function SelectInput({ label, value, onChange, options, required }: {
         <select
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full appearance-none text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] text-[#1F2937] pr-8 bg-white"
+          className="w-full appearance-none text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] pr-8 bg-white transition"
         >
           <option value="">— Select —</option>
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -95,52 +125,38 @@ function SectionCard({ title, children }: { title: string; children: React.React
   );
 }
 
-// ── MAIN PAGE ─────────────────────────────────────────────────────────────────
+// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function EditResidentPage() {
-  const router = useRouter();
-  const { id } = useParams<{ id: string }>();
+  const router  = useRouter();
+  const { id }  = useParams<{ id: string }>();
+  const puroks  = getMockPuroks();
 
-  const [form,       setForm]       = useState<ResidentForm>(EMPTY);
-  const [puroks,     setPuroks]     = useState<Purok[]>([]);
-  const [households, setHouseholds] = useState<Household[]>([]);
-  const [loading,    setLoading]    = useState(true);
-  const [saving,     setSaving]     = useState(false);
-  const [error,      setError]      = useState("");
+  // ── Lazy initializers — no setState calls inside useEffect ─────────────────
+  // The resident and form are derived synchronously at mount time from the mock
+  // store. If the resident doesn't exist we render null and let the effect below
+  // handle the redirect (effects can call router.push safely).
 
-  const set = (k: keyof ResidentForm, v: string) => setForm(p => ({ ...p, [k]: v }));
+  const [resident] = useState<Resident | null>(
+    () => getMockResidents().find(r => String(r.id) === String(id)) ?? null
+  );
 
-  // Load resident, puroks, households
+  const [form,   setForm]   = useState<ResidentForm>(
+    () => {
+      const r = getMockResidents().find(r => String(r.id) === String(id));
+      return r ? buildForm(r) : EMPTY;
+    }
+  );
+
+  const [saving, setSaving] = useState(false);
+  const [error,  setError]  = useState("");
+
+  // ── Redirect only — no setState here ──────────────────────────────────────
   useEffect(() => {
-    Promise.all([
-      fetch(`/api/residents/${id}`).then(r => r.json()),
-      fetch("/api/puroks").then(r => r.json()),
-      fetch("/api/households?limit=100").then(r => r.json()),
-    ]).then(([resident, puroksData, hhData]) => {
-      setForm({
-        fname:                  resident.fname                  ?? "",
-        lname:                  resident.lname                  ?? "",
-        mname:                  resident.mname                  ?? "",
-        name_extension:         resident.name_extension         ?? "",
-        birthdate:              resident.birthdate ? resident.birthdate.split("T")[0] : "",
-        place_of_birth:         resident.place_of_birth         ?? "",
-        sex:                    resident.sex                    ?? "",
-        civil_status:           resident.civil_status           ?? "",
-        citizenship:            resident.citizenship            ?? "Filipino",
-        religion:               resident.religion               ?? "",
-        nationality:            resident.nationality            ?? "Filipino",
-        employment_status:      resident.employment_status      ?? "",
-        educational_attainment: resident.educational_attainment ?? "",
-        occupation:             resident.occupation             ?? "",
-        income_bracket:         resident.income_bracket         ?? "",
-        sector:                 resident.sector                 ?? "",
-        purok_id:               resident.purok_id     ? String(resident.purok_id)     : "",
-        household_id:           resident.household_id ? String(resident.household_id) : "",
-      });
-      setPuroks(puroksData);
-      setHouseholds(hhData.households ?? []);
-    }).catch(() => router.push("/residents"))
-      .finally(() => setLoading(false));
-  }, [id, router]);
+    if (!resident) router.push("/residents");
+  }, [resident, router]);
+
+  const set = (k: keyof ResidentForm, v: string) =>
+    setForm(prev => ({ ...prev, [k]: v }));
 
   async function handleSave() {
     if (!form.fname || !form.lname || !form.birthdate || !form.sex || !form.civil_status) {
@@ -151,6 +167,7 @@ export default function EditResidentPage() {
     setError("");
 
     try {
+      /* ── Real API (commented out until Supabase is connected) ────────────────
       const res = await fetch(`/api/residents/${id}`, {
         method:  "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -160,27 +177,45 @@ export default function EditResidentPage() {
           household_id: form.household_id ? parseInt(form.household_id) : null,
         }),
       });
-
       if (!res.ok) throw new Error("Failed to save changes");
+      ─────────────────────────────────────────────────────────────────────────── */
+
+      // ── Mock: persist to mock store ────────────────────────────────────────
+      updateMockResident(Number(id), {
+        fname:                  form.fname,
+        lname:                  form.lname,
+        mname:                  form.mname                  || null,
+        name_extension:         form.name_extension         || null,
+        birthdate:              form.birthdate,
+        place_of_birth:         form.place_of_birth         || null,
+        sex:                    form.sex as Resident["sex"],
+        civil_status:           form.civil_status as Resident["civil_status"],
+        citizenship:            form.citizenship,
+        religion:               form.religion               || null,
+        nationality:            form.nationality,
+        employment_status:      form.employment_status      || null,
+        educational_attainment: form.educational_attainment || null,
+        occupation:             form.occupation             || null,
+        income_bracket:         form.income_bracket         || null,
+        sector:                 form.sector                 || null,
+        purok_id:               form.purok_id     ? parseInt(form.purok_id)     : null,
+        household_id:           form.household_id ? parseInt(form.household_id) : null,
+        updated_at:             new Date().toISOString(),
+      });
+
       router.push(`/residents/${id}`);
     } catch (e: any) {
       setError(e.message || "Something went wrong.");
-    } finally {
       setSaving(false);
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <div className="w-7 h-7 border-2 border-[#3B82F6] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  // Resident not found — effect will redirect, show nothing meanwhile
+  if (!resident) return null;
 
   return (
     <div>
-      {/* Page header */}
+      {/* ── Page header ── */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <button
@@ -189,20 +224,27 @@ export default function EditResidentPage() {
           >
             <ArrowLeft size={18} className="text-[#6B7280]" />
           </button>
-          <h1 className="text-[16px] font-black text-[#1F2937] uppercase tracking-wide">Edit Resident</h1>
+          <div>
+            <h1 className="text-[16px] font-black text-[#1F2937] uppercase tracking-wide">
+              Edit Resident
+            </h1>
+            <p className="text-[11px] text-[#9CA3AF] mt-0.5">
+              {resident.lname}, {resident.fname} · BM{String(resident.id).padStart(7, "0")}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
-          {error && <p className="text-red-500 text-[12px]">{error}</p>}
+          {error && <p className="text-[12px] text-red-500 font-medium">{error}</p>}
           <button
             onClick={() => router.push(`/residents/${id}`)}
-            className="px-4 py-2 rounded-lg border border-[#E9EAEC] text-[12px] font-bold text-[#6B7280] hover:bg-[#F4F5F7] transition"
+            className="px-4 py-2 rounded-xl border border-[#E9EAEC] text-[12px] font-bold text-[#6B7280] hover:bg-[#F4F5F7] transition"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-5 py-2 rounded-lg bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] disabled:opacity-50 transition"
+            className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] disabled:opacity-50 transition shadow-sm"
           >
             <Save size={13} />
             {saving ? "Saving…" : "Save Changes"}
@@ -210,14 +252,14 @@ export default function EditResidentPage() {
         </div>
       </div>
 
-      {/* Form sections */}
+      {/* ── Form sections ── */}
       <div className="grid grid-cols-2 gap-5">
 
-        {/* Personal */}
+        {/* Personal Information */}
         <SectionCard title="Personal Information">
           <div className="grid grid-cols-3 gap-3">
-            <TextInput label="Last Name"  value={form.lname} onChange={v => set("lname", v)} required />
-            <TextInput label="First Name" value={form.fname} onChange={v => set("fname", v)} required />
+            <TextInput label="Last Name"   value={form.lname} onChange={v => set("lname", v)} required />
+            <TextInput label="First Name"  value={form.fname} onChange={v => set("fname", v)} required />
             <TextInput label="Middle Name" value={form.mname} onChange={v => set("mname", v)} />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -225,39 +267,61 @@ export default function EditResidentPage() {
               label="Name Extension"
               value={form.name_extension}
               onChange={v => set("name_extension", v)}
-              options={[{ value: "Jr.", label: "Jr." }, { value: "Sr.", label: "Sr." }, { value: "II", label: "II" }, { value: "III", label: "III" }, { value: "IV", label: "IV" }]}
+              options={[
+                { value: "Jr.", label: "Jr." }, { value: "Sr.", label: "Sr." },
+                { value: "II",  label: "II"  }, { value: "III", label: "III" },
+                { value: "IV",  label: "IV"  },
+              ]}
             />
-            <TextInput label="Date of Birth" value={form.birthdate} onChange={v => set("birthdate", v)} type="date" required />
+            <TextInput
+              label="Date of Birth"
+              value={form.birthdate}
+              onChange={v => set("birthdate", v)}
+              type="date"
+              required
+            />
           </div>
-          <TextInput label="Place of Birth" value={form.place_of_birth} onChange={v => set("place_of_birth", v)} />
+          <TextInput
+            label="Place of Birth"
+            value={form.place_of_birth}
+            onChange={v => set("place_of_birth", v)}
+          />
           <div className="grid grid-cols-2 gap-3">
             <SelectInput
               label="Sex" value={form.sex} onChange={v => set("sex", v)} required
-              options={[{ value: "MALE", label: "Male" }, { value: "FEMALE", label: "Female" }]}
+              options={[
+                { value: "MALE",   label: "Male"   },
+                { value: "FEMALE", label: "Female" },
+              ]}
             />
             <SelectInput
               label="Civil Status" value={form.civil_status} onChange={v => set("civil_status", v)} required
               options={[
-                { value: "SINGLE", label: "Single" }, { value: "MARRIED", label: "Married" },
-                { value: "WIDOWED", label: "Widowed" }, { value: "SEPARATED", label: "Separated" }, { value: "LIVE_IN", label: "Live-in" },
+                { value: "SINGLE",    label: "Single"    },
+                { value: "MARRIED",   label: "Married"   },
+                { value: "WIDOWED",   label: "Widowed"   },
+                { value: "SEPARATED", label: "Separated" },
+                { value: "LIVE_IN",   label: "Live-in"   },
               ]}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <TextInput label="Citizenship"  value={form.citizenship}  onChange={v => set("citizenship",  v)} />
-            <TextInput label="Nationality"  value={form.nationality}  onChange={v => set("nationality",  v)} />
+            <TextInput label="Citizenship" value={form.citizenship} onChange={v => set("citizenship", v)} />
+            <TextInput label="Nationality" value={form.nationality} onChange={v => set("nationality", v)} />
           </div>
           <TextInput label="Religion" value={form.religion} onChange={v => set("religion", v)} />
         </SectionCard>
 
-        {/* Socio-economic */}
+        {/* Socio-Economic */}
         <SectionCard title="Socio-Economic">
           <SelectInput
             label="Employment Status" value={form.employment_status} onChange={v => set("employment_status", v)}
             options={[
-              { value: "EMPLOYED",   label: "Employed"   }, { value: "UNEMPLOYED", label: "Unemployed" },
-              { value: "SELF_EMPLOYED", label: "Self-employed" }, { value: "STUDENT", label: "Student" },
-              { value: "RETIRED",    label: "Retired"    },
+              { value: "EMPLOYED",      label: "Employed"      },
+              { value: "UNEMPLOYED",    label: "Unemployed"    },
+              { value: "SELF_EMPLOYED", label: "Self-employed" },
+              { value: "STUDENT",       label: "Student"       },
+              { value: "RETIRED",       label: "Retired"       },
             ]}
           />
           <SelectInput
@@ -276,28 +340,32 @@ export default function EditResidentPage() {
             label="Occupation" value={form.occupation} onChange={v => set("occupation", v)}
             options={[
               { value: "EMPLOYED",   label: "Employed"   }, { value: "STUDENT",   label: "Student"   },
-              { value: "TEACHER",    label: "Teacher"    }, { value: "POLICE",    label: "Police"    },
-              { value: "FARMER",     label: "Farmer"     }, { value: "VENDOR",    label: "Vendor"    },
-              { value: "NURSE",      label: "Nurse"      }, { value: "HOUSEWIFE", label: "Housewife" },
-              { value: "UNEMPLOYED", label: "Unemployed" }, { value: "OTHER",     label: "Other"     },
+              { value: "TEACHER",    label: "Teacher"    }, { value: "POLICE",     label: "Police"    },
+              { value: "FARMER",     label: "Farmer"     }, { value: "VENDOR",     label: "Vendor"    },
+              { value: "NURSE",      label: "Nurse"      }, { value: "HOUSEWIFE",  label: "Housewife" },
+              { value: "UNEMPLOYED", label: "Unemployed" }, { value: "OTHER",      label: "Other"     },
             ]}
           />
           <SelectInput
             label="Income Bracket" value={form.income_bracket} onChange={v => set("income_bracket", v)}
             options={[
-              { value: "BELOW_5K",    label: "Below ₱5,000"          },
-              { value: "5K_10K",      label: "₱5,000 – ₱10,000"     },
-              { value: "10K_20K",     label: "₱10,000 – ₱20,000"    },
-              { value: "20K_40K",     label: "₱20,000 – ₱40,000"    },
-              { value: "ABOVE_40K",   label: "Above ₱40,000"         },
+              { value: "BELOW_5K",  label: "Below ₱5,000"       },
+              { value: "5K_10K",    label: "₱5,000 – ₱10,000"  },
+              { value: "10K_20K",   label: "₱10,000 – ₱20,000" },
+              { value: "20K_40K",   label: "₱20,000 – ₱40,000" },
+              { value: "ABOVE_40K", label: "Above ₱40,000"      },
             ]}
           />
           <SelectInput
             label="Sector" value={form.sector} onChange={v => set("sector", v)}
             options={[
-              { value: "SENIOR", label: "Senior Citizen" }, { value: "PWD",    label: "PWD"            },
-              { value: "YOUTH",  label: "Youth"          }, { value: "4PS",    label: "4Ps Beneficiary" },
-              { value: "N/A",    label: "N/A"            },
+              { value: "SENIOR",    label: "Senior Citizen"  },
+              { value: "PWD",       label: "PWD"             },
+              { value: "YOUTH",     label: "Youth"           },
+              { value: "4PS",       label: "4Ps Beneficiary" },
+              { value: "EDUCATION", label: "Education"       },
+              { value: "TRANSPORT", label: "Transport"       },
+              { value: "N/A",       label: "N/A"             },
             ]}
           />
         </SectionCard>
@@ -305,13 +373,18 @@ export default function EditResidentPage() {
         {/* Address & Household */}
         <SectionCard title="Address & Household">
           <SelectInput
-            label="Purok" value={form.purok_id} onChange={v => set("purok_id", v)}
+            label="Purok"
+            value={form.purok_id}
+            onChange={v => set("purok_id", v)}
             options={puroks.map(p => ({ value: String(p.id), label: p.name }))}
           />
+          {/* Household selector — uncomment when API is connected
           <SelectInput
-            label="Household" value={form.household_id} onChange={v => set("household_id", v)}
+            label="Household"
+            value={form.household_id}
+            onChange={v => set("household_id", v)}
             options={households.map(h => ({ value: String(h.id), label: `${h.household_no} — ${h.address}` }))}
-          />
+          /> */}
         </SectionCard>
 
       </div>

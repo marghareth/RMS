@@ -182,7 +182,10 @@ export default function BlotterCaseDetailPage() {
             Filed {formatISODate(blotterCase.created_at)}
           </p>
         </div>
-        <button className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-4 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7]">
+        <button
+          onClick={() => window.print()}
+          className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-4 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7] print:hidden"
+        >
           <Printer size={14} />
           Print Case Record
         </button>

@@ -3,11 +3,17 @@
 import { useState } from "react";
 import { Menu, Search, Bell } from "lucide-react";
 
-export default function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
+export default function Topbar({
+  onMenuClick,
+  className = "",
+}: {
+  onMenuClick: () => void;
+  className?: string;
+}) {
   const [search, setSearch] = useState("");
 
   return (
-    <header className="flex h-[60px] shrink-0 items-center gap-4 border-b border-[#E9EAEC] bg-white px-5 sm:px-6">
+    <header className={`flex h-15 shrink-0 items-center gap-4 border-b border-[#E9EAEC] bg-white px-5 sm:px-6 ${className}`}>
       <button
         type="button"
         onClick={onMenuClick}
