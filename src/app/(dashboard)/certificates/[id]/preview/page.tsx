@@ -1,48 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Printer, Download, FileText } from "lucide-react";
+import { ArrowLeft, Printer, Download, FileText, FileEdit } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import {
   MOCK_CERTIFICATES,
   MOCK_ACTIVE_CAPTAIN,
   MOCK_BARANGAY_INFO,
   CertificateMock,
-  certTypeLabel,
   residentFullName,
   formatISODate,
 } from "@/lib/mock/certificates";
-
-// Purpose-driven document body per certificate type — mirrors what a real
-// PDF template (e.g. via @react-pdf/renderer, see src/lib/pdf.ts) would render.
-function certificateBody(cert: CertificateMock) {
-  const name = cert.resident ? residentFullName(cert.resident).toUpperCase() : (cert.manual_name ?? "").toUpperCase();
-  const address = cert.resident?.address ?? cert.manual_address ?? "this barangay";
-
-  switch (cert.certificate_type) {
-    case "RESIDENCY":
-      return `This is to certify that ${name}, of legal age, is a bona fide resident of ${address}, and has resided therein for the required period under barangay records.`;
-    case "INDIGENCY":
-      return `This is to certify that ${name}, a resident of ${address}, belongs to an indigent family in this barangay, based on records and assessment on file with this office.`;
-    case "CLEARANCE":
-      return `This is to certify that ${name}, a resident of ${address}, has no derogatory record on file with this barangay as of the date of issuance.`;
-    case "GOOD_MORAL":
-      return `This is to certify that ${name}, a resident of ${address}, is known to this office to be of good moral character and has no record of any misconduct.`;
-    case "BUSINESS_PERMIT":
-      return `This is to certify that the business operated by ${name}, located at ${address}, is endorsed by this barangay for the purpose of securing a business permit.`;
-    case "COHABITATION":
-      return `This is to certify that ${name}, a resident of ${address}, is known to this office to be cohabiting with their partner as verified by barangay records.`;
-    case "SOLO_PARENT":
-      return `This is to certify that ${name}, a resident of ${address}, is a solo parent as defined under RA 8972, based on records on file with this barangay.`;
-    case "FIRST_TIME_JOB_SEEKER":
-      return `This is to certify that ${name}, a resident of ${address}, is a first-time job seeker under RA 11261 (First Time Jobseekers Assistance Act) and is availing of the exemption granted therein.`;
-    case "LATE_REGISTRATION":
-      return `This is to certify that ${name}, a resident of ${address}, is undergoing late registration of civil documents and is endorsed by this barangay for the purpose stated.`;
-    default:
-      return `This is to certify that ${name}, a resident of ${address}, is known to this office for the purpose stated below.`;
-  }
-}
+import { getMockTemplate, renderTemplate } from "@/lib/mock/certificateTemplates";
 
 export default function CertificatePreviewPage() {
   const router = useRouter();
@@ -62,18 +32,73 @@ export default function CertificatePreviewPage() {
   //   fetch(`/api/certificates/${certId}`).then((r) => r.json()).then(setCertificate).catch(console.error);
   // }, [certId]);
 
+  // ── TEMPLATE LOOKUP ───────────────────────────────────────────────────────
+  // Pulls the editable template for this certificate's type (see
+  // /certificates/templates) instead of a hardcoded per-type switch-case, and
+  // interpolates it with this certificate's real data.
+  const template = useMemo(
+    () => (certificate ? getMockTemplate(certificate.certificate_type) : null),
+    [certificate]
+  );
+
+  // ── REAL TEMPLATE FETCH (disabled until API/DB is wired up) ─────────────
+  // const [template, setTemplate] = useState<CertificateTemplateMock | null>(null);
+  // useEffect(() => {
+  //   if (!certificate) return;
+  //   fetch(`/api/certificate-templates/${certificate.certificate_type}`)
+  //     .then((r) => r.json())
+  //     .then(setTemplate)
+  //     .catch(console.error);
+  // }, [certificate]);
+
+  const mergedValues = useMemo<Record<string, string>>(() => {
+    if (!certificate) {
+      return {
+        full_name: "",
+        address: "",
+        purpose: "",
+        captain_name: "",
+        captain_position: "",
+        barangay_name: "",
+        city: "",
+        province: "",
+        date_issued: "",
+      };
+    }
+    const name = certificate.resident
+      ? residentFullName(certificate.resident).toUpperCase()
+      : (certificate.manual_name ?? "").toUpperCase();
+    const address = certificate.resident?.address ?? certificate.manual_address ?? "this barangay";
+    return {
+      full_name: name,
+      address,
+      purpose: certificate.purpose,
+      captain_name: MOCK_ACTIVE_CAPTAIN.name,
+      captain_position: MOCK_ACTIVE_CAPTAIN.position,
+      barangay_name: MOCK_BARANGAY_INFO.name,
+      city: MOCK_BARANGAY_INFO.city,
+      province: MOCK_BARANGAY_INFO.province,
+      date_issued: formatISODate(certificate.issued_at) ?? "",
+    };
+  }, [certificate]);
+
+  const renderedTitle = template ? renderTemplate(template.title, mergedValues) : "";
+  const renderedBody = template ? renderTemplate(template.body, mergedValues) : "";
+  const renderedClosing = template ? renderTemplate(template.closing_line, mergedValues) : "";
+
   function handlePrint() {
     // ── MOCK: browser print dialog stands in for a generated PDF ─────────
     window.print();
 
     // ── REAL PDF GENERATION (disabled until API/DB is wired up) ───────────
     // Would hit GET /api/pdf/certificate/[id], which renders the same
-    // template server-side via @react-pdf/renderer (see src/lib/pdf.ts)
-    // and streams back a downloadable/printable PDF file.
+    // template server-side via @react-pdf/renderer (see src/lib/pdf.ts),
+    // pulling the merged template from CertificateTemplate the same way
+    // this page does, and streams back a downloadable/printable PDF file.
     // window.open(`/api/pdf/certificate/${certId}`, "_blank");
   }
 
-  if (!certificate) {
+  if (!certificate || !template) {
     return (
       <EmptyState
         icon={FileText}
@@ -107,6 +132,13 @@ export default function CertificatePreviewPage() {
           Back to Certificate
         </button>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push("/certificates/templates")}
+            className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-4 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7]"
+          >
+            <FileEdit size={14} />
+            Edit Template
+          </button>
           <button
             onClick={handlePrint}
             className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-4 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7]"
@@ -148,23 +180,20 @@ export default function CertificatePreviewPage() {
 
         {/* Title */}
         <h2 className="mb-8 text-center text-lg font-black uppercase tracking-widest text-[#1F2937]">
-          {certTypeLabel(certificate.certificate_type)}
+          {renderedTitle}
         </h2>
 
         {/* Body */}
         <div className="space-y-5 text-[13px] leading-loose text-[#374151]">
           <p>TO WHOM IT MAY CONCERN:</p>
-          <p className="indent-8 text-justify">{certificateBody(certificate)}</p>
+          <p className="indent-8 text-justify">{renderedBody}</p>
           <p className="indent-8 text-justify">
             This certification is being issued upon the request of the above-named person for the purpose of:
           </p>
           <p className="rounded-lg bg-[#F9FAFB] px-4 py-3 text-center font-semibold uppercase text-[#1F2937]">
             {certificate.purpose}
           </p>
-          <p className="indent-8 text-justify">
-            Issued this {formatISODate(certificate.issued_at)} at the Barangay Hall of{" "}
-            {MOCK_BARANGAY_INFO.name}, {MOCK_BARANGAY_INFO.city}, {MOCK_BARANGAY_INFO.province}.
-          </p>
+          <p className="indent-8 text-justify">{renderedClosing}</p>
         </div>
 
         {/* Signatory */}

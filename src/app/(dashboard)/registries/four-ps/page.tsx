@@ -10,7 +10,9 @@ export default function FourPsRegistryPage() {
       title="4Ps Beneficiaries"
       subtitle="Pantawid Pamilyang Pilipino Program"
       icon={HandCoins}
-      addNote="Select the household's representative resident to mark their household as a 4Ps beneficiary."
+      iconBg="bg-green-600"
+      addNote="Select a resident to register them as a 4Ps beneficiary."
+      detailBase="/registries/four-ps"
     />
   );
 }

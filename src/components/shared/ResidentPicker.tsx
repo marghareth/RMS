@@ -68,11 +68,16 @@ export default function ResidentPicker({
   // Debounced search
   useEffect(() => {
     if (!query.trim()) {
-      setResults([]);
+      // Avoid calling setState synchronously within the effect body — schedule
+      // the update asynchronously to prevent cascading renders per the lint rule.
+      Promise.resolve().then(() => {
+        setResults([]);
+        setLoading(false);
+      });
       return;
     }
-    setLoading(true);
     const t = setTimeout(async () => {
+      setLoading(true);
       try {
         const res = await fetch(`/api/residents?search=${encodeURIComponent(query)}&limit=8`);
         const data = await res.json();

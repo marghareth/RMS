@@ -163,14 +163,14 @@ export default function UsersListPage() {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => router.push(`/admin/users/${u.id}/edit`)}
-                        className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#374151] transition hover:bg-[#F4F5F7]"
+                        className="flex w-20 items-center justify-center gap-1.5 rounded-lg border border-[#E9EAEC] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#374151] transition hover:bg-[#F4F5F7]"
                       >
                         <Pencil size={11} />
                         Edit
                       </button>
                       <button
                         onClick={() => setDeactivateTarget(u)}
-                        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition ${
+                        className={`flex w-30.5 items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition ${
                           u.is_active
                             ? "border-[#FEE2E2] text-[#DC2626] hover:bg-[#FEE2E2]"
                             : "border-[#D1FAE5] text-[#059669] hover:bg-[#D1FAE5]"
