@@ -127,7 +127,13 @@ export default function FinancialReportPage() {
               <option key={m} value={String(i + 1).padStart(2, "0")}>{m}</option>
             ))}
           </select>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] transition">
+          {/* Real PDF generation (disabled until API/DB is wired up):
+              window.open(`/api/pdf/report/${reportType}?${params}`, "_blank")
+              — hits the not-yet-implemented /api/pdf/report/[type] route. */}
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] transition print:hidden"
+          >
             <Download size={13} /> Export PDF
           </button>
         </div>

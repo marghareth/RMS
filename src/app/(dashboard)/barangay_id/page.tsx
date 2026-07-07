@@ -176,7 +176,13 @@ export default function BarangayIdListPage() {
                     Issued {formatISODate(selected.issued_date)} by {selected.issuer.username}
                   </p>
                 </div>
-                <button className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]">
+                {/* Real PDF generation (disabled until API/DB is wired up):
+                    window.open(`/api/pdf/barangay-id/${selected.id}`, "_blank")
+                    — hits the not-yet-implemented /api/pdf/barangay-id/[id] route. */}
+                <button
+                  onClick={() => window.print()}
+                  className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] print:hidden"
+                >
                   <Printer size={14} />
                   Print ID
                 </button>

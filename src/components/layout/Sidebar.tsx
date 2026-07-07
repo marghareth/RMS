@@ -27,8 +27,8 @@ const mainNav = [
     basePath: "/residents",
     type: "group" as const,
     children: [
-      { label: "Residents", href: "/residents", addHref: "/residents/new", exact: true },
-      { label: "Households", href: "/households", addHref: "/households/new", exact: true },
+      { label: "Residents", href: "/residents", addHref: "/residents/new" },
+      { label: "Households", href: "/households", addHref: "/households/new" },
     ],
   },
   {
@@ -48,7 +48,7 @@ const mainNav = [
     basePath: "/certificates",
     type: "group" as const,
     children: [
-      { label: "All Certificates", href: "/certificates", addHref: "/certificates/new", exact: true },
+      { label: "All Certificates", href: "/certificates", addHref: "/certificates/new" },
       { label: "Barangay ID", href: "/barangay_id", addHref: "/barangay_id/new" },
     ],
   },
@@ -65,7 +65,7 @@ const mainNav = [
     basePath: "/health",
     type: "group" as const,
     children: [
-      { label: "Health Records", href: "/health", addHref: "/health/new", exact: true },
+      { label: "Health Records", href: "/health", addHref: "/health/new" },
       { label: "Vaccinations", href: "/health/vaccinations", addHref: "/health/vaccinations/new" },
     ],
   },
@@ -75,7 +75,7 @@ const mainNav = [
     basePath: "/equipment",
     type: "group" as const,
     children: [
-      { label: "Equipment", href: "/equipment", addHref: "/equipment/new", exact: true },
+      { label: "Equipment", href: "/equipment", addHref: "/equipment/new" },
       { label: "Borrow Item", href: "/equipment/borrow" },
       { label: "Return Item", href: "/equipment/return" },
     ],
@@ -86,7 +86,7 @@ const mainNav = [
     basePath: "/financial",
     type: "group" as const,
     children: [
-      { label: "Records", href: "/financial", addHref: "/financial/new", exact: true },
+      { label: "Records", href: "/financial", addHref: "/financial/new" },
       { label: "Summary", href: "/financial/summary" },
     ],
   },
@@ -110,7 +110,7 @@ const mainNav = [
     basePath: "/reports",
     type: "group" as const,
     children: [
-      { label: "Overview", href: "/reports", exact: true },
+      { label: "Overview", href: "/reports" },
       { label: "Population", href: "/reports/population" },
       { label: "Registries", href: "/reports/registries" },
       { label: "Certificates", href: "/reports/certificates" },
@@ -143,15 +143,17 @@ const bottomNav = [
 
 export default function Sidebar({
   collapsed,
+  className = "",
 }: {
   collapsed: boolean;
   onToggle: () => void;
+  className?: string;
 }) {
   return (
     <aside
       className={`flex h-screen shrink-0 flex-col overflow-hidden border-r border-[#E9EAEC] bg-white transition-[width] duration-200 ease-in-out ${
         collapsed ? "w-0 border-r-0" : "w-60"
-      }`}
+      } ${className}`}
     >
       {/* Brand */}
       <div className="flex shrink-0 items-center gap-3 border-b border-[#E9EAEC] px-5 py-5">

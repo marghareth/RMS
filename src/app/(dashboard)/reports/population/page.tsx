@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Users, Download, TrendingUp } from "lucide-react";
 import {
@@ -89,6 +89,25 @@ export default function PopulationReportPage() {
 
   const data = MOCK;
 
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExportPdf() {
+    setExporting(true);
+    try {
+      const { default: PopulationReportPDF } = await import("@/lib/pdf/PopulationReportPDF");
+      const { downloadPdf } = await import("@/lib/pdf/generatePdf");
+      await downloadPdf(
+        <PopulationReportPDF data={data} year={year} />,
+        `population-report-${year}.pdf`
+      );
+    } catch (e) {
+      console.error("Failed to generate PDF", e);
+      alert("Something went wrong while generating the PDF. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div>
       {/* ── Header ── */}
@@ -112,8 +131,12 @@ export default function PopulationReportPage() {
             className="text-[12px] border border-[#E9EAEC] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] bg-white text-[#1F2937]">
             {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] transition">
-            <Download size={13} /> Export PDF
+          <button
+            onClick={handleExportPdf}
+            disabled={exporting}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] transition disabled:opacity-60 print:hidden"
+          >
+            <Download size={13} /> {exporting ? "Generating..." : "Export PDF"}
           </button>
         </div>
       </div>
@@ -234,12 +257,12 @@ export default function PopulationReportPage() {
             <span key={h} className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wide py-2 border-b border-[#F4F5F7]">{h}</span>
           ))}
           {data.byPurok.map((p, i) => (
-            <>
-              <span key={`n-${i}`} className="text-[12px] font-semibold text-[#1F2937] py-3 border-b border-[#F9FAFB]">{p.purok}</span>
-              <span key={`c-${i}`} className="text-[12px] text-[#374151] py-3 border-b border-[#F9FAFB]">{p.count}</span>
-              <span key={`h-${i}`} className="text-[12px] text-[#374151] py-3 border-b border-[#F9FAFB]">{p.households}</span>
-              <span key={`a-${i}`} className="text-[12px] text-[#374151] py-3 border-b border-[#F9FAFB]">{(p.count / p.households).toFixed(1)}</span>
-            </>
+            <Fragment key={p.purok}>
+              <span className="text-[12px] font-semibold text-[#1F2937] py-3 border-b border-[#F9FAFB]">{p.purok}</span>
+              <span className="text-[12px] text-[#374151] py-3 border-b border-[#F9FAFB]">{p.count}</span>
+              <span className="text-[12px] text-[#374151] py-3 border-b border-[#F9FAFB]">{p.households}</span>
+              <span className="text-[12px] text-[#374151] py-3 border-b border-[#F9FAFB]">{(p.count / p.households).toFixed(1)}</span>
+            </Fragment>
           ))}
         </div>
       </ChartCard>

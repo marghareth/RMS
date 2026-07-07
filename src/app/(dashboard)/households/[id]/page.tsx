@@ -213,7 +213,10 @@ export default function HouseholdDetailPage() {
           <p className="mt-0.5 text-[13px] text-[#9CA3AF]">{household.address}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-4 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7]">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-4 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7] print:hidden"
+          >
             <Printer size={14} />
             Print
           </button>
@@ -274,7 +277,7 @@ export default function HouseholdDetailPage() {
           <div className="rounded-xl border border-[#FEE2E2] bg-white p-5">
             <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#DC2626]">Danger Zone</p>
             <p className="mb-3 text-[11px] text-[#9CA3AF]">
-              Deleting a household does not delete its members' resident records, but unlinks them.
+              Deleting a household does not delete its members&apos; resident records, but unlinks them.
             </p>
             <button
               onClick={() => setDeleteHouseholdConfirm(true)}
@@ -341,7 +344,7 @@ export default function HouseholdDetailPage() {
 
             {household.members.length === 0 ? (
               <p className="py-8 text-center text-[12px] text-[#9CA3AF]">
-                No members yet. Use "Add Member" to attach existing residents to this household.
+                No members yet. Use &quot;Add Member&quot; to attach existing residents to this household.
               </p>
             ) : (
               <div className="space-y-2">
