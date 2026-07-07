@@ -7,10 +7,12 @@ export default function PwdRegistryPage() {
   return (
     <RegistryManager
       registryType="PWD"
-      title="PWD"
-      subtitle="Persons with disability registry"
+      title="PWD Registry"
+      subtitle="Persons with disability"
       icon={Accessibility}
-      addNote="Select a resident and specify their disability type to register them in the PWD registry."
+      iconBg="bg-[#3B82F6]"
+      addNote="Select a resident and specify their disability type to register them."
+      detailBase="/registries/pwd"
     />
   );
 }

@@ -27,6 +27,7 @@ model User {
   health_records       HealthRecord[]
   vaccinations         Vaccination[]
   barangay_ids         BarangayId[]
+  certificate_templates_updated CertificateTemplate[]
 }
 
 enum Role {
@@ -141,6 +142,23 @@ enum CertificateType {
   SOLO_PARENT
   FIRST_TIME_JOB_SEEKER
   LATE_REGISTRATION
+}
+
+// One editable template per certificate type. `body` and `closing_line`
+// support placeholder tokens (e.g. {{full_name}}, {{address}}, {{purpose}},
+// {{captain_name}}, {{date_issued}}) that are interpolated with real data
+// when a certificate is previewed/printed.
+model CertificateTemplate {
+  id               Int             @id @default(autoincrement())
+  certificate_type CertificateType @unique
+  title            String
+  body             String
+  closing_line     String?
+  updated_by       Int?
+  updated_at       DateTime        @updatedAt
+  created_at       DateTime        @default(now())
+
+  updater User? @relation(fields: [updated_by], references: [id])
 }
 
 // ─── BLOTTER ─────────────────────────────────────────────────

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FileText,
+  FileEdit,
   CalendarDays,
   CalendarRange,
   UserPlus,
@@ -108,13 +109,22 @@ export default function CertificatesListPage() {
         title="Certificates"
         subtitle="Issue and track barangay certificates"
         actions={
-          <button
-            onClick={() => router.push("/certificates/new")}
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
-          >
-            <Plus size={15} />
-            Issue Certificate
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push("/certificates/templates")}
+              className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-4 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7]"
+            >
+              <FileEdit size={15} />
+              Manage Templates
+            </button>
+            <button
+              onClick={() => router.push("/certificates/new")}
+              className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
+            >
+              <Plus size={15} />
+              Issue Certificate
+            </button>
+          </div>
         }
       />
 
