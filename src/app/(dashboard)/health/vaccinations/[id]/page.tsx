@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Syringe, User, CalendarDays, Trash2, Heart } from "lucide-react";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Vaccination {
@@ -63,7 +64,7 @@ export default function VaccinationDetailPage() {
   }, [id]);
 
   async function handleDelete() {
-    if (!confirm("Delete this vaccination record?")) return;
+    // confirm() replaced by ConfirmDialog — see onConfirm handler below
     await fetch(`/api/health/vaccinations/${id}`, { method: "DELETE" });
     router.push("/health");
   }
@@ -71,10 +72,10 @@ export default function VaccinationDetailPage() {
 
   // ── Mock data ─────────────────────────────────────────────────────────────
   const vaccination = MOCK_VACCINATIONS[id] ?? MOCK_VACCINATIONS["1"];
-  const [deleting, setDeleting] = useState(false);
+  const [deleting,    setDeleting]    = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function handleDelete() {
-    if (!confirm("Delete this vaccination record? This cannot be undone.")) return;
     setDeleting(true);
     await new Promise(r => setTimeout(r, 600));
     router.push("/health");
@@ -99,7 +100,7 @@ export default function VaccinationDetailPage() {
           </div>
         </div>
         <button
-          onClick={handleDelete}
+          onClick={() => setConfirmOpen(true)}
           disabled={deleting}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-red-200 text-red-500 text-[12px] font-bold hover:bg-red-50 transition disabled:opacity-50"
         >
@@ -198,6 +199,18 @@ export default function VaccinationDetailPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete Vaccination Record"
+        message="This vaccination record will be permanently deleted. This action cannot be undone."
+        confirmLabel="Yes, Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }
