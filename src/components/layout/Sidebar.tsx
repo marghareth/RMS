@@ -156,7 +156,7 @@ export default function Sidebar({
       } ${className}`}
     >
       {/* Brand */}
-      <div className="flex shrink-0 items-center gap-3 border-b border-[#E9EAEC] px-5 py-5">
+      <div className="flex h-15 shrink-0 items-center justify-center border-b border-[#E9EAEC] px-5">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#3B82F6] shadow-sm">
           <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
             <path
@@ -165,12 +165,6 @@ export default function Sidebar({
             />
             <rect x="9" y="12" width="6" height="10" fill="#3B82F6" />
           </svg>
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-bold leading-tight text-[#1F2937]">
-            Brgy. Quisol
-          </p>
-          <p className="truncate text-[11px] text-[#9CA3AF]">Danao City, Cebu</p>
         </div>
       </div>
 
