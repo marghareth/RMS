@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Users2,
@@ -18,7 +18,6 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import {
-  MOCK_MEETINGS,
   MeetingRecordMock,
   meetingTypeLabel,
   formatISODate,
@@ -38,40 +37,35 @@ const EMPTY_FILTERS: FilterState = { meeting_type: "", date_from: "", date_to: "
 export default function AssemblyListPage() {
   const router = useRouter();
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // Swap this for a real fetch once the database is connected (see the
-  // commented-out effect below).
-  const [meetings] = useState<MeetingRecordMock[]>(MOCK_MEETINGS);
-  const [loading] = useState(false);
 
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
 
   // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [meetings, setMeetings] = useState<MeetingRecordMock[]>([]);
-  // const [loading, setLoading] = useState(true);
+  const [meetings, setMeetings] = useState<MeetingRecordMock[]>([]);
+  const [loading, setLoading] = useState(true);
   //
-  // useEffect(() => {
-  //   async function loadMeetings() {
-  //     setLoading(true);
-  //     try {
-  //       const params = new URLSearchParams({ limit: "50" });
-  //       if (filters.meeting_type) params.set("meeting_type", filters.meeting_type);
-  //       if (filters.date_from) params.set("date_from", filters.date_from);
-  //       if (filters.date_to) params.set("date_to", filters.date_to);
-  //
-  //       const res = await fetch(`/api/meetings?${params}`);
-  //       const data = await res.json();
-  //       setMeetings(data.meetings ?? []);
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadMeetings();
-  // }, [filters]);
+  useEffect(() => {
+     async function loadMeetings() {
+       setLoading(true);
+     try {
+         const params = new URLSearchParams({ limit: "50" });
+         if (filters.meeting_type) params.set("meeting_type", filters.meeting_type);
+         if (filters.date_from) params.set("date_from", filters.date_from);
+         if (filters.date_to) params.set("date_to", filters.date_to);
+  
+         const res = await fetch(`/api/meetings?${params}`);
+         const data = await res.json();
+         setMeetings(data.meetings ?? []);
+       } catch (e) {
+         console.error(e);
+       } finally {
+         setLoading(false);
+       }
+     }
+     loadMeetings();
+   }, [filters]);
 
   const filtered = useMemo(() => {
     return meetings

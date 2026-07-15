@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, FileEdit, RotateCcw, Save, Info, ChevronRight, CheckCircle2 } from "lucide-react";
 import { CERTIFICATE_TYPES, CertificateType, MOCK_ACTIVE_CAPTAIN, MOCK_BARANGAY_INFO } from "@/lib/mock/certificates";
 import {
-  getMockTemplates,
   updateMockTemplate,
   resetMockTemplate,
   renderTemplate,
@@ -34,19 +33,19 @@ export default function CertificateTemplatesPage() {
   // ── MOCK DATA STATE ──────────────────────────────────────────────────────
   // Swap this for a real fetch once the database is connected (see the
   // commented-out effect below).
-  const [templates, setTemplates] = useState<CertificateTemplateMock[]>(() => getMockTemplates());
+  // const [templates, setTemplates] = useState<CertificateTemplateMock[]>(() => getMockTemplates());
 
   // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [templates, setTemplates] = useState<CertificateTemplateMock[]>([]);
-  // const [loading, setLoading] = useState(true);
+   const [templates, setTemplates] = useState<CertificateTemplateMock[]>([]);
+   const [loading, setLoading] = useState(true);
   //
-  // useEffect(() => {
-  //   fetch("/api/certificate-templates")
-  //     .then((r) => r.json())
-  //     .then(setTemplates)
-  //     .catch(console.error)
-  //     .finally(() => setLoading(false));
-  // }, []);
+   useEffect(() => {
+     fetch("/api/certificate-templates")
+       .then((r) => r.json())
+       .then(setTemplates)
+       .catch(console.error)
+       .finally(() => setLoading(false));
+   }, []);
 
   const [selectedType, setSelectedType] = useState<CertificateType>(CERTIFICATE_TYPES[0].value);
   const selected = templates.find((t) => t.certificate_type === selectedType)!;
@@ -71,60 +70,44 @@ export default function CertificateTemplatesPage() {
   async function handleSave() {
     setSaving(true);
 
-    // ── MOCK SUBMIT ─────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 300));
-    updateMockTemplate(selectedType, { title: draftTitle, body: draftBody, closing_line: draftClosing });
-    setTemplates(getMockTemplates());
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
 
     // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-    // try {
-    //   const res = await fetch(`/api/certificate-templates/${selectedType}`, {
-    //     method: "PATCH",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ title: draftTitle, body: draftBody, closing_line: draftClosing }),
-    //   });
-    //   if (!res.ok) throw new Error("Failed to save template");
-    //   const updated = await res.json();
-    //   setTemplates((prev) => prev.map((t) => (t.certificate_type === selectedType ? updated : t)));
-    //   setSaved(true);
-    //   setTimeout(() => setSaved(false), 2500);
-    // } catch (e) {
-    //   console.error(e);
-    // } finally {
-    //   setSaving(false);
-    // }
+     try {
+       const res = await fetch(`/api/certificate-templates/${selectedType}`, {
+         method: "PATCH",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ title: draftTitle, body: draftBody, closing_line: draftClosing }),
+       });
+       if (!res.ok) throw new Error("Failed to save template");
+       const updated = await res.json();
+       setTemplates((prev) => prev.map((t) => (t.certificate_type === selectedType ? updated : t)));
+       setSaved(true);
+       setTimeout(() => setSaved(false), 2500);
+     } catch (e) {
+       console.error(e);
+     } finally {
+       setSaving(false);
+     }
   }
 
   async function handleReset() {
     if (!confirm(`Reset the "${selected.title}" template to its default wording? Unsaved edits will be lost.`)) return;
     setSaving(true);
 
-    // ── MOCK RESET ──────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 300));
-    const reset = resetMockTemplate(selectedType);
-    setTemplates(getMockTemplates());
-    setDraftTitle(reset.title);
-    setDraftBody(reset.body);
-    setDraftClosing(reset.closing_line);
-    setSaving(false);
-
     // ── REAL RESET (disabled until API/DB is wired up) ─────────────────
-    // try {
-    //   const res = await fetch(`/api/certificate-templates/${selectedType}/reset`, { method: "POST" });
-    //   if (!res.ok) throw new Error("Failed to reset template");
-    //   const reset = await res.json();
-    //   setTemplates((prev) => prev.map((t) => (t.certificate_type === selectedType ? reset : t)));
-    //   setDraftTitle(reset.title);
-    //   setDraftBody(reset.body);
-    //   setDraftClosing(reset.closing_line);
-    // } catch (e) {
-    //   console.error(e);
-    // } finally {
-    //   setSaving(false);
-    // }
+     try {
+       const res = await fetch(`/api/certificate-templates/${selectedType}/reset`, { method: "POST" });
+       if (!res.ok) throw new Error("Failed to reset template");
+       const reset = await res.json();
+       setTemplates((prev) => prev.map((t) => (t.certificate_type === selectedType ? reset : t)));
+       setDraftTitle(reset.title);
+       setDraftBody(reset.body);
+       setDraftClosing(reset.closing_line);
+     } catch (e) {
+       console.error(e);
+     } finally {
+       setSaving(false);
+     }
   }
 
   const previewBody = useMemo(() => renderTemplate(draftBody, SAMPLE_VALUES), [draftBody]);

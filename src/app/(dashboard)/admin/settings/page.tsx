@@ -1,9 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Landmark, Phone, UserCheck, Save, CheckCircle2 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
-import { MOCK_SETTINGS, GeneralSettings } from "@/lib/mock/admin";
+import { GeneralSettings } from "@/lib/mock/admin";
+
+const DEFAULT_SETTINGS: GeneralSettings = {
+  barangay_name: "",
+  address: "",
+  city: "",
+  province: "",
+  region: "",
+  contact_phone: "",
+  contact_email: "",
+  captain_override_name: "",
+  captain_override_position: "",
+};
 
 function Field({
   label,
@@ -35,32 +47,27 @@ function Field({
 }
 
 export default function GeneralSettingsPage() {
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // Swap this for a real fetch once the database is connected (see the
-  // commented-out effect below). GET /api/settings returns a flattened
-  // { [key]: value } object built from all SystemSetting rows.
-  const [settings, setSettings] = useState<GeneralSettings>(MOCK_SETTINGS);
-  const [loading] = useState(false);
+  // GET /api/settings returns a flattened { [key]: value } object built
+  // from all SystemSetting rows. Any keys not yet set fall back to
+  // DEFAULT_SETTINGS so the form always has strings to bind to.
+  const [settings, setSettings] = useState<GeneralSettings>(DEFAULT_SETTINGS);
+  const [loading, setLoading] = useState(true);
 
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [settings, setSettings] = useState<GeneralSettings | null>(null);
-  // const [loading, setLoading] = useState(true);
-  //
-  // useEffect(() => {
-  //   async function loadSettings() {
-  //     setLoading(true);
-  //     try {
-  //       const res = await fetch("/api/settings");
-  //       const data = await res.json();
-  //       setSettings({ ...MOCK_SETTINGS, ...data }); // fall back to defaults for unset keys
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadSettings();
-  // }, []);
+  useEffect(() => {
+    async function loadSettings() {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/settings");
+        const data = await res.json();
+        setSettings({ ...DEFAULT_SETTINGS, ...data });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadSettings();
+  }, []);
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -72,28 +79,20 @@ export default function GeneralSettingsPage() {
 
   async function handleSave() {
     setSaving(true);
-
-    // ── MOCK SUBMIT ─────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 500));
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-
-    // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-    // try {
-    //   const res = await fetch("/api/settings", {
-    //     method: "PATCH",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(settings), // each key upserted as a SystemSetting row
-    //   });
-    //   if (!res.ok) throw new Error("Failed to save settings");
-    //   setSaved(true);
-    //   setTimeout(() => setSaved(false), 3000);
-    // } catch (e) {
-    //   console.error(e);
-    // } finally {
-    //   setSaving(false);
-    // }
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings), // each key upserted as a SystemSetting row
+      });
+      if (!res.ok) throw new Error("Failed to save settings");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading) {

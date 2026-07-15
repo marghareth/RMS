@@ -99,7 +99,7 @@ export default function ResidentsPage() {
   const loadResidents = useCallback(async () => {
     setLoading(true);
     try {
-      /* ── Real API (commented out until Supabase is connected) ──────────────
+      
       const params = new URLSearchParams({ limit: "100" });
       if (search)                params.set("search",       search);
       if (filters.sex)           params.set("sex",          filters.sex);
@@ -108,15 +108,6 @@ export default function ResidentsPage() {
       const res  = await fetch(`/api/residents?${params}`);
       const data = await res.json();
       setResidents(data.residents ?? []);
-      ───────────────────────────────────────────────────────────────────────── */
-      const data = getMockResidents().filter(r => {
-        const q   = search.toLowerCase();
-        const hit = !q || `${r.fname} ${r.lname} ${r.mname ?? ""}`.toLowerCase().includes(q);
-        const sex  = !filters.sex          || r.sex          === filters.sex;
-        const cs   = !filters.civil_status || r.civil_status === filters.civil_status;
-        const pu   = !filters.purok_id     || r.purok_id     === Number(filters.purok_id);
-        return hit && sex && cs && pu;
-      });
       setResidents(data);
     } finally {
       setLoading(false);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, Plus, Package, ChevronRight,
@@ -184,7 +184,7 @@ export default function EquipmentPage() {
   const [filterStatus,  setFilterStatus]  = useState<EquipmentStatus | "ALL">("ALL");
   const [selected,      setSelected]      = useState<Equipment | null>(MOCK_EQUIPMENT[0]);
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
+ 
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading,   setLoading]   = useState(true);
 
@@ -198,14 +198,7 @@ export default function EquipmentPage() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [search, filterStatus]);
-  ─────────────────────────────────────────────────────────────────────────── */
-
-  // ── Mock filtering ────────────────────────────────────────────────────────
-  const equipment = MOCK_EQUIPMENT.filter(e => {
-    const matchSearch = e.name.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filterStatus === "ALL" || e.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
+  
 
   // ── Stats ─────────────────────────────────────────────────────────────────
   const totalItems      = MOCK_EQUIPMENT.length;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Syringe, User, CalendarDays, Trash2, Heart } from "lucide-react";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
@@ -13,18 +13,6 @@ interface Vaccination {
   resident: { id: number; fname: string; lname: string; birthdate: string; sex: string; purok?: { name: string } | null };
   recorder: { username: string };
 }
-
-// ─── MOCK DATA ────────────────────────────────────────────────────────────────
-const MOCK_VACCINATIONS: Record<string, Vaccination> = {
-  "1": { id: 1, vaccine_name: "BCG",                date_given: "2023-03-10", resident: { id: 5,  fname: "Nino",    lname: "Flores",  birthdate: "2023-01-01", sex: "MALE",   purok: { name: "Purok I"   } }, recorder: { username: "bhw_ana"  } },
-  "2": { id: 2, vaccine_name: "DPT (1st dose)",     date_given: "2023-04-10", resident: { id: 5,  fname: "Nino",    lname: "Flores",  birthdate: "2023-01-01", sex: "MALE",   purok: { name: "Purok I"   } }, recorder: { username: "bhw_ana"  } },
-  "3": { id: 3, vaccine_name: "DPT (2nd dose)",     date_given: "2023-05-10", resident: { id: 5,  fname: "Nino",    lname: "Flores",  birthdate: "2023-01-01", sex: "MALE",   purok: { name: "Purok I"   } }, recorder: { username: "bhw_ana"  } },
-  "4": { id: 4, vaccine_name: "COVID-19 (1st dose)",date_given: "2026-01-15", resident: { id: 9,  fname: "Teresa",  lname: "Ramos",   birthdate: "1980-05-12", sex: "FEMALE", purok: { name: "Purok II"  } }, recorder: { username: "bhw_lena" } },
-  "5": { id: 5, vaccine_name: "COVID-19 (2nd dose)",date_given: "2026-02-15", resident: { id: 9,  fname: "Teresa",  lname: "Ramos",   birthdate: "1980-05-12", sex: "FEMALE", purok: { name: "Purok II"  } }, recorder: { username: "bhw_lena" } },
-  "6": { id: 6, vaccine_name: "Influenza",          date_given: "2026-04-20", resident: { id: 10, fname: "Roberto", lname: "Aquino",  birthdate: "1972-09-30", sex: "MALE",   purok: { name: "Purok III" } }, recorder: { username: "bhw_ana"  } },
-  "7": { id: 7, vaccine_name: "Hepatitis B (1st)",  date_given: "2026-05-05", resident: { id: 2,  fname: "Maria",   lname: "Santos",  birthdate: "1968-07-22", sex: "FEMALE", purok: { name: "Purok I"   } }, recorder: { username: "bhw_lena" } },
-  "8": { id: 8, vaccine_name: "Tetanus Toxoid",     date_given: "2026-06-01", resident: { id: 3,  fname: "Rosa",    lname: "Reyes",   birthdate: "1995-11-05", sex: "FEMALE", purok: { name: "Purok III" } }, recorder: { username: "bhw_ana"  } },
-};
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function fmtDate(iso: string) {
@@ -46,39 +34,66 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+// ─── MAIN PAGE (keyed by id so state resets cleanly on navigation) ───────────
 export default function VaccinationDetailPage() {
-  const router = useRouter();
   const { id } = useParams<{ id: string }>();
+  return <VaccinationDetailContent key={id} id={id} />;
+}
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
+function VaccinationDetailContent({ id }: { id: string }) {
+  const router = useRouter();
+
   const [vaccination, setVaccination] = useState<Vaccination | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading,     setLoading]     = useState(true);
+  const [notFound,    setNotFound]    = useState(false);
 
-  useEffect(() => {
-    fetch(`/api/health/vaccinations/${id}`)
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(setVaccination)
-      .catch(() => router.push("/health"))
-      .finally(() => setLoading(false));
-  }, [id]);
-
-  async function handleDelete() {
-    // confirm() replaced by ConfirmDialog — see onConfirm handler below
-    await fetch(`/api/health/vaccinations/${id}`, { method: "DELETE" });
-    router.push("/health");
-  }
-  ─────────────────────────────────────────────────────────────────────────── */
-
-  // ── Mock data ─────────────────────────────────────────────────────────────
-  const vaccination = MOCK_VACCINATIONS[id] ?? MOCK_VACCINATIONS["1"];
   const [deleting,    setDeleting]    = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch(`/api/health/vaccinations/${id}`)
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then((data: Vaccination) => { if (!cancelled) setVaccination(data); })
+      .catch(() => { if (!cancelled) setNotFound(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [id]);
+
+  useEffect(() => {
+    if (notFound) router.push("/health");
+  }, [notFound, router]);
 
   async function handleDelete() {
     setDeleting(true);
-    await new Promise(r => setTimeout(r, 600));
-    router.push("/health");
+    setDeleteError("");
+    try {
+      const res = await fetch(`/api/health/vaccinations/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete record");
+      router.push("/health");
+    } catch (e: any) {
+      setDeleteError(e.message || "Something went wrong.");
+      setDeleting(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="py-16 text-center text-[13px] text-[#9CA3AF]">
+        Loading vaccination record…
+      </div>
+    );
+  }
+
+  if (!vaccination) {
+    return (
+      <div className="py-16 text-center text-[13px] text-[#9CA3AF]">
+        Redirecting…
+      </div>
+    );
   }
 
   return (
@@ -107,6 +122,12 @@ export default function VaccinationDetailPage() {
           <Trash2 size={13} /> Delete
         </button>
       </div>
+
+      {deleteError && (
+        <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200">
+          <p className="text-[12px] text-red-600 font-medium">{deleteError}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-5">
 

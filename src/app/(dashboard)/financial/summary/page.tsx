@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, TrendingUp, TrendingDown, Wallet, Printer } from "lucide-react";
 import StatCard from "@/components/shared/StatCard";
 import {
-  MOCK_FINANCIAL_RECORDS,
   FinancialRecordMock,
   formatCurrency,
   groupByMonth,
@@ -14,29 +13,27 @@ import {
 export default function FinancialSummaryPage() {
   const router = useRouter();
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // Swap this for a real fetch once the database is connected (see the
-  // commented-out effect below). The real summary would typically pull the
-  // full record set (or a year range) from GET /api/financial and aggregate
-  // client-side, same as here — there's no dedicated /summary API route yet.
-  const [records] = useState<FinancialRecordMock[]>(MOCK_FINANCIAL_RECORDS);
   const [year, setYear] = useState(String(new Date().getFullYear()));
 
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [records, setRecords] = useState<FinancialRecordMock[]>([]);
-  // useEffect(() => {
-  //   async function loadRecords() {
-  //     const params = new URLSearchParams({
-  //       limit: "500",
-  //       date_from: `${year}-01-01`,
-  //       date_to: `${year}-12-31`,
-  //     });
-  //     const res = await fetch(`/api/financial?${params}`);
-  //     const data = await res.json();
-  //     setRecords(data.records ?? []);
-  //   }
-  //   loadRecords();
-  // }, [year]);
+  // ── REAL DATA FETCH ───────────────────────────────────────────────────────
+  const [records, setRecords] = useState<FinancialRecordMock[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRecords() {
+      const params = new URLSearchParams({
+        limit: "500",
+        date_from: `${year}-01-01`,
+        date_to: `${year}-12-31`,
+      });
+      const res = await fetch(`/api/financial?${params}`);
+      const data = await res.json();
+      if (!cancelled) setRecords(data.records ?? []);
+    }
+
+    loadRecords();
+    return () => { cancelled = true; };
+  }, [year]);
 
   const yearRecords = useMemo(
     () => records.filter((r) => r.transaction_date.startsWith(year)),
@@ -55,8 +52,9 @@ export default function FinancialSummaryPage() {
 
   const availableYears = useMemo(() => {
     const years = new Set(records.map((r) => r.transaction_date.slice(0, 4)));
+    years.add(year); // always keep the selected year selectable, even with 0 records
     return Array.from(years).sort((a, b) => Number(b) - Number(a));
-  }, [records]);
+  }, [records, year]);
 
   return (
     <div>

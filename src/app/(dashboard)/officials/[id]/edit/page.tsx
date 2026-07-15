@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, UserCheck, Phone } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import {
-  MOCK_OFFICIALS,
   POSITIONS,
   PUROK_ASSIGNMENTS,
   BrgyOfficialMock,
@@ -17,47 +16,40 @@ export default function EditOfficialPage() {
   const params = useParams();
   const officialId = Number(params.id);
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // In place of the real GET /api/officials/[id] call. Swap for the
-  // commented block below once the database is connected.
-  const [original] = useState<BrgyOfficialMock | null>(
-    () => MOCK_OFFICIALS.find((o) => o.id === officialId) ?? null
-  );
-  const [loading] = useState(false);
 
   // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [original, setOriginal] = useState<BrgyOfficialMock | null>(null);
-  // const [loading, setLoading] = useState(true);
-  //
-  // useEffect(() => {
-  //   async function loadOfficial() {
-  //     setLoading(true);
-  //     try {
-  //       const res = await fetch(`/api/officials/${officialId}`);
-  //       if (!res.ok) throw new Error("Not found");
-  //       const data = await res.json();
-  //       setOriginal(data);
-  //       setPosition(data.position);
-  //       setPurokAssignment(data.purok_assignment ?? "");
-  //       setContactNo(data.contact_no ?? "");
-  //       setTermStart(data.term_start.slice(0, 10));
-  //       setTermEnd(data.term_end ? data.term_end.slice(0, 10) : "");
-  //       setIsActive(data.is_active);
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadOfficial();
-  // }, [officialId]);
-
+  const [original, setOriginal] = useState<BrgyOfficialMock | null>(null);
+  const [loading, setLoading] = useState(true);
   const [position, setPosition] = useState(original?.position ?? "");
   const [purokAssignment, setPurokAssignment] = useState(original?.purok_assignment ?? "");
   const [contactNo, setContactNo] = useState(original?.contact_no ?? "");
   const [termStart, setTermStart] = useState(original?.term_start.slice(0, 10) ?? "");
   const [termEnd, setTermEnd] = useState(original?.term_end?.slice(0, 10) ?? "");
   const [isActive, setIsActive] = useState(original?.is_active ?? true);
+
+  
+  useEffect(() => {
+     async function loadOfficial() {
+       setLoading(true);
+       try {
+         const res = await fetch(`/api/officials/${officialId}`);
+         if (!res.ok) throw new Error("Not found");
+         const data = await res.json();
+         setOriginal(data);
+         setPosition(data.position);
+         setPurokAssignment(data.purok_assignment ?? "");
+         setContactNo(data.contact_no ?? "");
+         setTermStart(data.term_start.slice(0, 10));
+         setTermEnd(data.term_end ? data.term_end.slice(0, 10) : "");
+         setIsActive(data.is_active);
+       } catch (e) {
+         console.error(e);
+       } finally {
+         setLoading(false);
+       }
+     }
+     loadOfficial();
+   }, [officialId]);
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);

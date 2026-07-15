@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, BookOpen, Download, Users, Heart, Accessibility } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
@@ -82,16 +82,57 @@ export default function RegistriesReportPage() {
   const [tab,  setTab]  = useState<Tab>("seniors");
   const [year, setYear] = useState(new Date().getFullYear().toString());
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
   const [data, setData] = useState<typeof MOCK | null>(null);
   const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    fetch(`/api/reports?type=registries&year=${year}`)
-      .then(r => r.json()).then(setData).finally(() => setLoading(false));
-  }, [year]);
-  ─────────────────────────────────────────────────────────────────────────── */
+  const [error, setError] = useState(false);
 
-  const data = MOCK;
+  // ── Reset state when `year` changes, during render (not in an effect) ──
+  // This is React's documented pattern for "adjusting state when a prop
+  // changes" and avoids the react-hooks/set-state-in-effect warning that
+  // comes from calling setState synchronously at the top of an effect.
+  const [prevYear, setPrevYear] = useState(year);
+  if (year !== prevYear) {
+    setPrevYear(year);
+    setData(null);
+    setLoading(true);
+    setError(false);
+  }
+
+  useEffect(() => {
+    let ignore = false;
+
+    fetch(`/api/reports?type=registries&year=${year}`)
+      .then(r => r.json())
+      .then(json => {
+        if (ignore) return;
+        setData(json);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (ignore) return;
+        setError(true);
+        setLoading(false);
+      });
+
+    return () => { ignore = true; };
+  }, [year]);
+
+  // ── Guard: narrows `data` to non-null for everything below ──
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64 text-[13px] text-[#9CA3AF]">
+        Loading registries…
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex items-center justify-center h-64 text-[13px] text-red-500">
+        Failed to load registry data. Please try again.
+      </div>
+    );
+  }
 
   const TABS: { key: Tab; label: string; icon: any; count: number; color: string; bg: string }[] = [
     { key: "seniors", label: "Senior Citizens", icon: Users,         count: data.seniors.total, color: "text-amber-600", bg: "bg-amber-50"  },
@@ -309,7 +350,7 @@ export default function RegistriesReportPage() {
                   <div className="flex-1 h-2 bg-[#F4F5F7] rounded-full overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${(p.count / data.fourPs.total) * 100}%`, background: PUROK_COLORS[i] }} />
                   </div>
-                  <span className="text-[12px] font-bold text-[#1F2937] min-w-7text-right">{p.count}</span>
+                  <span className="text-[12px] font-bold text-[#1F2937] min-w-7 text-right">{p.count}</span>
                   <span className="text-[10px] text-[#9CA3AF] min-w-9">{((p.count / data.fourPs.total) * 100).toFixed(1)}%</span>
                 </div>
               ))}

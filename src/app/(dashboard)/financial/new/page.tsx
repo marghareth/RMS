@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { FinancialType, INCOME_CATEGORIES, EXPENSE_CATEGORIES, formatCurrency } from "@/lib/mock/financial";
@@ -42,34 +42,28 @@ export default function NewFinancialRecordPage() {
 
     setSubmitting(true);
 
-    // ── MOCK SUBMIT ─────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 500));
-    setSubmitting(false);
-    alert(
-      `[MOCK] ${type === "INCOME" ? "Income" : "Expense"} of ${formatCurrency(parsedAmount)} recorded.\nA real save will redirect back to the financial ledger.`
-    );
-    router.push("/financial");
+    
 
     // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-    // try {
-    //   const res = await fetch("/api/financial", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       transaction_type: type,
-    //       amount: parsedAmount,
-    //       description,
-    //       transaction_date: date,
-    //     }),
-    //   });
-    //   if (!res.ok) throw new Error("Failed to save transaction");
-    //   router.push("/financial");
-    // } catch (e) {
-    //   console.error(e);
-    //   setError("Something went wrong while saving. Please try again.");
-    // } finally {
-    //   setSubmitting(false);
-    // }
+     try {
+       const res = await fetch("/api/financial", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           transaction_type: type,
+           amount: parsedAmount,
+           description,
+           transaction_date: date,
+         }),
+       });
+     if (!res.ok) throw new Error("Failed to save transaction");
+       router.push("/financial");
+     } catch (e) {
+       console.error(e);
+       setError("Something went wrong while saving. Please try again.");
+   } finally {
+       setSubmitting(false);
+     }
   }
 
   return (

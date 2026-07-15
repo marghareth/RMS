@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, UserCog, Eye, EyeOff, Users } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
-import { MOCK_USERS, UserMock, ROLES, Role } from "@/lib/mock/admin";
+import { UserMock, ROLES, Role } from "@/lib/mock/admin";
 
 export default function EditUserPage() {
   const router = useRouter();
@@ -14,31 +14,29 @@ export default function EditUserPage() {
   // ── MOCK DATA STATE ──────────────────────────────────────────────────────
   // In place of the real GET /api/users/[id] call. Swap for the commented
   // block below once the database is connected.
-  const [original] = useState<UserMock | null>(() => MOCK_USERS.find((u) => u.id === userId) ?? null);
-  const [loading] = useState(false);
+  //const [original] = useState<UserMock | null>(() => MOCK_USERS.find((u) => u.id === userId) ?? null);
+  //const [loading] = useState(false);
 
   // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [original, setOriginal] = useState<UserMock | null>(null);
-  // const [loading, setLoading] = useState(true);
+  const [original, setOriginal] = useState<UserMock | null>(null);
+  const [loading, setLoading] = useState(true);
   //
-  // useEffect(() => {
-  //   async function loadUser() {
-  //     setLoading(true);
-  //     try {
-  //       const res = await fetch(`/api/users/${userId}`);
-  //       if (!res.ok) throw new Error("Not found");
-  //       const data = await res.json();
-  //       setOriginal(data);
-  //       setRole(data.role);
-  //       setIsActive(data.is_active);
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadUser();
-  // }, [userId]);
+  useEffect(() => {
+     async function loadUser() {
+       setLoading(true);
+       try {
+         const res = await fetch(`/api/users/${userId}`);
+         if (!res.ok) throw new Error("Not found");
+         const data = await res.json();
+         setOriginal(data);
+       } catch (e) {
+         console.error(e);
+       } finally {
+         setLoading(false);
+       }
+     }
+     loadUser();
+   }, [userId]);
 
   const [role, setRole] = useState<Role | "">(original?.role ?? "");
   const [isActive, setIsActive] = useState(original?.is_active ?? true);
@@ -94,24 +92,24 @@ export default function EditUserPage() {
     router.push("/admin/users");
 
     // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-    // try {
-    //   const res = await fetch(`/api/users/${userId}`, {
-    //     method: "PATCH",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       role,
-    //       is_active: isActive,
-    //       password: newPassword || undefined, // only sent if being reset
-    //     }),
-    //   });
-    //   if (!res.ok) throw new Error("Failed to update user");
-    //   router.push("/admin/users");
-    // } catch (e) {
-    //   console.error(e);
-    //   setError("Something went wrong while saving. Please try again.");
-    // } finally {
-    //   setSubmitting(false);
-    // }
+     try {
+       const res = await fetch(`/api/users/${userId}`, {
+         method: "PATCH",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           role,
+           is_active: isActive,
+           password: newPassword || undefined, // only sent if being reset
+         }),
+       });
+       if (!res.ok) throw new Error("Failed to update user");
+       router.push("/admin/users");
+     } catch (e) {
+       console.error(e);
+       setError("Something went wrong while saving. Please try again.");
+     } finally {
+       setSubmitting(false);
+     }
   }
 
   return (

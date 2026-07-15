@@ -1,38 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DatabaseBackup, ShieldCheck, Clock, FileArchive } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
-import { MOCK_BACKUPS, BackupMock, formatISODateTime } from "@/lib/mock/admin";
+import {BackupMock, formatISODateTime } from "@/lib/mock/admin";
 
 export default function BackupPage() {
   // ── MOCK DATA STATE ──────────────────────────────────────────────────────
   // Swap this for a real fetch once the database is connected (see the
   // commented-out effect below).
-  const [backups, setBackups] = useState<BackupMock[]>(MOCK_BACKUPS);
-  const [loading] = useState(false);
+  //const [backups, setBackups] = useState<BackupMock[]>(MOCK_BACKUPS);
+  //const [loading] = useState(false);
 
   // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [backups, setBackups] = useState<BackupMock[]>([]);
-  // const [loading, setLoading] = useState(true);
+  const [backups, setBackups] = useState<BackupMock[]>([]);
+  const [loading, setLoading] = useState(true);
   //
-  // useEffect(() => {
-  //   async function loadBackups() {
-  //     setLoading(true);
-  //     try {
-  //       const res = await fetch("/api/backup");
-  //       setBackups(await res.json()); // GET /api/backup returns a bare array
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadBackups();
-  // }, []);
+  useEffect(() => {
+     async function loadBackups() {
+       setLoading(true);
+       try {
+         const res = await fetch("/api/backup");
+         setBackups(await res.json()); // GET /api/backup returns a bare array
+       } catch (e) {
+         console.error(e);
+       } finally {
+         setLoading(false);
+       }
+     }
+     loadBackups();
+   }, []);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [triggering, setTriggering] = useState(false);

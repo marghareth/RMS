@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, FileText, User, Calendar, ShieldCheck, Printer, History } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import {
-  MOCK_CERTIFICATES,
   CertificateMock,
   certTypeLabel,
   residentFullName,
@@ -31,40 +30,42 @@ export default function CertificateDetailPage() {
   const params = useParams();
   const certId = Number(params.id);
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // In place of the real GET /api/certificates/[id] call. Swap for the
-  // commented block below once the database is connected.
-  const [certificate] = useState<CertificateMock | null>(
-    () => MOCK_CERTIFICATES.find((c) => c.id === certId) ?? null
-  );
-  const [loading] = useState(false);
+  // GET /api/certificates/[id]
+  const [certificate, setCertificate] = useState<CertificateMock | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [certificate, setCertificate] = useState<CertificateMock | null>(null);
-  // const [loading, setLoading] = useState(true);
-  //
-  // useEffect(() => {
-  //   async function loadCertificate() {
-  //     setLoading(true);
-  //     try {
-  //       const res = await fetch(`/api/certificates/${certId}`);
-  //       if (!res.ok) throw new Error("Not found");
-  //       setCertificate(await res.json());
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadCertificate();
-  // }, [certId]);
+  useEffect(() => {
+    async function loadCertificate() {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/certificates/${certId}`);
+        if (!res.ok) throw new Error("Not found");
+        setCertificate(await res.json());
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadCertificate();
+  }, [certId]);
 
   // Other certificates issued to the same resident — full issuance history.
-  const residentHistory = useMemo(() => {
-    if (!certificate?.resident_id) return [];
-    return MOCK_CERTIFICATES.filter((c) => c.resident_id === certificate.resident_id && c.id !== certificate.id).sort(
-      (a, b) => new Date(b.issued_at).getTime() - new Date(a.issued_at).getTime()
-    );
+  // GET /api/certificates?resident_id=... already returns newest-first.
+  const [residentHistory, setResidentHistory] = useState<CertificateMock[]>([]);
+
+  useEffect(() => {
+    const residentId = certificate?.resident_id;
+    const request = residentId
+      ? fetch(`/api/certificates?resident_id=${residentId}`).then((r) => r.json())
+      : Promise.resolve({ certificates: [] });
+
+    request
+      .then((data) => {
+        const list: CertificateMock[] = data.certificates ?? [];
+        setResidentHistory(certificate ? list.filter((c) => c.id !== certificate.id) : []);
+      })
+      .catch(console.error);
   }, [certificate]);
 
   if (loading) {

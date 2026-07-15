@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, Plus, Syringe, User,
@@ -75,7 +75,7 @@ export default function VaccinationsListPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
+  
   const [vaccinations, setVaccinations] = useState<Vaccination[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -86,13 +86,9 @@ export default function VaccinationsListPage() {
       .then(d => setVaccinations(d.vaccinations ?? []))
       .finally(() => setLoading(false));
   }, [search]);
-  ─────────────────────────────────────────────────────────────────────────── */
+  
 
-  // ── Mock filter ───────────────────────────────────────────────────────────
-  const vaccinations = MOCK_VACCINATIONS.filter(v =>
-    `${v.resident.fname} ${v.resident.lname} ${v.vaccine_name}`
-      .toLowerCase().includes(search.toLowerCase())
-  );
+  
 
   return (
     <div>

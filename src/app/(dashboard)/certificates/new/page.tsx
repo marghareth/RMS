@@ -85,32 +85,32 @@ export default function NewCertificatePage() {
     router.push("/certificates");
 
     // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-    // try {
-    //   const res = await fetch("/api/certificates", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       resident_id: walkIn ? null : resident?.id,
-    //       certificate_type: certType,
-    //       purpose,
-    //       flagged_manual: walkIn,
-    //       manual_name: walkIn ? manualName : undefined,
-    //       manual_address: walkIn ? manualAddress : undefined,
-    //     }),
-    //   });
-    //   const data = await res.json();
-    //   if (!res.ok) {
-    //     // Server returns RESIDENCY_CHECK_FAILED or DUPLICATE_CERT with a message
-    //     setError(data.message || "Something went wrong while issuing the certificate.");
-    //     return;
-    //   }
-    //   router.push(`/certificates/${data.id}/preview`);
-    // } catch (e) {
-    //   console.error(e);
-    //   setError("Something went wrong. Please try again.");
-    // } finally {
-    //   setSubmitting(false);
-    // }
+     try {
+       const res = await fetch("/api/certificates", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           resident_id: walkIn ? null : resident?.id,
+           certificate_type: certType,
+           purpose,
+           flagged_manual: walkIn,
+           manual_name: walkIn ? manualName : undefined,
+           manual_address: walkIn ? manualAddress : undefined,
+         }),
+       });
+       const data = await res.json();
+       if (!res.ok) {
+         // Server returns RESIDENCY_CHECK_FAILED or DUPLICATE_CERT with a message
+         setError(data.message || "Something went wrong while issuing the certificate.");
+         return;
+       }
+       router.push(`/certificates/${data.id}/preview`);
+     } catch (e) {
+       console.error(e);
+       setError("Something went wrong. Please try again.");
+     } finally {
+       setSubmitting(false);
+     }
   }
 
   return (
@@ -126,7 +126,7 @@ export default function NewCertificatePage() {
       <div className="mb-5">
         <h1 className="text-xl font-bold text-[#1F2937]">Issue Certificate</h1>
         <p className="mt-0.5 text-[13px] text-[#9CA3AF]">
-          Auto-fills from the resident's profile. A certificate number will be generated automatically.
+          Auto-fills from the residents profile. A certificate number will be generated automatically.
         </p>
       </div>
 

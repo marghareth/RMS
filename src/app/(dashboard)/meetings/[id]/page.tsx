@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import {
-  MOCK_MEETINGS,
   MeetingRecordMock,
   meetingTypeLabel,
   formatISODate,
@@ -31,33 +30,30 @@ export default function MeetingDetailPage() {
   const params = useParams();
   const meetingId = Number(params.id);
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // In place of the real GET /api/meetings/[id] call. Swap for the
-  // commented block below once the database is connected.
-  const [meeting, setMeeting] = useState<MeetingRecordMock | null>(
-    () => MOCK_MEETINGS.find((m) => m.id === meetingId) ?? null
-  );
-  const [loading] = useState(false);
-
   // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [meeting, setMeeting] = useState<MeetingRecordMock | null>(null);
-  // const [loading, setLoading] = useState(true);
-  //
-  // useEffect(() => {
-  //   async function loadMeeting() {
-  //     setLoading(true);
-  //     try {
-  //       const res = await fetch(`/api/meetings/${meetingId}`);
-  //       if (!res.ok) throw new Error("Not found");
-  //       setMeeting(await res.json());
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadMeeting();
-  // }, [meetingId]);
+  const [meeting, setMeeting] = useState<MeetingRecordMock | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadMeeting = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/meetings/${meetingId}`);
+      if (!res.ok) throw new Error("Not found");
+      setMeeting(await res.json());
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [meetingId]);
+
+  useEffect(() => {
+    // Fetching-on-mount to synchronize local state with the /api/meetings
+    // endpoint (an external system) — the documented exception case for
+    // this rule. Re-fetching is also triggered manually after a save.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadMeeting();
+  }, [loadMeeting]);
 
   const [editing, setEditing] = useState(false);
   const [draftMinutes, setDraftMinutes] = useState(meeting?.minutes ?? "");
@@ -97,19 +93,21 @@ export default function MeetingDetailPage() {
   async function handleSaveMinutes() {
     setSaving(true);
 
-    // ── MOCK WRITE ──────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 400));
-    setMeeting((prev) => (prev ? { ...prev, minutes: draftMinutes.trim() || null } : prev));
-    setSaving(false);
-    setEditing(false);
-
     // ── REAL WRITE (disabled until API/DB is wired up) ─────────────────
-    // await fetch(`/api/meetings/${meetingId}`, {
-    //   method: "PATCH",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ minutes: draftMinutes.trim() || null }),
-    // });
-    // await loadMeeting(); // re-fetch to sync with server state
+    try {
+      const res = await fetch(`/api/meetings/${meetingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ minutes: draftMinutes.trim() || null }),
+      });
+      if (!res.ok) throw new Error("Save failed");
+      await loadMeeting(); // re-fetch to sync with server state
+      setEditing(false);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
   }
 
   const upcoming = isUpcoming(meeting.meeting_date);
