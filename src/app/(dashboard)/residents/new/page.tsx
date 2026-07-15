@@ -208,7 +208,12 @@ export default function NewRBIPage() {
   const router = useRouter();
 
   const [step,        setStep]        = useState(1);
-  const [puroks,      setPuroks]      = useState<Purok[]>([]);
+  // Seed with mock puroks immediately (lazy initializer — runs once, on
+  // mount, not inside an effect), then try to replace with real data
+  // from the API below. This avoids a synchronous setState() call in the
+  // effect body (react-hooks/set-state-in-effect) and avoids the old
+  // race condition where mock data could clobber a real API response.
+  const [puroks,      setPuroks]      = useState<Purok[]>(() => getMockPuroks());
   const [submitting,  setSubmitting]  = useState(false);
   const [error,       setError]       = useState("");
   const [editIdx,     setEditIdx]     = useState<number | null>(null);
@@ -229,11 +234,19 @@ export default function NewRBIPage() {
   const [hhNoPreview] = useState("HHNP1XXXXXXXXX");
 
   useEffect(() => {
-    // fetch("/api/puroks")
-    //   .then(r => r.json())
-    //   .then(setPuroks)
-    //   .catch(console.error);
-    setPuroks(getMockPuroks());
+    let ignore = false;
+
+    fetch("/api/puroks")
+      .then(r => r.json())
+      .then(json => {
+        if (!ignore) setPuroks(json);
+      })
+      .catch(() => {
+        // /api/puroks isn't available yet — keep the mock data that
+        // was already set as the initial state, no action needed here.
+      });
+
+    return () => { ignore = true; };
   }, []);
 
   // ── Step 1 validation ────────────────────────────────────────────────────

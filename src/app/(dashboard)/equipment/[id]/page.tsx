@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   ArrowLeft, Package, Pencil, Clock,
@@ -32,26 +32,6 @@ interface Equipment {
   date_acquired: string | null;
   borrowings: Borrowing[];
 }
-
-// ─── MOCK DATA ────────────────────────────────────────────────────────────────
-const MOCK: Record<string, Equipment> = {
-  "1": {
-    id: 1, name: "Megaphone", quantity: 3, condition: "Good",
-    status: "SERVICEABLE", date_acquired: "2022-01-15",
-    borrowings: [
-      { id: 1, borrower_name: "Juan dela Cruz",  date_borrowed: "2026-06-20", expected_return: "2026-06-27", actual_return: null, return_condition: null, is_overdue: true, resident: { fname: "Juan", lname: "dela Cruz" }, recorder: { username: "admin" } },
-      { id: 5, borrower_name: "Maria Santos",    date_borrowed: "2026-05-10", expected_return: "2026-05-15", actual_return: "2026-05-14", return_condition: "Good", is_overdue: false, resident: null, recorder: { username: "secretary1" } },
-      { id: 8, borrower_name: "Pedro Reyes",     date_borrowed: "2026-04-01", expected_return: "2026-04-05", actual_return: "2026-04-05", return_condition: "Good", is_overdue: false, resident: null, recorder: { username: "admin" } },
-    ],
-  },
-  "2": {
-    id: 2, name: "Plastic Chairs", quantity: 50, condition: "Fair",
-    status: "SERVICEABLE", date_acquired: "2021-05-10",
-    borrowings: [
-      { id: 2, borrower_name: "Maria Santos", date_borrowed: "2026-06-28", expected_return: "2026-07-05", actual_return: null, return_condition: null, is_overdue: false, resident: null, recorder: { username: "encoder1" } },
-    ],
-  },
-};
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<EquipmentStatus, { label: string; bg: string; text: string; dot: string; Icon: any }> = {
@@ -151,7 +131,6 @@ export default function EquipmentDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
   const [equipment, setEquipment] = useState<Equipment | null>(null);
   const [loading,   setLoading]   = useState(true);
 
@@ -161,17 +140,26 @@ export default function EquipmentDetailPage() {
       .then(setEquipment)
       .catch(() => router.push("/equipment"))
       .finally(() => setLoading(false));
-  }, [params.id]);
-  ─────────────────────────────────────────────────────────────────────────── */
-
-  // ── Mock data ─────────────────────────────────────────────────────────────
-  const equipment = MOCK[params.id] ?? MOCK["1"];
+  }, [params.id, router]);
 
   const [tab, setTab] = useState<"active" | "history">("active");
 
   function handleReturn(borrowingId: number) {
     router.push(`/equipment/return?borrowing_id=${borrowingId}`);
   }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+      </div>
+    );
+  }
+
+  // Loading finished with no record — the fetch's .catch() above is already
+  // redirecting away, so render nothing while that navigation completes
+  // rather than crash on null property access below.
+  if (!equipment) return null;
 
   const active   = activeBorrowings(equipment);
   const returned = returnedBorrowings(equipment);

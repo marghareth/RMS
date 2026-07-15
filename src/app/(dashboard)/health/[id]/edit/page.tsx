@@ -1,23 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Heart, Save } from "lucide-react";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface HealthForm { record_type: string; notes: string }
-
-// ─── MOCK INITIAL DATA ────────────────────────────────────────────────────────
-const MOCK_RECORDS: Record<string, HealthForm & { resident_name: string }> = {
-  "1": { record_type: "Hypertension",       notes: "BP: 140/90. Advised lifestyle changes and medication. Follow-up in 2 weeks.", resident_name: "dela Cruz, Juan"   },
-  "2": { record_type: "Diabetes",           notes: "Blood sugar: 210 mg/dL. Referred to RHU for further evaluation.",            resident_name: "Santos, Maria"      },
-  "3": { record_type: "Prenatal Checkup",   notes: "28 weeks AOG. Normal fetal heart rate at 144 bpm.",                          resident_name: "Reyes, Rosa"        },
-  "4": { record_type: "Tuberculosis",       notes: "DOTS therapy started. Month 2 of 6. Patient is compliant.",                  resident_name: "Garcia, Pedro"      },
-  "5": { record_type: "Well-child Checkup", notes: "Growth and development on track. Weight 14kg, Height 96cm.",                 resident_name: "Flores, Nino"       },
-  "6": { record_type: "Hypertension",       notes: "BP: 150/95. Medications adjusted.",                                          resident_name: "Lopez, Carmen"      },
-  "7": { record_type: "Asthma",             notes: "Nebulization done. Prescribed Salbutamol inhaler.",                          resident_name: "Cruz, Fernando"     },
-  "8": { record_type: "Family Planning",    notes: "IUD insertion scheduled next visit. Counseling completed.",                  resident_name: "Mendoza, Lourdes"   },
-};
+interface HealthRecordData extends HealthForm { resident_name: string }
 
 const RECORD_TYPES = [
   "Hypertension", "Diabetes", "Tuberculosis", "Prenatal Checkup",
@@ -37,37 +26,45 @@ const TYPE_COLORS: Record<string, string> = {
   "Family Planning":    "border-purple-200 bg-purple-50 text-purple-700",
 };
 
-// ─── FIELD LABEL ──────────────────────────────────────────────────────────────
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
-  return (
-    <label className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wide block mb-1.5">
-      {children}{required && <span className="text-red-500 ml-0.5">*</span>}
-    </label>
-  );
+// ─── MAIN PAGE (keyed by id so state resets cleanly on navigation) ───────────
+export default function EditHealthRecordPage() {
+  const { id } = useParams<{ id: string }>();
+  return <EditHealthRecordContent key={id} id={id} />;
 }
 
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
-export default function EditHealthRecordPage() {
+function EditHealthRecordContent({ id }: { id: string }) {
   const router = useRouter();
-  const { id } = useParams<{ id: string }>();
 
-  const initial = MOCK_RECORDS[id] ?? MOCK_RECORDS["1"];
-
-  const [form,   setForm]   = useState<HealthForm>({ record_type: initial.record_type, notes: initial.notes });
-  const [saving, setSaving] = useState(false);
-  const [error,  setError]  = useState("");
+  const [record,  setRecord]  = useState<HealthRecordData | null>(null);
+  const [form,    setForm]    = useState<HealthForm>({ record_type: "", notes: "" });
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [saving,  setSaving]  = useState(false);
+  const [error,   setError]   = useState("");
 
   const set = (k: keyof HealthForm, v: string) => setForm(p => ({ ...p, [k]: v }));
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
   useEffect(() => {
+    let cancelled = false;
+
     fetch(`/api/health/${id}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(data => setForm({ record_type: data.record_type, notes: data.notes ?? "" }))
-      .catch(() => router.push("/health"));
+      .then((data: HealthRecordData) => {
+        if (cancelled) return;
+        setRecord(data);
+        setForm({ record_type: data.record_type, notes: data.notes ?? "" });
+      })
+      .catch(() => { if (!cancelled) setNotFound(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
   }, [id]);
 
-  async function handleSave() {
+  useEffect(() => {
+    if (notFound) router.push("/health");
+  }, [notFound, router]);
+
+  const handleSave = useCallback(async () => {
     if (!form.record_type) { setError("Please select a record type."); return; }
     setSaving(true); setError("");
     try {
@@ -83,15 +80,22 @@ export default function EditHealthRecordPage() {
     } finally {
       setSaving(false);
     }
-  }
-  ─────────────────────────────────────────────────────────────────────────── */
+  }, [id, form, router]);
 
-  async function handleSave() {
-    if (!form.record_type) { setError("Please select a record type."); return; }
-    setSaving(true);
-    await new Promise(r => setTimeout(r, 700));
-    setSaving(false);
-    router.push(`/health/${id}`);
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto py-16 text-center text-[13px] text-[#9CA3AF]">
+        Loading health record…
+      </div>
+    );
+  }
+
+  if (!record) {
+    return (
+      <div className="max-w-2xl mx-auto py-16 text-center text-[13px] text-[#9CA3AF]">
+        Redirecting…
+      </div>
+    );
   }
 
   return (
@@ -105,7 +109,7 @@ export default function EditHealthRecordPage() {
         <div>
           <h1 className="text-[18px] font-black text-[#1F2937] uppercase tracking-wide">Edit Health Record</h1>
           <p className="text-[12px] text-[#9CA3AF] mt-0.5">
-            Resident: <span className="font-semibold text-[#6B7280]">{initial.resident_name}</span>
+            Resident: <span className="font-semibold text-[#6B7280]">{record.resident_name}</span>
           </p>
         </div>
       </div>

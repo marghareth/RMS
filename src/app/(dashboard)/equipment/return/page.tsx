@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft, Package, CheckCircle2, AlertTriangle,
@@ -20,25 +20,6 @@ interface Borrowing {
     condition: string | null;
   };
 }
-
-// ─── MOCK DATA ────────────────────────────────────────────────────────────────
-const MOCK_BORROWINGS: Record<string, Borrowing> = {
-  "1": {
-    id: 1, borrower_name: "Juan dela Cruz",
-    date_borrowed: "2026-06-20", expected_return: "2026-06-27", is_overdue: true,
-    equipment: { id: 1, name: "Megaphone", condition: "Good" },
-  },
-  "2": {
-    id: 2, borrower_name: "Maria Santos",
-    date_borrowed: "2026-06-28", expected_return: "2026-07-05", is_overdue: false,
-    equipment: { id: 2, name: "Plastic Chairs", condition: "Fair" },
-  },
-  "3": {
-    id: 3, borrower_name: "Pedro Reyes",
-    date_borrowed: "2026-06-29", expected_return: "2026-07-01", is_overdue: false,
-    equipment: { id: 6, name: "Sound System", condition: "Good" },
-  },
-};
 
 // ─── CONDITION OPTION ─────────────────────────────────────────────────────────
 function ConditionOption({
@@ -79,29 +60,55 @@ function InfoRow({ label, value, accent }: { label: string; value: React.ReactNo
   );
 }
 
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+// ─── PAGE (reads the query param, keys the content by it) ────────────────────
 export default function ReturnEquipmentPage() {
-  const router       = useRouter();
   const searchParams = useSearchParams();
   const borrowingId  = searchParams.get("borrowing_id") ?? "1";
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
+  // Keying by borrowingId forces a fresh mount whenever it changes, so all
+  // state below (loading, borrowing, form fields, etc.) starts clean via its
+  // initial useState value instead of needing a synchronous reset in an
+  // effect — which avoids react-hooks/set-state-in-effect entirely.
+  return <ReturnEquipmentContent key={borrowingId} borrowingId={borrowingId} />;
+}
+
+function ReturnEquipmentContent({ borrowingId }: { borrowingId: string }) {
+  const router = useRouter();
+
   const [borrowing, setBorrowing] = useState<Borrowing | null>(null);
   const [loading,   setLoading]   = useState(true);
+  const [notFound,  setNotFound]  = useState(false);
+
+  const [returnCondition, setReturnCondition] = useState("");
+  const [notes,           setNotes]           = useState("");
+  const [saving,          setSaving]          = useState(false);
+  const [done,            setDone]            = useState(false);
+  const [error,           setError]           = useState("");
 
   useEffect(() => {
-    fetch(`/api/equipment/borrowings?id=${borrowingId}`)  // or filter from list
+    let cancelled = false;
+
+    fetch(`/api/equipment/borrowings?id=${borrowingId}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(data => {
-        const found = data.find((b: Borrowing) => String(b.id) === borrowingId);
-        if (!found) router.push("/equipment");
+      .then((data: Borrowing[]) => {
+        if (cancelled) return;
+        const found = data.find(b => String(b.id) === borrowingId);
+        if (!found) setNotFound(true);
         else setBorrowing(found);
       })
-      .catch(() => router.push("/equipment"))
-      .finally(() => setLoading(false));
+      .catch(() => { if (!cancelled) setNotFound(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
   }, [borrowingId]);
 
-  async function handleReturn() {
+  // Redirect away once we know for sure the record doesn't exist.
+  useEffect(() => {
+    if (notFound) router.push("/equipment");
+  }, [notFound, router]);
+
+  const handleReturn = useCallback(async () => {
+    if (!borrowing) return;
     if (!returnCondition) { setError("Please select the return condition."); return; }
     setSaving(true);
     setError("");
@@ -110,7 +117,7 @@ export default function ReturnEquipmentPage() {
         method:  "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id:               parseInt(borrowingId),
+          id:               borrowing.id,
           return_condition: returnCondition,
         }),
       });
@@ -121,28 +128,28 @@ export default function ReturnEquipmentPage() {
     } finally {
       setSaving(false);
     }
-  }
-  ─────────────────────────────────────────────────────────────────────────── */
-
-  // ── Mock data ─────────────────────────────────────────────────────────────
-  const borrowing = MOCK_BORROWINGS[borrowingId] ?? MOCK_BORROWINGS["1"];
-
-  const [returnCondition, setReturnCondition] = useState("");
-  const [notes,           setNotes]           = useState("");
-  const [saving,          setSaving]          = useState(false);
-  const [done,            setDone]            = useState(false);
-  const [error,           setError]           = useState("");
-
-  // ── Mock return handler ───────────────────────────────────────────────────
-  async function handleReturn() {
-    if (!returnCondition) { setError("Please select the return condition."); return; }
-    setSaving(true);
-    await new Promise(r => setTimeout(r, 800));
-    setSaving(false);
-    setDone(true);
-  }
+  }, [borrowing, returnCondition]);
 
   const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+  // ── Loading / not-found guard ─────────────────────────────────────────────
+  // Everything below this line can safely assume `borrowing` is non-null.
+  if (loading) {
+    return (
+      <div className="max-w-xl mx-auto py-16 text-center text-[13px] text-[#9CA3AF]">
+        Loading borrow record…
+      </div>
+    );
+  }
+
+  if (!borrowing) {
+    // Either not found (redirect is already in flight) or fetch failed.
+    return (
+      <div className="max-w-xl mx-auto py-16 text-center text-[13px] text-[#9CA3AF]">
+        Redirecting…
+      </div>
+    );
+  }
 
   // ── Success screen ────────────────────────────────────────────────────────
   if (done) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, UserPlus, Eye, EyeOff } from "lucide-react";
 import { ROLES, Role, MOCK_USERS } from "@/lib/mock/admin";
@@ -44,24 +44,24 @@ export default function NewUserPage() {
     router.push("/admin/users");
 
     // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-    // try {
-    //   const res = await fetch("/api/users", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ username, password, role }),
-    //   });
-    //   if (!res.ok) {
-    //     const data = await res.json();
-    //     setError(data.error || "Failed to create user."); // e.g. 409 "Username already exists"
-    //     return;
-    //   }
-    //   router.push("/admin/users");
-    // } catch (e) {
-    //   console.error(e);
-    //   setError("Something went wrong while saving. Please try again.");
-    // } finally {
-    //   setSubmitting(false);
-    // }
+    try {
+       const res = await fetch("/api/users", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ username, password, role }),
+       });
+       if (!res.ok) {
+         const data = await res.json();
+         setError(data.error || "Failed to create user."); // e.g. 409 "Username already exists"
+         return;
+       }
+     router.push("/admin/users");
+     } catch (e) {
+       console.error(e);
+       setError("Something went wrong while saving. Please try again.");
+     } finally {
+       setSubmitting(false);
+     }
   }
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, Plus, Heart, Syringe,
@@ -106,7 +106,6 @@ export default function HealthPage() {
   const [tab,    setTab]    = useState<"health" | "vaccination">("health");
   const [search, setSearch] = useState("");
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
   const [healthRecords,  setHealthRecords]  = useState<HealthRecord[]>([]);
   const [vaccinations,   setVaccinations]   = useState<Vaccination[]>([]);
   const [loading,        setLoading]        = useState(true);
@@ -124,17 +123,7 @@ export default function HealthPage() {
       })
       .finally(() => setLoading(false));
   }, [search]);
-  ─────────────────────────────────────────────────────────────────────────── */
-
-  // ── Mock filtering ────────────────────────────────────────────────────────
-  const healthRecords = MOCK_HEALTH.filter(r =>
-    `${r.resident.fname} ${r.resident.lname} ${r.record_type}`
-      .toLowerCase().includes(search.toLowerCase())
-  );
-  const vaccinations = MOCK_VACCINATIONS.filter(v =>
-    `${v.resident.fname} ${v.resident.lname} ${v.vaccine_name}`
-      .toLowerCase().includes(search.toLowerCase())
-  );
+ 
 
   return (
     <div className="flex flex-col gap-5">

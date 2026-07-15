@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Heart, Save, User, Search } from "lucide-react";
 
@@ -200,7 +200,6 @@ export default function NewHealthRecordPage() {
     set("resident_id", String(r.id));
   }
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
   async function handleSave() {
     if (!form.resident_id || !form.record_type) {
       setError("Please select a resident and a record type.");
@@ -226,19 +225,7 @@ export default function NewHealthRecordPage() {
       setSaving(false);
     }
   }
-  ─────────────────────────────────────────────────────────────────────────── */
-
-  // ── Mock save ─────────────────────────────────────────────────────────────
-  async function handleSave() {
-    if (!form.resident_id || !form.record_type) {
-      setError("Please select a resident and a record type.");
-      return;
-    }
-    setSaving(true);
-    await new Promise(r => setTimeout(r, 700));
-    setSaving(false);
-    router.push("/health");
-  }
+ 
 
   const isValid = form.resident_id && form.record_type;
 
@@ -252,7 +239,7 @@ export default function NewHealthRecordPage() {
         </button>
         <div>
           <h1 className="text-[18px] font-black text-[#1F2937] uppercase tracking-wide">Add Health Record</h1>
-          <p className="text-[12px] text-[#9CA3AF] mt-0.5">Record a resident's health condition or checkup</p>
+          <p className="text-[12px] text-[#9CA3AF] mt-0.5">Record a residents health condition or checkup</p>
         </div>
       </div>
 

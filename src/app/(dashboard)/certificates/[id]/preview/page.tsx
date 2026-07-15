@@ -1,55 +1,40 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Printer, Download, FileText, FileEdit } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import {
-  MOCK_CERTIFICATES,
   MOCK_ACTIVE_CAPTAIN,
   MOCK_BARANGAY_INFO,
   CertificateMock,
   residentFullName,
   formatISODate,
 } from "@/lib/mock/certificates";
-import { getMockTemplate, renderTemplate } from "@/lib/mock/certificateTemplates";
+import { renderTemplate, CertificateTemplateMock } from "@/lib/mock/certificateTemplates";
 
 export default function CertificatePreviewPage() {
   const router = useRouter();
   const params = useParams();
   const certId = Number(params.id);
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // In place of the real GET /api/certificates/[id] call. Swap for the
-  // commented block below once the database is connected.
-  const [certificate] = useState<CertificateMock | null>(
-    () => MOCK_CERTIFICATES.find((c) => c.id === certId) ?? null
-  );
+  // GET /api/certificates/[id]
+  const [certificate, setCertificate] = useState<CertificateMock | null>(null);
+  useEffect(() => {
+    fetch(`/api/certificates/${certId}`).then((r) => r.json()).then(setCertificate).catch(console.error);
+  }, [certId]);
 
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [certificate, setCertificate] = useState<CertificateMock | null>(null);
-  // useEffect(() => {
-  //   fetch(`/api/certificates/${certId}`).then((r) => r.json()).then(setCertificate).catch(console.error);
-  // }, [certId]);
-
-  // ── TEMPLATE LOOKUP ───────────────────────────────────────────────────────
   // Pulls the editable template for this certificate's type (see
   // /certificates/templates) instead of a hardcoded per-type switch-case, and
   // interpolates it with this certificate's real data.
-  const template = useMemo(
-    () => (certificate ? getMockTemplate(certificate.certificate_type) : null),
-    [certificate]
-  );
-
-  // ── REAL TEMPLATE FETCH (disabled until API/DB is wired up) ─────────────
-  // const [template, setTemplate] = useState<CertificateTemplateMock | null>(null);
-  // useEffect(() => {
-  //   if (!certificate) return;
-  //   fetch(`/api/certificate-templates/${certificate.certificate_type}`)
-  //     .then((r) => r.json())
-  //     .then(setTemplate)
-  //     .catch(console.error);
-  // }, [certificate]);
+  const [template, setTemplate] = useState<CertificateTemplateMock | null>(null);
+  useEffect(() => {
+    if (!certificate) return;
+    fetch(`/api/certificate-templates/${certificate.certificate_type}`)
+      .then((r) => r.json())
+      .then(setTemplate)
+      .catch(console.error);
+  }, [certificate]);
 
   const mergedValues = useMemo<Record<string, string>>(() => {
     if (!certificate) {
@@ -87,15 +72,13 @@ export default function CertificatePreviewPage() {
   const renderedClosing = template ? renderTemplate(template.closing_line, mergedValues) : "";
 
   function handlePrint() {
-    // ── MOCK: browser print dialog stands in for a generated PDF ─────────
     window.print();
+  }
 
-    // ── REAL PDF GENERATION (disabled until API/DB is wired up) ───────────
-    // Would hit GET /api/pdf/certificate/[id], which renders the same
-    // template server-side via @react-pdf/renderer (see src/lib/pdf.ts),
-    // pulling the merged template from CertificateTemplate the same way
-    // this page does, and streams back a downloadable/printable PDF file.
-    // window.open(`/api/pdf/certificate/${certId}`, "_blank");
+  function handleDownloadPdf() {
+    // Renders the same template server-side via @react-pdf/renderer
+    // (see src/lib/pdf.ts) and streams back a downloadable PDF file.
+    window.open(`/api/pdf/certificate/${certId}`, "_blank");
   }
 
   if (!certificate || !template) {
@@ -147,7 +130,7 @@ export default function CertificatePreviewPage() {
             Print
           </button>
           <button
-            onClick={handlePrint}
+            onClick={handleDownloadPdf}
             className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
           >
             <Download size={14} />

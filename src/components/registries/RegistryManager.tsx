@@ -10,8 +10,10 @@ interface RegistryManagerProps {
   title: string;
   subtitle: string;
   icon: LucideIcon;
+  iconBg?: string;
   addNote?: string;
   minAge?: number;
+  detailBase: string;
 }
 
 function calcAge(birthdate: string) {

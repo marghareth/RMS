@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   IdCard,
@@ -16,7 +16,6 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import {
-  MOCK_BARANGAY_IDS,
   BarangayIdMock,
   residentFullName,
   calcAge,
@@ -32,28 +31,28 @@ export default function BarangayIdListPage() {
   // ── MOCK DATA STATE ──────────────────────────────────────────────────────
   // Swap this for a real fetch once the database is connected (see the
   // commented-out effect below).
-  const [ids] = useState<BarangayIdMock[]>(MOCK_BARANGAY_IDS);
-  const [loading] = useState(false);
+ // const [ids] = useState<BarangayIdMock[]>(MOCK_BARANGAY_IDS);
+ // const [loading] = useState(false);
 
   // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [ids, setIds] = useState<BarangayIdMock[]>([]);
-  // const [loading, setLoading] = useState(true);
+  const [ids, setIds] = useState<BarangayIdMock[]>([]);
+  const [loading, setLoading] = useState(true);
   //
-  // useEffect(() => {
-  //   async function loadIds() {
-  //     setLoading(true);
-  //     try {
-  //       const res = await fetch("/api/barangay-id?limit=50");
-  //       const data = await res.json();
-  //       setIds(data.ids ?? []);
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadIds();
-  // }, []);
+  useEffect(() => {
+     async function loadIds() {
+       setLoading(true);
+       try {
+         const res = await fetch("/api/barangay-id?limit=50");
+         const data = await res.json();
+         setIds(data.ids ?? []);
+       } catch (e) {
+         console.error(e);
+       } finally {
+         setLoading(false);
+       }
+     }
+     loadIds();
+   }, []);
 
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(ids[0]?.id ?? null);

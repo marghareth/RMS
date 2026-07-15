@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect} from "react";
 import { useRouter } from "next/navigation";
 import {
   DollarSign,
@@ -18,7 +18,7 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
-import { MOCK_FINANCIAL_RECORDS, FinancialRecordMock, formatCurrency, formatISODate } from "@/lib/mock/financial";
+import { FinancialRecordMock, formatCurrency, formatISODate } from "@/lib/mock/financial";
 
 interface FilterState {
   transaction_type: string;
@@ -31,44 +31,43 @@ const EMPTY_FILTERS: FilterState = { transaction_type: "", date_from: "", date_t
 export default function FinancialListPage() {
   const router = useRouter();
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // Swap this for a real fetch once the database is connected (see the
-  // commented-out effect below).
-  const [records] = useState<FinancialRecordMock[]>(MOCK_FINANCIAL_RECORDS);
-  const [loading] = useState(false);
-
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
 
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [records, setRecords] = useState<FinancialRecordMock[]>([]);
-  // const [income, setIncome] = useState(0);
-  // const [expense, setExpense] = useState(0);
-  // const [loading, setLoading] = useState(true);
-  //
-  // useEffect(() => {
-  //   async function loadRecords() {
-  //     setLoading(true);
-  //     try {
-  //       const params = new URLSearchParams({ limit: "50" });
-  //       if (filters.transaction_type) params.set("transaction_type", filters.transaction_type);
-  //       if (filters.date_from) params.set("date_from", filters.date_from);
-  //       if (filters.date_to) params.set("date_to", filters.date_to);
-  //
-  //       const res = await fetch(`/api/financial?${params}`);
-  //       const data = await res.json();
-  //       setRecords(data.records ?? []);
-  //       setIncome(data.income ?? 0);   // API returns grouped sums directly
-  //       setExpense(data.expense ?? 0);
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadRecords();
-  // }, [filters]);
+  // ── REAL DATA FETCH ───────────────────────────────────────────────────────
+  // Note: the API's own income/expense aggregation isn't used here, because
+  // it only accounts for transaction_type/date_from/date_to — it has no idea
+  // about the client-side `search` text filter below. The totals shown in
+  // the stat cards need to match what's actually in the table, so they're
+  // derived from `filtered` instead (see the useMemo further down).
+  const [records, setRecords] = useState<FinancialRecordMock[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRecords() {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({ limit: "50" });
+        if (filters.transaction_type) params.set("transaction_type", filters.transaction_type);
+        if (filters.date_from) params.set("date_from", filters.date_from);
+        if (filters.date_to) params.set("date_to", filters.date_to);
+
+        const res = await fetch(`/api/financial?${params}`);
+        const data = await res.json();
+        if (!cancelled) setRecords(data.records ?? []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadRecords();
+    return () => { cancelled = true; };
+  }, [filters]);
 
   const filtered = useMemo(() => {
     return records.filter((r) => {
@@ -80,9 +79,6 @@ export default function FinancialListPage() {
     });
   }, [records, search, filters]);
 
-  // In the real API this comes pre-aggregated from the `income`/`expense`
-  // fields of the GET response (via prisma.financialRecord.groupBy). Here we
-  // derive the same numbers client-side from the mock records.
   const { income, expense } = useMemo(() => {
     return filtered.reduce(
       (acc, r) => {

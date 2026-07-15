@@ -167,7 +167,6 @@ export default function EditResidentPage() {
     setError("");
 
     try {
-      /* ── Real API (commented out until Supabase is connected) ────────────────
       const res = await fetch(`/api/residents/${id}`, {
         method:  "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -178,7 +177,6 @@ export default function EditResidentPage() {
         }),
       });
       if (!res.ok) throw new Error("Failed to save changes");
-      ─────────────────────────────────────────────────────────────────────────── */
 
       // ── Mock: persist to mock store ────────────────────────────────────────
       updateMockResident(Number(id), {

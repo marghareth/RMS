@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { History, Search, SlidersHorizontal, X } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import {
-  MOCK_AUDIT_LOGS,
   AuditLogMock,
   AUDIT_TABLES,
   AUDIT_ACTIONS,
@@ -30,42 +29,37 @@ const TONE_CLASSES: Record<string, string> = {
 };
 
 export default function AuditLogsPage() {
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // Swap this for a real fetch once the database is connected (see the
-  // commented-out effect below).
-  const [logs] = useState<AuditLogMock[]>(MOCK_AUDIT_LOGS);
-  const [loading] = useState(false);
 
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
 
   // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [logs, setLogs] = useState<AuditLogMock[]>([]);
-  // const [loading, setLoading] = useState(true);
+  const [logs, setLogs] = useState<AuditLogMock[]>([]);
+  const [loading, setLoading] = useState(true);
   //
-  // useEffect(() => {
-  //   async function loadLogs() {
-  //     setLoading(true);
-  //     try {
-  //       const params = new URLSearchParams({ limit: "50" });
-  //       if (filters.table_affected) params.set("table_affected", filters.table_affected);
-  //       if (filters.date_from) params.set("date_from", filters.date_from);
-  //       if (filters.date_to) params.set("date_to", filters.date_to);
-  //       // Note: the current API doesn't filter by `action` server-side —
-  //       // that filter is applied client-side below regardless.
-  //
-  //       const res = await fetch(`/api/audit-logs?${params}`);
-  //       const data = await res.json();
-  //       setLogs(data.logs ?? []);
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadLogs();
-  // }, [filters]);
+  useEffect(() => {
+    async function loadLogs() {
+       setLoading(true);
+       try {
+         const params = new URLSearchParams({ limit: "50" });
+         if (filters.table_affected) params.set("table_affected", filters.table_affected);
+         if (filters.date_from) params.set("date_from", filters.date_from);
+         if (filters.date_to) params.set("date_to", filters.date_to);
+         // Note: the current API doesn't filter by `action` server-side —
+         // that filter is applied client-side below regardless.
+         //
+          const res = await fetch(`/api/audit-logs?${params}`);
+          const data = await res.json();
+          setLogs(data.logs ?? []);
+       } catch (e) {
+         console.error(e);
+       } finally {
+         setLoading(false);
+       }
+     }
+     loadLogs();
+   }, [filters]);
 
   const filtered = useMemo(() => {
     return logs.filter((l) => {

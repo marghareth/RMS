@@ -127,24 +127,24 @@ export default function NewBarangayIdPage() {
     router.push("/barangay_id");
 
     // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-    // try {
-    //   const res = await fetch("/api/barangay-id", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ resident_id: resident.id }),
-    //   });
-    //   if (!res.ok) {
-    //     const data = await res.json();
-    //     setError(data.error || "Failed to issue barangay ID.");
-    //     return;
-    //   }
-    //   router.push("/barangay_id");
-    // } catch (e) {
-    //   console.error(e);
-    //   setError("Something went wrong while saving. Please try again.");
-    // } finally {
-    //   setSubmitting(false);
-    // }
+     try {
+       const res = await fetch("/api/barangay-id", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ resident_id: resident.id }),
+       });
+       if (!res.ok) {
+         const data = await res.json();
+         setError(data.error || "Failed to issue barangay ID.");
+         return;
+       }
+       router.push("/barangay_id");
+     } catch (e) {
+       console.error(e);
+       setError("Something went wrong while saving. Please try again.");
+     } finally {
+       setSubmitting(false);
+     }
   }
 
   return (

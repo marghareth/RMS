@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Shield,
@@ -18,7 +18,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
-import { MOCK_BLOTTER_CASES, BlotterCaseMock, BlotterStatus, formatISODate } from "@/lib/mock/blotter";
+import { BlotterCaseMock, BlotterStatus, formatISODate } from "@/lib/mock/blotter";
 
 // ── FILTER STATE ─────────────────────────────────────────────────────────────
 interface FilterState {
@@ -36,40 +36,40 @@ export default function BlotterListPage() {
   // ── MOCK DATA STATE ──────────────────────────────────────────────────────
   // Swap this for a real fetch once the database is connected (see the
   // commented-out effect below).
-  const [cases] = useState<BlotterCaseMock[]>(MOCK_BLOTTER_CASES);
-  const [loading] = useState(false);
+  //const [cases] = useState<BlotterCaseMock[]>(MOCK_BLOTTER_CASES);
+  //const [loading] = useState(false);
 
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
 
   // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [cases, setCases] = useState<BlotterCaseMock[]>([]);
-  // const [loading, setLoading] = useState(true);
+   const [cases, setCases] = useState<BlotterCaseMock[]>([]);
+   const [loading, setLoading] = useState(true);
   //
-  // useEffect(() => {
-  //   async function loadCases() {
-  //     setLoading(true);
-  //     try {
-  //       const params = new URLSearchParams({ limit: "50" });
-  //       if (search) params.set("search", search);
-  //       if (filters.status) params.set("status", filters.status);
-  //       if (filters.escalated) params.set("escalated", "true");
-  //       if (filters.date_from) params.set("date_from", filters.date_from);
-  //       if (filters.date_to) params.set("date_to", filters.date_to);
-  //
-  //       const res = await fetch(`/api/blotter?${params}`);
-  //       const data = await res.json();
-  //       setCases(data.cases ?? []);
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   const t = setTimeout(loadCases, 300);
-  //   return () => clearTimeout(t);
-  // }, [search, filters]);
+   useEffect(() => {
+     async function loadCases() {
+       setLoading(true);
+       try {
+         const params = new URLSearchParams({ limit: "50" });
+         if (search) params.set("search", search);
+         if (filters.status) params.set("status", filters.status);
+         if (filters.escalated) params.set("escalated", "true");
+         if (filters.date_from) params.set("date_from", filters.date_from);
+         if (filters.date_to) params.set("date_to", filters.date_to);
+  
+         const res = await fetch(`/api/blotter?${params}`);
+         const data = await res.json();
+         setCases(data.cases ?? []);
+       } catch (e) {
+         console.error(e);
+       } finally {
+         setLoading(false);
+       }
+     }
+     const t = setTimeout(loadCases, 300);
+     return () => clearTimeout(t);
+   }, [search, filters]);
 
   // ── CLIENT-SIDE FILTERING (stands in for the API query above) ───────────
   const filtered = useMemo(() => {

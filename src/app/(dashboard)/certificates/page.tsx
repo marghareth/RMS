@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   FileText,
@@ -18,7 +18,6 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import {
-  MOCK_CERTIFICATES,
   CERTIFICATE_TYPES,
   CertificateMock,
   certTypeLabel,
@@ -41,37 +40,37 @@ export default function CertificatesListPage() {
   // ── MOCK DATA STATE ──────────────────────────────────────────────────────
   // Swap this for a real fetch once the database is connected (see the
   // commented-out effect below).
-  const [certificates] = useState<CertificateMock[]>(MOCK_CERTIFICATES);
-  const [loading] = useState(false);
+  //const [certificates] = useState<CertificateMock[]>(MOCK_CERTIFICATES);
+  //const [loading] = useState(false);
 
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
 
   // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [certificates, setCertificates] = useState<CertificateMock[]>([]);
-  // const [loading, setLoading] = useState(true);
+  const [certificates, setCertificates] = useState<CertificateMock[]>([]);
+  const [loading, setLoading] = useState(true);
   //
-  // useEffect(() => {
-  //   async function loadCertificates() {
-  //     setLoading(true);
-  //     try {
-  //       const params = new URLSearchParams({ limit: "50" });
-  //       if (filters.certificate_type) params.set("certificate_type", filters.certificate_type);
-  //       if (filters.date_from) params.set("date_from", filters.date_from);
-  //       if (filters.date_to) params.set("date_to", filters.date_to);
-  //
-  //       const res = await fetch(`/api/certificates?${params}`);
-  //       const data = await res.json();
-  //       setCertificates(data.certificates ?? []);
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadCertificates();
-  // }, [filters]);
+   useEffect(() => {
+     async function loadCertificates() {
+       setLoading(true);
+       try {
+         const params = new URLSearchParams({ limit: "50" });
+         if (filters.certificate_type) params.set("certificate_type", filters.certificate_type);
+         if (filters.date_from) params.set("date_from", filters.date_from);
+         if (filters.date_to) params.set("date_to", filters.date_to);
+  
+         const res = await fetch(`/api/certificates?${params}`);
+         const data = await res.json();
+         setCertificates(data.certificates ?? []);
+       } catch (e) {
+         console.error(e);
+       } finally {
+         setLoading(false);
+       }
+     }
+     loadCertificates();
+   }, [filters]);
 
   const filtered = useMemo(() => {
     return certificates.filter((c) => {

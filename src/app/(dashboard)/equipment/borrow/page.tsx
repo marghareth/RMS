@@ -6,6 +6,7 @@ import { ArrowLeft, Package, Save, User, CalendarDays } from "lucide-react";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Equipment { id: number; name: string; quantity: number; status: string }
+interface ResidentOption { id: number; name: string }
 
 interface BorrowForm {
   equipment_id:    string;
@@ -15,24 +16,6 @@ interface BorrowForm {
   expected_return: string;
   notes:           string;
 }
-
-// ─── MOCK DATA ────────────────────────────────────────────────────────────────
-const MOCK_EQUIPMENT: Equipment[] = [
-  { id: 1, name: "Megaphone",       quantity: 3,  status: "SERVICEABLE" },
-  { id: 2, name: "Plastic Chairs",  quantity: 50, status: "SERVICEABLE" },
-  { id: 3, name: "Folding Tables",  quantity: 10, status: "SERVICEABLE" },
-  { id: 5, name: "Tarpaulin Stand", quantity: 4,  status: "SERVICEABLE" },
-  { id: 6, name: "Sound System",    quantity: 1,  status: "SERVICEABLE" },
-  { id: 8, name: "First Aid Kit",   quantity: 5,  status: "SERVICEABLE" },
-];
-
-const MOCK_RESIDENTS = [
-  { id: 1,  name: "Juan dela Cruz"  },
-  { id: 2,  name: "Maria Santos"    },
-  { id: 3,  name: "Pedro Reyes"     },
-  { id: 4,  name: "Ana Garcia"      },
-  { id: 5,  name: "Jose Flores"     },
-];
 
 // ─── FIELD COMPONENTS ─────────────────────────────────────────────────────────
 function FieldLabel({ children, required, hint }: { children: React.ReactNode; required?: boolean; hint?: string }) {
@@ -72,10 +55,10 @@ function SelectInput({
 }
 
 function TextInput({
-  label, value, onChange, placeholder, required, hint, type = "text",
+  label, value, onChange, placeholder, required, hint, type = "text", min,
 }: {
   label: string; value: string; onChange: (v: string) => void;
-  placeholder?: string; required?: boolean; hint?: string; type?: string;
+  placeholder?: string; required?: boolean; hint?: string; type?: string; min?: string;
 }) {
   return (
     <div>
@@ -85,7 +68,7 @@ function TextInput({
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
-        min={type === "date" ? new Date().toISOString().split("T")[0] : undefined}
+        min={min}
         className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] placeholder:text-[#D1D5DB] transition bg-white"
       />
     </div>
@@ -98,33 +81,65 @@ export default function BorrowEquipmentPage() {
   const searchParams = useSearchParams();
   const preselected  = searchParams.get("equipment_id") ?? "";
 
-  const today    = new Date().toISOString().split("T")[0];
-  const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
-
-  const [form, setForm] = useState<BorrowForm>({
-    equipment_id:    preselected,
-    borrower_name:   "",
-    resident_id:     "",
-    date_borrowed:   today,
-    expected_return: nextWeek,
-    notes:           "",
+  // Computed once, inside a lazy useState initializer — this only runs on
+  // mount, so the impure Date-based calls here don't violate the render
+  // purity rule the way they would sitting directly in the component body.
+  const [form, setForm] = useState<BorrowForm>(() => {
+    const todayDate = new Date();
+    const today = todayDate.toISOString().split("T")[0];
+    const nextWeekDate = new Date(todayDate);
+    nextWeekDate.setDate(nextWeekDate.getDate() + 7);
+    const nextWeek = nextWeekDate.toISOString().split("T")[0];
+    return {
+      equipment_id:    preselected,
+      borrower_name:   "",
+      resident_id:     "",
+      date_borrowed:   today,
+      expected_return: nextWeek,
+      notes:           "",
+    };
   });
+  const [todayMin] = useState(() => new Date().toISOString().split("T")[0]);
+
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState("");
 
   const set = (k: keyof BorrowForm, v: string) => setForm(p => ({ ...p, [k]: v }));
 
-  // When a resident is selected, auto-fill borrower name
+  // Equipment + residents to populate the dropdowns.
+  const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
+  const [residentList, setResidentList] = useState<ResidentOption[]>([]);
+
   useEffect(() => {
-    if (form.resident_id) {
-      const r = MOCK_RESIDENTS.find(r => String(r.id) === form.resident_id);
-      if (r) set("borrower_name", r.name);
-    }
-  }, [form.resident_id]);
+    fetch("/api/equipment")
+      .then(r => r.json())
+      .then((data: Equipment[]) => setEquipmentList(data))
+      .catch(console.error);
 
-  const selectedEquipment = MOCK_EQUIPMENT.find(e => String(e.id) === form.equipment_id);
+    fetch("/api/residents?limit=1000")
+      .then(r => r.json())
+      .then((data) => {
+        const list = (data.residents ?? []).map((r: any) => ({
+          id: r.id,
+          name: `${r.lname}, ${r.fname}`,
+        }));
+        setResidentList(list);
+      })
+      .catch(console.error);
+  }, []);
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
+  // When a resident is selected, auto-fill borrower name. Adjusted directly
+  // during render (not in an effect) the first time a given resident_id is
+  // seen, so this doesn't fight the user's own edits on every re-render.
+  const [syncedResidentId, setSyncedResidentId] = useState<string | null>(null);
+  const selectedResidentOption = residentList.find(r => String(r.id) === form.resident_id);
+  if (form.resident_id && form.resident_id !== syncedResidentId && selectedResidentOption) {
+    setSyncedResidentId(form.resident_id);
+    setForm(prev => ({ ...prev, borrower_name: selectedResidentOption.name }));
+  }
+
+  const selectedEquipment = equipmentList.find(e => String(e.id) === form.equipment_id);
+
   async function handleSave() {
     if (!form.equipment_id || !form.borrower_name || !form.date_borrowed || !form.expected_return) {
       setError("Please fill in all required fields.");
@@ -155,23 +170,6 @@ export default function BorrowEquipmentPage() {
     } finally {
       setSaving(false);
     }
-  }
-  ─────────────────────────────────────────────────────────────────────────── */
-
-  // ── Mock save ─────────────────────────────────────────────────────────────
-  async function handleSave() {
-    if (!form.equipment_id || !form.borrower_name || !form.date_borrowed || !form.expected_return) {
-      setError("Please fill in all required fields.");
-      return;
-    }
-    if (form.expected_return < form.date_borrowed) {
-      setError("Expected return date must be after the borrow date.");
-      return;
-    }
-    setSaving(true);
-    await new Promise(r => setTimeout(r, 700));
-    setSaving(false);
-    router.push("/equipment");
   }
 
   const isValid = form.equipment_id && form.borrower_name && form.date_borrowed && form.expected_return;
@@ -208,7 +206,7 @@ export default function BorrowEquipmentPage() {
               label="Select Equipment"
               value={form.equipment_id}
               onChange={v => set("equipment_id", v)}
-              options={MOCK_EQUIPMENT.map(e => ({ value: String(e.id), label: `${e.name} (Qty: ${e.quantity})` }))}
+              options={equipmentList.map(e => ({ value: String(e.id), label: `${e.name} (Qty: ${e.quantity})` }))}
               required
             />
 
@@ -244,7 +242,7 @@ export default function BorrowEquipmentPage() {
               label="Link to Resident (optional)"
               value={form.resident_id}
               onChange={v => set("resident_id", v)}
-              options={MOCK_RESIDENTS.map(r => ({ value: String(r.id), label: r.name }))}
+              options={residentList.map(r => ({ value: String(r.id), label: r.name }))}
               hint="Auto-fills name below"
             />
 
@@ -274,6 +272,7 @@ export default function BorrowEquipmentPage() {
                 value={form.date_borrowed}
                 onChange={v => set("date_borrowed", v)}
                 type="date"
+                min={todayMin}
                 required
               />
               <TextInput
@@ -281,6 +280,7 @@ export default function BorrowEquipmentPage() {
                 value={form.expected_return}
                 onChange={v => set("expected_return", v)}
                 type="date"
+                min={todayMin}
                 required
               />
             </div>

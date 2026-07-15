@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   ArrowLeft, Heart, User, CalendarDays,
@@ -23,18 +23,6 @@ interface HealthRecord {
   resident:    Resident;
   recorder:    { id: number; username: string };
 }
-
-// ─── MOCK DATA ────────────────────────────────────────────────────────────────
-const MOCK_RECORDS: Record<string, HealthRecord> = {
-  "1": { id: 1, resident_id: 1, record_type: "Hypertension",       notes: "BP: 140/90. Advised lifestyle changes and medication. Follow-up in 2 weeks. Patient was also advised to reduce salt intake and engage in light physical activity.", recorded_at: "2026-06-25T08:30:00Z", resident: { id: 1, fname: "Juan",   lname: "dela Cruz", birthdate: "1975-03-12", sex: "MALE",   purok: { name: "Purok II"  } }, recorder: { id: 3, username: "bhw_ana"  } },
-  "2": { id: 2, resident_id: 2, record_type: "Diabetes",           notes: "Blood sugar: 210 mg/dL. Referred to RHU for further evaluation. Patient is currently on Metformin 500mg twice daily.", recorded_at: "2026-06-22T10:00:00Z", resident: { id: 2, fname: "Maria",  lname: "Santos",    birthdate: "1968-07-22", sex: "FEMALE", purok: { name: "Purok I"   } }, recorder: { id: 3, username: "bhw_ana"  } },
-  "3": { id: 3, resident_id: 3, record_type: "Prenatal Checkup",   notes: "28 weeks AOG. Normal fetal heart rate at 144 bpm. Fundic height appropriate. Iron and Folic acid supplements given.", recorded_at: "2026-06-20T09:15:00Z", resident: { id: 3, fname: "Rosa",   lname: "Reyes",     birthdate: "1995-11-05", sex: "FEMALE", purok: { name: "Purok III" } }, recorder: { id: 4, username: "bhw_lena" } },
-  "4": { id: 4, resident_id: 4, record_type: "Tuberculosis",       notes: "DOTS therapy started. Month 2 of 6. Patient is compliant with medications. Sputum smear results pending.", recorded_at: "2026-06-18T11:00:00Z", resident: { id: 4, fname: "Pedro",  lname: "Garcia",    birthdate: "1961-09-18", sex: "MALE",   purok: { name: "Purok IV"  } }, recorder: { id: 4, username: "bhw_lena" } },
-  "5": { id: 5, resident_id: 5, record_type: "Well-child Checkup", notes: "Growth and development on track. 3 years old. Weight 14kg, Height 96cm. All milestones achieved.", recorded_at: "2026-06-15T08:00:00Z", resident: { id: 5, fname: "Nino",   lname: "Flores",    birthdate: "2023-03-01", sex: "MALE",   purok: { name: "Purok I"   } }, recorder: { id: 3, username: "bhw_ana"  } },
-  "6": { id: 6, resident_id: 6, record_type: "Hypertension",       notes: "BP: 150/95. Medications adjusted. Patient advised to monitor BP daily and return if symptomatic.", recorded_at: "2026-06-10T14:00:00Z", resident: { id: 6, fname: "Carmen", lname: "Lopez",     birthdate: "1958-04-30", sex: "FEMALE", purok: { name: "Purok II"  } }, recorder: { id: 4, username: "bhw_lena" } },
-  "7": { id: 7, resident_id: 7, record_type: "Asthma",             notes: "Nebulization done in health center. Prescribed Salbutamol inhaler. Patient instructed on proper use and trigger avoidance.", recorded_at: "2026-06-05T09:30:00Z", resident: { id: 7, fname: "Fernando", lname: "Cruz",  birthdate: "1988-12-15", sex: "MALE",   purok: { name: "Purok III" } }, recorder: { id: 3, username: "bhw_ana"  } },
-  "8": { id: 8, resident_id: 8, record_type: "Family Planning",    notes: "IUD insertion scheduled next visit. Counseling on various family planning methods completed. Patient chose IUD.", recorded_at: "2026-05-30T10:00:00Z", resident: { id: 8, fname: "Lourdes", lname: "Mendoza", birthdate: "1992-08-20", sex: "FEMALE", purok: { name: "Purok IV"  } }, recorder: { id: 4, username: "bhw_lena" } },
-};
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function fmtDate(iso: string) {
@@ -69,39 +57,66 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+// ─── MAIN PAGE (keyed by id so state resets cleanly on navigation) ───────────
 export default function HealthRecordDetailPage() {
-  const router = useRouter();
   const { id } = useParams<{ id: string }>();
+  return <HealthRecordDetailContent key={id} id={id} />;
+}
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
-  const [record,  setRecord]  = useState<HealthRecord | null>(null);
-  const [loading, setLoading] = useState(true);
+function HealthRecordDetailContent({ id }: { id: string }) {
+  const router = useRouter();
+
+  const [record,   setRecord]   = useState<HealthRecord | null>(null);
+  const [loading,  setLoading]  = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  const [deleting,    setDeleting]    = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+
     fetch(`/api/health/${id}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(setRecord)
-      .catch(() => router.push("/health"))
-      .finally(() => setLoading(false));
+      .then((data: HealthRecord) => { if (!cancelled) setRecord(data); })
+      .catch(() => { if (!cancelled) setNotFound(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
   }, [id]);
 
-  async function handleDelete() {
-    // confirm() replaced by ConfirmDialog — see onConfirm handler below
-    await fetch(`/api/health/${id}`, { method: "DELETE" });
-    router.push("/health");
-  }
-  ─────────────────────────────────────────────────────────────────────────── */
-
-  // ── Mock data ─────────────────────────────────────────────────────────────
-  const record = MOCK_RECORDS[id] ?? MOCK_RECORDS["1"];
-  const [deleting,     setDeleting]     = useState(false);
-  const [confirmOpen,  setConfirmOpen]  = useState(false);
+  useEffect(() => {
+    if (notFound) router.push("/health");
+  }, [notFound, router]);
 
   async function handleDelete() {
     setDeleting(true);
-    await new Promise(r => setTimeout(r, 600));
-    router.push("/health");
+    setDeleteError("");
+    try {
+      const res = await fetch(`/api/health/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete record");
+      router.push("/health");
+    } catch (e: any) {
+      setDeleteError(e.message || "Something went wrong.");
+      setDeleting(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="py-16 text-center text-[13px] text-[#9CA3AF]">
+        Loading health record…
+      </div>
+    );
+  }
+
+  if (!record) {
+    return (
+      <div className="py-16 text-center text-[13px] text-[#9CA3AF]">
+        Redirecting…
+      </div>
+    );
   }
 
   const cfg = TYPE_COLORS[record.record_type] ?? { bg: "bg-gray-50", text: "text-gray-700", icon_bg: "bg-gray-500" };
@@ -140,6 +155,12 @@ export default function HealthRecordDetailPage() {
           </button>
         </div>
       </div>
+
+      {deleteError && (
+        <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200">
+          <p className="text-[12px] text-red-600 font-medium">{deleteError}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-5">
 
@@ -250,17 +271,18 @@ export default function HealthRecordDetailPage() {
           </div>
         </div>
       </div>
-        <ConfirmDialog
-          open={confirmOpen}
-          title="Delete Health Record"
-          message="This health record will be permanently deleted. This action cannot be undone."
-          confirmLabel="Yes, Delete"
-          cancelLabel="Cancel"
-          variant="danger"
-          loading={deleting}
-          onConfirm={handleDelete}
-          onCancel={() => setConfirmOpen(false)}
-        />
-      </div>
-    );
-  }
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete Health Record"
+        message="This health record will be permanently deleted. This action cannot be undone."
+        confirmLabel="Yes, Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
+    </div>
+  );
+}

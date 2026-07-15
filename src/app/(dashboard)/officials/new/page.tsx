@@ -126,42 +126,33 @@ export default function NewOfficialPage() {
 
     setSubmitting(true);
 
-    // ── MOCK SUBMIT ─────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 500));
-    setSubmitting(false);
-    alert(
-      `[MOCK] ${residentFullName(resident)} added as ${position}.\nA real save will redirect back to the officials directory.`
-    );
-    router.push("/officials");
 
-    // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-    // try {
-    //   const res = await fetch("/api/officials", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       resident_id: resident.id,
-    //       position,
-    //       contact_no: contactNo || undefined,
-    //       purok_assignment: purokAssignment || undefined,
-    //       term_start: termStart,
-    //       term_end: termEnd || undefined,
-    //       is_active: isActive,
-    //     }),
-    //   });
-    //   if (!res.ok) {
-    //     const data = await res.json();
-    //     // resident_id is @unique — API returns 409/400 if already an official
-    //     setError(data.error || "Failed to add official.");
-    //     return;
-    //   }
-    //   router.push("/officials");
-    // } catch (e) {
-    //   console.error(e);
-    //   setError("Something went wrong while saving. Please try again.");
-    // } finally {
-    //   setSubmitting(false);
-    // }
+    try {
+       const res = await fetch("/api/officials", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           resident_id: resident.id,
+           position,
+           contact_no: contactNo || undefined,
+           purok_assignment: purokAssignment || undefined,
+           term_start: termStart,
+           term_end: termEnd || undefined,
+           is_active: isActive,
+         }),
+       });
+       if (!res.ok) {
+         const data = await res.json();
+         setError(data.error || "Failed to add official.");
+         return;
+       }
+       router.push("/officials");
+     } catch (e) {
+       console.error(e);
+       setError("Something went wrong while saving. Please try again.");
+     } finally {
+       setSubmitting(false);
+     }
   }
 
   return (

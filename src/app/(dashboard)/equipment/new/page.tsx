@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Package, Save } from "lucide-react";
 
@@ -107,7 +107,7 @@ export default function NewEquipmentPage() {
 
   const set = (k: keyof EquipmentForm, v: string) => setForm(p => ({ ...p, [k]: v }));
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
+  
   async function handleSave() {
     if (!form.name.trim() || !form.quantity) {
       setError("Name and quantity are required.");
@@ -135,19 +135,7 @@ export default function NewEquipmentPage() {
       setSaving(false);
     }
   }
-  ─────────────────────────────────────────────────────────────────────────── */
-
-  // ── Mock save (remove when API is connected) ──────────────────────────────
-  async function handleSave() {
-    if (!form.name.trim() || !form.quantity) {
-      setError("Name and quantity are required.");
-      return;
-    }
-    setSaving(true);
-    await new Promise(r => setTimeout(r, 800)); // simulate network
-    setSaving(false);
-    router.push("/equipment");
-  }
+ 
 
   const isValid = form.name.trim() && parseInt(form.quantity) > 0;
 

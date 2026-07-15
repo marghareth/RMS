@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -20,8 +20,6 @@ import type { LucideIcon } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import {
-  MOCK_HOUSEHOLDS,
-  MOCK_UNASSIGNED_RESIDENTS,
   memberFullName,
   calcAge,
   formatISODate,
@@ -46,44 +44,73 @@ function InfoTile({ icon: Icon, label, value }: { icon: LucideIcon; label: strin
   );
 }
 
+// ─── MAIN PAGE (keyed by id so state resets cleanly on navigation) ───────────
 export default function HouseholdDetailPage() {
-  const router = useRouter();
   const params = useParams();
   const householdId = Number(params.id);
+  return <HouseholdDetailContent key={householdId} householdId={householdId} />;
+}
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // In place of the real GET /api/households/[id] call. Swap for the
-  // commented block below once the database is connected.
-  const [household, setHousehold] = useState<HouseholdMock | null>(
-    () => MOCK_HOUSEHOLDS.find((h: HouseholdMock) => h.id === householdId) ?? null
-  );
-  const [loading] = useState(false);
+function HouseholdDetailContent({ householdId }: { householdId: number }) {
+  const router = useRouter();
 
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [household, setHousehold] = useState<HouseholdMock | null>(null);
-  // const [loading, setLoading] = useState(true);
-  //
-  // useEffect(() => {
-  //   async function loadHousehold() {
-  //     setLoading(true);
-  //     try {
-  //       const res = await fetch(`/api/households/${householdId}`);
-  //       if (!res.ok) throw new Error("Not found");
-  //       setHousehold(await res.json());
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadHousehold();
-  // }, [householdId]);
+  const [household, setHousehold] = useState<HouseholdMock | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [candidateResidents, setCandidateResidents] = useState<HouseholdMemberMock[]>([]);
+
+  // Initial load: inlined directly in the effect (not delegated to a named
+  // function) — react-hooks/set-state-in-effect's static analysis flags any
+  // function call in an effect body that transitively calls setState, even
+  // an async one where the actual setState happens after an await. Inlining
+  // the .then/.catch/.finally chain here is what satisfies it.
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch(`/api/households/${householdId}`)
+      .then(r => { if (!r.ok) throw new Error("Not found"); return r.json(); })
+      .then((data: HouseholdMock) => { if (!cancelled) setHousehold(data); })
+      .catch(e => console.error(e))
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [householdId]);
+
+  // Reusable refetch for after mutations — only called from event handlers
+  // (handleAddMember, handleRemoveMember, etc.), never from an effect, so
+  // react-hooks/set-state-in-effect doesn't apply to it.
+  const loadHousehold = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/households/${householdId}`);
+      if (!res.ok) throw new Error("Not found");
+      setHousehold(await res.json());
+    } catch (e) {
+      console.error(e);
+    }
+  }, [householdId]);
 
   const [showAddMember, setShowAddMember] = useState(false);
   const [memberQuery, setMemberQuery] = useState("");
   const [removeTarget, setRemoveTarget] = useState<HouseholdMemberMock | null>(null);
   const [deleteHouseholdConfirm, setDeleteHouseholdConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState("");
+
+  // Search for unassigned residents as the user types (debounced).
+  // When the query is empty, we simply don't fetch or update state — the
+  // dropdown itself is already gated on `memberQuery.trim()` in the JSX
+  // below, so a stale `candidateResidents` value has no visible effect and
+  // there's no need to synchronously clear it here.
+  useEffect(() => {
+    if (!memberQuery.trim()) return;
+    let cancelled = false;
+    const handle = setTimeout(() => {
+      fetch(`/api/residents?unassigned=true&search=${encodeURIComponent(memberQuery)}`)
+        .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+        .then(data => { if (!cancelled) setCandidateResidents(data.residents ?? []); })
+        .catch(() => { if (!cancelled) setCandidateResidents([]); });
+    }, 250);
+    return () => { cancelled = true; clearTimeout(handle); };
+  }, [memberQuery]);
 
   if (loading) {
     return (
@@ -111,85 +138,76 @@ export default function HouseholdDetailPage() {
     );
   }
 
-  const candidateResidents = MOCK_UNASSIGNED_RESIDENTS.filter(
-    (r: HouseholdMemberMock) =>
-      !household.members.some((m: HouseholdMemberMock) => m.id === r.id) &&
-      memberFullName(r).toLowerCase().includes(memberQuery.toLowerCase())
-  );
-
-  // ── MOCK: add a member ──────────────────────────────────────────────────
   async function handleAddMember(resident: HouseholdMemberMock) {
     setBusy(true);
-    await new Promise<void>((resolve) => setTimeout(resolve, 300));
-    setHousehold((prev: HouseholdMock | null) => (prev ? { ...prev, members: [...prev.members, resident] } : prev));
-    setBusy(false);
-    setShowAddMember(false);
-    setMemberQuery("");
-
-    // ── REAL WRITE (disabled until API/DB is wired up) ─────────────────
-    // await fetch(`/api/residents/${resident.id}`, {
-    //   method: "PATCH",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ household_id: household.id }),
-    // });
-    // await loadHousehold(); // re-fetch to sync with server state
+    setActionError("");
+    try {
+      const res = await fetch(`/api/residents/${resident.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ household_id: household!.id }),
+      });
+      if (!res.ok) throw new Error("Failed to add member");
+      await loadHousehold();
+      setShowAddMember(false);
+      setMemberQuery("");
+    } catch (e: any) {
+      setActionError(e.message || "Failed to add member.");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  // ── MOCK: remove a member ────────────────────────────────────────────────
   async function handleRemoveMember() {
     if (!removeTarget || !household) return;
     setBusy(true);
-    await new Promise<void>((resolve) => setTimeout(resolve, 300));
-    setHousehold((prev: HouseholdMock | null) =>
-      prev
-        ? {
-            ...prev,
-            members: prev.members.filter((m) => m.id !== removeTarget.id),
-            household_head_id: prev.household_head_id === removeTarget.id ? null : prev.household_head_id,
-            household_head: prev.household_head_id === removeTarget.id ? null : prev.household_head,
-          }
-        : prev
-    );
-    setBusy(false);
-    setRemoveTarget(null);
-
-    // ── REAL WRITE (disabled until API/DB is wired up) ─────────────────
-    // await fetch(`/api/residents/${removeTarget.id}`, {
-    //   method: "PATCH",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ household_id: null }),
-    // });
-    // await loadHousehold();
+    setActionError("");
+    try {
+      const res = await fetch(`/api/residents/${removeTarget.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ household_id: null }),
+      });
+      if (!res.ok) throw new Error("Failed to remove member");
+      await loadHousehold();
+      setRemoveTarget(null);
+    } catch (e: any) {
+      setActionError(e.message || "Failed to remove member.");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  // ── MOCK: set as household head ─────────────────────────────────────────
   async function handleSetHead(member: HouseholdMemberMock) {
     setBusy(true);
-    await new Promise<void>((resolve) => setTimeout(resolve, 300));
-    setHousehold((prev: HouseholdMock | null) => (prev ? { ...prev, household_head_id: member.id, household_head: member } : prev));
-    setBusy(false);
-
-    // ── REAL WRITE (disabled until API/DB is wired up) ─────────────────
-    // await fetch(`/api/households/${household.id}`, {
-    //   method: "PATCH",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ household_head_id: member.id }),
-    // });
-    // await loadHousehold();
+    setActionError("");
+    try {
+      const res = await fetch(`/api/households/${household!.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ household_head_id: member.id }),
+      });
+      if (!res.ok) throw new Error("Failed to set household head");
+      await loadHousehold();
+    } catch (e: any) {
+      setActionError(e.message || "Failed to set household head.");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  // ── MOCK: delete household ──────────────────────────────────────────────
   async function handleDeleteHousehold() {
     setBusy(true);
-    await new Promise<void>((resolve) => setTimeout(resolve, 400));
-    setBusy(false);
-    setDeleteHouseholdConfirm(false);
-    alert(`[MOCK] Household ${household!.household_no} deleted.`);
-    router.push("/households");
-
-    // ── REAL WRITE (disabled until API/DB is wired up) ─────────────────
-    // await fetch(`/api/households/${household.id}`, { method: "DELETE" });
-    // router.push("/households");
+    setActionError("");
+    try {
+      const res = await fetch(`/api/households/${household!.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete household");
+      router.push("/households");
+    } catch (e: any) {
+      setActionError(e.message || "Failed to delete household.");
+      setBusy(false);
+      setDeleteHouseholdConfirm(false);
+    }
   }
 
   return (
@@ -229,6 +247,10 @@ export default function HouseholdDetailPage() {
           </button>
         </div>
       </div>
+
+      {actionError && (
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-[12px] text-[#DC2626]">{actionError}</div>
+      )}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* ── Left: household info ── */}
@@ -404,7 +426,9 @@ export default function HouseholdDetailPage() {
             : ""
         }
         confirmLabel={busy ? "Removing..." : "Remove"}
-        danger
+        cancelLabel="Cancel"
+        variant="danger"
+        loading={busy}
         onConfirm={handleRemoveMember}
         onCancel={() => setRemoveTarget(null)}
       />
@@ -414,7 +438,9 @@ export default function HouseholdDetailPage() {
         title="Delete this household?"
         message={`${household.household_no} will be permanently deleted. This cannot be undone.`}
         confirmLabel={busy ? "Deleting..." : "Delete"}
-        danger
+        cancelLabel="Cancel"
+        variant="danger"
+        loading={busy}
         onConfirm={handleDeleteHousehold}
         onCancel={() => setDeleteHouseholdConfirm(false)}
       />

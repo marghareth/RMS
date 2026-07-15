@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Save, Package } from "lucide-react";
 
@@ -15,16 +15,8 @@ interface EquipmentForm {
   date_acquired: string;
 }
 
-// ─── MOCK DATA (pre-filled per id) ────────────────────────────────────────────
-const MOCK_EQUIPMENT: Record<string, EquipmentForm> = {
-  "1": { name: "Megaphone",       quantity: "3",  condition: "Good",        status: "SERVICEABLE",   date_acquired: "2022-01-15" },
-  "2": { name: "Plastic Chairs",  quantity: "50", condition: "Fair",        status: "SERVICEABLE",   date_acquired: "2021-05-10" },
-  "3": { name: "Folding Tables",  quantity: "10", condition: "Good",        status: "SERVICEABLE",   date_acquired: "2021-05-10" },
-  "4": { name: "Generator",       quantity: "1",  condition: "Needs repair",status: "UNSERVICEABLE", date_acquired: "2019-08-22" },
-  "5": { name: "Tarpaulin Stand", quantity: "4",  condition: "Good",        status: "SERVICEABLE",   date_acquired: "2023-03-01" },
-  "6": { name: "Sound System",    quantity: "1",  condition: "Good",        status: "SERVICEABLE",   date_acquired: "2022-11-12" },
-  "7": { name: "Basketball Ring", quantity: "2",  condition: "Damaged",     status: "MISSING",       date_acquired: "2020-06-15" },
-  "8": { name: "First Aid Kit",   quantity: "5",  condition: "Complete",    status: "SERVICEABLE",   date_acquired: "2024-01-08" },
+const EMPTY_FORM: EquipmentForm = {
+  name: "", quantity: "1", condition: "", status: "SERVICEABLE", date_acquired: "",
 };
 
 // ─── FIELD COMPONENTS ─────────────────────────────────────────────────────────
@@ -57,7 +49,7 @@ function TextInput({
 }
 
 function StatusCard({
-  value, label, description, dot, selected, onClick,
+  label, description, dot, selected, onClick,
 }: {
   value: EquipmentStatus; label: string; description: string;
   dot: string; selected: boolean; onClick: () => void;
@@ -85,18 +77,12 @@ export default function EditEquipmentPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
 
-  // ── Load from mock (replace useEffect + fetch when API is connected) ──────
-  const initial = MOCK_EQUIPMENT[params.id] ?? {
-    name: "", quantity: "1", condition: "", status: "SERVICEABLE" as EquipmentStatus, date_acquired: "",
-  };
-
-  const [form,   setForm]   = useState<EquipmentForm>(initial);
+  const [form,   setForm]   = useState<EquipmentForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState("");
 
   const set = (k: keyof EquipmentForm, v: string) => setForm(p => ({ ...p, [k]: v }));
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
   useEffect(() => {
     fetch(`/api/equipment/${params.id}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
@@ -108,7 +94,7 @@ export default function EditEquipmentPage() {
         date_acquired: eq.date_acquired ? eq.date_acquired.split("T")[0] : "",
       }))
       .catch(() => router.push("/equipment"));
-  }, [params.id]);
+  }, [params.id, router]);
 
   async function handleSave() {
     if (!form.name.trim() || !form.quantity) {
@@ -136,19 +122,6 @@ export default function EditEquipmentPage() {
     } finally {
       setSaving(false);
     }
-  }
-  ─────────────────────────────────────────────────────────────────────────── */
-
-  // ── Mock save ─────────────────────────────────────────────────────────────
-  async function handleSave() {
-    if (!form.name.trim() || !form.quantity) {
-      setError("Name and quantity are required.");
-      return;
-    }
-    setSaving(true);
-    await new Promise(r => setTimeout(r, 700));
-    setSaving(false);
-    router.push(`/equipment/${params.id}`);
   }
 
   const isValid = form.name.trim() && parseInt(form.quantity) > 0;
@@ -179,7 +152,7 @@ export default function EditEquipmentPage() {
             <Package size={16} className="text-white" />
           </div>
           <div>
-            <p className="text-[13px] font-bold text-[#1F2937]">{initial.name}</p>
+            <p className="text-[13px] font-bold text-[#1F2937]">{form.name || "—"}</p>
             <p className="text-[11px] text-[#9CA3AF]">Equipment ID: #{String(params.id).padStart(5, "0")}</p>
           </div>
         </div>

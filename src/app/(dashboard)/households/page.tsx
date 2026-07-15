@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Home, Users, MapPin, UserX, Search, Plus, ChevronRight } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import { MOCK_HOUSEHOLDS, MOCK_PUROKS, memberFullName } from "@/lib/mock/households";
-import type { HouseholdMock } from "@/lib/mock/households";
+import type { PurokMock, HouseholdMock } from "@/lib/mock/households";
 
 const HOUSING_LABEL: Record<string, string> = {
   OWN: "Own",
@@ -19,42 +19,36 @@ const HOUSING_LABEL: Record<string, string> = {
 export default function HouseholdsListPage() {
   const router = useRouter();
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // Swap this for a real fetch once the database is connected (see the
-  // commented-out effect below).
-  const [households] = useState<HouseholdMock[]>(MOCK_HOUSEHOLDS);
-  const [puroks] = useState(MOCK_PUROKS);
-  const [loading] = useState(false);
 
   const [search, setSearch] = useState("");
   const [purokFilter, setPurokFilter] = useState("");
 
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [households, setHouseholds] = useState<HouseholdMock[]>([]);
-  // const [puroks, setPuroks] = useState<PurokMock[]>([]);
-  // const [loading, setLoading] = useState(true);
-  //
-  // useEffect(() => {
-  //   fetch("/api/puroks").then((r) => r.json()).then(setPuroks).catch(console.error);
-  // }, []);
-  //
-  // useEffect(() => {
-  //   async function loadHouseholds() {
-  //     setLoading(true);
-  //     try {
-  //       const params = new URLSearchParams({ limit: "50" });
-  //       if (purokFilter) params.set("purok_id", purokFilter);
-  //       const res = await fetch(`/api/households?${params}`);
-  //       const data = await res.json();
-  //       setHouseholds(data.households ?? []);
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadHouseholds();
-  // }, [purokFilter]);
+  
+  const [households, setHouseholds] = useState<HouseholdMock[]>([]);
+  const [puroks, setPuroks] = useState<PurokMock[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+     fetch("/api/puroks").then((r) => r.json()).then(setPuroks).catch(console.error);
+   }, []);
+  
+   useEffect(() => {
+     async function loadHouseholds() {
+       setLoading(true);
+       try {
+         const params = new URLSearchParams({ limit: "50" });
+         if (purokFilter) params.set("purok_id", purokFilter);
+         const res = await fetch(`/api/households?${params}`);
+         const data = await res.json();
+         setHouseholds(data.households ?? []);
+       } catch (e) {
+         console.error(e);
+       } finally {
+         setLoading(false);
+       }
+     }
+     loadHouseholds();
+   }, [purokFilter]);
 
   // ── CLIENT-SIDE FILTERING (stands in for the API query above) ───────────
   const filtered = useMemo(() => {

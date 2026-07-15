@@ -232,8 +232,28 @@ function readResidentsFromStorage(): Resident[] {
   }
 }
 
+// Rebuilds each resident's household.members array from household_id,
+// since persistResidents intentionally strips it before writing to avoid
+// the circular household<->members<->resident reference. Safe to rebuild
+// on every read — this reconstructed graph is only ever read from until the
+// next save, at which point persistResidents strips it again.
+function attachHouseholdMembers(residents: Resident[]): Resident[] {
+  const byHouseholdId = new Map<number, Resident[]>();
+  for (const r of residents) {
+    if (!r.household) continue;
+    const list = byHouseholdId.get(r.household.id) ?? [];
+    list.push(r);
+    byHouseholdId.set(r.household.id, list);
+  }
+  return residents.map((r) =>
+    r.household
+      ? { ...r, household: { ...r.household, members: byHouseholdId.get(r.household.id) ?? [] } }
+      : r
+  );
+}
+
 export function getMockResidents(): Resident[] {
-  return readResidentsFromStorage();
+  return attachHouseholdMembers(readResidentsFromStorage());
 }
 
 export function getMockPuroks(): Purok[] {
@@ -245,7 +265,20 @@ export function persistResidents(residents: Resident[]) {
     return;
   }
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(residents));
+  // Each resident embeds its household, and each household embeds its member
+  // residents — a genuine circular graph (resident.household.members[0] can
+  // be the very resident being serialized). JSON.stringify can't handle
+  // cycles, so we drop the redundant `members` array when writing (it's
+  // reconstructed from household_id on every read instead — see
+  // attachHouseholdMembers below).
+  const safeReplacer = function (this: unknown, key: string, value: unknown) {
+    if (key === "members" && this && typeof (this as { household_no?: unknown }).household_no === "string") {
+      return undefined;
+    }
+    return value;
+  };
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(residents, safeReplacer));
 }
 
 export function saveMockResidents(residents: Resident[]) {
@@ -266,17 +299,17 @@ export function updateMockResident(id: number, updates: Partial<Resident>) {
   );
 
   persistResidents(nextResidents);
-  return nextResidents;
+  return attachHouseholdMembers(nextResidents);
 }
 
 export function addMockResidents(nextResidents: Resident[]) {
   const residents = getMockResidents();
   const merged = [...residents, ...nextResidents];
   persistResidents(merged);
-  return merged;
+  return attachHouseholdMembers(merged);
 }
 
 export function resetMockResidents() {
   persistResidents(initialMockResidents);
-  return initialMockResidents;
+  return attachHouseholdMembers(initialMockResidents);
 }

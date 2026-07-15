@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Home } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
-import { MOCK_HOUSEHOLDS, MOCK_PUROKS, HouseholdMock } from "@/lib/mock/households";
+import { MOCK_PUROKS, HouseholdMock } from "@/lib/mock/households";
 
 const HOUSING_OPTIONS = [
   { value: "OWN", label: "Own" },
@@ -67,48 +67,49 @@ export default function EditHouseholdPage() {
   const params = useParams();
   const householdId = Number(params.id);
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // In place of the real GET /api/households/[id] call. Swap for the
-  // commented block below once the database is connected.
-  const [original] = useState<HouseholdMock | null>(
-    () => MOCK_HOUSEHOLDS.find((h) => h.id === householdId) ?? null
-  );
-  const [loading] = useState(false);
+  // ── REAL DATA FETCH ───────────────────────────────────────────────────────
+  const [original, setOriginal] = useState<HouseholdMock | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [original, setOriginal] = useState<HouseholdMock | null>(null);
-  // const [loading, setLoading] = useState(true);
-  //
-  // useEffect(() => {
-  //   async function loadHousehold() {
-  //     setLoading(true);
-  //     try {
-  //       const res = await fetch(`/api/households/${householdId}`);
-  //       if (!res.ok) throw new Error("Not found");
-  //       const data = await res.json();
-  //       setOriginal(data);
-  //       setPurokId(String(data.purok_id));
-  //       setAddress(data.address);
-  //       setHousingType(data.housing_type ?? "");
-  //       setWaterSource(data.water_source ?? "");
-  //       setComfortRoom(data.comfort_room ?? "");
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadHousehold();
-  // }, [householdId]);
-
-  const [purokId, setPurokId] = useState(original ? String(original.purok_id) : "");
-  const [address, setAddress] = useState(original?.address ?? "");
-  const [housingType, setHousingType] = useState(original?.housing_type ?? "");
-  const [waterSource, setWaterSource] = useState(original?.water_source ?? "");
-  const [comfortRoom, setComfortRoom] = useState(original?.comfort_room ?? "");
+  // Form fields — declared before the effect below, since the effect's
+  // fetch callback calls their setters. Their initial values don't need to
+  // read from `original` (it's always null on first render); the fetch
+  // effect populates them for real as soon as data arrives.
+  const [purokId, setPurokId] = useState("");
+  const [address, setAddress] = useState("");
+  const [housingType, setHousingType] = useState("");
+  const [waterSource, setWaterSource] = useState("");
+  const [comfortRoom, setComfortRoom] = useState("");
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadHousehold() {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/households/${householdId}`);
+        if (!res.ok) throw new Error("Not found");
+        const data = await res.json();
+        if (cancelled) return;
+        setOriginal(data);
+        setPurokId(String(data.purok_id));
+        setAddress(data.address);
+        setHousingType(data.housing_type ?? "");
+        setWaterSource(data.water_source ?? "");
+        setComfortRoom(data.comfort_room ?? "");
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadHousehold();
+    return () => { cancelled = true; };
+  }, [householdId]);
 
   if (loading) {
     return (
@@ -149,33 +150,26 @@ export default function EditHouseholdPage() {
 
     setSubmitting(true);
 
-    // ── MOCK SUBMIT ─────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 500));
-    setSubmitting(false);
-    alert(`[MOCK] Household ${original!.household_no} updated.\nA real save will redirect to the detail page.`);
-    router.push(`/households/${householdId}`);
-
-    // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-    // try {
-    //   const res = await fetch(`/api/households/${householdId}`, {
-    //     method: "PATCH",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       purok_id: parseInt(purokId),
-    //       address,
-    //       housing_type: housingType || undefined,
-    //       water_source: waterSource || undefined,
-    //       comfort_room: comfortRoom || undefined,
-    //     }),
-    //   });
-    //   if (!res.ok) throw new Error("Failed to update household");
-    //   router.push(`/households/${householdId}`);
-    // } catch (e) {
-    //   console.error(e);
-    //   setError("Something went wrong while saving. Please try again.");
-    // } finally {
-    //   setSubmitting(false);
-    // }
+    try {
+      const res = await fetch(`/api/households/${householdId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          purok_id: parseInt(purokId),
+          address,
+          housing_type: housingType || undefined,
+          water_source: waterSource || undefined,
+          comfort_room: comfortRoom || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to update household");
+      router.push(`/households/${householdId}`);
+    } catch (e) {
+      console.error(e);
+      setError("Something went wrong while saving. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -231,7 +225,7 @@ export default function EditHouseholdPage() {
 
           <div className="rounded-lg bg-[#F9FAFB] px-4 py-3">
             <p className="text-[11px] text-[#6B7280]">
-              To change the household head or members, use the "Add Member" / "Set as Head" actions on the household
+              To change the household head or members, use the Add Member / Set as Head actions on the household
               detail page instead.
             </p>
           </div>

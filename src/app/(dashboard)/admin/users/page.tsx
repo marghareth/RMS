@@ -1,41 +1,44 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Users, UserCheck, UserX, Search, Plus, Pencil, Power } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
-import { MOCK_USERS, UserMock, roleLabel, formatISODate } from "@/lib/mock/admin";
+import { UserMock, roleLabel, formatISODate } from "@/lib/mock/admin";
 
 export default function UsersListPage() {
   const router = useRouter();
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // Swap this for a real fetch once the database is connected (see the
-  // commented-out effect below).
-  const [users, setUsers] = useState<UserMock[]>(MOCK_USERS);
-  const [loading] = useState(false);
+  const [users, setUsers] = useState<UserMock[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [users, setUsers] = useState<UserMock[]>([]);
-  // const [loading, setLoading] = useState(true);
-  //
-  // useEffect(() => {
-  //   async function loadUsers() {
-  //     setLoading(true);
-  //     try {
-  //       const res = await fetch("/api/users");
-  //       setUsers(await res.json()); // GET /api/users returns a bare array
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadUsers();
-  // }, []);
+  // Initial load: fetch directly as a promise chain rather than calling an
+  // outside async function, so nothing sets state synchronously in the
+  // effect body. GET /api/users returns a bare array.
+  useEffect(() => {
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then((data) => setUsers(data))
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Reusable refresh, called from event handlers (not effects) after a
+  // write, so it's never subject to the set-state-in-effect rule.
+  async function loadUsers() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/users");
+      setUsers(await res.json());
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const [search, setSearch] = useState("");
   const [deactivateTarget, setDeactivateTarget] = useState<UserMock | null>(null);
@@ -60,30 +63,28 @@ export default function UsersListPage() {
     [users]
   );
 
-  // ── MOCK: toggle active status (soft-delete uses the same mechanism) ────
+  // Reactivating uses PATCH; deactivating uses the dedicated DELETE route,
+  // which sets is_active to false server-side rather than hard-deleting.
   async function handleToggleActive() {
     if (!deactivateTarget) return;
     setBusy(true);
-    await new Promise((r) => setTimeout(r, 300));
-    setUsers((prev) =>
-      prev.map((u) => (u.id === deactivateTarget.id ? { ...u, is_active: !u.is_active } : u))
-    );
-    setBusy(false);
-    setDeactivateTarget(null);
-
-    // ── REAL WRITE (disabled until API/DB is wired up) ─────────────────
-    // Reactivating uses PATCH; deactivating uses the dedicated DELETE route,
-    // which sets is_active to false server-side rather than hard-deleting.
-    // if (deactivateTarget.is_active) {
-    //   await fetch(`/api/users/${deactivateTarget.id}`, { method: "DELETE" });
-    // } else {
-    //   await fetch(`/api/users/${deactivateTarget.id}`, {
-    //     method: "PATCH",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ is_active: true }),
-    //   });
-    // }
-    // await loadUsers();
+    try {
+      if (deactivateTarget.is_active) {
+        await fetch(`/api/users/${deactivateTarget.id}`, { method: "DELETE" });
+      } else {
+        await fetch(`/api/users/${deactivateTarget.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_active: true }),
+        });
+      }
+      await loadUsers();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusy(false);
+      setDeactivateTarget(null);
+    }
   }
 
   return (
@@ -199,7 +200,8 @@ export default function UsersListPage() {
             : ""
         }
         confirmLabel={busy ? "Working..." : deactivateTarget?.is_active ? "Deactivate" : "Activate"}
-        danger={deactivateTarget?.is_active}
+        variant={deactivateTarget?.is_active ? "danger" : "success"}
+        loading={busy}
         onConfirm={handleToggleActive}
         onCancel={() => setDeactivateTarget(null)}
       />

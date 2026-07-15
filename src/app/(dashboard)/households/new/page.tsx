@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Home, User, Search, X } from "lucide-react";
 import {
@@ -179,47 +179,38 @@ export default function NewHouseholdPage() {
 
     setSubmitting(true);
 
-    // ── MOCK SUBMIT ─────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 500));
-    setSubmitting(false);
-    alert(
-      `[MOCK] Household created at "${address}" (${nextHouseholdNo}).\nA real save will redirect to the new household's detail page.`
-    );
-    router.push("/households");
-
-    // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-    // try {
-    //   const res = await fetch("/api/households", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       purok_id: parseInt(purokId),
-    //       address,
-    //       housing_type: housingType || undefined,
-    //       water_source: waterSource || undefined,
-    //       comfort_room: comfortRoom || undefined,
-    //       household_head_id: head?.id ?? undefined,
-    //     }),
-    //   });
-    //   if (!res.ok) throw new Error("Failed to create household");
-    //   const created = await res.json();
-    //
-    //   // If a head was picked, also link them to this household via the
-    //   // resident endpoint (household membership lives on Resident.household_id).
-    //   if (head) {
-    //     await fetch(`/api/residents/${head.id}`, {
-    //       method: "PATCH",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify({ household_id: created.id }),
-    //     });
-    //   }
-    //   router.push(`/households/${created.id}`);
-    // } catch (e) {
-    //   console.error(e);
-    //   setError("Something went wrong while creating the household. Please try again.");
-    // } finally {
-    //   setSubmitting(false);
-    // }
+   
+     try {
+       const res = await fetch("/api/households", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           purok_id: parseInt(purokId),
+           address,
+           housing_type: housingType || undefined,
+           water_source: waterSource || undefined,
+           comfort_room: comfortRoom || undefined,
+           household_head_id: head?.id ?? undefined,
+         }),
+       });
+       if (!res.ok) throw new Error("Failed to create household");
+       const created = await res.json();
+    
+    
+       if (head) {
+         await fetch(`/api/residents/${head.id}`, {
+           method: "PATCH",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify({ household_id: created.id }),
+         });
+       }
+       router.push(`/households/${created.id}`);
+     } catch (e) {
+       console.error(e);
+       setError("Something went wrong while creating the household. Please try again.");
+     } finally {
+       setSubmitting(false);
+     }
   }
 
   return (

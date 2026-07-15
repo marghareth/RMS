@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Syringe, Save, User, Search, CalendarDays } from "lucide-react";
 
@@ -164,7 +164,7 @@ export default function NewVaccinationPage() {
 
   const finalVaccineName = form.vaccine_name === "Other (specify)" ? form.custom_vaccine : form.vaccine_name;
 
-  /* ── Real API (commented out until Supabase is connected) ──────────────────
+
   async function handleSave() {
     if (!form.resident_id || !finalVaccineName || !form.date_given) {
       setError("Please fill in all required fields.");
@@ -189,18 +189,8 @@ export default function NewVaccinationPage() {
       setSaving(false);
     }
   }
-  ─────────────────────────────────────────────────────────────────────────── */
-
-  async function handleSave() {
-    if (!form.resident_id || !finalVaccineName || !form.date_given) {
-      setError("Please fill in all required fields.");
-      return;
-    }
-    setSaving(true);
-    await new Promise(r => setTimeout(r, 700));
-    setSaving(false);
-    router.push("/health");
-  }
+  
+  
 
   const isValid = form.resident_id && finalVaccineName && form.date_given;
 

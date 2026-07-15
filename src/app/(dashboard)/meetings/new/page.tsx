@@ -35,26 +35,26 @@ export default function NewMeetingPage() {
     );
     router.push("/meetings");
 
-    // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-    // try {
-    //   const res = await fetch("/api/meetings", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       meeting_type: meetingType,
-    //       meeting_date: meetingDateTime,
-    //       minutes: minutes.trim() || undefined,
-    //     }),
-    //   });
-    //   if (!res.ok) throw new Error("Failed to create meeting record");
-    //   const created = await res.json();
-    //   router.push(`/meetings/${created.id}`);
-    // } catch (e) {
-    //   console.error(e);
-    //   setError("Something went wrong while saving. Please try again.");
-    // } finally {
-    //   setSubmitting(false);
-    // }
+    
+    try {
+       const res = await fetch("/api/meetings", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           meeting_type: meetingType,
+           meeting_date: meetingDateTime,
+           minutes: minutes.trim() || undefined,
+         }),
+       });
+       if (!res.ok) throw new Error("Failed to create meeting record");
+       const created = await res.json();
+       router.push(`/meetings/${created.id}`);
+     } catch (e) {
+       console.error(e);
+       setError("Something went wrong while saving. Please try again.");
+     } finally {
+       setSubmitting(false);
+     }
   }
 
   return (
@@ -149,7 +149,7 @@ export default function NewMeetingPage() {
               className="w-full resize-none rounded-lg border border-[#E9EAEC] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-[#3B82F6]"
             />
             <p className="mt-1.5 text-[11px] text-[#9CA3AF]">
-              Minutes are stored as text. File uploads for scanned minutes aren't supported by the current schema.
+              Minutes are stored as text. File uploads for scanned minutes arent supported by the current schema.
             </p>
           </div>
 

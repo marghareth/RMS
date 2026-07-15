@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   UserCheck,
@@ -23,7 +23,6 @@ import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import {
-  MOCK_OFFICIALS,
   BrgyOfficialMock,
   residentFullName,
   calcAge,
@@ -46,35 +45,28 @@ function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string
 export default function OfficialsListPage() {
   const router = useRouter();
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // Swap this for a real fetch once the database is connected (see the
-  // commented-out effect below).
-  const [officials, setOfficials] = useState<BrgyOfficialMock[]>(MOCK_OFFICIALS);
-  const [loading] = useState(false);
+  const [officials, setOfficials] = useState<BrgyOfficialMock[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeOnly, setActiveOnly] = useState(true);
 
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
-  // const [officials, setOfficials] = useState<BrgyOfficialMock[]>([]);
-  // const [loading, setLoading] = useState(true);
-  //
-  // useEffect(() => {
-  //   async function loadOfficials() {
-  //     setLoading(true);
-  //     try {
-  //       const params = new URLSearchParams();
-  //       if (activeOnly) params.set("is_active", "true");
-  //       const res = await fetch(`/api/officials?${params}`);
-  //       setOfficials(await res.json()); // GET /api/officials returns a bare array
-  //     } catch (e) {
-  //       console.error(e);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   loadOfficials();
-  // }, [activeOnly]);
+  useEffect(() => {
+    async function loadOfficials() {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (activeOnly) params.set("is_active", "true");
+        const res = await fetch(`/api/officials?${params}`);
+        setOfficials(await res.json()); // GET /api/officials returns a bare array
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadOfficials();
+  }, [activeOnly]);
 
   const [search, setSearch] = useState("");
-  const [activeOnly, setActiveOnly] = useState(true);
   const [selectedId, setSelectedId] = useState<number | null>(officials[0]?.id ?? null);
   const [deleteTarget, setDeleteTarget] = useState<BrgyOfficialMock | null>(null);
   const [busy, setBusy] = useState(false);
@@ -321,8 +313,9 @@ export default function OfficialsListPage() {
             ? `${residentFullName(deleteTarget.resident)} will be permanently removed from the officials directory. This cannot be undone.`
             : ""
         }
-        confirmLabel={busy ? "Removing..." : "Remove"}
-        danger
+        confirmLabel="Remove"
+        variant="danger"
+        loading={busy}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
