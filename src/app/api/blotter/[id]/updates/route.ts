@@ -4,7 +4,7 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const auth = await requirePermission("blotter:write");
+  const auth = await requirePermission("blotter:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await req.json();

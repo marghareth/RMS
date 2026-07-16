@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
   const sex          = searchParams.get("sex");
   const civil_status = searchParams.get("civil_status");
   const is_archived  = searchParams.get("is_archived") === "true";
+  const unassigned   = searchParams.get("unassigned") === "true";
   const page         = parseInt(searchParams.get("page")  || "1");
   const limit        = parseInt(searchParams.get("limit") || "20");
   const skip         = (page - 1) * limit;
@@ -32,6 +33,7 @@ export async function GET(req: NextRequest) {
       purok_id     ? { purok_id:     parseInt(purok_id) } : {},
       sex          ? { sex }                              : {},
       civil_status ? { civil_status }                     : {},
+      unassigned   ? { household_id: null }                : {},
     ],
   };
 
@@ -56,58 +58,66 @@ export async function POST(req: NextRequest) {
   const auth = await requirePermission("residents:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
+  try {
+    const body = await req.json();
 
-  // Duplicate check: same name + birthdate
-  const existing = await prisma.resident.findFirst({
-    where: {
-      fname:     { equals: body.fname,     mode: "insensitive" },
-      lname:     { equals: body.lname,     mode: "insensitive" },
-      birthdate: new Date(body.birthdate),
-    },
-  });
-
-  if (existing) {
-    return NextResponse.json(
-      {
-        error:    "DUPLICATE",
-        message:  "A resident with the same name and birthdate already exists.",
-        existing,
+    // Duplicate check: same name + birthdate
+    const existing = await prisma.resident.findFirst({
+      where: {
+        fname:     { equals: body.fname,     mode: "insensitive" },
+        lname:     { equals: body.lname,     mode: "insensitive" },
+        birthdate: new Date(body.birthdate),
       },
-      { status: 409 }
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        {
+          error:    "DUPLICATE",
+          message:  "A resident with the same name and birthdate already exists.",
+          existing,
+        },
+        { status: 409 }
+      );
+    }
+
+    const resident = await prisma.resident.create({
+      data: {
+        fname:                  body.fname,
+        lname:                  body.lname,
+        mname:                  body.mname                  ?? null,
+        name_extension:         body.name_extension         ?? null,
+        birthdate:              new Date(body.birthdate),
+        place_of_birth:         body.place_of_birth         ?? null,
+        sex:                    body.sex,
+        civil_status:           body.civil_status,
+        citizenship:            body.citizenship            || "Filipino",
+        religion:               body.religion               ?? null,
+        nationality:            body.nationality            || "Filipino",
+        employment_status:      body.employment_status      ?? null,
+        educational_attainment: body.educational_attainment ?? null,
+        occupation:             body.occupation             ?? null,
+        income_bracket:         body.income_bracket         ?? null,
+        sector:                 body.sector                 ?? null,
+        purok_id:               body.purok_id               ?? null,
+        household_id:           body.household_id           ?? null,
+      },
+    });
+
+    await logAudit({
+      user_id:        parseInt(auth.session.user.id),
+      action:         "CREATE",
+      table_affected: "Resident",
+      record_id:      resident.id,
+      details:        `Created resident: ${resident.fname} ${resident.lname}`,
+    });
+
+    return NextResponse.json(resident, { status: 201 });
+  } catch (e: any) {
+    console.error("POST /api/residents failed:", e);
+    return NextResponse.json(
+      { error: "SERVER_ERROR", message: e?.message || "Failed to create resident." },
+      { status: 500 }
     );
   }
-
-  const resident = await prisma.resident.create({
-    data: {
-      fname:                  body.fname,
-      lname:                  body.lname,
-      mname:                  body.mname                  ?? null,
-      name_extension:         body.name_extension         ?? null,
-      birthdate:              new Date(body.birthdate),
-      place_of_birth:         body.place_of_birth         ?? null,
-      sex:                    body.sex,
-      civil_status:           body.civil_status,
-      citizenship:            body.citizenship            || "Filipino",
-      religion:               body.religion               ?? null,
-      nationality:            body.nationality            || "Filipino",
-      employment_status:      body.employment_status      ?? null,
-      educational_attainment: body.educational_attainment ?? null,
-      occupation:             body.occupation             ?? null,
-      income_bracket:         body.income_bracket         ?? null,
-      sector:                 body.sector                 ?? null,
-      purok_id:               body.purok_id               ?? null,
-      household_id:           body.household_id           ?? null,
-    },
-  });
-
-  await logAudit({
-    user_id:        parseInt(auth.session.user.id),
-    action:         "CREATE",
-    table_affected: "Resident",
-    record_id:      resident.id,
-    details:        `Created resident: ${resident.fname} ${resident.lname}`,
-  });
-
-  return NextResponse.json(resident, { status: 201 });
 }

@@ -3,13 +3,39 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Home, User, Search, X } from "lucide-react";
-import {
-  MOCK_PUROKS,
-  MOCK_UNASSIGNED_RESIDENTS,
-  memberFullName,
-  calcAge,
-} from "@/lib/mock/households";
-import type { HouseholdMemberMock } from "@/lib/mock/households";
+
+// ── TYPES ─────────────────────────────────────────────────────────────────────
+interface Purok {
+  id: number;
+  name: string;
+}
+
+interface UnassignedResident {
+  id: number;
+  fname: string;
+  lname: string;
+  mname: string | null;
+  name_extension: string | null;
+  birthdate: string;
+  sex: string;
+  civil_status: string;
+  occupation: string | null;
+}
+
+function memberFullName(m: UnassignedResident) {
+  const ext = m.name_extension ? ` ${m.name_extension}` : "";
+  const mi  = m.mname ? ` ${m.mname[0]}.` : "";
+  return `${m.lname}, ${m.fname}${ext}${mi}`;
+}
+
+function calcAge(birthdate: string) {
+  const today = new Date();
+  const dob   = new Date(birthdate);
+  let age     = today.getFullYear() - dob.getFullYear();
+  const m     = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return age;
+}
 
 const HOUSING_OPTIONS = [
   { value: "OWN", label: "Own" },
@@ -67,21 +93,53 @@ function SelectField({
   );
 }
 
-// Lightweight resident search over the mock "unassigned" pool — stands in
-// for a real ResidentPicker query filtered to residents without a household.
+// Searches real, currently-unassigned residents via GET /api/residents?search=&unassigned=true
 function HeadPicker({
   value,
   onChange,
 }: {
-  value: HouseholdMemberMock | null;
-  onChange: (r: HouseholdMemberMock | null) => void;
+  value: UnassignedResident | null;
+  onChange: (r: UnassignedResident | null) => void;
 }) {
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
+  const [query, setQuery]     = useState("");
+  const [open, setOpen]       = useState(false);
+  const [results, setResults] = useState<UnassignedResident[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const results = MOCK_UNASSIGNED_RESIDENTS.filter((r: HouseholdMemberMock) =>
-    memberFullName(r).toLowerCase().includes(query.toLowerCase())
-  );
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      // Nothing to clear here: the dropdown only renders when
+      // `query.trim()` is truthy, so stale `results` are never shown
+      // while the query is empty. No setState needed in that case.
+      return;
+    }
+
+    let ignore = false;
+
+    const timeout = setTimeout(() => {
+      if (ignore) return;
+      setLoading(true);
+
+      const params = new URLSearchParams({ search: q, unassigned: "true", limit: "10" });
+      fetch(`/api/residents?${params}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (!ignore) setResults(data.residents ?? []);
+        })
+        .catch(() => {
+          if (!ignore) setResults([]);
+        })
+        .finally(() => {
+          if (!ignore) setLoading(false);
+        });
+    }, 300); // debounce
+
+    return () => {
+      ignore = true;
+      clearTimeout(timeout);
+    };
+  }, [query]);
 
   if (value) {
     return (
@@ -120,10 +178,12 @@ function HeadPicker({
       </div>
       {open && query.trim() && (
         <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-[#E9EAEC] bg-white shadow-lg">
-          {results.length === 0 ? (
+          {loading ? (
+            <p className="px-3 py-4 text-center text-[12px] text-[#9CA3AF]">Searching…</p>
+          ) : results.length === 0 ? (
             <p className="px-3 py-4 text-center text-[12px] text-[#9CA3AF]">No unassigned residents found</p>
           ) : (
-            results.map((r: HouseholdMemberMock) => (
+            results.map((r) => (
               <button
                 key={r.id}
                 type="button"
@@ -152,19 +212,36 @@ function HeadPicker({
 export default function NewHouseholdPage() {
   const router = useRouter();
 
+  const [puroks, setPuroks] = useState<Purok[]>([]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    fetch("/api/puroks")
+      .then(async (r) => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}));
+          throw new Error(body.error || body.message || `Request failed (${r.status})`);
+        }
+        return r.json();
+      })
+      .then((json) => {
+        if (!ignore && Array.isArray(json)) setPuroks(json);
+      })
+      .catch((e) => console.error("Failed to load puroks from /api/puroks:", e.message));
+
+    return () => { ignore = true; };
+  }, []);
+
   const [purokId, setPurokId] = useState("");
   const [address, setAddress] = useState("");
   const [housingType, setHousingType] = useState("");
   const [waterSource, setWaterSource] = useState("");
   const [comfortRoom, setComfortRoom] = useState("");
-  const [head, setHead] = useState<HouseholdMemberMock | null>(null);
+  const [head, setHead] = useState<UnassignedResident | null>(null);
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  // Preview of the auto-generated household number (real logic lives server-side
-  // in POST /api/households via generateHouseholdNo()).
-  const nextHouseholdNo = `HHNP1${String(6).padStart(9, "0")}`; // mock preview only
 
   async function handleSubmit() {
     setError("");
@@ -179,38 +256,52 @@ export default function NewHouseholdPage() {
 
     setSubmitting(true);
 
-   
-     try {
-       const res = await fetch("/api/households", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({
-           purok_id: parseInt(purokId),
-           address,
-           housing_type: housingType || undefined,
-           water_source: waterSource || undefined,
-           comfort_room: comfortRoom || undefined,
-           household_head_id: head?.id ?? undefined,
-         }),
-       });
-       if (!res.ok) throw new Error("Failed to create household");
-       const created = await res.json();
-    
-    
-       if (head) {
-         await fetch(`/api/residents/${head.id}`, {
-           method: "PATCH",
-           headers: { "Content-Type": "application/json" },
-           body: JSON.stringify({ household_id: created.id }),
-         });
-       }
-       router.push(`/households/${created.id}`);
-     } catch (e) {
-       console.error(e);
-       setError("Something went wrong while creating the household. Please try again.");
-     } finally {
-       setSubmitting(false);
-     }
+    try {
+      const res = await fetch("/api/households", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          purok_id: parseInt(purokId),
+          address,
+          housing_type: housingType || undefined,
+          water_source: waterSource || undefined,
+          comfort_room: comfortRoom || undefined,
+          household_head_id: head?.id ?? undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || "Failed to create household.");
+      }
+
+      const created = await res.json();
+
+      if (head) {
+        const patchRes = await fetch(`/api/residents/${head.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ household_id: created.id }),
+        });
+
+        if (!patchRes.ok) {
+          const err = await patchRes.json().catch(() => ({}));
+          // Household was already created at this point — surface the
+          // problem but don't lose the household that was just made.
+          throw new Error(
+            err.message || err.error ||
+            `Household was created, but failed to link ${memberFullName(head)} as head.`
+          );
+        }
+      }
+
+      router.push(`/households/${created.id}`);
+    } catch (e: any) {
+      console.error(e);
+      setError(e.message || "Something went wrong while creating the household. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -226,7 +317,7 @@ export default function NewHouseholdPage() {
       <div className="mb-5">
         <h1 className="text-xl font-bold text-[#1F2937]">Add Household</h1>
         <p className="mt-0.5 text-[13px] text-[#9CA3AF]">
-          A household number will be generated automatically (preview: {nextHouseholdNo}).
+          A household number will be generated automatically once saved.
         </p>
       </div>
 
@@ -244,7 +335,7 @@ export default function NewHouseholdPage() {
               label="Purok"
               value={purokId}
               onChange={setPurokId}
-              options={MOCK_PUROKS.map((p: { id: number; name: string }) => ({ value: String(p.id), label: p.name }))}
+              options={puroks.map((p) => ({ value: String(p.id), label: p.name }))}
               required
             />
             <div className="flex flex-col gap-1">

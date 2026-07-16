@@ -36,43 +36,63 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const auth = await requirePermission("residents:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
-  const id   = parseInt(params.id);
+  try {
+    const body = await req.json();
+    const id   = parseInt(params.id);
 
-  const resident = await prisma.resident.update({
-    where: { id },
-    data: {
-      fname:                  body.fname,
-      lname:                  body.lname,
-      mname:                  body.mname                  ?? null,
-      name_extension:         body.name_extension         ?? null,
-      birthdate:              body.birthdate ? new Date(body.birthdate) : undefined,
-      place_of_birth:         body.place_of_birth         ?? null,
-      sex:                    body.sex,
-      civil_status:           body.civil_status,
-      citizenship:            body.citizenship,
-      religion:               body.religion               ?? null,
-      nationality:            body.nationality,
-      employment_status:      body.employment_status      ?? null,
-      educational_attainment: body.educational_attainment ?? null,
-      occupation:             body.occupation             ?? null,
-      income_bracket:         body.income_bracket         ?? null,
-      sector:                 body.sector                 ?? null,
-      purok_id:               body.purok_id               ?? null,
-      household_id:           body.household_id           ?? null,
-      is_archived:            body.is_archived,
-    },
-  });
+    // Partial update: only touch fields actually present in the request
+    // body. Previously every field used `body.x ?? null`, which meant a
+    // PATCH sending only `{ household_id }` silently wiped out purok_id,
+    // sector, occupation, etc. by setting them to null. Now a field is
+    // only written if the caller explicitly included it.
+    const data: Record<string, any> = {};
 
-  await logAudit({
-    user_id:        parseInt(auth.session.user.id),
-    action:         "UPDATE",
-    table_affected: "Resident",
-    record_id:      id,
-    details:        `Updated resident: ${resident.fname} ${resident.lname}`,
-  });
+    const directFields = ["fname", "lname", "sex", "civil_status", "citizenship", "nationality", "is_archived"] as const;
+    for (const key of directFields) {
+      if (body[key] !== undefined) data[key] = body[key];
+    }
 
-  return NextResponse.json(resident);
+    const nullableFields = [
+      "mname", "name_extension", "place_of_birth", "religion", "employment_status",
+      "educational_attainment", "occupation", "income_bracket", "sector",
+      "purok_id", "household_id",
+    ] as const;
+    for (const key of nullableFields) {
+      if (key in body) data[key] = body[key] ?? null;
+    }
+
+    if ("birthdate" in body) {
+      data.birthdate = body.birthdate ? new Date(body.birthdate) : null;
+    }
+
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json(
+        { error: "VALIDATION_ERROR", message: "No fields to update." },
+        { status: 400 }
+      );
+    }
+
+    const resident = await prisma.resident.update({ where: { id }, data });
+
+    await logAudit({
+      user_id:        parseInt(auth.session.user.id),
+      action:         "UPDATE",
+      table_affected: "Resident",
+      record_id:      id,
+      details:        `Updated resident: ${resident.fname} ${resident.lname}`,
+    });
+
+    return NextResponse.json(resident);
+  } catch (e: any) {
+    console.error(`PATCH /api/residents/${params.id} failed:`, e);
+    if (e.code === "P2025") {
+      return NextResponse.json({ error: "NOT_FOUND", message: "Resident not found." }, { status: 404 });
+    }
+    return NextResponse.json(
+      { error: "SERVER_ERROR", message: e?.message || "Failed to update resident." },
+      { status: 500 }
+    );
+  }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {

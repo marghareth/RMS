@@ -18,27 +18,18 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    // ── MOCK LOGIN (remove when real auth is connected) ──
-    await new Promise(r => setTimeout(r, 800));
-    if (username === "admin" && password === "admin123") {
-      router.push("/dashboard");
-      return;
-    }
-    setError("Invalid username or password.");
-    setLoading(false);
+    const res = await signIn("credentials", {
+      username,
+      password,
+      redirect: false,
+    });
 
-    // ── REAL LOGIN (uncomment when ready) ──
-    // const res = await signIn("credentials", {
-    //   username,
-    //   password,
-    //   redirect: false,
-    // });
-    // if (res?.ok) {
-    //   router.push("/dashboard");
-    // } else {
-    //   setError("Invalid username or password.");
-    //   setLoading(false);
-    // }
+    if (res?.ok) {
+      router.push("/dashboard");
+    } else {
+      setError("Invalid username or password.");
+      setLoading(false);
+    }
   }
 
   return (
