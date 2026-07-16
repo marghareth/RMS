@@ -9,7 +9,7 @@ function isValidType(type: string): type is CertificateTypeValue {
 
 // Restores a certificate type's template to its hardcoded default wording.
 export async function POST(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
-  const auth = await requirePermission("certificates:write");
+  const auth = await requirePermission("certificates:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { type } = await params;

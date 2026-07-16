@@ -44,28 +44,55 @@ export async function POST(req: NextRequest) {
   const auth = await requirePermission("households:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
-  const household_no = await generateHouseholdNo();
+  try {
+    const body = await req.json();
 
-  const household = await prisma.household.create({
-    data: {
-      household_no,
-      purok_id: body.purok_id,
-      household_head_id: body.household_head_id ?? null,
-      address: body.address,
-      housing_type: body.housing_type ?? null,
-      water_source: body.water_source ?? null,
-      comfort_room: body.comfort_room ?? null,
-    },
-  });
+    if (!body.purok_id || !body.address) {
+      return NextResponse.json(
+        { error: "VALIDATION_ERROR", message: "Purok and address are required." },
+        { status: 400 }
+      );
+    }
 
-  await logAudit({
-    user_id: parseInt(auth.session.user.id),
-    action: "CREATE",
-    table_affected: "Household",
-    record_id: household.id,
-    details: `Created household ${household.household_no} at: ${household.address}`,
-  });
+    const purok = await prisma.purok.findUnique({ where: { id: Number(body.purok_id) } });
+    if (!purok) {
+      return NextResponse.json(
+        {
+          error: "INVALID_PUROK",
+          message: `Purok ${body.purok_id} does not exist in the database. Refresh the page and re-select a purok from the dropdown.`,
+        },
+        { status: 400 }
+      );
+    }
 
-  return NextResponse.json(household, { status: 201 });
+    const household_no = await generateHouseholdNo();
+
+    const household = await prisma.household.create({
+      data: {
+        household_no,
+        purok_id: Number(body.purok_id),
+        household_head_id: body.household_head_id ?? null,
+        address: body.address,
+        housing_type: body.housing_type ?? null,
+        water_source: body.water_source ?? null,
+        comfort_room: body.comfort_room ?? null,
+      },
+    });
+
+    await logAudit({
+      user_id: parseInt(auth.session.user.id),
+      action: "CREATE",
+      table_affected: "Household",
+      record_id: household.id,
+      details: `Created household ${household.household_no} at: ${household.address}`,
+    });
+
+    return NextResponse.json(household, { status: 201 });
+  } catch (e: any) {
+    console.error("POST /api/households failed:", e);
+    return NextResponse.json(
+      { error: "SERVER_ERROR", message: e?.message || "Failed to create household." },
+      { status: 500 }
+    );
+  }
 }

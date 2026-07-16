@@ -47,7 +47,7 @@ const expense = summary.find((s: { transaction_type: string; _sum: { amount: any
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requirePermission("financial:write");
+  const auth = await requirePermission("financial:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await req.json();

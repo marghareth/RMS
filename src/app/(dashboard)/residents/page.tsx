@@ -6,7 +6,7 @@ import {
   Search, SlidersHorizontal, ChevronRight,
   Plus, X, Users,
 } from "lucide-react";
-import { getMockPuroks, getMockResidents, type Resident as MockResident } from "@/lib/mockResidents";
+import { getMockPuroks, type Resident as MockResident } from "@/lib/mockResidents";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Purok { id: number; name: string }
@@ -108,7 +108,6 @@ export default function ResidentsPage() {
       const res  = await fetch(`/api/residents?${params}`);
       const data = await res.json();
       setResidents(data.residents ?? []);
-      setResidents(data);
     } finally {
       setLoading(false);
     }
