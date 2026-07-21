@@ -1,14 +1,16 @@
+// FILE: src/app/api/residents/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission("residents:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const { id: idParam } = await params;
   const resident = await prisma.resident.findUnique({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(idParam) },
     include: {
       purok: true,
       household: {
@@ -32,13 +34,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json(resident);
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission("residents:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const { id: idParam } = await params;
+
   try {
     const body = await req.json();
-    const id   = parseInt(params.id);
+    const id   = parseInt(idParam);
 
     // Partial update: only touch fields actually present in the request
     // body. Previously every field used `body.x ?? null`, which meant a
@@ -84,7 +88,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     return NextResponse.json(resident);
   } catch (e: any) {
-    console.error(`PATCH /api/residents/${params.id} failed:`, e);
+    console.error(`PATCH /api/residents/${idParam} failed:`, e);
     if (e.code === "P2025") {
       return NextResponse.json({ error: "NOT_FOUND", message: "Resident not found." }, { status: 404 });
     }
@@ -95,11 +99,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission("residents:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const id = parseInt(params.id);
+  const { id: idParam } = await params;
+  const id = parseInt(idParam);
 
   // Soft delete only — never hard delete residents
   const resident = await prisma.resident.update({

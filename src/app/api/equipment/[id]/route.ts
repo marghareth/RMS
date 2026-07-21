@@ -1,14 +1,16 @@
+// FILE: src/app/api/equipment/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission("equipment:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const { id: idParam } = await params;
   const equipment = await prisma.equipment.findUnique({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(idParam) },
     include: {
       borrowings: {
         include: {
@@ -24,12 +26,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json(equipment);
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission("equipment:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await req.json();
-  const id = parseInt(params.id);
+  const { id: idParam } = await params;
+  const id = parseInt(idParam);
 
   const equipment = await prisma.equipment.update({
     where: { id },

@@ -1,14 +1,16 @@
+// FILE: src/app/api/meetings/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission("meetings:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const { id: idParam } = await params;
   const meeting = await prisma.meetingRecord.findUnique({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(idParam) },
     include: { recorder: { select: { id: true, username: true } } },
   });
 
@@ -16,12 +18,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json(meeting);
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission("meetings:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await req.json();
-  const id = parseInt(params.id);
+  const { id: idParam } = await params;
+  const id = parseInt(idParam);
 
   const meeting = await prisma.meetingRecord.update({
     where: { id },

@@ -1,3 +1,4 @@
+// src/components/registries/RegistryDetail.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,14 +10,52 @@ import {
   CalendarDays, MapPin,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import {
-  getMockRegistryById,
-  deleteMockRegistry,
-  type RegistryEntry,
-} from "@/lib/mockRegistries";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type RegistryType = "SENIOR_CITIZEN" | "PWD" | "FOUR_PS";
+
+interface RegistryResident {
+  id: number;
+  fname: string;
+  lname: string;
+  mname: string | null;
+  name_extension: string | null;
+  birthdate: string;
+  place_of_birth: string | null;
+  sex: string;
+  civil_status: string;
+  citizenship: string;
+  religion: string | null;
+  employment_status: string | null;
+  educational_attainment: string | null;
+  occupation: string | null;
+  income_bracket: string | null;
+  sector: string | null;
+  purok: { id: number; name: string } | null;
+  household: {
+    id: number;
+    household_no: string;
+    address: string;
+    housing_type: string | null;
+    water_source: string | null;
+    comfort_room: string | null;
+    _count: { members: number };
+  } | null;
+  certificates: { id: number; certificate_type: string; issued_at: string }[];
+  barangay_ids: { id: number; id_number: string; issued_date: string }[];
+  health_records: { id: number; record_type: string; notes: string | null; recorded_at: string }[];
+  vaccinations: { id: number; vaccine_name: string; date_given: string }[];
+}
+
+interface RegistryEntry {
+  id: number;
+  resident_id: number;
+  registry_type: RegistryType;
+  disability_type: string | null;
+  is_4ps_beneficiary: boolean;
+  registered_at: string;
+  resident: RegistryResident;
+}
 
 interface RegistryDetailProps {
   entryId:    number;
@@ -92,31 +131,43 @@ export default function RegistryDetail({
   entryId, title, icon: Icon, iconBg, accentText, listBase,
 }: RegistryDetailProps) {
   const router = useRouter();
-  // For the mock data we can derive the entry synchronously to avoid
-  // calling setState inside an effect (which can cause cascading renders).
-  const entry = getMockRegistryById(entryId) ?? null;
+  const [entry, setEntry] = useState<RegistryEntry | null>(null);
+  const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    /* ── Real API (commented out until Supabase is connected) ──────────────────
-    fetch(`/api/registries/${entryId}`)
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .then(setEntry)
-      .catch(() => router.push(listBase))
-      .finally(() => setLoading(false));
-    ─────────────────────────────────────────────────────────────────────────── */
-    // For mock data we derive `entry` synchronously; if not found, navigate away.
-    if (!entry) router.push(listBase);
-  }, [entry, listBase, router]);
+    let cancelled = false;
+    // Defer to a microtask so no setState call runs synchronously within the
+    // effect body itself (avoids react-hooks/set-state-in-effect).
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      setLoading(true);
+      fetch(`/api/registries/${entryId}`)
+        .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
+        .then((data) => { if (!cancelled) setEntry(data); })
+        .catch(() => { if (!cancelled) router.push(listBase); })
+        .finally(() => { if (!cancelled) setLoading(false); });
+    });
+    return () => { cancelled = true; };
+  }, [entryId, listBase, router]);
 
   async function handleDelete() {
     if (!confirm("Remove this resident from the registry? This cannot be undone.")) return;
     setDeleting(true);
-    /* ── Real API (commented out) ──────────────────────────────────────────────
-    await fetch(`/api/registries/${entryId}`, { method: "DELETE" });
-    ─────────────────────────────────────────────────────────────────────────── */
-    deleteMockRegistry(entryId);
-    router.push(listBase);
+    try {
+      await fetch(`/api/registries/${entryId}`, { method: "DELETE" });
+      router.push(listBase);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+      </div>
+    );
   }
 
   if (!entry) return null;
@@ -246,7 +297,7 @@ export default function RegistryDetail({
                 No. of Members
               </span>
               <span className="text-[11px] font-medium text-[#374151]">
-                : {r.household?.members?.length ?? "—"}
+                : {r.household?._count?.members ?? "—"}
               </span>
             </div>
             {r.household && (
