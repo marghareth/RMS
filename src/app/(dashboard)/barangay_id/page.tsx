@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/barangay_id/page.tsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -28,16 +29,8 @@ import {
 export default function BarangayIdListPage() {
   const router = useRouter();
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // Swap this for a real fetch once the database is connected (see the
-  // commented-out effect below).
- // const [ids] = useState<BarangayIdMock[]>(MOCK_BARANGAY_IDS);
- // const [loading] = useState(false);
-
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
   const [ids, setIds] = useState<BarangayIdMock[]>([]);
   const [loading, setLoading] = useState(true);
-  //
   useEffect(() => {
      async function loadIds() {
        setLoading(true);
@@ -219,7 +212,7 @@ export default function BarangayIdListPage() {
                     <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5">
                       <div>
                         <p className="text-[8px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Address</p>
-                        <p className="truncate text-[10px] text-[#374151]">{selected.resident.address}</p>
+                        <p className="truncate text-[10px] text-[#374151]">{selected.resident.household?.address ?? "—"}</p>
                       </div>
                       <div>
                         <p className="text-[8px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Birthdate</p>

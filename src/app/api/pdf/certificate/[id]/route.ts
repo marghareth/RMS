@@ -72,7 +72,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       body: renderTemplate(template.body, values),
       closing: renderTemplate(template.closing_line ?? "", values),
       purpose: certificate.purpose,
-      certificateNo: `CERT-${String(certificate.id).padStart(6, "0")}`,
+      certificateNo: certificate.certificate_no,
       applicantName: fullName,
       flaggedManual: certificate.flagged_manual,
       captainName: MOCK_ACTIVE_CAPTAIN.name,

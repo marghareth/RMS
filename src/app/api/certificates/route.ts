@@ -1,7 +1,22 @@
+// FILE: src/app/api/certificates/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+
+// ── Generate certificate number e.g. CERT-2026-000123 ─────────────────────
+async function generateCertificateNo(): Promise<string> {
+  const year = new Date().getFullYear();
+  const count = await prisma.certificate.count({
+    where: {
+      issued_at: {
+        gte: new Date(`${year}-01-01T00:00:00.000Z`),
+        lt: new Date(`${year + 1}-01-01T00:00:00.000Z`),
+      },
+    },
+  });
+  return `CERT-${year}-${String(count + 1).padStart(6, "0")}`;
+}
 
 export async function GET(req: NextRequest) {
   const auth = await requirePermission("certificates:read");
@@ -31,7 +46,7 @@ export async function GET(req: NextRequest) {
       skip,
       take: limit,
       include: {
-        resident: true,
+        resident: { include: { purok: true, household: true } },
         issuer: { select: { id: true, username: true, role: true } },
       },
       orderBy: { issued_at: "desc" },
@@ -43,7 +58,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requirePermission("certificates:write", req);
+  const auth = await requirePermission("certificates:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await req.json();
@@ -85,8 +100,16 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  let certificate_no = await generateCertificateNo();
+  while (await prisma.certificate.findUnique({ where: { certificate_no } })) {
+    // Extremely unlikely race between the count check and the insert below —
+    // append a short random suffix so we never loop forever on a collision.
+    certificate_no = `${certificate_no}-${Math.floor(100 + Math.random() * 900)}`;
+  }
+
   const certificate = await prisma.certificate.create({
     data: {
+      certificate_no,
       resident_id: body.resident_id || null,
       issued_by: parseInt(auth.session.user.id),
       certificate_type: body.certificate_type,
@@ -96,7 +119,7 @@ export async function POST(req: NextRequest) {
       manual_address: body.manual_address || null,
     },
     include: {
-      resident: true,
+      resident: { include: { purok: true, household: true } },
       issuer: { select: { id: true, username: true } },
     },
   });
@@ -106,7 +129,7 @@ export async function POST(req: NextRequest) {
     action: "CREATE",
     table_affected: "Certificate",
     record_id: certificate.id,
-    details: `Issued ${certificate.certificate_type} certificate`,
+    details: `Issued ${certificate.certificate_type} certificate: ${certificate.certificate_no}`,
   });
 
   return NextResponse.json(certificate, { status: 201 });

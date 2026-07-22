@@ -1,31 +1,28 @@
+// FILE PATH: src/app/(dashboard)/health/new/page.tsx
+// Replace the entire contents of this file with the code below.
+//
+// WHAT WAS WRONG: this file defined its own local ResidentPicker that
+// searched a hardcoded MOCK_RESIDENTS array (10 fake names) instead of
+// querying the real database. Any real resident (e.g. "Bueno") would
+// always show "No residents found" because it was never actually being
+// looked up. Fixed by swapping in the shared ResidentPicker component
+// (src/components/shared/ResidentPicker.tsx), which calls
+// GET /api/residents?search=... against the live database — the same
+// component already used correctly on the blotter "new case" page.
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Heart, Save, User, Search } from "lucide-react";
+import { ArrowLeft, Heart, Save, User } from "lucide-react";
+import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPicker";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
-interface Resident { id: number; fname: string; lname: string; purok?: { name: string } | null }
-
 interface HealthForm {
   resident_id: string;
   record_type: string;
   notes:       string;
 }
-
-// ─── MOCK DATA ────────────────────────────────────────────────────────────────
-const MOCK_RESIDENTS: Resident[] = [
-  { id: 1,  fname: "Juan",     lname: "dela Cruz", purok: { name: "Purok II"  } },
-  { id: 2,  fname: "Maria",    lname: "Santos",    purok: { name: "Purok I"   } },
-  { id: 3,  fname: "Rosa",     lname: "Reyes",     purok: { name: "Purok III" } },
-  { id: 4,  fname: "Pedro",    lname: "Garcia",    purok: { name: "Purok IV"  } },
-  { id: 5,  fname: "Nino",     lname: "Flores",    purok: { name: "Purok I"   } },
-  { id: 6,  fname: "Carmen",   lname: "Lopez",     purok: { name: "Purok II"  } },
-  { id: 7,  fname: "Fernando", lname: "Cruz",      purok: { name: "Purok III" } },
-  { id: 8,  fname: "Lourdes",  lname: "Mendoza",   purok: { name: "Purok IV"  } },
-  { id: 9,  fname: "Teresa",   lname: "Ramos",     purok: { name: "Purok II"  } },
-  { id: 10, fname: "Roberto",  lname: "Aquino",    purok: { name: "Purok III" } },
-];
 
 const RECORD_TYPES = [
   "Hypertension",
@@ -52,101 +49,6 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
     <label className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wide block mb-1.5">
       {children}{required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
-  );
-}
-
-// ─── RESIDENT PICKER ─────────────────────────────────────────────────────────
-function ResidentPicker({
-  selected, onSelect,
-}: {
-  selected: Resident | null;
-  onSelect: (r: Resident) => void;
-}) {
-  const [query,  setQuery]  = useState("");
-  const [open,   setOpen]   = useState(false);
-
-  const filtered = MOCK_RESIDENTS.filter(r =>
-    `${r.fname} ${r.lname}`.toLowerCase().includes(query.toLowerCase())
-  );
-
-  return (
-    <div>
-      <FieldLabel required>Resident</FieldLabel>
-
-      {selected ? (
-        <div className="flex items-center justify-between px-4 py-3 rounded-xl border border-[#3B82F6] bg-blue-50">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#3B82F6] flex items-center justify-center shrink-0">
-              <User size={14} className="text-white" />
-            </div>
-            <div>
-              <p className="text-[13px] font-bold text-[#1F2937]">{selected.lname}, {selected.fname}</p>
-              <p className="text-[11px] text-[#6B7280]">{selected.purok?.name ?? "—"} · ID #{String(selected.id).padStart(7, "0")}</p>
-            </div>
-          </div>
-          <button
-            onClick={() => { setOpen(true); setQuery(""); }}
-            className="text-[11px] font-bold text-[#3B82F6] hover:text-[#1D4ED8] transition"
-          >
-            Change
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={() => setOpen(true)}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-[#E9EAEC] hover:border-[#3B82F6] bg-white transition text-left"
-        >
-          <div className="w-8 h-8 rounded-full bg-[#F4F5F7] flex items-center justify-center shrink-0">
-            <User size={14} className="text-[#9CA3AF]" />
-          </div>
-          <span className="text-[13px] text-[#9CA3AF]">Select a resident...</span>
-        </button>
-      )}
-
-      {/* Dropdown */}
-      {open && (
-        <div className="mt-2 bg-white rounded-xl border border-[#E9EAEC] shadow-lg overflow-hidden z-10 relative">
-          <div className="p-3 border-b border-[#F4F5F7]">
-            <div className="relative">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
-              <input
-                autoFocus
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Search by name..."
-                className="w-full pl-8 pr-3 py-2 text-[12px] bg-[#F4F5F7] rounded-lg border border-transparent focus:outline-none focus:border-[#3B82F6] text-[#1F2937] placeholder:text-[#9CA3AF]"
-              />
-            </div>
-          </div>
-          <div className="max-h-48 overflow-y-auto">
-            {filtered.length === 0 ? (
-              <p className="text-[12px] text-[#9CA3AF] text-center py-4">No residents found</p>
-            ) : (
-              filtered.map(r => (
-                <button
-                  key={r.id}
-                  onClick={() => { onSelect(r); setOpen(false); setQuery(""); }}
-                  className="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-[#F4F5F7] transition border-b border-[#F9FAFB] last:border-0"
-                >
-                  <div className="w-7 h-7 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0">
-                    <User size={12} className="text-[#3B82F6]" />
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-semibold text-[#1F2937]">{r.lname}, {r.fname}</p>
-                    <p className="text-[10px] text-[#9CA3AF]">{r.purok?.name ?? "—"}</p>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-          <div className="p-2 border-t border-[#F4F5F7]">
-            <button onClick={() => setOpen(false)} className="w-full py-1.5 text-[11px] text-[#9CA3AF] hover:text-[#6B7280] transition">
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -188,16 +90,16 @@ function RecordTypeGrid({ value, onChange }: { value: string; onChange: (v: stri
 export default function NewHealthRecordPage() {
   const router = useRouter();
 
-  const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
+  const [selectedResident, setSelectedResident] = useState<PickedResident | null>(null);
   const [form,    setForm]    = useState<HealthForm>({ resident_id: "", record_type: "", notes: "" });
   const [saving,  setSaving]  = useState(false);
   const [error,   setError]   = useState("");
 
   const set = (k: keyof HealthForm, v: string) => setForm(p => ({ ...p, [k]: v }));
 
-  function handleSelectResident(r: Resident) {
+  function handleSelectResident(r: PickedResident | null) {
     setSelectedResident(r);
-    set("resident_id", String(r.id));
+    set("resident_id", r ? String(r.id) : "");
   }
 
   async function handleSave() {
@@ -225,7 +127,6 @@ export default function NewHealthRecordPage() {
       setSaving(false);
     }
   }
- 
 
   const isValid = form.resident_id && form.record_type;
 
@@ -252,9 +153,15 @@ export default function NewHealthRecordPage() {
               <User size={14} className="text-white" />
             </div>
             <p className="text-[13px] font-bold text-[#1F2937]">Resident</p>
+            <span className="text-red-500 text-[11px] font-bold ml-1">*</span>
           </div>
           <div className="p-5">
-            <ResidentPicker selected={selectedResident} onSelect={handleSelectResident} />
+            <FieldLabel required>Resident</FieldLabel>
+            <ResidentPicker
+              value={selectedResident}
+              onChange={handleSelectResident}
+              placeholder="Search resident by name..."
+            />
           </div>
         </div>
 

@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const certificate = await prisma.certificate.findUnique({
     where: { id: parseInt(id) },
     include: {
-      resident: true,
+      resident: { include: { purok: true, household: true } },
       issuer: { select: { id: true, username: true } },
     },
   });

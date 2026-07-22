@@ -1,3 +1,4 @@
+// FILE: src/app/api/barangay-id/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
       skip,
       take: limit,
       include: {
-        resident: true,
+        resident: { include: { purok: true, household: true } },
         issuer: { select: { id: true, username: true } },
       },
       orderBy: { issued_date: "desc" },
@@ -39,10 +40,30 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requirePermission("barangay_id:write", req);
+  const auth = await requirePermission("barangay_id:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await req.json();
+
+  if (!body.resident_id) {
+    return NextResponse.json({ error: "resident_id is required" }, { status: 400 });
+  }
+
+  const resident = await prisma.resident.findUnique({ where: { id: body.resident_id } });
+  if (!resident) {
+    return NextResponse.json({ error: "Resident not found" }, { status: 404 });
+  }
+
+  // A resident should only hold one barangay ID at a time. resident_id isn't
+  // @unique on the model, so this has to be enforced here rather than by a
+  // DB constraint.
+  const existing = await prisma.barangayId.findFirst({ where: { resident_id: body.resident_id } });
+  if (existing) {
+    return NextResponse.json(
+      { error: "DUPLICATE_ID", message: "This resident already has a barangay ID on file." },
+      { status: 409 }
+    );
+  }
 
   let id_number = generateIdNumber();
   let exists = await prisma.barangayId.findUnique({ where: { id_number } });
@@ -58,7 +79,7 @@ export async function POST(req: NextRequest) {
       issued_by: parseInt(auth.session.user.id),
     },
     include: {
-      resident: true,
+      resident: { include: { purok: true, household: true } },
       issuer: { select: { id: true, username: true } },
     },
   });

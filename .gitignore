@@ -28,6 +28,9 @@ Thumbs.db
 # Prisma
 prisma/migrations/dev.db
 
+# Prisma generated client
+src/generated
+
 # Logs
 npm-debug.log*
 yarn-debug.log*

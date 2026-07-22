@@ -1,3 +1,4 @@
+// FILE: src/lib/mock/certificates.ts
 // ── MOCK DATA ──────────────────────────────────────────────────────────────
 // Temporary in-memory data standing in for the Prisma/DB layer while the
 // Certificates UI is being built. Shapes mirror the `Certificate` model in
@@ -46,8 +47,8 @@ export interface CertResidentMock {
   birthdate: string; // ISO date
   sex: string;
   civil_status: string;
-  purok_name: string;
-  address: string;
+  purok: { id: number; name: string } | null;
+  household: { id: number; address: string } | null;
   created_at: string; // ISO date — used for the 6-month residency check
 }
 
@@ -59,7 +60,7 @@ export interface CertIssuerMock {
 
 export interface CertificateMock {
   id: number;
-  certificate_no: string; // display convenience, not a real schema field
+  certificate_no: string;
   resident_id: number | null;
   resident: CertResidentMock | null;
   issued_by: number;
@@ -97,8 +98,8 @@ export const MOCK_RESIDENTS_POOL: CertResidentMock[] = [
     birthdate: "1985-03-14",
     sex: "FEMALE",
     civil_status: "MARRIED",
-    purok_name: "Purok II",
-    address: "Purok II, Brgy. Quisol",
+    purok: { id: 2, name: "Purok II" },
+    household: { id: 200, address: "Purok II, Brgy. Quisol" },
     created_at: "2020-01-10T00:00:00Z",
   },
   {
@@ -110,8 +111,8 @@ export const MOCK_RESIDENTS_POOL: CertResidentMock[] = [
     birthdate: "1990-08-01",
     sex: "MALE",
     civil_status: "MARRIED",
-    purok_name: "Purok IV",
-    address: "Purok IV, Brgy. Quisol",
+    purok: { id: 4, name: "Purok IV" },
+    household: { id: 400, address: "Purok IV, Brgy. Quisol" },
     created_at: "2019-06-05T00:00:00Z",
   },
   {
@@ -123,8 +124,8 @@ export const MOCK_RESIDENTS_POOL: CertResidentMock[] = [
     birthdate: "1995-10-03",
     sex: "MALE",
     civil_status: "SINGLE",
-    purok_name: "Purok I",
-    address: "Purok I, Brgy. Quisol",
+    purok: { id: 1, name: "Purok I" },
+    household: { id: 100, address: "Purok I, Brgy. Quisol" },
     created_at: "2026-05-20T00:00:00Z", // registered <6 months ago — fails residency check
   },
   {
@@ -136,8 +137,8 @@ export const MOCK_RESIDENTS_POOL: CertResidentMock[] = [
     birthdate: "1988-05-14",
     sex: "FEMALE",
     civil_status: "WIDOWED",
-    purok_name: "Purok I",
-    address: "Purok I, Brgy. Quisol",
+    purok: { id: 1, name: "Purok I" },
+    household: { id: 100, address: "Purok I, Brgy. Quisol" },
     created_at: "2021-02-18T00:00:00Z",
   },
 ];
