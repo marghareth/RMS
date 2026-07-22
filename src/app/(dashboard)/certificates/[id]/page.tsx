@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/certificates/[id]/page.tsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -146,7 +147,7 @@ export default function CertificateDetailPage() {
                   label="Date of Birth"
                   value={formatISODate(certificate.resident.birthdate)}
                 />
-                <InfoRow icon={ShieldCheck} label="Purok" value={certificate.resident.purok_name} />
+                <InfoRow icon={ShieldCheck} label="Purok" value={certificate.resident.purok?.name} />
                 <InfoRow icon={FileText} label="Resident Record" value={`Linked · RBI #${certificate.resident.id}`} />
               </div>
             ) : (

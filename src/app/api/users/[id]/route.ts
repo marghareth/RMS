@@ -1,15 +1,17 @@
+// FILE: src/app/api/users/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import bcrypt from "bcryptjs";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission("users:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const { id: idParam } = await params;
   const user = await prisma.user.findUnique({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(idParam) },
     select: {
       id: true,
       username: true,
@@ -23,12 +25,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json(user);
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission("users:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await req.json();
-  const id = parseInt(params.id);
+  const { id: idParam } = await params;
+  const id = parseInt(idParam);
 
   const data: any = {
     role: body.role,
@@ -61,11 +64,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json(user);
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission("users:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const id = parseInt(params.id);
+  const { id: idParam } = await params;
+  const id = parseInt(idParam);
 
   await prisma.user.update({
     where: { id },

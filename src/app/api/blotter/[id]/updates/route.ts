@@ -1,14 +1,16 @@
+// FILE: src/app/api/blotter/[id]/updates/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const auth = await requirePermission("blotter:write", req);
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requirePermission("blotter:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await req.json();
-  const blotter_case_id = parseInt(params.id);
+  const { id: idParam } = await params;
+  const blotter_case_id = parseInt(idParam);
 
   const update = await prisma.blotterUpdate.create({
     data: {

@@ -1,3 +1,4 @@
+// src/app/api/registries/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requirePermission("registries:write", req);
+  const auth = await requirePermission("registries:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await req.json();
@@ -62,7 +63,14 @@ export async function POST(req: NextRequest) {
       disability_type: body.disability_type || null,
       is_4ps_beneficiary: body.is_4ps_beneficiary || false,
     },
-    include: { resident: true },
+    include: {
+      resident: {
+        include: {
+          purok: true,
+          household: { include: { _count: { select: { members: true } } } },
+        },
+      },
+    },
   });
 
   await logAudit({

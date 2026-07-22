@@ -1,3 +1,4 @@
+// FILE: src/components/shared/ResidentPicker.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -17,6 +18,13 @@ export interface PickedResident {
   birthdate: string;
   sex: string;
   purok: PickedPurok | null;
+  // Optional — the /api/residents endpoint this component calls already
+  // returns these (it includes purok + household on every resident), they
+  // just weren't part of this type before. Added so consumers that need
+  // more than name/age/purok (e.g. the Barangay ID form) don't need a
+  // second fetch or a separate picker component.
+  civil_status?: string;
+  household?: { id: number; address: string } | null;
 }
 
 function calcAge(birthdate: string) {

@@ -29,8 +29,23 @@ export default function HouseholdsListPage() {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-     fetch("/api/puroks").then((r) => r.json()).then(setPuroks).catch(console.error);
-   }, []);
+    let ignore = false;
+
+    fetch("/api/puroks")
+      .then(async (r) => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}));
+          throw new Error(body.error || body.message || `Request failed (${r.status})`);
+        }
+        return r.json();
+      })
+      .then((json) => {
+        if (!ignore && Array.isArray(json)) setPuroks(json);
+      })
+      .catch((e) => console.error("Failed to load puroks from /api/puroks:", e.message));
+
+    return () => { ignore = true; };
+  }, []);
   
    useEffect(() => {
      async function loadHouseholds() {

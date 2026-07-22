@@ -1,14 +1,16 @@
+// FILE: src/app/api/households/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission("households:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const { id: idParam } = await params;
   const household = await prisma.household.findUnique({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(idParam) },
     include: {
       purok: true,
       household_head: true,
@@ -23,12 +25,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json(household);
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission("households:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = await req.json();
-  const id = parseInt(params.id);
+  const { id: idParam } = await params;
+  const id = parseInt(idParam);
 
   const household = await prisma.household.update({
     where: { id },
@@ -53,11 +56,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json(household);
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requirePermission("households:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const id = parseInt(params.id);
+  const { id: idParam } = await params;
+  const id = parseInt(idParam);
   const household = await prisma.household.delete({ where: { id } });
 
   await logAudit({

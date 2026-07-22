@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/certificates/[id]/preview/page.tsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -18,23 +19,77 @@ export default function CertificatePreviewPage() {
   const params = useParams();
   const certId = Number(params.id);
 
-  // GET /api/certificates/[id]
   const [certificate, setCertificate] = useState<CertificateMock | null>(null);
+  const [certLoading, setCertLoading] = useState(true);
+  const [template, setTemplate] = useState<CertificateTemplateMock | null>(null);
+  const [templateLoading, setTemplateLoading] = useState(true);
+
+  // Reset to a "loading" state the instant certId changes, before either
+  // fetch effect below even runs — done during render rather than inside
+  // an effect. This is React's documented pattern for resetting state when
+  // a prop changes (see "Adjusting some state when a prop changes" at
+  // https://react.dev/learn/you-might-not-need-an-effect), and it's exempt
+  // from the set-state-in-effect rule because it isn't inside useEffect.
+  const [loadedForId, setLoadedForId] = useState(certId);
+  if (certId !== loadedForId) {
+    setLoadedForId(certId);
+    setCertificate(null);
+    setCertLoading(true);
+    setTemplate(null);
+    setTemplateLoading(true);
+  }
+
+  // GET /api/certificates/[id]
   useEffect(() => {
-    fetch(`/api/certificates/${certId}`).then((r) => r.json()).then(setCertificate).catch(console.error);
+    let cancelled = false;
+    fetch(`/api/certificates/${certId}`)
+      .then((r) => {
+        if (!r.ok) throw new Error("Certificate not found");
+        return r.json();
+      })
+      .then((data) => {
+        if (!cancelled) setCertificate(data);
+      })
+      .catch((e) => {
+        console.error(e);
+        if (!cancelled) setCertificate(null);
+      })
+      .finally(() => {
+        if (!cancelled) setCertLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [certId]);
 
   // Pulls the editable template for this certificate's type (see
   // /certificates/templates) instead of a hardcoded per-type switch-case, and
   // interpolates it with this certificate's real data.
-  const [template, setTemplate] = useState<CertificateTemplateMock | null>(null);
   useEffect(() => {
-    if (!certificate) return;
+    if (!certificate) return; // nothing to fetch yet — `loading` below already
+    // accounts for this via `certificate !== null`, so there's no need to
+    // touch templateLoading here.
+    let cancelled = false;
     fetch(`/api/certificate-templates/${certificate.certificate_type}`)
       .then((r) => r.json())
-      .then(setTemplate)
-      .catch(console.error);
+      .then((data) => {
+        if (!cancelled) setTemplate(data);
+      })
+      .catch(console.error)
+      .finally(() => {
+        if (!cancelled) setTemplateLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [certificate]);
+
+  // Only genuinely "not found" once the certificate fetch has settled — and,
+  // if a certificate was found, once its template has settled too. Without
+  // this, `!certificate` is briefly true on every load (both start as
+  // null), which flashed the "Certificate not found" screen for a second
+  // or two before the real data arrived.
+  const loading = certLoading || (certificate !== null && templateLoading);
 
   const mergedValues = useMemo<Record<string, string>>(() => {
     if (!certificate) {
@@ -53,7 +108,7 @@ export default function CertificatePreviewPage() {
     const name = certificate.resident
       ? residentFullName(certificate.resident).toUpperCase()
       : (certificate.manual_name ?? "").toUpperCase();
-    const address = certificate.resident?.address ?? certificate.manual_address ?? "this barangay";
+    const address = certificate.resident?.household?.address ?? certificate.manual_address ?? "this barangay";
     return {
       full_name: name,
       address,
@@ -79,6 +134,14 @@ export default function CertificatePreviewPage() {
     // Renders the same template server-side via @react-pdf/renderer
     // (see src/lib/pdf.ts) and streams back a downloadable PDF file.
     window.open(`/api/pdf/certificate/${certId}`, "_blank");
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+      </div>
+    );
   }
 
   if (!certificate || !template) {

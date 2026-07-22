@@ -1,3 +1,4 @@
+// src/app/api/registries/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -14,6 +15,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         include: {
           purok: true,
           household: { include: { _count: { select: { members: true } } } },
+          certificates: { orderBy: { issued_at: "desc" } },
+          barangay_ids: { orderBy: { issued_date: "desc" } },
+          health_records: { orderBy: { recorded_at: "desc" } },
+          vaccinations: { orderBy: { date_given: "desc" } },
         },
       },
     },
