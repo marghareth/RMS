@@ -1,3 +1,8 @@
+// FILE PATH: src/app/(dashboard)/health/[id]/page.tsx
+// This is the PAGE component. Make sure this — and only this — is what
+// lives at that path. The GET/PATCH/DELETE route code belongs in a
+// completely different file: src/app/api/health/[id]/route.ts.
+
 "use client";
 
 import { useState, useEffect } from "react";

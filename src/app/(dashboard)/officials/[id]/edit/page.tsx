@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/officials/[id]/edit/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -93,38 +94,31 @@ export default function EditOfficialPage() {
 
     setSubmitting(true);
 
-    // ── MOCK SUBMIT ─────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 500));
-    setSubmitting(false);
-    alert(`[MOCK] ${residentFullName(original!.resident)}'s record updated.\nA real save will redirect back to the officials directory.`);
-    router.push("/officials");
-
-    // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-    // try {
-    //   const res = await fetch(`/api/officials/${officialId}`, {
-    //     method: "PATCH",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       position,
-    //       purok_assignment: purokAssignment || null,
-    //       term_start: termStart,
-    //       term_end: termEnd || null,
-    //       is_active: isActive,
-    //     }),
-    //   });
-    //   if (!res.ok) throw new Error("Failed to update official");
-    //   router.push("/officials");
-    // } catch (e) {
-    //   console.error(e);
-    //   setError("Something went wrong while saving. Please try again.");
-    // } finally {
-    //   setSubmitting(false);
-    // }
-
-    // Note: contact_no is on the BrgyOfficial model too, but the API's
-    // PATCH handler above doesn't currently accept it — only position,
-    // purok_assignment, term_start, term_end, and is_active are updatable.
-    // Flag this to the backend if contact editing needs to be supported.
+    try {
+      const res = await fetch(`/api/officials/${officialId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          position,
+          contact_no: contactNo || null,
+          purok_assignment: purokAssignment || null,
+          term_start: termStart,
+          term_end: termEnd || null,
+          is_active: isActive,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.message || data.error || "Failed to update official.");
+        return;
+      }
+      router.push("/officials");
+    } catch (e) {
+      console.error(e);
+      setError("Something went wrong while saving. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (

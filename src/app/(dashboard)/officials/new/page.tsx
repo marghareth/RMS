@@ -1,104 +1,16 @@
+// FILE: src/app/(dashboard)/officials/new/page.tsx
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, UserCheck, Search, X, Phone } from "lucide-react";
-import {
-  MOCK_ELIGIBLE_RESIDENTS,
-  POSITIONS,
-  PUROK_ASSIGNMENTS,
-  OfficialResidentMock,
-  residentFullName,
-  calcAge,
-} from "@/lib/mock/officials";
-
-// Lightweight resident search over the mock "eligible" pool (residents not
-// already holding an official position — resident_id is @unique on
-// BrgyOfficial). Stands in for a real ResidentPicker query filtered server-side.
-function ResidentSearch({
-  value,
-  onChange,
-}: {
-  value: OfficialResidentMock | null;
-  onChange: (r: OfficialResidentMock | null) => void;
-}) {
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-
-  const results = MOCK_ELIGIBLE_RESIDENTS.filter((r) =>
-    residentFullName(r).toLowerCase().includes(query.toLowerCase())
-  );
-
-  if (value) {
-    return (
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-[#E9EAEC] bg-[#F9FAFB] px-4 py-3">
-        <div className="min-w-0">
-          <p className="truncate text-[13px] font-semibold text-[#1F2937]">{residentFullName(value)}</p>
-          <p className="truncate text-[11px] text-[#9CA3AF]">
-            {value.sex} &middot; {calcAge(value.birthdate)} yrs old &middot; {value.address}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => onChange(null)}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[#9CA3AF] transition hover:bg-[#E9EAEC] hover:text-[#374151]"
-        >
-          <X size={14} />
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative">
-      <div className="relative">
-        <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
-        <input
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          placeholder="Search resident (not currently an official)..."
-          className="w-full rounded-xl border border-[#E9EAEC] bg-white py-3 pl-9 pr-3 text-[13px] text-[#1F2937] outline-none focus:border-[#3B82F6]"
-        />
-      </div>
-      {open && query.trim() && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-[#E9EAEC] bg-white shadow-lg">
-          {results.length === 0 ? (
-            <p className="px-3 py-4 text-center text-[12px] text-[#9CA3AF]">No eligible residents found</p>
-          ) : (
-            results.map((r) => (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => {
-                  onChange(r);
-                  setQuery("");
-                  setOpen(false);
-                }}
-                className="flex w-full items-center justify-between gap-2 border-b border-[#F4F5F7] px-3 py-2.5 text-left transition last:border-b-0 hover:bg-[#F9FAFB]"
-              >
-                <div>
-                  <p className="text-[13px] font-semibold text-[#1F2937]">{residentFullName(r)}</p>
-                  <p className="text-[11px] text-[#9CA3AF]">
-                    {r.sex} &middot; {calcAge(r.birthdate)} yrs old &middot; {r.address}
-                  </p>
-                </div>
-              </button>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+import { ArrowLeft, UserCheck, Phone } from "lucide-react";
+import { POSITIONS, PUROK_ASSIGNMENTS } from "@/lib/mock/officials";
+import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPicker";
 
 export default function NewOfficialPage() {
   const router = useRouter();
 
-  const [resident, setResident] = useState<OfficialResidentMock | null>(null);
+  const [resident, setResident] = useState<PickedResident | null>(null);
   const [position, setPosition] = useState("");
   const [purokAssignment, setPurokAssignment] = useState("");
   const [contactNo, setContactNo] = useState("");
@@ -143,7 +55,7 @@ export default function NewOfficialPage() {
        });
        if (!res.ok) {
          const data = await res.json();
-         setError(data.error || "Failed to add official.");
+         setError(data.message || data.error || "Failed to add official.");
          return;
        }
        router.push("/officials");
@@ -181,7 +93,7 @@ export default function NewOfficialPage() {
             </div>
             <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Resident</p>
           </div>
-          <ResidentSearch value={resident} onChange={setResident} />
+          <ResidentPicker value={resident} onChange={setResident} placeholder="Search resident by name..." />
         </div>
 
         {/* Official details */}
