@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/equipment/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -28,109 +29,6 @@ interface Equipment {
   date_acquired: string | null;
   borrowings: Borrowing[];
 }
-
-// ─── MOCK DATA ────────────────────────────────────────────────────────────────
-const MOCK_EQUIPMENT: Equipment[] = [
-  {
-    id: 1,
-    name: "Megaphone",
-    quantity: 3,
-    condition: "Good",
-    status: "SERVICEABLE",
-    date_acquired: "2022-01-15",
-    borrowings: [
-      {
-        id: 1,
-        borrower_name: "Juan dela Cruz",
-        date_borrowed: "2026-06-20",
-        expected_return: "2026-06-27",
-        actual_return: null,
-        is_overdue: true,
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Plastic Chairs",
-    quantity: 50,
-    condition: "Fair",
-    status: "SERVICEABLE",
-    date_acquired: "2021-05-10",
-    borrowings: [
-      {
-        id: 2,
-        borrower_name: "Maria Santos",
-        date_borrowed: "2026-06-28",
-        expected_return: "2026-07-05",
-        actual_return: null,
-        is_overdue: false,
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Folding Tables",
-    quantity: 10,
-    condition: "Good",
-    status: "SERVICEABLE",
-    date_acquired: "2021-05-10",
-    borrowings: [],
-  },
-  {
-    id: 4,
-    name: "Generator",
-    quantity: 1,
-    condition: "Needs repair",
-    status: "UNSERVICEABLE",
-    date_acquired: "2019-08-22",
-    borrowings: [],
-  },
-  {
-    id: 5,
-    name: "Tarpaulin Stand",
-    quantity: 4,
-    condition: "Good",
-    status: "SERVICEABLE",
-    date_acquired: "2023-03-01",
-    borrowings: [],
-  },
-  {
-    id: 6,
-    name: "Sound System",
-    quantity: 1,
-    condition: "Good",
-    status: "SERVICEABLE",
-    date_acquired: "2022-11-12",
-    borrowings: [
-      {
-        id: 3,
-        borrower_name: "Pedro Reyes",
-        date_borrowed: "2026-06-29",
-        expected_return: "2026-07-01",
-        actual_return: null,
-        is_overdue: false,
-      },
-    ],
-  },
-  {
-    id: 7,
-    name: "Basketball Ring",
-    quantity: 2,
-    condition: "Damaged",
-    status: "MISSING",
-    date_acquired: "2020-06-15",
-    borrowings: [],
-  },
-  {
-    id: 8,
-    name: "First Aid Kit",
-    quantity: 5,
-    condition: "Complete",
-    status: "SERVICEABLE",
-    date_acquired: "2024-01-08",
-    borrowings: [],
-  },
-];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<EquipmentStatus, {
@@ -182,29 +80,46 @@ export default function EquipmentPage() {
 
   const [search,        setSearch]        = useState("");
   const [filterStatus,  setFilterStatus]  = useState<EquipmentStatus | "ALL">("ALL");
-  const [selected,      setSelected]      = useState<Equipment | null>(MOCK_EQUIPMENT[0]);
+  const [selectedId,    setSelectedId]    = useState<number | null>(null);
 
- 
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading,   setLoading]   = useState(true);
 
+  // Reset to a "loading" state the instant search/filterStatus change,
+  // during render rather than inside the effect below — same
+  // render-time-reset pattern used on the certificate preview page, exempt
+  // from the set-state-in-effect rule because it isn't inside useEffect.
+  // See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const queryKey = `${search}|${filterStatus}`;
+  const [loadedKey, setLoadedKey] = useState(queryKey);
+  if (queryKey !== loadedKey) {
+    setLoadedKey(queryKey);
+    setLoading(true);
+  }
+
   useEffect(() => {
+    let cancelled = false;
     const params = new URLSearchParams();
     if (search)                          params.set("search", search);
     if (filterStatus !== "ALL")          params.set("status", filterStatus);
     fetch(`/api/equipment?${params}`)
       .then(r => r.json())
-      .then(setEquipment)
+      .then(data => { if (!cancelled) setEquipment(data); })
       .catch(console.error)
-      .finally(() => setLoading(false));
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [search, filterStatus]);
-  
+
+  // Derived rather than stored: falls back to the first item once real data
+  // has loaded, without needing an effect (and its own setState-in-effect
+  // pitfall) just to "auto-select the first row".
+  const selected = equipment.find(e => e.id === selectedId) ?? equipment[0] ?? null;
 
   // ── Stats ─────────────────────────────────────────────────────────────────
-  const totalItems      = MOCK_EQUIPMENT.length;
-  const serviceable     = MOCK_EQUIPMENT.filter(e => e.status === "SERVICEABLE").length;
-  const currentlyOut    = MOCK_EQUIPMENT.reduce((n, e) => n + activeBorrowings(e).length, 0);
-  const overdueCount    = MOCK_EQUIPMENT.filter(hasOverdue).length;
+  const totalItems      = equipment.length;
+  const serviceable     = equipment.filter(e => e.status === "SERVICEABLE").length;
+  const currentlyOut    = equipment.reduce((n, e) => n + activeBorrowings(e).length, 0);
+  const overdueCount    = equipment.filter(hasOverdue).length;
 
   return (
     <div className="flex flex-col gap-5">
@@ -268,7 +183,11 @@ export default function EquipmentPage() {
 
           {/* List */}
           <div className="flex-1 overflow-y-auto">
-            {equipment.length === 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+              </div>
+            ) : equipment.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-2">
                 <Package size={28} className="text-[#D1D5DB]" />
                 <p className="text-[12px] text-[#9CA3AF]">No equipment found</p>
@@ -281,7 +200,7 @@ export default function EquipmentPage() {
                 return (
                   <button
                     key={eq.id}
-                    onClick={() => setSelected(eq)}
+                    onClick={() => setSelectedId(eq.id)}
                     className={`w-full text-left px-4 py-3 flex items-center gap-3 border-b border-[#F4F5F7] transition
                       ${active ? "bg-[#3B82F6]" : "hover:bg-[#F9FAFB]"}`}
                   >

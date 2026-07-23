@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id: idParam } = await params;
   const official = await prisma.brgyOfficial.findUnique({
     where: { id: parseInt(idParam) },
-    include: { resident: true },
+    include: { resident: { include: { purok: true, household: true } } },
   });
 
   if (!official) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -30,11 +30,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     where: { id },
     data: {
       position: body.position,
-      purok_assignment: body.purok_assignment,
+      contact_no: body.contact_no ?? null,
+      purok_assignment: body.purok_assignment ?? null,
       term_start: body.term_start ? new Date(body.term_start) : undefined,
-      term_end: body.term_end ? new Date(body.term_end) : undefined,
+      term_end: body.term_end ? new Date(body.term_end) : null,
       is_active: body.is_active,
     },
+    include: { resident: { include: { purok: true, household: true } } },
   });
 
   await logAudit({

@@ -146,9 +146,13 @@ export default function NewHealthRecordPage() {
 
       <div className="space-y-4">
 
-        {/* ── Resident card ── */}
-        <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
+        {/* ── Resident card ──
+             NOTE: intentionally no `overflow-hidden` here (unlike the other
+             cards below) — ResidentPicker's search-results dropdown is
+             absolutely positioned and needs to render outside this card's
+             bounds. overflow-hidden would clip it off after ~1 row. */}
+        <div className="bg-white rounded-xl border border-[#E9EAEC]">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB] rounded-t-xl">
             <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
               <User size={14} className="text-white" />
             </div>

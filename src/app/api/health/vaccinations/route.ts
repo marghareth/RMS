@@ -1,3 +1,10 @@
+// FILE PATH: src/app/api/health/vaccinations/route.ts
+// Replace the entire contents of this file with the code below.
+//
+// WHAT WAS WRONG: same issue as /api/health/route.ts — `search` was sent
+// by the frontend but never read or applied here. Added a `search` filter
+// matching resident first/last name OR vaccine_name.
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -9,11 +16,25 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const resident_id = searchParams.get("resident_id");
+  const search = searchParams.get("search") || "";
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "20");
   const skip = (page - 1) * limit;
 
-  const where: any = resident_id ? { resident_id: parseInt(resident_id) } : {};
+  const where: any = {
+    AND: [
+      resident_id ? { resident_id: parseInt(resident_id) } : {},
+      search
+        ? {
+            OR: [
+              { vaccine_name: { contains: search, mode: "insensitive" } },
+              { resident: { fname: { contains: search, mode: "insensitive" } } },
+              { resident: { lname: { contains: search, mode: "insensitive" } } },
+            ],
+          }
+        : {},
+    ],
+  };
 
   const [vaccinations, total] = await Promise.all([
     prisma.vaccination.findMany({

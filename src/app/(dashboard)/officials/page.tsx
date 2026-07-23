@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/officials/page.tsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -95,35 +96,38 @@ export default function OfficialsListPage() {
     [officials]
   );
 
-  // ── MOCK: toggle active status ───────────────────────────────────────────
   async function handleToggleActive(o: BrgyOfficialMock) {
     setBusy(true);
-    await new Promise((r) => setTimeout(r, 300));
-    setOfficials((prev) => prev.map((x) => (x.id === o.id ? { ...x, is_active: !x.is_active } : x)));
-    setBusy(false);
-
-    // ── REAL WRITE (disabled until API/DB is wired up) ─────────────────
-    // await fetch(`/api/officials/${o.id}`, {
-    //   method: "PATCH",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ is_active: !o.is_active }),
-    // });
-    // await loadOfficials();
+    try {
+      const res = await fetch(`/api/officials/${o.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !o.is_active }),
+      });
+      if (!res.ok) throw new Error("Failed to update official");
+      const updated = await res.json();
+      setOfficials((prev) => prev.map((x) => (x.id === o.id ? updated : x)));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusy(false);
+    }
   }
 
-  // ── MOCK: delete official ────────────────────────────────────────────────
   async function handleDelete() {
     if (!deleteTarget) return;
     setBusy(true);
-    await new Promise((r) => setTimeout(r, 300));
-    setOfficials((prev) => prev.filter((o) => o.id !== deleteTarget.id));
-    if (selectedId === deleteTarget.id) setSelectedId(null);
-    setBusy(false);
-    setDeleteTarget(null);
-
-    // ── REAL WRITE (disabled until API/DB is wired up) ─────────────────
-    // await fetch(`/api/officials/${deleteTarget.id}`, { method: "DELETE" });
-    // await loadOfficials();
+    try {
+      const res = await fetch(`/api/officials/${deleteTarget.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete official");
+      setOfficials((prev) => prev.filter((o) => o.id !== deleteTarget.id));
+      if (selectedId === deleteTarget.id) setSelectedId(null);
+      setDeleteTarget(null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -282,7 +286,7 @@ export default function OfficialsListPage() {
               <div className="mb-5 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
                 <InfoRow icon={Cake} label="Date of Birth" value={formatISODate(selected.resident.birthdate)} />
                 <InfoRow icon={UserCheck} label="Age / Sex" value={`${calcAge(selected.resident.birthdate)} yrs · ${selected.resident.sex}`} />
-                <InfoRow icon={Home} label="Current Address" value={selected.resident.address} />
+                <InfoRow icon={Home} label="Current Address" value={selected.resident.household?.address} />
                 <InfoRow icon={MapPin} label="Place of Birth" value={selected.resident.place_of_birth} />
                 <InfoRow icon={UserCheck} label="Civil Status" value={selected.resident.civil_status.replace("_", "-")} />
                 <InfoRow icon={FileText} label="Resident Record" value={`Linked · RBI #${selected.resident.id}`} />

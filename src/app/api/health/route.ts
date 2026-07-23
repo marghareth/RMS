@@ -1,3 +1,13 @@
+// FILE PATH: src/app/api/health/route.ts
+// Replace the entire contents of this file with the code below.
+//
+// WHAT WAS WRONG: the GET handler accepted resident_id, page, and limit
+// query params, but silently ignored `search` — even though the Health
+// Records page sends ?search=... from its search box. So typing in that
+// box never filtered anything server-side. Added a `search` filter that
+// matches resident first/last name OR record_type, so the search box on
+// the health page actually works against real data.
+
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -9,11 +19,25 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const resident_id = searchParams.get("resident_id");
+  const search = searchParams.get("search") || "";
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "20");
   const skip = (page - 1) * limit;
 
-  const where: any = resident_id ? { resident_id: parseInt(resident_id) } : {};
+  const where: any = {
+    AND: [
+      resident_id ? { resident_id: parseInt(resident_id) } : {},
+      search
+        ? {
+            OR: [
+              { record_type: { contains: search, mode: "insensitive" } },
+              { resident: { fname: { contains: search, mode: "insensitive" } } },
+              { resident: { lname: { contains: search, mode: "insensitive" } } },
+            ],
+          }
+        : {},
+    ],
+  };
 
   const [records, total] = await Promise.all([
     prisma.healthRecord.findMany({

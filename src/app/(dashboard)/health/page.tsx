@@ -1,3 +1,29 @@
+// FILE PATH: src/app/(dashboard)/health/page.tsx
+// Replace the entire contents of this file with the code below.
+//
+// WHAT WAS WRONG: the table rows themselves already used real data from
+// /api/health and /api/health/vaccinations. But:
+//   1. The 4 stat cards at the top and the 2 tab-count badges used
+//      MOCK_HEALTH.length / MOCK_VACCINATIONS.length (both hardcoded to 8
+//      fake records) instead of the real fetched counts — that's why the
+//      numbers looked plausible but weren't actually derived from the DB.
+//   2. "Active Cases" (5) and "Residents Covered" (8) were literal
+//      hardcoded numbers, not computed at all.
+//   3. The search box sent ?search=... but /api/health and
+//      /api/health/vaccinations ignored that param entirely (fixed
+//      separately in the two route.ts files).
+//
+// FIX: removed MOCK_HEALTH / MOCK_VACCINATIONS completely. Total Health
+// Records and Vaccinations Given now come straight from the API's `total`
+// field (the true DB count, not just the current page). Residents Covered
+// is the number of distinct residents appearing in either list. Active
+// Cases has no dedicated status field in the schema (HealthRecord has no
+// "resolved/ongoing" column) — as a stand-in, it counts records whose
+// record_type is one of a defined set of ongoing/chronic conditions
+// (see ONGOING_TYPES below). This is a heuristic, not a true DB field —
+// flagging this so you can adjust the list or add a real status column
+// if you want this number to mean something more precise.
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -31,28 +57,21 @@ interface Vaccination {
   recorder:     { username: string };
 }
 
-// ─── MOCK DATA ────────────────────────────────────────────────────────────────
-const MOCK_HEALTH: HealthRecord[] = [
-  { id: 1,  resident_id: 1,  record_type: "Hypertension",       notes: "BP: 140/90. Advised lifestyle changes and medication.",  recorded_at: "2026-06-25T08:30:00Z", resident: { id: 1,  fname: "Juan",       lname: "dela Cruz",  purok: { name: "Purok II"  } }, recorder: { username: "bhw_ana"    } },
-  { id: 2,  resident_id: 2,  record_type: "Diabetes",           notes: "Blood sugar: 210 mg/dL. Referred to RHU.",              recorded_at: "2026-06-22T10:00:00Z", resident: { id: 2,  fname: "Maria",      lname: "Santos",     purok: { name: "Purok I"   } }, recorder: { username: "bhw_ana"    } },
-  { id: 3,  resident_id: 3,  record_type: "Prenatal Checkup",   notes: "28 weeks AOG. Normal fetal heart rate.",                recorded_at: "2026-06-20T09:15:00Z", resident: { id: 3,  fname: "Rosa",       lname: "Reyes",      purok: { name: "Purok III" } }, recorder: { username: "bhw_lena"   } },
-  { id: 4,  resident_id: 4,  record_type: "Tuberculosis",       notes: "DOTS therapy started. Month 2 of 6.",                   recorded_at: "2026-06-18T11:00:00Z", resident: { id: 4,  fname: "Pedro",      lname: "Garcia",     purok: { name: "Purok IV"  } }, recorder: { username: "bhw_lena"   } },
-  { id: 5,  resident_id: 5,  record_type: "Well-child Checkup", notes: "Growth and development on track. 3 years old.",         recorded_at: "2026-06-15T08:00:00Z", resident: { id: 5,  fname: "Nino",       lname: "Flores",     purok: { name: "Purok I"   } }, recorder: { username: "bhw_ana"    } },
-  { id: 6,  resident_id: 6,  record_type: "Hypertension",       notes: "BP: 150/95. Medications adjusted.",                    recorded_at: "2026-06-10T14:00:00Z", resident: { id: 6,  fname: "Carmen",     lname: "Lopez",      purok: { name: "Purok II"  } }, recorder: { username: "bhw_lena"   } },
-  { id: 7,  resident_id: 7,  record_type: "Asthma",             notes: "Nebulization done. Prescribed bronchodilator.",         recorded_at: "2026-06-05T09:30:00Z", resident: { id: 7,  fname: "Fernando",   lname: "Cruz",       purok: { name: "Purok III" } }, recorder: { username: "bhw_ana"    } },
-  { id: 8,  resident_id: 8,  record_type: "Family Planning",    notes: "IUD insertion scheduled. Counseling completed.",        recorded_at: "2026-05-30T10:00:00Z", resident: { id: 8,  fname: "Lourdes",    lname: "Mendoza",    purok: { name: "Purok IV"  } }, recorder: { username: "bhw_lena"   } },
-];
-
-const MOCK_VACCINATIONS: Vaccination[] = [
-  { id: 1,  resident_id: 5,  vaccine_name: "BCG",                date_given: "2023-03-10", resident: { id: 5,  fname: "Nino",     lname: "Flores",   purok: { name: "Purok I"   } }, recorder: { username: "bhw_ana"  } },
-  { id: 2,  resident_id: 5,  vaccine_name: "DPT (1st dose)",     date_given: "2023-04-10", resident: { id: 5,  fname: "Nino",     lname: "Flores",   purok: { name: "Purok I"   } }, recorder: { username: "bhw_ana"  } },
-  { id: 3,  resident_id: 5,  vaccine_name: "DPT (2nd dose)",     date_given: "2023-05-10", resident: { id: 5,  fname: "Nino",     lname: "Flores",   purok: { name: "Purok I"   } }, recorder: { username: "bhw_ana"  } },
-  { id: 4,  resident_id: 9,  vaccine_name: "COVID-19 (1st dose)",date_given: "2026-01-15", resident: { id: 9,  fname: "Teresa",   lname: "Ramos",    purok: { name: "Purok II"  } }, recorder: { username: "bhw_lena" } },
-  { id: 5,  resident_id: 9,  vaccine_name: "COVID-19 (2nd dose)",date_given: "2026-02-15", resident: { id: 9,  fname: "Teresa",   lname: "Ramos",    purok: { name: "Purok II"  } }, recorder: { username: "bhw_lena" } },
-  { id: 6,  resident_id: 10, vaccine_name: "Influenza",          date_given: "2026-04-20", resident: { id: 10, fname: "Roberto",  lname: "Aquino",   purok: { name: "Purok III" } }, recorder: { username: "bhw_ana"  } },
-  { id: 7,  resident_id: 2,  vaccine_name: "Hepatitis B (1st)",  date_given: "2026-05-05", resident: { id: 2,  fname: "Maria",    lname: "Santos",   purok: { name: "Purok I"   } }, recorder: { username: "bhw_lena" } },
-  { id: 8,  resident_id: 3,  vaccine_name: "Tetanus Toxoid",     date_given: "2026-06-01", resident: { id: 3,  fname: "Rosa",     lname: "Reyes",    purok: { name: "Purok III" } }, recorder: { username: "bhw_ana"  } },
-];
+// Record types treated as "ongoing / chronic" for the Active Cases stat.
+// The schema has no status field on HealthRecord, so this is a heuristic —
+// adjust this list (or better, add a real status column) if it doesn't
+// match how your barangay actually tracks ongoing cases.
+const ONGOING_TYPES = new Set([
+  "Hypertension",
+  "Diabetes",
+  "Tuberculosis",
+  "Asthma",
+  "Mental Health",
+  "Malnutrition",
+  "Malaria",
+  "Dengue",
+  "COVID-19",
+]);
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function fmtDate(iso: string) {
@@ -108,6 +127,8 @@ export default function HealthPage() {
 
   const [healthRecords,  setHealthRecords]  = useState<HealthRecord[]>([]);
   const [vaccinations,   setVaccinations]   = useState<Vaccination[]>([]);
+  const [healthTotal,    setHealthTotal]    = useState(0);
+  const [vaccinationTotal, setVaccinationTotal] = useState(0);
   const [loading,        setLoading]        = useState(true);
 
   useEffect(() => {
@@ -119,11 +140,23 @@ export default function HealthPage() {
     ])
       .then(([hData, vData]) => {
         setHealthRecords(hData.records ?? []);
+        setHealthTotal(hData.total ?? (hData.records ?? []).length);
         setVaccinations(vData.vaccinations ?? []);
+        setVaccinationTotal(vData.total ?? (vData.vaccinations ?? []).length);
       })
       .finally(() => setLoading(false));
   }, [search]);
- 
+
+  // Distinct residents touched by either a health record or a vaccination
+  // (based on the currently loaded page of up to 50 of each — accurate for
+  // typical barangay volumes; raise the `limit` above or add a dedicated
+  // /api/health/summary endpoint if you need this to be exact past 50).
+  const residentsCovered = new Set([
+    ...healthRecords.map(r => r.resident_id),
+    ...vaccinations.map(v => v.resident_id),
+  ]).size;
+
+  const activeCases = healthRecords.filter(r => ONGOING_TYPES.has(r.record_type)).length;
 
   return (
     <div className="flex flex-col gap-5">
@@ -154,10 +187,10 @@ export default function HealthPage() {
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-4 gap-4">
-        <StatCard label="Total Health Records" value={MOCK_HEALTH.length}       sub="All recorded conditions" icon={Heart}       color="red" />
-        <StatCard label="Vaccinations Given"    value={MOCK_VACCINATIONS.length} sub="Doses administered"      icon={Syringe}     color="blue" />
-        <StatCard label="Active Cases"          value={5}                        sub="Ongoing treatment"       icon={Activity}    color="amber" />
-        <StatCard label="Residents Covered"     value={8}                        sub="Unique residents"        icon={ShieldCheck} color="green" />
+        <StatCard label="Total Health Records" value={healthTotal}       sub="All recorded conditions" icon={Heart}       color="red" />
+        <StatCard label="Vaccinations Given"    value={vaccinationTotal} sub="Doses administered"      icon={Syringe}     color="blue" />
+        <StatCard label="Active Cases"          value={activeCases}      sub="Ongoing treatment"       icon={Activity}    color="amber" />
+        <StatCard label="Residents Covered"     value={residentsCovered} sub="Unique residents"        icon={ShieldCheck} color="green" />
       </div>
 
       {/* ── Main content ── */}
@@ -166,8 +199,8 @@ export default function HealthPage() {
         {/* Toolbar */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
           <div className="flex items-center gap-2">
-            <TabBtn label="Health Records" count={MOCK_HEALTH.length}       icon={Heart}   active={tab === "health"}      onClick={() => setTab("health")}      />
-            <TabBtn label="Vaccinations"   count={MOCK_VACCINATIONS.length} icon={Syringe} active={tab === "vaccination"} onClick={() => setTab("vaccination")} />
+            <TabBtn label="Health Records" count={healthTotal}       icon={Heart}   active={tab === "health"}      onClick={() => setTab("health")}      />
+            <TabBtn label="Vaccinations"   count={vaccinationTotal}  icon={Syringe} active={tab === "vaccination"} onClick={() => setTab("vaccination")} />
           </div>
           <div className="relative w-56">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
