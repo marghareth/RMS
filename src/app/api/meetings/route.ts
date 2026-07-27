@@ -1,9 +1,12 @@
+// FILE: src/app/api/meetings/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
+import { meetingCreateSchema, paginationSchema } from "@/lib/validations";
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("meetings:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -11,8 +14,10 @@ export async function GET(req: NextRequest) {
   const meeting_type = searchParams.get("meeting_type");
   const date_from = searchParams.get("date_from");
   const date_to = searchParams.get("date_to");
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const { page, limit } = paginationSchema.parse({
+    page: searchParams.get("page"),
+    limit: searchParams.get("limit"),
+  });
   const skip = (page - 1) * limit;
 
   const where: any = {
@@ -28,28 +33,26 @@ export async function GET(req: NextRequest) {
       where,
       skip,
       take: limit,
-      include: {
-        recorder: { select: { id: true, username: true } },
-      },
+      include: { recorder: { select: { id: true, username: true } } },
       orderBy: { meeting_date: "desc" },
     }),
     prisma.meetingRecord.count({ where }),
   ]);
 
   return NextResponse.json({ meetings, total, page, limit });
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("meetings:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
+  const body = meetingCreateSchema.parse(await req.json());
 
   const meeting = await prisma.meetingRecord.create({
     data: {
       meeting_type: body.meeting_type,
-      meeting_date: new Date(body.meeting_date),
-      minutes: body.minutes || null,
+      meeting_date: body.meeting_date,
+      minutes: body.minutes ?? null,
       recorded_by: parseInt(auth.session.user.id),
     },
   });
@@ -63,4 +66,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(meeting, { status: 201 });
-}
+});

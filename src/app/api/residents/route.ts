@@ -1,3 +1,4 @@
+// FILE: src/app/api/residents/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";

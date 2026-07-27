@@ -3,20 +3,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
+import { equipmentUpdateSchema } from "@/lib/validations";
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("equipment:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const { id: idParam } = await params;
+  const { id: idParam } = await context!.params;
   const equipment = await prisma.equipment.findUnique({
     where: { id: parseInt(idParam) },
     include: {
       borrowings: {
-        include: {
-          resident: true,
-          recorder: { select: { id: true, username: true } },
-        },
+        include: { resident: true, recorder: { select: { id: true, username: true } } },
         orderBy: { date_borrowed: "desc" },
       },
     },
@@ -24,24 +23,24 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   if (!equipment) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(equipment);
-}
+});
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("equipment:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
-  const { id: idParam } = await params;
+  const { id: idParam } = await context!.params;
   const id = parseInt(idParam);
+  const body = equipmentUpdateSchema.parse(await req.json());
 
   const equipment = await prisma.equipment.update({
     where: { id },
     data: {
       name: body.name,
       quantity: body.quantity,
-      condition: body.condition,
+      condition: "condition" in body ? body.condition ?? null : undefined,
       status: body.status,
-      date_acquired: body.date_acquired ? new Date(body.date_acquired) : undefined,
+      date_acquired: "date_acquired" in body ? body.date_acquired ?? null : undefined,
     },
   });
 
@@ -54,4 +53,4 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   });
 
   return NextResponse.json(equipment);
-}
+});

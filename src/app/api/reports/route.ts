@@ -1,8 +1,10 @@
+// FILE: src/app/api/reports/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
+import { withErrorHandling } from "@/lib/api-handler";
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("reports:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -83,7 +85,14 @@ export async function GET(req: NextRequest) {
         _sum: { amount: true },
         _count: true,
       });
-      return NextResponse.json(summary);
+      // _sum.amount is a Prisma Decimal, which serializes to a STRING via
+      // toJSON() — convert to a plain number so frontend math doesn't
+      // silently break into string concatenation.
+      const serialized = summary.map((s: { transaction_type: string; _sum: { amount: any }; _count: number }) => ({
+        ...s,
+        _sum: { amount: Number(s._sum.amount ?? 0) },
+      }));
+      return NextResponse.json(serialized);
     }
 
     case "inventory": {
@@ -109,4 +118,4 @@ export async function GET(req: NextRequest) {
     default:
       return NextResponse.json({ error: "Invalid report type" }, { status: 400 });
   }
-}
+});

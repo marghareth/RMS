@@ -1,24 +1,22 @@
-// FILE PATH: src/app/api/health/vaccinations/route.ts
-// Replace the entire contents of this file with the code below.
-//
-// WHAT WAS WRONG: same issue as /api/health/route.ts — `search` was sent
-// by the frontend but never read or applied here. Added a `search` filter
-// matching resident first/last name OR vaccine_name.
-
+// FILE: src/app/api/health/vaccinations/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
+import { vaccinationCreateSchema, paginationSchema } from "@/lib/validations";
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("health:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);
   const resident_id = searchParams.get("resident_id");
   const search = searchParams.get("search") || "";
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const { page, limit } = paginationSchema.parse({
+    page: searchParams.get("page"),
+    limit: searchParams.get("limit"),
+  });
   const skip = (page - 1) * limit;
 
   const where: any = {
@@ -41,29 +39,26 @@ export async function GET(req: NextRequest) {
       where,
       skip,
       take: limit,
-      include: {
-        resident: true,
-        recorder: { select: { id: true, username: true } },
-      },
+      include: { resident: true, recorder: { select: { id: true, username: true } } },
       orderBy: { date_given: "desc" },
     }),
     prisma.vaccination.count({ where }),
   ]);
 
   return NextResponse.json({ vaccinations, total, page, limit });
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("health:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
+  const body = vaccinationCreateSchema.parse(await req.json());
 
   const vaccination = await prisma.vaccination.create({
     data: {
       resident_id: body.resident_id,
       vaccine_name: body.vaccine_name,
-      date_given: new Date(body.date_given),
+      date_given: body.date_given,
       recorded_by: parseInt(auth.session.user.id),
     },
     include: { resident: true },
@@ -78,4 +73,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(vaccination, { status: 201 });
-}
+});

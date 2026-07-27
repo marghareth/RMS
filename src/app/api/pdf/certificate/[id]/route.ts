@@ -7,16 +7,17 @@ import { requirePermission } from "@/lib/session";
 import { renderTemplate } from "@/lib/mock/certificateTemplates";
 import { MOCK_ACTIVE_CAPTAIN, MOCK_BARANGAY_INFO } from "@/lib/mock/certificates";
 import CertificatePDF from "@/lib/pdf/CertificatePDF";
+import { withErrorHandling } from "@/lib/api-handler";
 
 // @react-pdf/renderer renders with a real Node canvas/font pipeline, which
 // isn't available on the Edge runtime — this route must run on Node.
 export const runtime = "nodejs";
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("certificates:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const { id: idParam } = await params;
+  const { id: idParam } = await context!.params;
   const id = parseInt(idParam);
   if (Number.isNaN(id)) {
     return NextResponse.json({ error: "Invalid certificate id" }, { status: 400 });
@@ -92,4 +93,4 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       "Content-Length": String(buffer.length),
     },
   });
-}
+});

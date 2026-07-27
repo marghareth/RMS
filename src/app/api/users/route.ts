@@ -1,37 +1,31 @@
+// FILE: src/app/api/users/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
+import { userCreateSchema } from "@/lib/validations";
 import bcrypt from "bcryptjs";
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("users:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      username: true,
-      role: true,
-      is_active: true,
-      created_at: true,
-    },
+    select: { id: true, username: true, role: true, is_active: true, created_at: true },
     orderBy: { username: "asc" },
   });
 
   return NextResponse.json(users);
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("users:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
+  const body = userCreateSchema.parse(await req.json());
 
-  const existing = await prisma.user.findUnique({
-    where: { username: body.username },
-  });
-
+  const existing = await prisma.user.findUnique({ where: { username: body.username } });
   if (existing) {
     return NextResponse.json({ error: "Username already exists" }, { status: 409 });
   }
@@ -39,18 +33,8 @@ export async function POST(req: NextRequest) {
   const password_hash = await bcrypt.hash(body.password, 10);
 
   const user = await prisma.user.create({
-    data: {
-      username: body.username,
-      password_hash,
-      role: body.role,
-    },
-    select: {
-      id: true,
-      username: true,
-      role: true,
-      is_active: true,
-      created_at: true,
-    },
+    data: { username: body.username, password_hash, role: body.role },
+    select: { id: true, username: true, role: true, is_active: true, created_at: true },
   });
 
   await logAudit({
@@ -62,4 +46,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(user, { status: 201 });
-}
+});

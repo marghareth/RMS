@@ -3,8 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
+import { equipmentCreateSchema } from "@/lib/validations";
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("equipment:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -22,30 +24,27 @@ export async function GET(req: NextRequest) {
   const equipment = await prisma.equipment.findMany({
     where,
     include: {
-      borrowings: {
-        where: { actual_return: null },
-        include: { resident: true },
-      },
+      borrowings: { where: { actual_return: null }, include: { resident: true } },
     },
     orderBy: { name: "asc" },
   });
 
   return NextResponse.json(equipment);
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("equipment:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
+  const body = equipmentCreateSchema.parse(await req.json());
 
   const equipment = await prisma.equipment.create({
     data: {
       name: body.name,
-      quantity: body.quantity || 1,
-      condition: body.condition || null,
-      status: body.status || "SERVICEABLE",
-      date_acquired: body.date_acquired ? new Date(body.date_acquired) : null,
+      quantity: body.quantity ?? 1,
+      condition: body.condition ?? null,
+      status: body.status ?? "SERVICEABLE",
+      date_acquired: body.date_acquired ?? null,
     },
   });
 
@@ -58,4 +57,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(equipment, { status: 201 });
-}
+});

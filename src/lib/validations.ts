@@ -56,9 +56,9 @@ export const residentCreateSchema = z.object({
   place_of_birth: z.string().trim().optional().nullable(),
   sex: sexEnum,
   civil_status: civilStatusEnum,
-  citizenship: z.string().trim().default("Filipino"),
+  citizenship: z.string().trim().optional(), // DB column defaults to "Filipino" when omitted on create
   religion: z.string().trim().optional().nullable(),
-  nationality: z.string().trim().default("Filipino"),
+  nationality: z.string().trim().optional(), // DB column defaults to "Filipino" when omitted on create
   employment_status: z.string().trim().optional().nullable(),
   educational_attainment: z.string().trim().optional().nullable(),
   occupation: z.string().trim().optional().nullable(),
@@ -216,9 +216,20 @@ export const settingUpdateSchema = z.object({
   value: z.string(),
 });
 
+// ─── PUROKS ─────────────────────────────────────────────────────────────────
+export const purokCreateSchema = z.object({
+  name: nonEmptyString,
+});
+
 // ─── SHARED QUERY-STRING HELPERS ────────────────────────────────────────────
 // For GET routes: safely parse pagination params instead of raw parseInt().
+// URLSearchParams.get() returns `null` for an absent param, but Zod's
+// .default() only triggers on `undefined` — without the preprocess below,
+// an absent `?page=`/`?limit=` would coerce null -> 0 and fail .positive(),
+// throwing a 400 on every list request that doesn't explicitly set them.
+const nullToUndefined = (v: unknown) => (v === null ? undefined : v);
+
 export const paginationSchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(20),
+  page: z.preprocess(nullToUndefined, z.coerce.number().int().positive().default(1)),
+  limit: z.preprocess(nullToUndefined, z.coerce.number().int().positive().max(100).default(20)),
 });

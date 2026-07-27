@@ -1,19 +1,22 @@
+// FILE: src/app/api/certificate-templates/[type]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
+import { withErrorHandling, ApiError } from "@/lib/api-handler";
+import { certificateTemplateUpdateSchema } from "@/lib/validations";
 import { DEFAULT_CERTIFICATE_TEMPLATES, CERTIFICATE_TYPE_VALUES, type CertificateTypeValue } from "@/lib/certificateTemplateDefaults";
 
 function isValidType(type: string): type is CertificateTypeValue {
   return (CERTIFICATE_TYPE_VALUES as readonly string[]).includes(type);
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
+export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("certificates:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const { type } = await params;
+  const { type } = await context!.params;
   if (!isValidType(type)) {
-    return NextResponse.json({ error: "Invalid certificate type" }, { status: 400 });
+    throw new ApiError(400, "INVALID_TYPE", "Invalid certificate type");
   }
 
   const template = await prisma.certificateTemplate.upsert({
@@ -29,19 +32,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ type
   });
 
   return NextResponse.json(template);
-}
+});
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
+export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("certificates:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const { type } = await params;
+  const { type } = await context!.params;
   if (!isValidType(type)) {
-    return NextResponse.json({ error: "Invalid certificate type" }, { status: 400 });
+    throw new ApiError(400, "INVALID_TYPE", "Invalid certificate type");
   }
 
-  const body = await req.json();
-  const { title, body: templateBody, closing_line } = body;
+  const { title, body: templateBody, closing_line } = certificateTemplateUpdateSchema.partial().parse(await req.json());
   const updatedBy = parseInt(auth.session.user.id);
 
   const updated = await prisma.certificateTemplate.upsert({
@@ -63,4 +65,4 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ty
   });
 
   return NextResponse.json(updated);
-}
+});
