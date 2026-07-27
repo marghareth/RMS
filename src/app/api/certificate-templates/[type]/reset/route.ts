@@ -1,6 +1,8 @@
+// FILE: src/app/api/certificate-templates/[type]/reset/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
+import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { DEFAULT_CERTIFICATE_TEMPLATES, CERTIFICATE_TYPE_VALUES, type CertificateTypeValue } from "@/lib/certificateTemplateDefaults";
 
 function isValidType(type: string): type is CertificateTypeValue {
@@ -8,13 +10,13 @@ function isValidType(type: string): type is CertificateTypeValue {
 }
 
 // Restores a certificate type's template to its hardcoded default wording.
-export async function POST(req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
+export const POST = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("certificates:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const { type } = await params;
+  const { type } = await context!.params;
   if (!isValidType(type)) {
-    return NextResponse.json({ error: "Invalid certificate type" }, { status: 400 });
+    throw new ApiError(400, "INVALID_TYPE", "Invalid certificate type");
   }
 
   const defaults = DEFAULT_CERTIFICATE_TEMPLATES[type];
@@ -37,4 +39,4 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ typ
   });
 
   return NextResponse.json(reset);
-}
+});

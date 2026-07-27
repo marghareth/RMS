@@ -27,6 +27,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { hasPermission } from "@/lib/permission";
+import { withErrorHandling } from "@/lib/api-handler";
 
 type Severity = "urgent" | "warning" | "info";
 
@@ -41,7 +42,7 @@ interface NotificationItem {
 
 const SEVERITY_ORDER: Record<Severity, number> = { urgent: 0, warning: 1, info: 2 };
 
-export async function GET() {
+export const GET = withErrorHandling(async () => {
   const auth = await requirePermission("dashboard:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -117,4 +118,4 @@ export async function GET() {
   });
 
   return NextResponse.json({ notifications, count: notifications.length });
-}
+});

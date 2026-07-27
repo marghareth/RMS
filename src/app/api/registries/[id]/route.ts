@@ -1,15 +1,18 @@
-// src/app/api/registries/[id]/route.ts
+// FILE: src/app/api/registries/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
+import { registryUpdateSchema } from "@/lib/validations";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("registries:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  const { id: idParam } = await context!.params;
   const registry = await prisma.specialRegistry.findUnique({
-    where: { id: parseInt(params.id) },
+    where: { id: parseInt(idParam) },
     include: {
       resident: {
         include: {
@@ -26,14 +29,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   if (!registry) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(registry);
-}
+});
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("registries:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
-  const id = parseInt(params.id);
+  const { id: idParam } = await context!.params;
+  const id = parseInt(idParam);
+  const body = registryUpdateSchema.parse(await req.json());
 
   const registry = await prisma.specialRegistry.update({
     where: { id },
@@ -52,13 +56,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   });
 
   return NextResponse.json(registry);
-}
+});
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export const DELETE = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("registries:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const id = parseInt(params.id);
+  const { id: idParam } = await context!.params;
+  const id = parseInt(idParam);
   await prisma.specialRegistry.delete({ where: { id } });
 
   await logAudit({
@@ -70,4 +75,4 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   });
 
   return NextResponse.json({ message: "Removed from registry" });
-}
+});

@@ -1,12 +1,14 @@
+// FILE: src/app/api/certificate-templates/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
+import { withErrorHandling } from "@/lib/api-handler";
 import { DEFAULT_CERTIFICATE_TEMPLATES, CERTIFICATE_TYPE_VALUES } from "@/lib/certificateTemplateDefaults";
 
 // Returns all certificate templates, auto-seeding any certificate type that
 // doesn't have a row yet (e.g. right after this feature is first deployed)
 // with its hardcoded default so every type always has an editable template.
-export async function GET() {
+export const GET = withErrorHandling(async () => {
   const auth = await requirePermission("certificates:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -36,4 +38,4 @@ export async function GET() {
   });
 
   return NextResponse.json(templates);
-}
+});

@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling, ApiError } from "@/lib/api-handler";
+import { certificateCreateSchema, paginationSchema } from "@/lib/validations";
 
 // ── Generate certificate number e.g. CERT-2026-000123 ─────────────────────
 async function generateCertificateNo(): Promise<string> {
@@ -18,7 +20,7 @@ async function generateCertificateNo(): Promise<string> {
   return `CERT-${year}-${String(count + 1).padStart(6, "0")}`;
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("certificates:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -27,8 +29,10 @@ export async function GET(req: NextRequest) {
   const certificate_type = searchParams.get("certificate_type");
   const date_from = searchParams.get("date_from");
   const date_to = searchParams.get("date_to");
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const { page, limit } = paginationSchema.parse({
+    page: searchParams.get("page"),
+    limit: searchParams.get("limit"),
+  });
   const skip = (page - 1) * limit;
 
   const where: any = {
@@ -55,13 +59,13 @@ export async function GET(req: NextRequest) {
   ]);
 
   return NextResponse.json({ certificates, total, page, limit });
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("certificates:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
+  const body = certificateCreateSchema.parse(await req.json());
 
   // 6-month residency check
   if (body.resident_id) {
@@ -70,16 +74,17 @@ export async function POST(req: NextRequest) {
     });
 
     if (!resident) {
-      return NextResponse.json({ error: "Resident not found" }, { status: 404 });
+      throw new ApiError(404, "NOT_FOUND", "Resident not found");
     }
 
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     if (resident.created_at > sixMonthsAgo) {
-      return NextResponse.json(
-        { error: "RESIDENCY_CHECK_FAILED", message: "Resident has not been in the barangay for at least 6 months." },
-        { status: 400 }
+      throw new ApiError(
+        400,
+        "RESIDENCY_CHECK_FAILED",
+        "Resident has not been in the barangay for at least 6 months."
       );
     }
 
@@ -110,13 +115,13 @@ export async function POST(req: NextRequest) {
   const certificate = await prisma.certificate.create({
     data: {
       certificate_no,
-      resident_id: body.resident_id || null,
+      resident_id: body.resident_id ?? null,
       issued_by: parseInt(auth.session.user.id),
       certificate_type: body.certificate_type,
       purpose: body.purpose,
-      flagged_manual: body.flagged_manual || false,
-      manual_name: body.manual_name || null,
-      manual_address: body.manual_address || null,
+      flagged_manual: body.flagged_manual ?? false,
+      manual_name: body.manual_name ?? null,
+      manual_address: body.manual_address ?? null,
     },
     include: {
       resident: { include: { purok: true, household: true } },
@@ -133,4 +138,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(certificate, { status: 201 });
-}
+});

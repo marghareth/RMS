@@ -2,7 +2,7 @@
 // Run with:  npm run db:seed
 // Or:        npx tsx prisma/migrations/seed.ts
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -72,9 +72,14 @@ async function main() {
   console.log("\n👥 Creating residents...");
 
   // Helper to find or create a resident by fname+lname+birthdate
-  async function upsertResident(data: Record<string, any>) {
+  //
+  // Uses the "Unchecked" variant because the seed data below sets raw
+  // foreign-key scalars (household_id, purok_id) directly, rather than
+  // nested relation objects like `household: { connect: { id } }` —
+  // only ResidentUncheckedCreateInput allows that.
+  async function upsertResident(data: Prisma.ResidentUncheckedCreateInput) {
     const existing = await prisma.resident.findFirst({
-      where: { fname: data.fname as string, lname: data.lname as string, birthdate: data.birthdate as Date },
+      where: { fname: data.fname, lname: data.lname, birthdate: data.birthdate as Date },
     });
     if (existing) return existing;
     return prisma.resident.create({ data });
@@ -178,10 +183,15 @@ async function main() {
     { resident_id: eduardoV.id, issued_by: encoder.id,   certificate_type: "CLEARANCE"            , purpose: "Employment",                    issued_at: monthsAgo(2) },
     { resident_id: kristineDC.id,issued_by: encoder.id,  certificate_type: "FIRST_TIME_JOB_SEEKER", purpose: "DOLE requirement",              issued_at: monthsAgo(1) },
     { resident_id: mariaDC.id,  issued_by: secretary.id, certificate_type: "RESIDENCY"            , purpose: "SSS loan requirement",          issued_at: monthsAgo(3) },
-  ];
+  ] as const;
 
-  for (const c of certData) {
-    await prisma.certificate.create({ data: c });
+  // certificate_no became required by the 20260722140000_add_certificate_no
+  // migration — generate the same deterministic "CERT-YYYY-NNNNNN" format
+  // the real API uses, numbered sequentially per seed run.
+  for (const [i, c] of certData.entries()) {
+    const year = c.issued_at.getFullYear();
+    const certificate_no = `CERT-${year}-${String(i + 1).padStart(6, "0")}`;
+    await prisma.certificate.create({ data: { ...c, certificate_no } });
   }
   console.log(`  ✅ ${certData.length} certificates created`);
 
@@ -289,7 +299,7 @@ async function main() {
     { resident_id: litoM.id,      registry_type: "FOUR_PS"       , is_4ps_beneficiary: true, registered_at: yearsAgo(3) },
     { resident_id: melindaM.id,   registry_type: "FOUR_PS"       , is_4ps_beneficiary: true, registered_at: yearsAgo(3) },
     { resident_id: ninoM.id,      registry_type: "FOUR_PS"       , is_4ps_beneficiary: true, registered_at: yearsAgo(3) },
-  ];
+  ] as const;
 
   for (const r of registries) {
     const exists = await prisma.specialRegistry.findFirst({ where: { resident_id: r.resident_id, registry_type: r.registry_type } });
@@ -356,7 +366,7 @@ async function main() {
     { name: "Sound System",      quantity: 1, condition: "Good",         status: "SERVICEABLE"  , date_acquired: yearsAgo(4)  },
     { name: "First Aid Kit",     quantity: 5, condition: "Complete",     status: "SERVICEABLE"  , date_acquired: yearsAgo(2)  },
     { name: "Basketball Ring",   quantity: 2, condition: "Damaged",      status: "MISSING"      , date_acquired: yearsAgo(6)  },
-  ];
+  ] as const;
 
   const createdEquipment: Array<{ id: number; name: string; [key: string]: any }> = [];
   for (const e of equipmentList) {
@@ -396,7 +406,7 @@ async function main() {
     { transaction_type: "EXPENSE", amount: 55000,  description: "Personnel services – May 2026",       transaction_date: monthsAgo(1), recorded_by: secretary.id },
     { transaction_type: "INCOME" , amount: 75000,  description: "Tax collection – April 2026",         transaction_date: monthsAgo(2), recorded_by: secretary.id },
     { transaction_type: "EXPENSE", amount: 48000,  description: "Personnel services – April 2026",     transaction_date: monthsAgo(2), recorded_by: secretary.id },
-  ];
+  ] as const;
 
   for (const f of financialData) {
     await prisma.financialRecord.create({ data: f });
@@ -431,7 +441,7 @@ async function main() {
       recorded_by:   secretary.id,
       minutes: "First quarter assembly. Reports from all committee heads presented. Concerns raised: (1) Illegal dumping in Sitio Kanipaan, (2) Streetlight replacement needed in Purok IV.",
     },
-  ];
+  ] as const;
 
   for (const m of meetings) {
     await prisma.meetingRecord.create({ data: m });

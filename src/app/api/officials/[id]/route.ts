@@ -3,12 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
+import { officialUpdateSchema } from "@/lib/validations";
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("officials:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const { id: idParam } = await params;
+  const { id: idParam } = await context!.params;
   const official = await prisma.brgyOfficial.findUnique({
     where: { id: parseInt(idParam) },
     include: { resident: { include: { purok: true, household: true } } },
@@ -16,24 +18,24 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   if (!official) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(official);
-}
+});
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("officials:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
-  const { id: idParam } = await params;
+  const { id: idParam } = await context!.params;
   const id = parseInt(idParam);
+  const body = officialUpdateSchema.parse(await req.json());
 
   const official = await prisma.brgyOfficial.update({
     where: { id },
     data: {
       position: body.position,
-      contact_no: body.contact_no ?? null,
-      purok_assignment: body.purok_assignment ?? null,
-      term_start: body.term_start ? new Date(body.term_start) : undefined,
-      term_end: body.term_end ? new Date(body.term_end) : null,
+      contact_no: "contact_no" in body ? body.contact_no ?? null : undefined,
+      purok_assignment: "purok_assignment" in body ? body.purok_assignment ?? null : undefined,
+      term_start: body.term_start,
+      term_end: "term_end" in body ? body.term_end ?? null : undefined,
       is_active: body.is_active,
     },
     include: { resident: { include: { purok: true, household: true } } },
@@ -48,13 +50,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   });
 
   return NextResponse.json(official);
-}
+});
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("officials:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const { id: idParam } = await params;
+  const { id: idParam } = await context!.params;
   const id = parseInt(idParam);
   await prisma.brgyOfficial.delete({ where: { id } });
 
@@ -67,4 +69,4 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   });
 
   return NextResponse.json({ message: "Official deleted" });
-}
+});

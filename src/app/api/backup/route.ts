@@ -1,9 +1,11 @@
+// FILE: src/app/api/backup/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("backup:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -13,9 +15,9 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json(backups);
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("backup:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -35,4 +37,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(backup, { status: 201 });
-}
+});

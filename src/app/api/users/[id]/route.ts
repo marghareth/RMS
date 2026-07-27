@@ -3,41 +3,33 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
+import { userUpdateSchema } from "@/lib/validations";
 import bcrypt from "bcryptjs";
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("users:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const { id: idParam } = await params;
+  const { id: idParam } = await context!.params;
   const user = await prisma.user.findUnique({
     where: { id: parseInt(idParam) },
-    select: {
-      id: true,
-      username: true,
-      role: true,
-      is_active: true,
-      created_at: true,
-    },
+    select: { id: true, username: true, role: true, is_active: true, created_at: true },
   });
 
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(user);
-}
+});
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("users:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
-  const { id: idParam } = await params;
+  const { id: idParam } = await context!.params;
   const id = parseInt(idParam);
+  const body = userUpdateSchema.parse(await req.json());
 
-  const data: any = {
-    role: body.role,
-    is_active: body.is_active,
-  };
-
+  const data: any = { role: body.role, is_active: body.is_active };
   if (body.password) {
     data.password_hash = await bcrypt.hash(body.password, 10);
   }
@@ -45,12 +37,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const user = await prisma.user.update({
     where: { id },
     data,
-    select: {
-      id: true,
-      username: true,
-      role: true,
-      is_active: true,
-    },
+    select: { id: true, username: true, role: true, is_active: true },
   });
 
   await logAudit({
@@ -62,19 +49,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   });
 
   return NextResponse.json(user);
-}
+});
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("users:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const { id: idParam } = await params;
+  const { id: idParam } = await context!.params;
   const id = parseInt(idParam);
 
-  await prisma.user.update({
-    where: { id },
-    data: { is_active: false },
-  });
+  await prisma.user.update({ where: { id }, data: { is_active: false } });
 
   await logAudit({
     user_id: parseInt(auth.session.user.id),
@@ -85,4 +69,4 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   });
 
   return NextResponse.json({ message: "User deactivated" });
-}
+});

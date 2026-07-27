@@ -3,14 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
+import { officialCreateSchema } from "@/lib/validations";
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("officials:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);
   const is_active = searchParams.get("is_active");
-
   const where: any = is_active !== null ? { is_active: is_active === "true" } : {};
 
   const officials = await prisma.brgyOfficial.findMany({
@@ -20,17 +21,13 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json(officials);
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("officials:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
-
-  if (!body.resident_id) {
-    return NextResponse.json({ error: "resident_id is required" }, { status: 400 });
-  }
+  const body = officialCreateSchema.parse(await req.json());
 
   // resident_id is @unique on BrgyOfficial — a resident can only hold one
   // official record at a time. Checked here first so the error is friendly
@@ -47,10 +44,10 @@ export async function POST(req: NextRequest) {
     data: {
       resident_id: body.resident_id,
       position: body.position,
-      contact_no: body.contact_no || null,
-      purok_assignment: body.purok_assignment || null,
-      term_start: new Date(body.term_start),
-      term_end: body.term_end ? new Date(body.term_end) : null,
+      contact_no: body.contact_no ?? null,
+      purok_assignment: body.purok_assignment ?? null,
+      term_start: body.term_start,
+      term_end: body.term_end ?? null,
       is_active: body.is_active ?? true,
     },
     include: { resident: { include: { purok: true, household: true } } },
@@ -65,4 +62,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(official, { status: 201 });
-}
+});

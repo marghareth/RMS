@@ -1,7 +1,10 @@
+// FILE: src/app/api/blotter/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
+import { blotterCreateSchema, paginationSchema } from "@/lib/validations";
 
 function generateCaseNumber(): string {
   const now = new Date();
@@ -10,7 +13,7 @@ function generateCaseNumber(): string {
   return `BLT-${year}-${random}`;
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("blotter:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -20,8 +23,10 @@ export async function GET(req: NextRequest) {
   const search = searchParams.get("search") || "";
   const date_from = searchParams.get("date_from");
   const date_to = searchParams.get("date_to");
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const { page, limit } = paginationSchema.parse({
+    page: searchParams.get("page"),
+    limit: searchParams.get("limit"),
+  });
   const skip = (page - 1) * limit;
 
   const where: any = {
@@ -30,13 +35,15 @@ export async function GET(req: NextRequest) {
       escalated ? { escalated: escalated === "true" } : {},
       date_from ? { incident_date: { gte: new Date(date_from) } } : {},
       date_to ? { incident_date: { lte: new Date(date_to) } } : {},
-      search ? {
-        OR: [
-          { complainant_name: { contains: search, mode: "insensitive" } },
-          { respondent_name: { contains: search, mode: "insensitive" } },
-          { case_number: { contains: search, mode: "insensitive" } },
-        ],
-      } : {},
+      search
+        ? {
+            OR: [
+              { complainant_name: { contains: search, mode: "insensitive" } },
+              { respondent_name: { contains: search, mode: "insensitive" } },
+              { case_number: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {},
     ],
   };
 
@@ -52,34 +59,32 @@ export async function GET(req: NextRequest) {
   ]);
 
   return NextResponse.json({ cases, total, page, limit });
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("blotter:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
+  const body = blotterCreateSchema.parse(await req.json());
 
   // ensure unique case number
   let case_number = generateCaseNumber();
-  let exists = await prisma.blotterCase.findUnique({ where: { case_number } });
-  while (exists) {
+  while (await prisma.blotterCase.findUnique({ where: { case_number } })) {
     case_number = generateCaseNumber();
-    exists = await prisma.blotterCase.findUnique({ where: { case_number } });
   }
 
   const blotterCase = await prisma.blotterCase.create({
     data: {
       case_number,
-      complainant_id: body.complainant_id || null,
+      complainant_id: body.complainant_id ?? null,
       complainant_name: body.complainant_name,
-      complainant_contact: body.complainant_contact,
-      complainant_address: body.complainant_address,
-      respondent_id: body.respondent_id || null,
+      complainant_contact: body.complainant_contact ?? null,
+      complainant_address: body.complainant_address ?? null,
+      respondent_id: body.respondent_id ?? null,
       respondent_name: body.respondent_name,
       incident_narrative: body.incident_narrative,
-      incident_date: new Date(body.incident_date),
-      hearing_date: body.hearing_date ? new Date(body.hearing_date) : null,
+      incident_date: body.incident_date,
+      hearing_date: body.hearing_date ?? null,
     },
   });
 
@@ -92,4 +97,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(blotterCase, { status: 201 });
-}
+});

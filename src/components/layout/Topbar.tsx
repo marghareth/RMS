@@ -79,8 +79,11 @@ export default function Topbar({
   const [notifLoading, setNotifLoading] = useState(true);
   const notifRef = useRef<HTMLDivElement>(null);
 
+  // NOTE: this only kicks off a fetch — any setState calls happen inside
+  // the .then/.catch/.finally callbacks (async, post-effect), never
+  // synchronously in the effect body itself, so it's safe to call from
+  // useEffect below without tripping react-hooks/set-state-in-effect.
   function loadNotifications() {
-    setNotifLoading(true);
     fetch("/api/notifications")
       .then((r) => (r.ok ? r.json() : { notifications: [] }))
       .then((d) => setNotifications(d.notifications ?? []))
@@ -88,6 +91,8 @@ export default function Topbar({
       .finally(() => setNotifLoading(false));
   }
 
+  // notifLoading already starts as `true` (see useState above), so no
+  // setState is needed here on mount — just kick off the fetch.
   useEffect(() => { loadNotifications(); }, []);
 
   // Close both dropdowns on outside click.
@@ -144,7 +149,10 @@ export default function Topbar({
             aria-label="Notifications"
             onClick={() => {
               setNotifOpen((v) => !v);
-              if (!notifOpen) loadNotifications();
+              if (!notifOpen) {
+                setNotifLoading(true);
+                loadNotifications();
+              }
             }}
             className="relative flex h-9 w-9 items-center justify-center rounded-lg text-[#6B7280] transition-colors hover:bg-[#F4F5F7] hover:text-[#1F2937]"
           >

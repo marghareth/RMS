@@ -1,27 +1,22 @@
-// FILE PATH: src/app/api/health/route.ts
-// Replace the entire contents of this file with the code below.
-//
-// WHAT WAS WRONG: the GET handler accepted resident_id, page, and limit
-// query params, but silently ignored `search` — even though the Health
-// Records page sends ?search=... from its search box. So typing in that
-// box never filtered anything server-side. Added a `search` filter that
-// matches resident first/last name OR record_type, so the search box on
-// the health page actually works against real data.
-
+// FILE: src/app/api/health/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
+import { healthRecordCreateSchema, paginationSchema } from "@/lib/validations";
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("health:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);
   const resident_id = searchParams.get("resident_id");
   const search = searchParams.get("search") || "";
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const { page, limit } = paginationSchema.parse({
+    page: searchParams.get("page"),
+    limit: searchParams.get("limit"),
+  });
   const skip = (page - 1) * limit;
 
   const where: any = {
@@ -44,29 +39,26 @@ export async function GET(req: NextRequest) {
       where,
       skip,
       take: limit,
-      include: {
-        resident: true,
-        recorder: { select: { id: true, username: true } },
-      },
+      include: { resident: true, recorder: { select: { id: true, username: true } } },
       orderBy: { recorded_at: "desc" },
     }),
     prisma.healthRecord.count({ where }),
   ]);
 
   return NextResponse.json({ records, total, page, limit });
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("health:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
+  const body = healthRecordCreateSchema.parse(await req.json());
 
   const record = await prisma.healthRecord.create({
     data: {
       resident_id: body.resident_id,
       record_type: body.record_type,
-      notes: body.notes || null,
+      notes: body.notes ?? null,
       recorded_by: parseInt(auth.session.user.id),
     },
     include: { resident: true },
@@ -81,4 +73,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(record, { status: 201 });
-}
+});

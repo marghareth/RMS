@@ -26,8 +26,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
+import { withErrorHandling } from "@/lib/api-handler";
 
-export async function GET() {
+export const GET = withErrorHandling(async () => {
   const auth = await requirePermission("residents:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -120,4 +121,4 @@ export async function GET() {
       equipment:    pctChange(equipmentThisMonth, equipmentLastMonth),
     },
   });
-}
+});

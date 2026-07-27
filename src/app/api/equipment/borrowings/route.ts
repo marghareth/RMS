@@ -1,24 +1,23 @@
+// FILE: src/app/api/equipment/borrowings/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
+import { equipmentBorrowCreateSchema } from "@/lib/validations";
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("equipment:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);
   const is_returned = searchParams.get("is_returned");
-
   const where: any = is_returned === "false" ? { actual_return: null } : {};
 
   // auto flag overdue
   await prisma.equipmentBorrowing.updateMany({
-    where: {
-      actual_return: null,
-      expected_return: { lt: new Date() },
-      is_overdue: false,
-    },
+    where: { actual_return: null, expected_return: { lt: new Date() }, is_overdue: false },
     data: { is_overdue: true },
   });
 
@@ -33,21 +32,21 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json(borrowings);
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("equipment:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
+  const body = equipmentBorrowCreateSchema.parse(await req.json());
 
   const borrowing = await prisma.equipmentBorrowing.create({
     data: {
       equipment_id: body.equipment_id,
-      resident_id: body.resident_id || null,
+      resident_id: body.resident_id ?? null,
       borrower_name: body.borrower_name,
-      date_borrowed: new Date(body.date_borrowed),
-      expected_return: new Date(body.expected_return),
+      date_borrowed: body.date_borrowed,
+      expected_return: body.expected_return,
       recorded_by: parseInt(auth.session.user.id),
     },
     include: { equipment: true, resident: true },
@@ -62,19 +61,21 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(borrowing, { status: 201 });
-}
+});
 
-export async function PATCH(req: NextRequest) {
+export const PATCH = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("equipment:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
+  const body = z
+    .object({ id: z.coerce.number().int().positive(), return_condition: z.string().trim().optional().nullable() })
+    .parse(await req.json());
 
   const borrowing = await prisma.equipmentBorrowing.update({
     where: { id: body.id },
     data: {
       actual_return: new Date(),
-      return_condition: body.return_condition,
+      return_condition: body.return_condition ?? null,
       is_overdue: false,
     },
     include: { equipment: true },
@@ -89,4 +90,4 @@ export async function PATCH(req: NextRequest) {
   });
 
   return NextResponse.json(borrowing);
-}
+});

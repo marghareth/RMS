@@ -3,12 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
+import { blotterUpdateSchema } from "@/lib/validations";
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("blotter:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const { id: idParam } = await params;
+  const { id: idParam } = await context!.params;
   const blotterCase = await prisma.blotterCase.findUnique({
     where: { id: parseInt(idParam) },
     include: {
@@ -23,21 +25,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   if (!blotterCase) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(blotterCase);
-}
+});
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("blotter:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
-  const { id: idParam } = await params;
+  const { id: idParam } = await context!.params;
   const id = parseInt(idParam);
+  const body = blotterUpdateSchema.parse(await req.json());
 
   const blotterCase = await prisma.blotterCase.update({
     where: { id },
     data: {
       status: body.status,
-      hearing_date: body.hearing_date ? new Date(body.hearing_date) : undefined,
+      hearing_date: "hearing_date" in body ? body.hearing_date ?? null : undefined,
       escalated: body.escalated,
       incident_narrative: body.incident_narrative,
     },
@@ -52,4 +54,4 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   });
 
   return NextResponse.json(blotterCase);
-}
+});

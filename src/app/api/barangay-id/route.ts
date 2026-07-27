@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling, ApiError } from "@/lib/api-handler";
+import { barangayIdCreateSchema, paginationSchema } from "@/lib/validations";
 
 function generateIdNumber(): string {
   const year = new Date().getFullYear();
@@ -10,14 +12,16 @@ function generateIdNumber(): string {
   return `BID-${year}-${random}`;
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("barangay_id:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);
   const resident_id = searchParams.get("resident_id");
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "20");
+  const { page, limit } = paginationSchema.parse({
+    page: searchParams.get("page"),
+    limit: searchParams.get("limit"),
+  });
   const skip = (page - 1) * limit;
 
   const where: any = resident_id ? { resident_id: parseInt(resident_id) } : {};
@@ -37,21 +41,17 @@ export async function GET(req: NextRequest) {
   ]);
 
   return NextResponse.json({ ids, total, page, limit });
-}
+});
 
-export async function POST(req: NextRequest) {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("barangay_id:write");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = await req.json();
-
-  if (!body.resident_id) {
-    return NextResponse.json({ error: "resident_id is required" }, { status: 400 });
-  }
+  const body = barangayIdCreateSchema.parse(await req.json());
 
   const resident = await prisma.resident.findUnique({ where: { id: body.resident_id } });
   if (!resident) {
-    return NextResponse.json({ error: "Resident not found" }, { status: 404 });
+    throw new ApiError(404, "NOT_FOUND", "Resident not found");
   }
 
   // A resident should only hold one barangay ID at a time. resident_id isn't
@@ -66,10 +66,8 @@ export async function POST(req: NextRequest) {
   }
 
   let id_number = generateIdNumber();
-  let exists = await prisma.barangayId.findUnique({ where: { id_number } });
-  while (exists) {
+  while (await prisma.barangayId.findUnique({ where: { id_number } })) {
     id_number = generateIdNumber();
-    exists = await prisma.barangayId.findUnique({ where: { id_number } });
   }
 
   const barangayId = await prisma.barangayId.create({
@@ -93,4 +91,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(barangayId, { status: 201 });
-}
+});
