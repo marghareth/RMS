@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/households/page.tsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -6,7 +7,7 @@ import { Home, Users, MapPin, UserX, Search, Plus, ChevronRight } from "lucide-r
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
-import { MOCK_HOUSEHOLDS, MOCK_PUROKS, memberFullName } from "@/lib/mock/households";
+import { memberFullName } from "@/lib/mock/households";
 import type { PurokMock, HouseholdMock } from "@/lib/mock/households";
 
 const HOUSING_LABEL: Record<string, string> = {

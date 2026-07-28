@@ -1,7 +1,8 @@
+// FILE: src/app/(dashboard)/admin/page.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Users, History, DatabaseBackup, ChevronRight } from "lucide-react";
+import { Users, History, DatabaseBackup, ChevronRight, MapPin } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 
 const SECTIONS = [
@@ -11,6 +12,13 @@ const SECTIONS = [
     title: "User Management",
     description: "Create accounts, assign roles, and manage access.",
     color: "blue" as const,
+  },
+  {
+    href: "/admin/puroks",
+    icon: MapPin,
+    title: "Puroks",
+    description: "Add, rename, or remove the puroks/zones used across the system.",
+    color: "purple" as const,
   },
   {
     href: "/admin/audit-logs",
@@ -32,6 +40,7 @@ const COLOR_MAP = {
   blue: { bg: "bg-[#EBF3FF]", text: "text-[#1D4ED8]" },
   amber: { bg: "bg-[#FEF3C7]", text: "text-[#D97706]" },
   green: { bg: "bg-[#D1FAE5]", text: "text-[#059669]" },
+  purple: { bg: "bg-[#F3E8FF]", text: "text-[#7C3AED]" },
 };
 
 export default function AdminHubPage() {
@@ -41,7 +50,7 @@ export default function AdminHubPage() {
     <div>
       <PageHeader title="Admin" subtitle="System administration and configuration" />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {SECTIONS.map((s) => {
           const colors = COLOR_MAP[s.color];
           return (

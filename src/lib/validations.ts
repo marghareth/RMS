@@ -221,6 +221,10 @@ export const purokCreateSchema = z.object({
   name: nonEmptyString,
 });
 
+export const purokUpdateSchema = z.object({
+  name: nonEmptyString,
+});
+
 // ─── SHARED QUERY-STRING HELPERS ────────────────────────────────────────────
 // For GET routes: safely parse pagination params instead of raw parseInt().
 // URLSearchParams.get() returns `null` for an absent param, but Zod's

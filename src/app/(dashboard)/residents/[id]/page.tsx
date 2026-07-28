@@ -1,9 +1,9 @@
+// FILE: src/app/(dashboard)/residents/[id]/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Pencil, Archive } from "lucide-react";
-import { getMockResidents, type Resident as MockResident } from "@/lib/mockResidents";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 // ── TYPES ─────────────────────────────────────────────────────────────────────
@@ -19,7 +19,35 @@ interface HealthRecord { id: number; record_type: string; notes: string | null; 
 interface Vaccination { id: number; vaccine_name: string; date_given: string }
 interface BarangayId  { id: number; id_number: string; issued_date: string }
 
-interface Resident extends MockResident {}
+interface Resident {
+  id: number;
+  fname: string;
+  lname: string;
+  mname: string | null;
+  name_extension: string | null;
+  birthdate: string;
+  place_of_birth: string | null;
+  sex: string;
+  civil_status: string;
+  citizenship: string;
+  religion: string | null;
+  nationality: string;
+  employment_status: string | null;
+  educational_attainment: string | null;
+  occupation: string | null;
+  income_bracket: string | null;
+  sector: string | null;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+  purok: Purok | null;
+  household: Household | null;
+  certificates: Certificate[];
+  special_registries: SpecialRegistry[];
+  health_records: HealthRecord[];
+  vaccinations: Vaccination[];
+  barangay_ids: BarangayId[];
+}
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function calcAge(birthdate: string) {
@@ -66,22 +94,61 @@ function Badge({ label, color = "blue" }: { label: string; color?: "blue" | "gre
 export default function ResidentDetailPage() {
   const router    = useRouter();
   const { id }    = useParams<{ id: string }>();
-  // Compute initial resident synchronously to avoid setting state inside the effect
-  const initialResident = getMockResidents().find((item) => String(item.id) === String(id)) ?? null;
-  const [resident, setResident] = useState<Resident | null>(initialResident);
-  const [loading,  setLoading]  = useState(false);
+
+  const [resident,   setResident]   = useState<Resident | null>(null);
+  // Track which id the current `resident`/"not found" result belongs to,
+  // instead of separate loading/notFound state flags. This lets `loading`
+  // and `notFound` be *derived* during render rather than set imperatively
+  // at the top of an effect — so there's no setState call that runs
+  // synchronously inside the effect (which is what react-hooks/set-state-in-effect
+  // flags). The actual setState calls below only happen inside the fetch's
+  // .then()/.catch() callbacks, i.e. after the network response arrives.
+  const [residentId, setResidentId] = useState<string | null>(null);
+  const [notFoundId, setNotFoundId] = useState<string | null>(null);
   const [archiving,    setArchiving]    = useState(false);
   const [confirmOpen,   setConfirmOpen]   = useState(false);
 
+  const loading  = residentId !== id && notFoundId !== id;
+  const notFound = notFoundId === id;
+
   useEffect(() => {
-    // If no resident found, navigate away. Do NOT call setState here.
-    if (!initialResident) router.push("/residents");
-  }, [id, router, initialResident]);
+    let cancelled = false;
+
+    fetch(`/api/residents/${id}`)
+      .then(async (res) => {
+        if (cancelled) return;
+        if (res.status === 404) {
+          setNotFoundId(id);
+          return;
+        }
+        if (!res.ok) throw new Error("Failed to load resident");
+        const data = await res.json();
+        if (cancelled) return;
+        setResident(data);
+        setResidentId(id);
+      })
+      .catch(() => {
+        if (!cancelled) setNotFoundId(id);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    // Only navigate away once we're sure the fetch finished and truly found nothing.
+    if (notFound) router.push("/residents");
+  }, [notFound, router]);
 
   async function handleArchive() {
     setArchiving(true);
-    // await fetch(`/api/residents/${id}`, { method: "DELETE" });
-    router.push("/residents");
+    try {
+      await fetch(`/api/residents/${id}`, { method: "DELETE" });
+      router.push("/residents");
+    } finally {
+      setArchiving(false);
+    }
   }
 
   if (loading) {

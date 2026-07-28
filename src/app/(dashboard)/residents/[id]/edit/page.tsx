@@ -1,16 +1,35 @@
+// FILE: src/app/(dashboard)/residents/[id]/edit/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
-import {
-  getMockResidents,
-  getMockPuroks,
-  updateMockResident,
-  type Resident,
-} from "@/lib/mockResidents";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
+interface Purok { id: number; name: string }
+
+interface Resident {
+  id: number;
+  fname: string;
+  lname: string;
+  mname: string | null;
+  name_extension: string | null;
+  birthdate: string;
+  place_of_birth: string | null;
+  sex: string;
+  civil_status: string;
+  citizenship: string;
+  religion: string | null;
+  nationality: string;
+  employment_status: string | null;
+  educational_attainment: string | null;
+  occupation: string | null;
+  income_bracket: string | null;
+  sector: string | null;
+  purok_id: number | null;
+  household_id: number | null;
+}
+
 interface ResidentForm {
   fname:                  string;
   lname:                  string;
@@ -129,31 +148,66 @@ function SectionCard({ title, children }: { title: string; children: React.React
 export default function EditResidentPage() {
   const router  = useRouter();
   const { id }  = useParams<{ id: string }>();
-  const puroks  = getMockPuroks();
 
-  // ── Lazy initializers — no setState calls inside useEffect ─────────────────
-  // The resident and form are derived synchronously at mount time from the mock
-  // store. If the resident doesn't exist we render null and let the effect below
-  // handle the redirect (effects can call router.push safely).
-
-  const [resident] = useState<Resident | null>(
-    () => getMockResidents().find(r => String(r.id) === String(id)) ?? null
-  );
-
-  const [form,   setForm]   = useState<ResidentForm>(
-    () => {
-      const r = getMockResidents().find(r => String(r.id) === String(id));
-      return r ? buildForm(r) : EMPTY;
-    }
-  );
-
+  const [puroks,     setPuroks]     = useState<Purok[]>([]);
+  const [resident,   setResident]   = useState<Resident | null>(null);
+  const [form,       setForm]       = useState<ResidentForm>(EMPTY);
+  // See the resident detail page for why loading/notFound are derived from
+  // ids rather than stored as their own state: it avoids calling setState
+  // synchronously inside the effect (react-hooks/set-state-in-effect). The
+  // actual setState calls below only run inside the fetch's .then()/.catch(),
+  // i.e. once the network response has come back.
+  const [residentId, setResidentId] = useState<string | null>(null);
+  const [notFoundId, setNotFoundId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState("");
 
+  const loading  = residentId !== id && notFoundId !== id;
+  const notFound = notFoundId === id;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    Promise.all([
+      fetch(`/api/residents/${id}`),
+      fetch(`/api/puroks`),
+    ])
+      .then(async ([residentRes, puroksRes]) => {
+        if (cancelled) return;
+
+        if (residentRes.status === 404) {
+          setNotFoundId(id);
+          return;
+        }
+        if (!residentRes.ok) throw new Error("Failed to load resident");
+
+        const residentData: Resident = await residentRes.json();
+        if (cancelled) return;
+
+        setResident(residentData);
+        setForm(buildForm(residentData));
+        setResidentId(id);
+
+        if (puroksRes.ok) {
+          const puroksData = await puroksRes.json();
+          if (!cancelled) {
+            setPuroks(Array.isArray(puroksData) ? puroksData : puroksData.puroks ?? []);
+          }
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setNotFoundId(id);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
   // ── Redirect only — no setState here ──────────────────────────────────────
   useEffect(() => {
-    if (!resident) router.push("/residents");
-  }, [resident, router]);
+    if (notFound) router.push("/residents");
+  }, [notFound, router]);
 
   const set = (k: keyof ResidentForm, v: string) =>
     setForm(prev => ({ ...prev, [k]: v }));
@@ -177,29 +231,6 @@ export default function EditResidentPage() {
         }),
       });
       if (!res.ok) throw new Error("Failed to save changes");
-
-      // ── Mock: persist to mock store ────────────────────────────────────────
-      updateMockResident(Number(id), {
-        fname:                  form.fname,
-        lname:                  form.lname,
-        mname:                  form.mname                  || null,
-        name_extension:         form.name_extension         || null,
-        birthdate:              form.birthdate,
-        place_of_birth:         form.place_of_birth         || null,
-        sex:                    form.sex as Resident["sex"],
-        civil_status:           form.civil_status as Resident["civil_status"],
-        citizenship:            form.citizenship,
-        religion:               form.religion               || null,
-        nationality:            form.nationality,
-        employment_status:      form.employment_status      || null,
-        educational_attainment: form.educational_attainment || null,
-        occupation:             form.occupation             || null,
-        income_bracket:         form.income_bracket         || null,
-        sector:                 form.sector                 || null,
-        purok_id:               form.purok_id     ? parseInt(form.purok_id)     : null,
-        household_id:           form.household_id ? parseInt(form.household_id) : null,
-        updated_at:             new Date().toISOString(),
-      });
 
       router.push(`/residents/${id}`);
     } catch (e: any) {

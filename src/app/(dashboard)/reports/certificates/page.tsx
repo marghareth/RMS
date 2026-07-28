@@ -87,8 +87,8 @@ export default function CertificatesReportPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams({ type: "certificates" });
-      if (year)  params.set("date_from", `${year}-01-01`);
-      if (month) params.set("date_from", `${year}-${month}-01`);
+      if (year)  params.set("year", year);
+      if (month) params.set("month", month);
       const res = await fetch(`/api/reports?${params}`);
       setData(await res.json());
     } catch (e) {

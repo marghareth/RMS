@@ -1,10 +1,13 @@
+// FILE: src/app/(dashboard)/households/[id]/edit/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Home } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
-import { MOCK_PUROKS, HouseholdMock } from "@/lib/mock/households";
+import { HouseholdMock } from "@/lib/mock/households";
+
+interface Purok { id: number; name: string }
 
 const HOUSING_OPTIONS = [
   { value: "OWN", label: "Own" },
@@ -70,6 +73,7 @@ export default function EditHouseholdPage() {
   // ── REAL DATA FETCH ───────────────────────────────────────────────────────
   const [original, setOriginal] = useState<HouseholdMock | null>(null);
   const [loading, setLoading] = useState(true);
+  const [puroks, setPuroks] = useState<Purok[]>([]);
 
   // Form fields — declared before the effect below, since the effect's
   // fetch callback calls their setters. Their initial values don't need to
@@ -110,6 +114,17 @@ export default function EditHouseholdPage() {
     loadHousehold();
     return () => { cancelled = true; };
   }, [householdId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/puroks")
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => {
+        if (!cancelled && Array.isArray(data)) setPuroks(data);
+      })
+      .catch((e) => console.error("Failed to load puroks from /api/puroks:", e));
+    return () => { cancelled = true; };
+  }, []);
 
   if (loading) {
     return (
@@ -201,7 +216,7 @@ export default function EditHouseholdPage() {
               label="Purok"
               value={purokId}
               onChange={setPurokId}
-              options={MOCK_PUROKS.map((p) => ({ value: String(p.id), label: p.name }))}
+              options={puroks.map((p) => ({ value: String(p.id), label: p.name }))}
               required
             />
             <div className="flex flex-col gap-1">

@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/residents/page.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -6,11 +7,22 @@ import {
   Search, SlidersHorizontal, ChevronRight,
   Plus, X, Users,
 } from "lucide-react";
-import { getMockPuroks, type Resident as MockResident } from "@/lib/mockResidents";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Purok { id: number; name: string }
-interface Resident extends MockResident {}
+interface Household { id: number; household_no: string; address: string }
+interface Resident {
+  id: number;
+  fname: string;
+  lname: string;
+  mname: string | null;
+  name_extension: string | null;
+  sex: string;
+  civil_status: string;
+  is_archived: boolean;
+  purok: Purok | null;
+  household: Household | null;
+}
 interface FilterState { sex: string; civil_status: string; purok_id: string }
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -90,11 +102,26 @@ export default function ResidentsPage() {
   const router = useRouter();
 
   const [residents,  setResidents]  = useState<Resident[]>([]);
-  const [puroks,     setPuroks]     = useState(() => getMockPuroks());
+  const [puroks,     setPuroks]     = useState<Purok[]>([]);
   const [search,     setSearch]     = useState("");
   const [loading,    setLoading]    = useState(true);
   const [showFilter, setShowFilter] = useState(false);
   const [filters,    setFilters]    = useState<FilterState>({ sex: "", civil_status: "", purok_id: "" });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/puroks")
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data) => {
+        if (!cancelled && Array.isArray(data)) setPuroks(data);
+      })
+      .catch(() => {
+        // Non-fatal — the filter dropdown just stays empty if this fails.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const loadResidents = useCallback(async () => {
     setLoading(true);
