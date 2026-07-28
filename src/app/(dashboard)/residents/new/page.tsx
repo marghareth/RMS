@@ -1,9 +1,9 @@
+// FILE: src/app/(dashboard)/residents/new/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
-import { getMockPuroks } from "@/lib/mockResidents";
 
 // ── TYPES ─────────────────────────────────────────────────────────────────────
 interface Purok { id: number; name: string }
@@ -208,12 +208,8 @@ export default function NewRBIPage() {
   const router = useRouter();
 
   const [step,        setStep]        = useState(1);
-  // Seed with mock puroks immediately (lazy initializer — runs once, on
-  // mount, not inside an effect), then try to replace with real data
-  // from the API below. This avoids a synchronous setState() call in the
-  // effect body (react-hooks/set-state-in-effect) and avoids the old
-  // race condition where mock data could clobber a real API response.
-  const [puroks,      setPuroks]      = useState<Purok[]>(() => getMockPuroks());
+  const [puroks,      setPuroks]      = useState<Purok[]>([]);
+  const [puroksError, setPuroksError] = useState("");
   const [submitting,  setSubmitting]  = useState(false);
   const [error,       setError]       = useState("");
   const [editIdx,     setEditIdx]     = useState<number | null>(null);
@@ -248,9 +244,7 @@ export default function NewRBIPage() {
         if (!ignore && Array.isArray(json)) setPuroks(json);
       })
       .catch((e) => {
-        // /api/puroks failed (not authenticated, DB not reachable, etc.) —
-        // keep the mock data that was already set as the initial state,
-        // and log so the real cause is visible instead of a silent crash.
+        if (!ignore) setPuroksError("Couldn't load puroks. Please refresh the page.");
         console.error("Failed to load puroks from /api/puroks:", e.message);
       });
 
@@ -411,6 +405,9 @@ export default function NewRBIPage() {
                 options={puroks.map(p => ({ value: String(p.id), label: p.name }))}
                 required
               />
+              {puroksError && (
+                <p className="text-[11px] text-red-500 -mt-2">{puroksError}</p>
+              )}
 
               <SelectField
                 label="Housing Type"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Shield,
@@ -18,6 +18,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
+import BlotterCaseSheet from "@/components/blotter/BlotterCaseSheet";
 import { BlotterCaseMock, BlotterStatus, formatISODate } from "@/lib/mock/blotter";
 
 // ── FILTER STATE ─────────────────────────────────────────────────────────────
@@ -46,30 +47,32 @@ export default function BlotterListPage() {
   // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
    const [cases, setCases] = useState<BlotterCaseMock[]>([]);
    const [loading, setLoading] = useState(true);
-  //
-   useEffect(() => {
-     async function loadCases() {
-       setLoading(true);
-       try {
-         const params = new URLSearchParams({ limit: "50" });
-         if (search) params.set("search", search);
-         if (filters.status) params.set("status", filters.status);
-         if (filters.escalated) params.set("escalated", "true");
-         if (filters.date_from) params.set("date_from", filters.date_from);
-         if (filters.date_to) params.set("date_to", filters.date_to);
-  
-         const res = await fetch(`/api/blotter?${params}`);
-         const data = await res.json();
-         setCases(data.cases ?? []);
-       } catch (e) {
-         console.error(e);
-       } finally {
-         setLoading(false);
-       }
+   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
+
+   const loadCases = useCallback(async () => {
+     setLoading(true);
+     try {
+       const params = new URLSearchParams({ limit: "50" });
+       if (search) params.set("search", search);
+       if (filters.status) params.set("status", filters.status);
+       if (filters.escalated) params.set("escalated", "true");
+       if (filters.date_from) params.set("date_from", filters.date_from);
+       if (filters.date_to) params.set("date_to", filters.date_to);
+
+       const res = await fetch(`/api/blotter?${params}`);
+       const data = await res.json();
+       setCases(data.cases ?? []);
+     } catch (e) {
+       console.error(e);
+     } finally {
+       setLoading(false);
      }
+   }, [search, filters]);
+
+   useEffect(() => {
      const t = setTimeout(loadCases, 300);
      return () => clearTimeout(t);
-   }, [search, filters]);
+   }, [loadCases]);
 
   // ── CLIENT-SIDE FILTERING (stands in for the API query above) ───────────
   const filtered = useMemo(() => {
@@ -257,7 +260,7 @@ export default function BlotterListPage() {
               {filtered.map((c) => (
                 <tr
                   key={c.id}
-                  onClick={() => router.push(`/blotter/${c.id}`)}
+                  onClick={() => setSelectedCaseId(c.id)}
                   className="cursor-pointer border-b border-[#F4F5F7] transition last:border-b-0 hover:bg-[#F9FAFB]"
                 >
                   <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937]">{c.case_number}</td>
@@ -282,6 +285,12 @@ export default function BlotterListPage() {
           </table>
         )}
       </div>
+
+      <BlotterCaseSheet
+        caseId={selectedCaseId}
+        onClose={() => setSelectedCaseId(null)}
+        onUpdated={loadCases}
+      />
     </div>
   );
 }

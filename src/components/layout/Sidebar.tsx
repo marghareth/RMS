@@ -129,6 +129,7 @@ const bottomNav = [
     type: "group" as const,
     children: [
       { label: "Users", href: "/admin/users", addHref: "/admin/users/new" },
+      { label: "Puroks", href: "/admin/puroks" },
       { label: "Audit Logs", href: "/admin/audit-logs" },
       { label: "Backup", href: "/admin/backup" },
     ],

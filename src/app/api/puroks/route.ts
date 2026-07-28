@@ -9,7 +9,12 @@ export const GET = withErrorHandling(async () => {
   const auth = await requirePermission("residents:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const puroks = await prisma.purok.findMany({ orderBy: { name: "asc" } });
+  const puroks = await prisma.purok.findMany({
+    orderBy: { name: "asc" },
+    include: {
+      _count: { select: { residents: true, households: true } },
+    },
+  });
   return NextResponse.json(puroks);
 });
 
