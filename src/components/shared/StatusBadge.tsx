@@ -1,8 +1,10 @@
+// FILE: src/components/shared/StatusBadge.tsx
 type Status =
   | "FILED" | "ONGOING" | "RESOLVED" | "DISMISSED" | "ESCALATED"
   | "SERVICEABLE" | "UNSERVICEABLE" | "MISSING"
   | "ACTIVE" | "INACTIVE" | "ARCHIVED"
   | "INCOME" | "EXPENSE"
+  | "CHECKED_OUT"
   | string;
 
 const statusMap: Record<string, { label: string; classes: string }> = {
@@ -19,6 +21,15 @@ const statusMap: Record<string, { label: string; classes: string }> = {
   ARCHIVED:      { label: "Archived",      classes: "bg-gray-100 text-gray-400" },
   INCOME:        { label: "Income",        classes: "bg-green-50 text-green-600" },
   EXPENSE:       { label: "Expense",       classes: "bg-red-50 text-red-600" },
+  SCHEDULED:     { label: "Scheduled",     classes: "bg-amber-50 text-amber-600" },
+  COMPLETED:     { label: "Completed",     classes: "bg-green-50 text-green-600" },
+  CANCELLED:     { label: "Cancelled",     classes: "bg-red-50 text-red-600" },
+  PENDING:       { label: "Pending",       classes: "bg-gray-100 text-gray-500" },
+  DISCUSSED:     { label: "Discussed",     classes: "bg-amber-50 text-amber-600" },
+  APPROVED:      { label: "Approved",      classes: "bg-green-50 text-green-600" },
+  CHECKED_OUT:   { label: "Checked Out",   classes: "bg-gray-100 text-gray-500" },
+  PROCESSING:    { label: "Processing",    classes: "bg-blue-50 text-blue-600" },
+  RELEASED:      { label: "Released",      classes: "bg-green-50 text-green-600" },
 };
 
 export default function StatusBadge({ status }: { status: Status }) {

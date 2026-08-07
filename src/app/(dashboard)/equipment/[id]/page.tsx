@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/equipment/[id]/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -30,7 +31,32 @@ interface Equipment {
   condition: string | null;
   status: EquipmentStatus;
   date_acquired: string | null;
+  created_at: string;
+  image_url: string | null;
+  serial_number: string | null;
+  purchase_cost: number | string | null;
+  current_value: number | string | null;
+  purchase_date: string | null;
+  assigned_to: string | null;
+  location: string | null;
+  description: string | null;
+  asset_type: string | null;
   borrowings: Borrowing[];
+}
+
+const CONDITION_LABELS: Record<string, string> = {
+  GOOD: "Good",
+  FAIR: "Fair",
+  POOR: "Poor",
+  NEEDS_REPAIR: "Needs Repair",
+  DECOMMISSIONED: "Decommissioned",
+};
+
+function fmtCurrency(value: number | string | null | undefined) {
+  const n = value === null || value === undefined ? 0 : Number(value);
+  return new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", minimumFractionDigits: 2 }).format(
+    Number.isFinite(n) ? n : 0
+  );
 }
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -178,8 +204,13 @@ export default function EquipmentDetailPage() {
             <ArrowLeft size={18} className="text-[#6B7280]" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-[#F4F5F7] flex items-center justify-center">
-              <Package size={20} className="text-[#6B7280]" />
+            <div className="w-11 h-11 rounded-xl bg-[#F4F5F7] flex items-center justify-center overflow-hidden">
+              {equipment.image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element -- inventory photos are user-supplied external URLs
+                <img src={equipment.image_url} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <Package size={20} className="text-[#6B7280]" />
+              )}
             </div>
             <div>
               <h1 className="text-[17px] font-black text-[#1F2937] uppercase tracking-wide">{equipment.name}</h1>
@@ -213,11 +244,17 @@ export default function EquipmentDetailPage() {
             <InfoRow icon={Hash} label="Equipment ID">
               #{String(equipment.id).padStart(5, "0")}
             </InfoRow>
+            <InfoRow icon={Layers} label="Type">
+              {equipment.asset_type ?? "—"}
+            </InfoRow>
             <InfoRow icon={Layers} label="Quantity">
               {equipment.quantity} piece{equipment.quantity !== 1 ? "s" : ""}
             </InfoRow>
             <InfoRow icon={Wrench} label="Condition">
-              {equipment.condition ?? "—"}
+              {equipment.condition ? (CONDITION_LABELS[equipment.condition] ?? equipment.condition) : "—"}
+            </InfoRow>
+            <InfoRow icon={Hash} label="Serial Number">
+              {equipment.serial_number ?? "—"}
             </InfoRow>
             <InfoRow icon={CalendarDays} label="Date Acquired">
               {equipment.date_acquired ? fmtDate(equipment.date_acquired) : "—"}
@@ -228,6 +265,47 @@ export default function EquipmentDetailPage() {
                 {cfg.label}
               </span>
             </InfoRow>
+          </div>
+
+          {/* Valuation */}
+          <div className="bg-white rounded-xl border border-[#E9EAEC] p-5">
+            <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] mb-3">Valuation</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-[#F9FAFB] border border-[#F4F5F7] px-4 py-3">
+                <p className="text-[10px] text-[#9CA3AF] uppercase font-semibold">Purchase Cost</p>
+                <p className="text-[15px] font-black text-[#1F2937] mt-0.5">{fmtCurrency(equipment.purchase_cost)}</p>
+              </div>
+              <div className="rounded-xl bg-[#F9FAFB] border border-[#F4F5F7] px-4 py-3">
+                <p className="text-[10px] text-[#9CA3AF] uppercase font-semibold">Current Value</p>
+                <p className="text-[15px] font-black text-[#1F2937] mt-0.5">{fmtCurrency(equipment.current_value)}</p>
+              </div>
+            </div>
+            {equipment.purchase_date && (
+              <p className="text-[11px] text-[#9CA3AF] mt-3">Purchased {fmtDate(equipment.purchase_date)}</p>
+            )}
+          </div>
+
+          {/* Assignment */}
+          {(equipment.assigned_to || equipment.location) && (
+            <div className="bg-white rounded-xl border border-[#E9EAEC] p-5">
+              <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] mb-3">Assignment</p>
+              <InfoRow icon={Hash} label="Assigned To">{equipment.assigned_to ?? "—"}</InfoRow>
+              <InfoRow icon={Hash} label="Location">{equipment.location ?? "—"}</InfoRow>
+            </div>
+          )}
+
+          {/* Description */}
+          {equipment.description && (
+            <div className="bg-white rounded-xl border border-[#E9EAEC] p-5">
+              <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] mb-3">Description</p>
+              <p className="text-[13px] text-[#374151] leading-relaxed">{equipment.description}</p>
+            </div>
+          )}
+
+          {/* Metadata */}
+          <div className="bg-white rounded-xl border border-[#E9EAEC] p-5">
+            <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] mb-3">Metadata</p>
+            <InfoRow icon={CalendarDays} label="Added to Inventory">{fmtDate(equipment.created_at)}</InfoRow>
           </div>
 
           {/* Quick stats */}

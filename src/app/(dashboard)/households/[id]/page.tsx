@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/households/[id]/page.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -15,6 +16,12 @@ import {
   Trash2,
   Pencil,
   Printer,
+  ClipboardList,
+  Zap,
+  Trash,
+  Wallet,
+  UsersRound,
+  X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
@@ -23,12 +30,34 @@ import {
   memberFullName,
   calcAge,
   formatISODate,
+  formatCurrency,
 } from "@/lib/mock/households";
-import type { HouseholdMock, HouseholdMemberMock } from "@/lib/mock/households";
+import type { HouseholdMock, HouseholdMemberMock, MigrantMock } from "@/lib/mock/households";
 
 const HOUSING_LABEL: Record<string, string> = { OWN: "Own", RENT: "Rent", SHARED: "Shared", INFORMAL: "Informal" };
 const WATER_LABEL: Record<string, string> = { INDIVIDUAL: "Individual", COMMUNAL: "Communal", WELL: "Well", OTHER: "Other" };
 const CR_LABEL: Record<string, string> = { OWN: "Own", SHARED: "Shared", NONE: "None" };
+const TENURE_LABEL: Record<string, string> = {
+  OWNER: "Owner", RENTER: "Renter", CARETAKER: "Caretaker", SHARER: "Sharer", OTHER: "Other",
+};
+const HOUSEHOLD_UNIT_LABEL: Record<string, string> = {
+  SINGLE_HOUSE: "Single House", DUPLEX: "Duplex", APARTMENT: "Apartment", OTHER: "Other",
+};
+const WASTE_LABEL: Record<string, string> = {
+  COLLECTED: "Collected", BURNED: "Burned", BURIED: "Buried", COMPOSTED: "Composted", OTHER: "Other",
+};
+const POWER_LABEL: Record<string, string> = {
+  ELECTRIC_METERED: "Electric (Metered)", ELECTRIC_SHARED: "Electric (Shared)", SOLAR: "Solar", NONE: "None", OTHER: "Other",
+};
+
+// Renders "Owner" normally, or "Other — Boarding house" when the value is
+// OTHER and a free-text companion field was filled in.
+function withOther(value: string | null, other: string | null, labels: Record<string, string>) {
+  if (!value) return "—";
+  const label = labels[value] ?? value;
+  if (value === "OTHER" && other) return `Other — ${other}`;
+  return label;
+}
 
 function InfoTile({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string | null }) {
   return (
@@ -43,6 +72,19 @@ function InfoTile({ icon: Icon, label, value }: { icon: LucideIcon; label: strin
     </div>
   );
 }
+
+interface MigrantFormState {
+  name: string;
+  previous_location: string;
+  reason: string;
+  transferred_to: string;
+  duration_here: string;
+  has_returned: boolean;
+}
+
+const EMPTY_MIGRANT_FORM: MigrantFormState = {
+  name: "", previous_location: "", reason: "", transferred_to: "", duration_here: "", has_returned: false,
+};
 
 // ─── MAIN PAGE (keyed by id so state resets cleanly on navigation) ───────────
 export default function HouseholdDetailPage() {
@@ -75,9 +117,8 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
     return () => { cancelled = true; };
   }, [householdId]);
 
-  // Reusable refetch for after mutations — only called from event handlers
-  // (handleAddMember, handleRemoveMember, etc.), never from an effect, so
-  // react-hooks/set-state-in-effect doesn't apply to it.
+  // Reusable refetch for after mutations — only called from event handlers,
+  // never from an effect, so react-hooks/set-state-in-effect doesn't apply.
   const loadHousehold = useCallback(async () => {
     try {
       const res = await fetch(`/api/households/${householdId}`);
@@ -95,11 +136,13 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
 
+  // ── Migrants (2.8) ──
+  const [migrantFormOpen, setMigrantFormOpen] = useState<"new" | number | null>(null);
+  const [migrantForm, setMigrantForm] = useState<MigrantFormState>(EMPTY_MIGRANT_FORM);
+  const [migrantDeleteTarget, setMigrantDeleteTarget] = useState<MigrantMock | null>(null);
+  const [migrantBusy, setMigrantBusy] = useState(false);
+
   // Search for unassigned residents as the user types (debounced).
-  // When the query is empty, we simply don't fetch or update state — the
-  // dropdown itself is already gated on `memberQuery.trim()` in the JSX
-  // below, so a stale `candidateResidents` value has no visible effect and
-  // there's no need to synchronously clear it here.
   useEffect(() => {
     if (!memberQuery.trim()) return;
     let cancelled = false;
@@ -210,6 +253,77 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
     }
   }
 
+  // ── Migrants (2.8) ──
+  function openAddMigrant() {
+    setMigrantForm(EMPTY_MIGRANT_FORM);
+    setMigrantFormOpen("new");
+  }
+
+  function openEditMigrant(m: MigrantMock) {
+    setMigrantForm({
+      name: m.name,
+      previous_location: m.previous_location ?? "",
+      reason: m.reason ?? "",
+      transferred_to: m.transferred_to ?? "",
+      duration_here: m.duration_here ?? "",
+      has_returned: m.has_returned,
+    });
+    setMigrantFormOpen(m.id);
+  }
+
+  async function handleSaveMigrant() {
+    if (!migrantForm.name.trim() || !household) return;
+    setMigrantBusy(true);
+    setActionError("");
+    try {
+      const payload = {
+        household_id: household.id,
+        name: migrantForm.name.trim(),
+        previous_location: migrantForm.previous_location.trim() || null,
+        reason: migrantForm.reason.trim() || null,
+        transferred_to: migrantForm.transferred_to.trim() || null,
+        duration_here: migrantForm.duration_here.trim() || null,
+        has_returned: migrantForm.has_returned,
+      };
+
+      const res =
+        migrantFormOpen === "new"
+          ? await fetch("/api/migrants", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            })
+          : await fetch(`/api/migrants/${migrantFormOpen}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+      if (!res.ok) throw new Error("Failed to save migrant record");
+      await loadHousehold();
+      setMigrantFormOpen(null);
+    } catch (e: any) {
+      setActionError(e.message || "Failed to save migrant record.");
+    } finally {
+      setMigrantBusy(false);
+    }
+  }
+
+  async function handleDeleteMigrant() {
+    if (!migrantDeleteTarget) return;
+    setMigrantBusy(true);
+    try {
+      const res = await fetch(`/api/migrants/${migrantDeleteTarget.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete migrant record");
+      await loadHousehold();
+      setMigrantDeleteTarget(null);
+    } catch (e: any) {
+      setActionError(e.message || "Failed to delete migrant record.");
+    } finally {
+      setMigrantBusy(false);
+    }
+  }
+
   return (
     <div>
       {/* Header */}
@@ -255,22 +369,52 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* ── Left: household info ── */}
         <div className="space-y-5 lg:col-span-1">
+          {/* Household Information */}
           <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
             <p className="mb-4 text-[12px] font-black uppercase tracking-wide text-[#1F2937]">
               Household Information
             </p>
             <div className="space-y-4">
               <InfoTile icon={MapPin} label="Address" value={household.address} />
-              <InfoTile icon={Home} label="Housing Type" value={HOUSING_LABEL[household.housing_type ?? ""] ?? "—"} />
-              <InfoTile icon={Droplets} label="Water Source" value={WATER_LABEL[household.water_source ?? ""] ?? "—"} />
-              <InfoTile icon={DoorOpen} label="Comfort Room" value={CR_LABEL[household.comfort_room ?? ""] ?? "—"} />
-              <InfoTile icon={Users} label="No. of Members" value={String(household.members.length)} />
             </div>
             <div className="mt-4 border-t border-[#F4F5F7] pt-3 text-[11px] text-[#9CA3AF]">
               Registered {formatISODate(household.created_at)}
               {household.updated_at !== household.created_at && (
                 <> &middot; Updated {formatISODate(household.updated_at)}</>
               )}
+            </div>
+          </div>
+
+          {/* Classification */}
+          <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+            <p className="mb-4 text-[12px] font-black uppercase tracking-wide text-[#1F2937]">Classification</p>
+            <div className="space-y-4">
+              <InfoTile icon={Home} label="Housing Type" value={withOther(household.housing_type, household.housing_type_other, HOUSING_LABEL)} />
+              <InfoTile icon={ClipboardList} label="Tenure Status" value={withOther(household.tenure_status, household.tenure_other, TENURE_LABEL)} />
+              <InfoTile icon={Home} label="Household Unit" value={withOther(household.household_unit, household.household_unit_other, HOUSEHOLD_UNIT_LABEL)} />
+            </div>
+          </div>
+
+          {/* National Indicators (DILG/BIMS) */}
+          <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+            <p className="mb-4 text-[12px] font-black uppercase tracking-wide text-[#1F2937]">
+              National Indicators (DILG/BIMS)
+            </p>
+            <div className="space-y-4">
+              <InfoTile icon={Droplets} label="Water System" value={WATER_LABEL[household.water_source ?? ""] ?? "—"} />
+              <InfoTile icon={Trash} label="Waste Disposal" value={WASTE_LABEL[household.waste_disposal ?? ""] ?? "—"} />
+              <InfoTile icon={Zap} label="Power Supply" value={POWER_LABEL[household.power_supply ?? ""] ?? "—"} />
+              <InfoTile icon={DoorOpen} label="Toilet Type" value={CR_LABEL[household.comfort_room ?? ""] ?? "—"} />
+            </div>
+          </div>
+
+          {/* Demographics */}
+          <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+            <p className="mb-4 text-[12px] font-black uppercase tracking-wide text-[#1F2937]">Demographics</p>
+            <div className="space-y-4">
+              <InfoTile icon={Users} label="No. of Members" value={String(household.members.length)} />
+              <InfoTile icon={UsersRound} label="No. of Families" value={household.no_of_families != null ? String(household.no_of_families) : "—"} />
+              <InfoTile icon={Wallet} label="Monthly Income" value={household.monthly_income != null ? formatCurrency(household.monthly_income) : "—"} />
             </div>
           </div>
 
@@ -311,8 +455,8 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
           </div>
         </div>
 
-        {/* ── Right: members ── */}
-        <div className="lg:col-span-2">
+        {/* ── Right: members + migrants ── */}
+        <div className="space-y-5 lg:col-span-2">
           <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937]">
@@ -414,6 +558,159 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
               </div>
             )}
           </div>
+
+          {/* Migrants (2.8) */}
+          <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937]">
+                Migrants ({household.migrants.length})
+              </p>
+              {migrantFormOpen === null && (
+                <button
+                  onClick={openAddMigrant}
+                  className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-[#2563EB]"
+                >
+                  <Plus size={13} />
+                  Add Migrant
+                </button>
+              )}
+            </div>
+
+            {migrantFormOpen !== null && (
+              <div className="mb-4 rounded-xl border border-[#E9EAEC] bg-[#F9FAFB] p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#1F2937]">
+                    {migrantFormOpen === "new" ? "New Migrant" : "Edit Migrant"}
+                  </p>
+                  <button onClick={() => setMigrantFormOpen(null)}>
+                    <X size={14} className="text-[#9CA3AF]" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                      Name <span className="text-[#DC2626]">*</span>
+                    </label>
+                    <input
+                      value={migrantForm.name}
+                      onChange={(e) => setMigrantForm((f) => ({ ...f, name: e.target.value }))}
+                      className="w-full rounded-lg border border-[#E9EAEC] bg-white px-3 py-2 text-[13px] outline-none focus:border-[#3B82F6]"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                      Previous Location
+                    </label>
+                    <input
+                      value={migrantForm.previous_location}
+                      onChange={(e) => setMigrantForm((f) => ({ ...f, previous_location: e.target.value }))}
+                      className="w-full rounded-lg border border-[#E9EAEC] bg-white px-3 py-2 text-[13px] outline-none focus:border-[#3B82F6]"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                      Reason
+                    </label>
+                    <input
+                      value={migrantForm.reason}
+                      onChange={(e) => setMigrantForm((f) => ({ ...f, reason: e.target.value }))}
+                      className="w-full rounded-lg border border-[#E9EAEC] bg-white px-3 py-2 text-[13px] outline-none focus:border-[#3B82F6]"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                      Transferred To
+                    </label>
+                    <input
+                      value={migrantForm.transferred_to}
+                      onChange={(e) => setMigrantForm((f) => ({ ...f, transferred_to: e.target.value }))}
+                      className="w-full rounded-lg border border-[#E9EAEC] bg-white px-3 py-2 text-[13px] outline-none focus:border-[#3B82F6]"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                      Duration Here
+                    </label>
+                    <input
+                      value={migrantForm.duration_here}
+                      onChange={(e) => setMigrantForm((f) => ({ ...f, duration_here: e.target.value }))}
+                      placeholder="e.g. 2 years"
+                      className="w-full rounded-lg border border-[#E9EAEC] bg-white px-3 py-2 text-[13px] outline-none focus:border-[#3B82F6]"
+                    />
+                  </div>
+                  <label className="flex items-center gap-2 sm:col-span-2">
+                    <input
+                      type="checkbox"
+                      checked={migrantForm.has_returned}
+                      onChange={(e) => setMigrantForm((f) => ({ ...f, has_returned: e.target.checked }))}
+                      className="h-4 w-4 rounded border-[#E9EAEC] text-[#3B82F6]"
+                    />
+                    <span className="text-[12px] text-[#374151]">Has returned to previous location</span>
+                  </label>
+                </div>
+                <div className="mt-3 flex justify-end gap-2">
+                  <button
+                    onClick={() => setMigrantFormOpen(null)}
+                    className="rounded-lg border border-[#E9EAEC] bg-white px-3 py-2 text-[11px] font-bold text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveMigrant}
+                    disabled={migrantBusy || !migrantForm.name.trim()}
+                    className="rounded-lg bg-[#3B82F6] px-3 py-2 text-[11px] font-bold text-white transition hover:bg-[#2563EB] disabled:opacity-50"
+                  >
+                    {migrantBusy ? "Saving…" : "Save"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {household.migrants.length === 0 ? (
+              <p className="py-8 text-center text-[12px] text-[#9CA3AF]">
+                No migrant records for this household.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {household.migrants.map((m) => (
+                  <div key={m.id} className="rounded-xl border border-[#E9EAEC] px-4 py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="truncate text-[13px] font-bold text-[#1F2937]">{m.name}</p>
+                          {!m.has_returned && (
+                            <span className="rounded-full bg-[#FEF3C7] px-2 py-0.5 text-[10px] font-semibold text-[#D97706]">
+                              No return
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-[11px] text-[#9CA3AF]">
+                          From {m.previous_location || "—"} &middot; {m.reason || "No reason on file"}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-[#9CA3AF]">
+                          Transferred to {m.transferred_to || "—"} &middot; {m.duration_here || "—"}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          onClick={() => openEditMigrant(m)}
+                          className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                        >
+                          <Pencil size={13} />
+                        </button>
+                        <button
+                          onClick={() => setMigrantDeleteTarget(m)}
+                          className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#FEE2E2] hover:text-[#DC2626]"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -443,6 +740,18 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
         loading={busy}
         onConfirm={handleDeleteHousehold}
         onCancel={() => setDeleteHouseholdConfirm(false)}
+      />
+
+      <ConfirmDialog
+        open={!!migrantDeleteTarget}
+        title="Delete migrant record?"
+        message={migrantDeleteTarget ? `The record for "${migrantDeleteTarget.name}" will be permanently deleted.` : ""}
+        confirmLabel={migrantBusy ? "Deleting..." : "Delete"}
+        cancelLabel="Cancel"
+        variant="danger"
+        loading={migrantBusy}
+        onConfirm={handleDeleteMigrant}
+        onCancel={() => setMigrantDeleteTarget(null)}
       />
     </div>
   );

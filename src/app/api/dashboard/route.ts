@@ -36,6 +36,8 @@ export const GET = withErrorHandling(async () => {
   const startOfMonth      = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfLastMonth  = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const startOfYear       = new Date(now.getFullYear(), 0, 1);
+  const startOfToday      = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTomorrow   = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
   // NOTE ON BATCHING: this route needs ~17 separate counts/queries to build
   // the dashboard. Firing all 17 at once via a single Promise.all() opens
@@ -95,6 +97,28 @@ export const GET = withErrorHandling(async () => {
       prisma.equipmentBorrowing.count({ where: { date_borrowed: { gte: startOfLastMonth, lt: startOfMonth } } }),
     ]);
 
+  // ── New KPI/panel widgets (Batch 11: Dashboard Customization) ──
+  // Kept in its own small batch for the same connection-pool reason noted
+  // above, rather than folding into the first Promise.all().
+  const [
+    visitorsActive, meetingsToday, settledCases,
+    overdueEquipmentReturns, filedBlotterCases, overdueHearings,
+    documentStatusRaw,
+  ] = await Promise.all([
+    prisma.visitorLog.count({ where: { time_out: null } }),
+    prisma.meetingRecord.count({ where: { meeting_date: { gte: startOfToday, lt: startOfTomorrow } } }),
+    prisma.blotterCase.count({ where: { status: { in: ["RESOLVED", "DISMISSED"] } } }),
+    prisma.equipmentBorrowing.count({ where: { actual_return: null, is_overdue: true } }),
+    prisma.blotterCase.count({ where: { status: "FILED" } }),
+    prisma.blotterCase.count({ where: { status: "ONGOING", hearing_date: { lt: now } } }),
+    prisma.certificate.groupBy({ by: ["status"], _count: true }),
+  ]);
+
+  const documentStatusCounts = (["PENDING", "PROCESSING", "RELEASED", "CANCELLED"] as const).map((status) => ({
+    status,
+    count: documentStatusRaw.find((s) => s.status === status)?._count ?? 0,
+  }));
+
   // % change helper. Returns null when there's no prior-month baseline to
   // compare against (0 last month) — the frontend shows "New" instead of
   // a misleading infinite/undefined percentage in that case.
@@ -119,6 +143,17 @@ export const GET = withErrorHandling(async () => {
       households:   pctChange(householdsThisMonth, householdsLastMonth),
       certsMonth:   pctChange(certsThisMonth, certsLastMonth),
       equipment:    pctChange(equipmentThisMonth, equipmentLastMonth),
+    },
+
+    // ── Batch 11 additions ──
+    visitorsActive,
+    meetingsToday,
+    settledCases,
+    documentStatusCounts,
+    priorityTasks: {
+      overdueEquipmentReturns,
+      filedBlotterCases,
+      overdueHearings,
     },
   });
 });

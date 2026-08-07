@@ -43,12 +43,14 @@ const mainNav = [
     ],
   },
   {
-    label: "Certificates",
+    label: "Documents",
     icon: FileText,
     basePath: "/certificates",
     type: "group" as const,
     children: [
       { label: "All Certificates", href: "/certificates", addHref: "/certificates/new" },
+      { label: "Document Queue", href: "/document-queue" },
+      { label: "Document Release", href: "/document-release" },
       { label: "Barangay ID", href: "/barangay_id", addHref: "/barangay_id/new" },
     ],
   },

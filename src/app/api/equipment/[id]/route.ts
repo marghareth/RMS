@@ -41,6 +41,15 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
       condition: "condition" in body ? body.condition ?? null : undefined,
       status: body.status,
       date_acquired: "date_acquired" in body ? body.date_acquired ?? null : undefined,
+      image_url: "image_url" in body ? body.image_url ?? null : undefined,
+      serial_number: "serial_number" in body ? body.serial_number ?? null : undefined,
+      purchase_cost: "purchase_cost" in body ? body.purchase_cost ?? null : undefined,
+      current_value: "current_value" in body ? body.current_value ?? null : undefined,
+      purchase_date: "purchase_date" in body ? body.purchase_date ?? null : undefined,
+      assigned_to: "assigned_to" in body ? body.assigned_to ?? null : undefined,
+      location: "location" in body ? body.location ?? null : undefined,
+      description: "description" in body ? body.description ?? null : undefined,
+      asset_type: "asset_type" in body ? body.asset_type ?? null : undefined,
     },
   });
 

@@ -171,7 +171,10 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
       }));
 
       const monthCounts = new Array(12).fill(0);
-      for (const { issued_at } of monthRows) monthCounts[new Date(issued_at).getMonth()]++;
+      for (const row of monthRows) {
+        if (!row.issued_at) continue;
+        monthCounts[new Date(row.issued_at).getMonth()]++;
+      }
       const byMonth = MONTH_LABELS.map((month, i) => ({ month, count: monthCounts[i] }));
 
       const recent = recentRaw.map((c) => ({
@@ -179,7 +182,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
         resident: residentName(c.resident, c.manual_name),
         type: CERT_LABELS[c.certificate_type]?.label ?? titleCase(c.certificate_type),
         purpose: c.purpose,
-        issued_at: c.issued_at.toISOString(),
+        issued_at: c.issued_at ? c.issued_at.toISOString() : null,
         issuer: c.issuer.username,
       }));
 
@@ -188,7 +191,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
 
     // ─── BLOTTER ──────────────────────────────────────────────────────────
     case "blotter": {
-      const [total, byStatusRaw, escalated, filedRows, resolvedRows, recentRaw] = await Promise.all([
+      const [total, byStatusRaw, escalated, filedRows, resolvedRows, byTypeRaw, recentRaw] = await Promise.all([
         prisma.blotterCase.count({ where: { created_at: { gte: effectiveStart, lte: effectiveEnd } } }),
         prisma.blotterCase.groupBy({
           by: ["status"],
@@ -203,6 +206,12 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
         prisma.blotterUpdate.findMany({
           where: { new_status: "RESOLVED", updated_at: { gte: yearStart, lte: yearEnd } },
           select: { updated_at: true },
+        }),
+        prisma.blotterCase.groupBy({
+          by: ["incident_type"],
+          where: { created_at: { gte: effectiveStart, lte: effectiveEnd } },
+          _count: true,
+          orderBy: { _count: { incident_type: "desc" } },
         }),
         prisma.blotterCase.findMany({
           where: { created_at: { gte: effectiveStart, lte: effectiveEnd } },
@@ -219,11 +228,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
       for (const { updated_at } of resolvedRows) resolvedByMonth[new Date(updated_at).getMonth()]++;
       const byMonth = MONTH_LABELS.map((month, i) => ({ month, filed: filedByMonth[i], resolved: resolvedByMonth[i] }));
 
-      // NOTE: BlotterCase has no incident-type column in the schema (only
-      // `status`) — there's nothing real to group by here. Returning `[]`
-      // rather than fabricating categories; the "Incident Types" section
-      // will render empty until a schema field backs it.
-      const byType: { type: string; count: number }[] = [];
+      const byType = byTypeRaw.map((t) => ({ type: t.incident_type, count: t._count }));
 
       const recent = recentRaw.map((c) => ({
         id: c.id,

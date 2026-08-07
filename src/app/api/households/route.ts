@@ -67,6 +67,17 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       housing_type: body.housing_type ?? null,
       water_source: body.water_source ?? null,
       comfort_room: body.comfort_room ?? null,
+
+      // ── DILG/BIMS enhancements (2.8) ──
+      tenure_status: body.tenure_status ?? null,
+      tenure_other: body.tenure_other ?? null,
+      housing_type_other: body.housing_type_other ?? null,
+      household_unit: body.household_unit ?? null,
+      household_unit_other: body.household_unit_other ?? null,
+      no_of_families: body.no_of_families ?? null,
+      monthly_income: body.monthly_income ?? null,
+      waste_disposal: body.waste_disposal ?? null,
+      power_supply: body.power_supply ?? null,
     },
   });
 

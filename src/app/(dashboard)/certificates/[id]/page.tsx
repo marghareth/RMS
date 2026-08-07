@@ -6,12 +6,15 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, FileText, User, Calendar, ShieldCheck, Printer, History } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
+import StatusBadge from "@/components/shared/StatusBadge";
 import {
   CertificateMock,
   certTypeLabel,
   residentFullName,
   formatISODateTime,
   formatISODate,
+  certDisplayDate,
+  PAYMENT_STATUS_LABELS,
 } from "@/lib/mock/certificates";
 
 function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string | null }) {
@@ -112,13 +115,18 @@ export default function CertificateDetailPage() {
             <span className="inline-flex items-center rounded-full bg-[#EBF3FF] px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8]">
               {certTypeLabel(certificate.certificate_type)}
             </span>
+            <StatusBadge status={certificate.status} />
             {certificate.flagged_manual && (
               <span className="inline-flex items-center rounded-full bg-[#FEF3C7] px-2.5 py-1 text-[11px] font-semibold text-[#D97706]">
                 Walk-in
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-[13px] text-[#9CA3AF]">Issued {formatISODateTime(certificate.issued_at)}</p>
+          <p className="mt-0.5 text-[13px] text-[#9CA3AF]">
+            {certificate.issued_at
+              ? `Released ${formatISODateTime(certificate.issued_at)}`
+              : `Requested ${formatISODateTime(certificate.requested_at)} · Queue #${certificate.queue_number}`}
+          </p>
         </div>
         <button
           onClick={() => router.push(`/certificates/${certId}/preview`)}
@@ -190,7 +198,7 @@ export default function CertificateDetailPage() {
                       <p className="text-[12px] font-bold text-[#1F2937]">{certTypeLabel(c.certificate_type)}</p>
                       <p className="text-[11px] text-[#9CA3AF]">{c.purpose}</p>
                     </div>
-                    <span className="shrink-0 text-[11px] text-[#6B7280]">{formatISODate(c.issued_at)}</span>
+                    <span className="shrink-0 text-[11px] text-[#6B7280]">{formatISODate(certDisplayDate(c))}</span>
                   </button>
                 ))}
               </div>
@@ -203,8 +211,14 @@ export default function CertificateDetailPage() {
           <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
             <p className="mb-3 text-[12px] font-black uppercase tracking-wide text-[#1F2937]">Issuance Info</p>
             <InfoRow icon={ShieldCheck} label="Issued By" value={certificate.issuer.username} />
-            <InfoRow icon={Calendar} label="Date Issued" value={formatISODateTime(certificate.issued_at)} />
+            <InfoRow
+              icon={Calendar}
+              label="Date Issued"
+              value={certificate.issued_at ? formatISODateTime(certificate.issued_at) : "Awaiting release"}
+            />
             <InfoRow icon={FileText} label="Certificate No." value={certificate.certificate_no} />
+            <InfoRow icon={FileText} label="Queue No." value={certificate.queue_number} />
+            <InfoRow icon={ShieldCheck} label="Payment" value={PAYMENT_STATUS_LABELS[certificate.payment_status]} />
           </div>
         </div>
       </div>

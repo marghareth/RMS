@@ -27,7 +27,34 @@ interface Equipment {
   condition: string | null;
   status: EquipmentStatus;
   date_acquired: string | null;
+  created_at: string;
+  image_url: string | null;
+  serial_number: string | null;
+  purchase_cost: number | string | null;
+  current_value: number | string | null;
+  purchase_date: string | null;
+  assigned_to: string | null;
+  location: string | null;
+  description: string | null;
+  asset_type: string | null;
   borrowings: Borrowing[];
+}
+
+const CONDITION_LABELS: Record<string, string> = {
+  GOOD: "Good",
+  FAIR: "Fair",
+  POOR: "Poor",
+  NEEDS_REPAIR: "Needs Repair",
+  DECOMMISSIONED: "Decommissioned",
+};
+
+// Defaults to ₱0.00 rather than blank/NaN when the value hasn't been set —
+// matches the Finance Suite's currency-display convention.
+function fmtCurrency(value: number | string | null | undefined) {
+  const n = value === null || value === undefined ? 0 : Number(value);
+  return new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", minimumFractionDigits: 2 }).format(
+    Number.isFinite(n) ? n : 0
+  );
 }
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -80,6 +107,7 @@ export default function EquipmentPage() {
 
   const [search,        setSearch]        = useState("");
   const [filterStatus,  setFilterStatus]  = useState<EquipmentStatus | "ALL">("ALL");
+  const [filterType,    setFilterType]    = useState("");
   const [selectedId,    setSelectedId]    = useState<number | null>(null);
 
   const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -90,7 +118,7 @@ export default function EquipmentPage() {
   // render-time-reset pattern used on the certificate preview page, exempt
   // from the set-state-in-effect rule because it isn't inside useEffect.
   // See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
-  const queryKey = `${search}|${filterStatus}`;
+  const queryKey = `${search}|${filterStatus}|${filterType}`;
   const [loadedKey, setLoadedKey] = useState(queryKey);
   if (queryKey !== loadedKey) {
     setLoadedKey(queryKey);
@@ -102,13 +130,19 @@ export default function EquipmentPage() {
     const params = new URLSearchParams();
     if (search)                          params.set("search", search);
     if (filterStatus !== "ALL")          params.set("status", filterStatus);
+    if (filterType)                      params.set("asset_type", filterType);
     fetch(`/api/equipment?${params}`)
       .then(r => r.json())
       .then(data => { if (!cancelled) setEquipment(data); })
       .catch(console.error)
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [search, filterStatus]);
+  }, [search, filterStatus, filterType]);
+
+  // Distinct asset types across the currently-loaded list, for the Type
+  // filter dropdown — recomputed client-side rather than a separate
+  // endpoint since the list is already small (barangay equipment inventory).
+  const assetTypes = Array.from(new Set(equipment.map(e => e.asset_type).filter((t): t is string => !!t))).sort();
 
   // Derived rather than stored: falls back to the first item once real data
   // has loaded, without needing an effect (and its own setState-in-effect
@@ -179,6 +213,16 @@ export default function EquipmentPage() {
                 </button>
               ))}
             </div>
+            {assetTypes.length > 0 && (
+              <select
+                value={filterType}
+                onChange={e => setFilterType(e.target.value)}
+                className="w-full text-[12px] bg-[#F4F5F7] rounded-xl border border-transparent focus:outline-none focus:border-[#3B82F6] focus:bg-white transition px-3 py-2"
+              >
+                <option value="">All Types</option>
+                {assetTypes.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            )}
           </div>
 
           {/* List */}
@@ -204,17 +248,22 @@ export default function EquipmentPage() {
                     className={`w-full text-left px-4 py-3 flex items-center gap-3 border-b border-[#F4F5F7] transition
                       ${active ? "bg-[#3B82F6]" : "hover:bg-[#F9FAFB]"}`}
                   >
-                    {/* Icon */}
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0
+                    {/* Thumbnail */}
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden
                       ${active ? "bg-blue-400" : "bg-[#F4F5F7]"}`}>
-                      <Package size={16} className={active ? "text-white" : "text-[#9CA3AF]"} />
+                      {eq.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- inventory photos are user-supplied external URLs, not build-time assets
+                        <img src={eq.image_url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <Package size={16} className={active ? "text-white" : "text-[#9CA3AF]"} />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className={`text-[13px] font-bold truncate ${active ? "text-white" : "text-[#1F2937]"}`}>
                         {eq.name}
                       </p>
                       <p className={`text-[11px] mt-0.5 ${active ? "text-blue-100" : "text-[#9CA3AF]"}`}>
-                        Qty: {eq.quantity}
+                        {eq.asset_type && `${eq.asset_type} · `}Qty: {eq.quantity}
                         {out > 0 && ` · ${out} borrowed`}
                         {overdue && " · ⚠ overdue"}
                       </p>
@@ -245,8 +294,13 @@ export default function EquipmentPage() {
             {/* Header */}
             <div className="flex items-start justify-between mb-5 pb-4 border-b border-[#E9EAEC]">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-[#F4F5F7] flex items-center justify-center">
-                  <Package size={22} className="text-[#6B7280]" />
+                <div className="w-12 h-12 rounded-xl bg-[#F4F5F7] flex items-center justify-center overflow-hidden">
+                  {selected.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- inventory photos are user-supplied external URLs
+                    <img src={selected.image_url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <Package size={22} className="text-[#6B7280]" />
+                  )}
                 </div>
                 <div>
                   <h2 className="text-[16px] font-black text-[#1F2937] uppercase tracking-wide">{selected.name}</h2>
@@ -274,7 +328,9 @@ export default function EquipmentPage() {
               {[
                 ["Status",         <StatusBadge key="s" status={selected.status} />],
                 ["Quantity",       <span key="q" className="text-[13px] font-bold text-[#1F2937]">{selected.quantity} pcs</span>],
-                ["Condition",      <span key="c" className="text-[13px] text-[#374151]">{selected.condition ?? "—"}</span>],
+                ["Type",           <span key="ty" className="text-[13px] text-[#374151]">{selected.asset_type ?? "—"}</span>],
+                ["Condition",      <span key="c" className="text-[13px] text-[#374151]">{selected.condition ? (CONDITION_LABELS[selected.condition] ?? selected.condition) : "—"}</span>],
+                ["Serial No.",     <span key="sn" className="text-[13px] text-[#374151]">{selected.serial_number ?? "—"}</span>],
                 ["Date Acquired",  <span key="d" className="text-[13px] text-[#374151]">
                   {selected.date_acquired
                     ? new Date(selected.date_acquired).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
@@ -293,6 +349,60 @@ export default function EquipmentPage() {
                   <span>{value}</span>
                 </div>
               ))}
+            </div>
+
+            {/* Valuation */}
+            <div className="border-t border-[#E9EAEC] pt-5 mb-5">
+              <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] mb-3">Valuation</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-[#F9FAFB] border border-[#F4F5F7] px-4 py-3">
+                  <p className="text-[10px] text-[#9CA3AF] uppercase font-semibold">Purchase Cost</p>
+                  <p className="text-[15px] font-black text-[#1F2937] mt-0.5">{fmtCurrency(selected.purchase_cost)}</p>
+                </div>
+                <div className="rounded-xl bg-[#F9FAFB] border border-[#F4F5F7] px-4 py-3">
+                  <p className="text-[10px] text-[#9CA3AF] uppercase font-semibold">Current Value</p>
+                  <p className="text-[15px] font-black text-[#1F2937] mt-0.5">{fmtCurrency(selected.current_value)}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Assignment */}
+            {(selected.assigned_to || selected.location) && (
+              <div className="border-t border-[#E9EAEC] pt-5 mb-5">
+                <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] mb-3">Assignment</p>
+                <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Assigned To</span>
+                    <span>: </span>
+                    <span className="text-[13px] text-[#374151]">{selected.assigned_to ?? "—"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Location</span>
+                    <span>: </span>
+                    <span className="text-[13px] text-[#374151]">{selected.location ?? "—"}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Description */}
+            {selected.description && (
+              <div className="border-t border-[#E9EAEC] pt-5 mb-5">
+                <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] mb-3">Description</p>
+                <p className="text-[13px] text-[#374151] leading-relaxed">{selected.description}</p>
+              </div>
+            )}
+
+            {/* Metadata */}
+            <div className="border-t border-[#E9EAEC] pt-5 mb-1">
+              <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] mb-3">Metadata</p>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide min-w-27.5 shrink-0">Added to Inventory</span>
+                <span>: </span>
+                <span className="text-[13px] text-[#374151]">
+                  {new Date(selected.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                </span>
+              </div>
             </div>
 
             {/* Active borrowings */}

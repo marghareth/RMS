@@ -12,6 +12,9 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
 
   const { searchParams } = new URL(req.url);
   const meeting_type = searchParams.get("meeting_type");
+  const status = searchParams.get("status");
+  const location = searchParams.get("location");
+  const title = searchParams.get("title");
   const date_from = searchParams.get("date_from");
   const date_to = searchParams.get("date_to");
   const { page, limit } = paginationSchema.parse({
@@ -23,6 +26,9 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   const where: any = {
     AND: [
       meeting_type ? { meeting_type } : {},
+      status ? { status } : {},
+      location ? { location: { contains: location, mode: "insensitive" } } : {},
+      title ? { title: { contains: title, mode: "insensitive" } } : {},
       date_from ? { meeting_date: { gte: new Date(date_from) } } : {},
       date_to ? { meeting_date: { lte: new Date(date_to) } } : {},
     ],
@@ -33,7 +39,10 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
       where,
       skip,
       take: limit,
-      include: { recorder: { select: { id: true, username: true } } },
+      include: {
+        recorder: { select: { id: true, username: true } },
+        _count: { select: { agenda_items: true } },
+      },
       orderBy: { meeting_date: "desc" },
     }),
     prisma.meetingRecord.count({ where }),
@@ -53,6 +62,9 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       meeting_type: body.meeting_type,
       meeting_date: body.meeting_date,
       minutes: body.minutes ?? null,
+      title: body.title ?? null,
+      location: body.location ?? null,
+      status: body.status ?? "SCHEDULED",
       recorded_by: parseInt(auth.session.user.id),
     },
   });
@@ -62,7 +74,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     action: "CREATE",
     table_affected: "MeetingRecord",
     record_id: meeting.id,
-    details: `Created ${body.meeting_type} meeting record`,
+    details: `Created ${body.meeting_type} meeting record${body.title ? `: ${body.title}` : ""}`,
   });
 
   return NextResponse.json(meeting, { status: 201 });

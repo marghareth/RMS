@@ -28,8 +28,17 @@ export default function NavGroup({
   items,
   defaultOpen = false,
 }: NavGroupProps) {
-  const pathname       = usePathname();
-  const hasActiveChild = pathname === basePath || pathname.startsWith(basePath + "/");
+  const pathname = usePathname();
+  // Checked against every child's href, not just `basePath` — some groups
+  // (e.g. Certificates/"Documents") now contain children that live outside
+  // the group's nominal basePath (Document Queue, Document Release), and a
+  // single-prefix check would leave those children hidden/unhighlighted
+  // when visited directly. Falls back to basePath too, in case a group's
+  // landing page isn't itself listed as a child href.
+  const hasActiveChild =
+    pathname === basePath ||
+    pathname.startsWith(basePath + "/") ||
+    items.some((child) => pathname === child.href || pathname.startsWith(child.href + "/"));
   const [open, setOpen] = useState(() => hasActiveChild || defaultOpen);
 
   useEffect(() => {

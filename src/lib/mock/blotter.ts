@@ -1,3 +1,4 @@
+// FILE: src/lib/mock/blotter.ts
 // ── MOCK DATA ──────────────────────────────────────────────────────────────
 // Temporary in-memory data standing in for the Prisma/DB layer while the
 // Blotter UI is being built. Shapes mirror the `BlotterCase` / `BlotterUpdate`
@@ -33,6 +34,7 @@ export interface BlotterCaseMock {
   respondent_name: string;
   incident_narrative: string;
   incident_date: string; // ISO date
+  incident_type: string; // references IncidentType.name
   hearing_date: string | null; // ISO date
   status: BlotterStatus;
   escalated: boolean;
@@ -53,6 +55,7 @@ export const MOCK_BLOTTER_CASES: BlotterCaseMock[] = [
     incident_narrative:
       "Complainant alleges that respondent's dog attacked her son while playing near the barangay basketball court, causing minor injuries. Complainant is requesting mediation and reimbursement of medical expenses.",
     incident_date: "2026-06-24",
+    incident_type: "Animal-related Complaint",
     hearing_date: "2026-06-29",
     status: "ONGOING",
     escalated: false,
@@ -81,6 +84,7 @@ export const MOCK_BLOTTER_CASES: BlotterCaseMock[] = [
     incident_narrative:
       "Complainant reports theft of livestock (2 chickens) from his backyard sometime between 10PM and 5AM. No witnesses identified yet.",
     incident_date: "2026-06-20",
+    incident_type: "Theft",
     hearing_date: null,
     status: "FILED",
     escalated: false,
@@ -99,6 +103,7 @@ export const MOCK_BLOTTER_CASES: BlotterCaseMock[] = [
     incident_narrative:
       "Boundary dispute regarding a fence allegedly built 1.5 meters into complainant's property. Respondent disputes the survey markers used.",
     incident_date: "2026-06-10",
+    incident_type: "Land / Boundary Dispute",
     hearing_date: "2026-06-15",
     status: "RESOLVED",
     escalated: false,
@@ -136,6 +141,7 @@ export const MOCK_BLOTTER_CASES: BlotterCaseMock[] = [
     incident_narrative:
       "Complainant reports repeated verbal harassment and threats from respondent following a dispute over a shared water line. Requests immediate intervention.",
     incident_date: "2026-05-30",
+    incident_type: "Verbal Altercation / Quarrel",
     hearing_date: "2026-06-03",
     status: "ONGOING",
     escalated: true,
@@ -164,6 +170,7 @@ export const MOCK_BLOTTER_CASES: BlotterCaseMock[] = [
     incident_narrative:
       "Noise complaint from neighbors regarding a videoke session past curfew hours (12:30AM). Respondent was advised verbally on-site.",
     incident_date: "2026-06-27",
+    incident_type: "Noise Disturbance",
     hearing_date: null,
     status: "DISMISSED",
     escalated: false,
@@ -192,6 +199,7 @@ export const MOCK_BLOTTER_CASES: BlotterCaseMock[] = [
     incident_narrative:
       "Complainant alleges non-payment of a personal loan amounting to ₱15,000, due since March 2026. Requests barangay mediation before pursuing formal collection.",
     incident_date: "2026-06-05",
+    incident_type: "Debt / Financial Complaint",
     hearing_date: "2026-06-08",
     status: "ONGOING",
     escalated: false,

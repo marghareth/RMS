@@ -1,4 +1,5 @@
 "use client";
+// FILE: src/app/(dashboard)/meetings/new/page.tsx
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -9,6 +10,8 @@ export default function NewMeetingPage() {
   const router = useRouter();
 
   const [meetingType, setMeetingType] = useState<MeetingType>("SB_MEETING");
+  const [title, setTitle] = useState("");
+  const [location, setLocation] = useState("");
   const [meetingDate, setMeetingDate] = useState(new Date().toISOString().slice(0, 10));
   const [meetingTime, setMeetingTime] = useState("14:00");
   const [minutes, setMinutes] = useState("");
@@ -24,37 +27,29 @@ export default function NewMeetingPage() {
     }
 
     setSubmitting(true);
-
     const meetingDateTime = new Date(`${meetingDate}T${meetingTime || "00:00"}:00`).toISOString();
 
-    // ── MOCK SUBMIT ─────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 500));
-    setSubmitting(false);
-    alert(
-      `[MOCK] ${meetingType === "SB_MEETING" ? "SB Meeting" : "Barangay Assembly"} record created for ${meetingDate}.\nA real save will redirect to the new meeting's detail page.`
-    );
-    router.push("/meetings");
-
-    
     try {
-       const res = await fetch("/api/meetings", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({
-           meeting_type: meetingType,
-           meeting_date: meetingDateTime,
-           minutes: minutes.trim() || undefined,
-         }),
-       });
-       if (!res.ok) throw new Error("Failed to create meeting record");
-       const created = await res.json();
-       router.push(`/meetings/${created.id}`);
-     } catch (e) {
-       console.error(e);
-       setError("Something went wrong while saving. Please try again.");
-     } finally {
-       setSubmitting(false);
-     }
+      const res = await fetch("/api/meetings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          meeting_type: meetingType,
+          meeting_date: meetingDateTime,
+          title: title.trim() || undefined,
+          location: location.trim() || undefined,
+          minutes: minutes.trim() || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to create meeting record");
+      const created = await res.json();
+      router.push(`/meetings/${created.id}`);
+    } catch (e) {
+      console.error(e);
+      setError("Something went wrong while saving. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -70,7 +65,7 @@ export default function NewMeetingPage() {
       <div className="mb-5">
         <h1 className="text-xl font-bold text-[#1F2937]">New Meeting Record</h1>
         <p className="mt-0.5 text-[13px] text-[#9CA3AF]">
-          Encode a SB meeting or barangay assembly, with minutes if available.
+          Encode a SB meeting or barangay assembly. Agenda items can be added once the meeting is created.
         </p>
       </div>
 
@@ -109,6 +104,18 @@ export default function NewMeetingPage() {
         </div>
 
         <div className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+              Title <span className="font-normal normal-case text-[#9CA3AF]">(optional)</span>
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Q3 Budget Review & Infrastructure Update"
+              className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+            />
+          </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
@@ -135,6 +142,18 @@ export default function NewMeetingPage() {
           </div>
 
           <div>
+            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+              Location <span className="font-normal normal-case text-[#9CA3AF]">(optional)</span>
+            </label>
+            <input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g. Barangay Hall Session Room"
+              className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+            />
+          </div>
+
+          <div>
             <div className="mb-1.5 flex items-center gap-1.5">
               <FileText size={12} className="text-[#6B7280]" />
               <label className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
@@ -144,12 +163,12 @@ export default function NewMeetingPage() {
             <textarea
               value={minutes}
               onChange={(e) => setMinutes(e.target.value)}
-              rows={10}
+              rows={8}
               placeholder="Attendance, agenda, resolutions, and other notes from the meeting..."
               className="w-full resize-none rounded-lg border border-[#E9EAEC] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-[#3B82F6]"
             />
             <p className="mt-1.5 text-[11px] text-[#9CA3AF]">
-              Minutes are stored as text. File uploads for scanned minutes arent supported by the current schema.
+              Minutes are stored as text. For structured, trackable topics, use Agenda Items on the meeting page instead.
             </p>
           </div>
 
