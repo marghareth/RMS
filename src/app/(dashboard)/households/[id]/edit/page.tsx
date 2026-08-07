@@ -14,6 +14,7 @@ const HOUSING_OPTIONS = [
   { value: "RENT", label: "Rent" },
   { value: "SHARED", label: "Shared" },
   { value: "INFORMAL", label: "Informal" },
+  { value: "OTHER", label: "Other" },
 ];
 const WATER_OPTIONS = [
   { value: "INDIVIDUAL", label: "Individual" },
@@ -25,6 +26,33 @@ const CR_OPTIONS = [
   { value: "OWN", label: "Own" },
   { value: "SHARED", label: "Shared" },
   { value: "NONE", label: "None" },
+];
+const TENURE_OPTIONS = [
+  { value: "OWNER", label: "Owner" },
+  { value: "RENTER", label: "Renter" },
+  { value: "CARETAKER", label: "Caretaker" },
+  { value: "SHARER", label: "Sharer" },
+  { value: "OTHER", label: "Other" },
+];
+const HOUSEHOLD_UNIT_OPTIONS = [
+  { value: "SINGLE_HOUSE", label: "Single House" },
+  { value: "DUPLEX", label: "Duplex" },
+  { value: "APARTMENT", label: "Apartment" },
+  { value: "OTHER", label: "Other" },
+];
+const WASTE_OPTIONS = [
+  { value: "COLLECTED", label: "Collected" },
+  { value: "BURNED", label: "Burned" },
+  { value: "BURIED", label: "Buried" },
+  { value: "COMPOSTED", label: "Composted" },
+  { value: "OTHER", label: "Other" },
+];
+const POWER_OPTIONS = [
+  { value: "ELECTRIC_METERED", label: "Electric (Metered)" },
+  { value: "ELECTRIC_SHARED", label: "Electric (Shared)" },
+  { value: "SOLAR", label: "Solar" },
+  { value: "NONE", label: "None" },
+  { value: "OTHER", label: "Other" },
 ];
 
 function SelectField({
@@ -65,6 +93,33 @@ function SelectField({
   );
 }
 
+function TextField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="rounded-xl border border-[#E9EAEC] bg-white px-4 py-3 text-[13px] text-[#1F2937] outline-none placeholder:text-[#D1D5DB] focus:border-[#3B82F6]"
+      />
+    </div>
+  );
+}
+
 export default function EditHouseholdPage() {
   const router = useRouter();
   const params = useParams();
@@ -82,8 +137,19 @@ export default function EditHouseholdPage() {
   const [purokId, setPurokId] = useState("");
   const [address, setAddress] = useState("");
   const [housingType, setHousingType] = useState("");
+  const [housingTypeOther, setHousingTypeOther] = useState("");
   const [waterSource, setWaterSource] = useState("");
   const [comfortRoom, setComfortRoom] = useState("");
+
+  // ── DILG/BIMS enhancements (2.8) ──
+  const [tenureStatus, setTenureStatus] = useState("");
+  const [tenureOther, setTenureOther] = useState("");
+  const [householdUnit, setHouseholdUnit] = useState("");
+  const [householdUnitOther, setHouseholdUnitOther] = useState("");
+  const [noOfFamilies, setNoOfFamilies] = useState("");
+  const [monthlyIncome, setMonthlyIncome] = useState("");
+  const [wasteDisposal, setWasteDisposal] = useState("");
+  const [powerSupply, setPowerSupply] = useState("");
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -102,8 +168,17 @@ export default function EditHouseholdPage() {
         setPurokId(String(data.purok_id));
         setAddress(data.address);
         setHousingType(data.housing_type ?? "");
+        setHousingTypeOther(data.housing_type_other ?? "");
         setWaterSource(data.water_source ?? "");
         setComfortRoom(data.comfort_room ?? "");
+        setTenureStatus(data.tenure_status ?? "");
+        setTenureOther(data.tenure_other ?? "");
+        setHouseholdUnit(data.household_unit ?? "");
+        setHouseholdUnitOther(data.household_unit_other ?? "");
+        setNoOfFamilies(data.no_of_families != null ? String(data.no_of_families) : "");
+        setMonthlyIncome(data.monthly_income != null ? String(data.monthly_income) : "");
+        setWasteDisposal(data.waste_disposal ?? "");
+        setPowerSupply(data.power_supply ?? "");
       } catch (e) {
         console.error(e);
       } finally {
@@ -173,8 +248,18 @@ export default function EditHouseholdPage() {
           purok_id: parseInt(purokId),
           address,
           housing_type: housingType || undefined,
+          housing_type_other: housingType === "OTHER" ? housingTypeOther || undefined : null,
           water_source: waterSource || undefined,
           comfort_room: comfortRoom || undefined,
+
+          tenure_status: tenureStatus || undefined,
+          tenure_other: tenureStatus === "OTHER" ? tenureOther || undefined : null,
+          household_unit: householdUnit || undefined,
+          household_unit_other: householdUnit === "OTHER" ? householdUnitOther || undefined : null,
+          no_of_families: noOfFamilies ? parseInt(noOfFamilies) : undefined,
+          monthly_income: monthlyIncome ? parseFloat(monthlyIncome) : undefined,
+          waste_disposal: wasteDisposal || undefined,
+          power_supply: powerSupply || undefined,
         }),
       });
       if (!res.ok) throw new Error("Failed to update household");
@@ -202,66 +287,100 @@ export default function EditHouseholdPage() {
         <p className="mt-0.5 text-[13px] text-[#9CA3AF]">{original.household_no}</p>
       </div>
 
-      <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF]">
-            <Home size={14} className="text-[#1D4ED8]" />
+      <div className="space-y-5">
+        {/* General Information */}
+        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF]">
+              <Home size={14} className="text-[#1D4ED8]" />
+            </div>
+            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">General Information</p>
           </div>
-          <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">General Information</p>
-        </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <SelectField
-              label="Purok"
-              value={purokId}
-              onChange={setPurokId}
-              options={puroks.map((p) => ({ value: String(p.id), label: p.name }))}
-              required
-            />
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
-                House Address <span className="text-red-500">*</span>
-              </label>
-              <input
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="House No./Street"
-                className="rounded-xl border border-[#E9EAEC] bg-white px-4 py-3 text-[13px] text-[#1F2937] outline-none placeholder:text-[#D1D5DB] focus:border-[#3B82F6]"
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <SelectField
+                label="Purok"
+                value={purokId}
+                onChange={setPurokId}
+                options={puroks.map((p) => ({ value: String(p.id), label: p.name }))}
+                required
               />
+              <TextField label="House Address *" value={address} onChange={setAddress} placeholder="House No./Street" />
             </div>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <SelectField label="Housing Type" value={housingType} onChange={setHousingType} options={HOUSING_OPTIONS} />
-            <SelectField label="Water Source" value={waterSource} onChange={setWaterSource} options={WATER_OPTIONS} />
-            <SelectField label="Comfort Room" value={comfortRoom} onChange={setComfortRoom} options={CR_OPTIONS} />
+        {/* Classification */}
+        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+          <p className="mb-4 text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Classification</p>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <SelectField label="Housing Type" value={housingType} onChange={setHousingType} options={HOUSING_OPTIONS} />
+              {housingType === "OTHER" && (
+                <TextField label="Specify Housing Type" value={housingTypeOther} onChange={setHousingTypeOther} placeholder="e.g. Boarding house" />
+              )}
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <SelectField label="Tenure Status" value={tenureStatus} onChange={setTenureStatus} options={TENURE_OPTIONS} />
+              {tenureStatus === "OTHER" && (
+                <TextField label="Specify Tenure Status" value={tenureOther} onChange={setTenureOther} placeholder="e.g. Informal settler" />
+              )}
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <SelectField label="Household Unit" value={householdUnit} onChange={setHouseholdUnit} options={HOUSEHOLD_UNIT_OPTIONS} />
+              {householdUnit === "OTHER" && (
+                <TextField label="Specify Household Unit" value={householdUnitOther} onChange={setHouseholdUnitOther} placeholder="e.g. Bunkhouse" />
+              )}
+            </div>
           </div>
+        </div>
 
-          <div className="rounded-lg bg-[#F9FAFB] px-4 py-3">
-            <p className="text-[11px] text-[#6B7280]">
-              To change the household head or members, use the Add Member / Set as Head actions on the household
-              detail page instead.
-            </p>
+        {/* National Indicators (DILG/BIMS) */}
+        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+          <p className="mb-4 text-[13px] font-black uppercase tracking-wide text-[#1F2937]">
+            National Indicators (DILG/BIMS)
+          </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <SelectField label="Water System" value={waterSource} onChange={setWaterSource} options={WATER_OPTIONS} />
+            <SelectField label="Waste Disposal" value={wasteDisposal} onChange={setWasteDisposal} options={WASTE_OPTIONS} />
+            <SelectField label="Power Supply" value={powerSupply} onChange={setPowerSupply} options={POWER_OPTIONS} />
+            <SelectField label="Toilet Type" value={comfortRoom} onChange={setComfortRoom} options={CR_OPTIONS} />
           </div>
+        </div>
 
-          {error && <p className="rounded-lg bg-[#FEE2E2] px-4 py-3 text-[12px] text-[#DC2626]">{error}</p>}
-
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <button
-              onClick={() => router.push(`/households/${householdId}`)}
-              className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:text-[#1F2937]"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-60"
-            >
-              {submitting ? "Saving..." : "Save Changes"}
-            </button>
+        {/* Demographics */}
+        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+          <p className="mb-4 text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Demographics</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <TextField label="No. of Families" value={noOfFamilies} onChange={setNoOfFamilies} type="number" placeholder="1" />
+            <TextField label="Monthly Income (₱)" value={monthlyIncome} onChange={setMonthlyIncome} type="number" placeholder="0.00" />
           </div>
+        </div>
+
+        <div className="rounded-lg bg-[#F9FAFB] px-4 py-3">
+          <p className="text-[11px] text-[#6B7280]">
+            To change the household head or members, use the Add Member / Set as Head actions on the household
+            detail page instead.
+          </p>
+        </div>
+
+        {error && <p className="rounded-lg bg-[#FEE2E2] px-4 py-3 text-[12px] text-[#DC2626]">{error}</p>}
+
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <button
+            onClick={() => router.push(`/households/${householdId}`)}
+            className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:text-[#1F2937]"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-60"
+          >
+            {submitting ? "Saving..." : "Save Changes"}
+          </button>
         </div>
       </div>
     </div>

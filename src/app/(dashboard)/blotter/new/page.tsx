@@ -3,14 +3,45 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, User, UserX, FileText, Info } from "lucide-react";
 import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPicker";
 import { addWorkingDays } from "@/lib/mock/blotter";
 
+interface IncidentType {
+  id: number;
+  name: string;
+  is_active: boolean;
+}
+
 export default function NewBlotterCasePage() {
   const router = useRouter();
+
+  // ── Incident types (admin-managed, /admin/settings) ────────────────────────
+  const [incidentTypes, setIncidentTypes] = useState<IncidentType[]>([]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    fetch("/api/incident-types")
+      .then(async (r) => {
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}));
+          throw new Error(body.error || body.message || `Request failed (${r.status})`);
+        }
+        return r.json();
+      })
+      .then((json) => {
+        if (!ignore && Array.isArray(json)) setIncidentTypes(json);
+      })
+      .catch((e) => console.error("Failed to load incident types from /api/incident-types:", e.message));
+
+    return () => { ignore = true; };
+  }, []);
+
+  const activeIncidentTypes = incidentTypes.filter((t) => t.is_active);
+  const [incidentType, setIncidentType] = useState("");
 
   // ── Complainant ───────────────────────────────────────────────────────────
   const [complainant, setComplainant] = useState<PickedResident | null>(null);
@@ -56,6 +87,10 @@ export default function NewBlotterCasePage() {
       setError("Please select or enter the respondent's name.");
       return;
     }
+    if (!incidentType) {
+      setError("Please select an incident type.");
+      return;
+    }
     if (!narrative.trim()) {
       setError("Please provide the incident narrative.");
       return;
@@ -79,6 +114,7 @@ export default function NewBlotterCasePage() {
           respondent_name: finalRespondentName,
           incident_narrative: narrative,
           incident_date: incidentDate,
+          incident_type: incidentType,
           hearing_date: hearingDate || undefined,
         }),
       });
@@ -225,6 +261,27 @@ export default function NewBlotterCasePage() {
           </div>
 
           <div className="space-y-4">
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                Incident Type
+              </label>
+              <select
+                value={incidentType}
+                onChange={(e) => setIncidentType(e.target.value)}
+                className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition focus:border-[#3B82F6]"
+              >
+                <option value="">Select incident type…</option>
+                {activeIncidentTypes.map((t) => (
+                  <option key={t.id} value={t.name}>{t.name}</option>
+                ))}
+              </select>
+              {incidentTypes.length === 0 && (
+                <p className="mt-1 text-[11px] text-[#9CA3AF]">
+                  No incident types configured yet — add some in Settings.
+                </p>
+              )}
+            </div>
+
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
                 Incident Narrative

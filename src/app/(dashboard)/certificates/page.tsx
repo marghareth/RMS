@@ -17,12 +17,14 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
+import StatusBadge from "@/components/shared/StatusBadge";
 import {
   CERTIFICATE_TYPES,
   CertificateMock,
   certTypeLabel,
   residentFullName,
   formatISODate,
+  certDisplayDate,
 } from "@/lib/mock/certificates";
 
 interface FilterState {
@@ -76,8 +78,8 @@ export default function CertificatesListPage() {
     return certificates.filter((c) => {
       if (filters.certificate_type && c.certificate_type !== filters.certificate_type) return false;
       if (filters.flagged_only && !c.flagged_manual) return false;
-      if (filters.date_from && c.issued_at.slice(0, 10) < filters.date_from) return false;
-      if (filters.date_to && c.issued_at.slice(0, 10) > filters.date_to) return false;
+      if (filters.date_from && certDisplayDate(c).slice(0, 10) < filters.date_from) return false;
+      if (filters.date_to && certDisplayDate(c).slice(0, 10) > filters.date_to) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         const name = c.resident ? residentFullName(c.resident) : c.manual_name ?? "";
@@ -91,10 +93,10 @@ export default function CertificatesListPage() {
   const stats = useMemo(() => {
     const now = new Date();
     const thisMonth = certificates.filter((c) => {
-      const d = new Date(c.issued_at);
+      const d = new Date(certDisplayDate(c));
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     }).length;
-    const thisYear = certificates.filter((c) => new Date(c.issued_at).getFullYear() === now.getFullYear()).length;
+    const thisYear = certificates.filter((c) => new Date(certDisplayDate(c)).getFullYear() === now.getFullYear()).length;
     const flagged = certificates.filter((c) => c.flagged_manual).length;
     return { total: certificates.length, thisMonth, thisYear, flagged };
   }, [certificates]);
@@ -260,6 +262,7 @@ export default function CertificatesListPage() {
                 <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Type</th>
                 <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Resident</th>
                 <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Purpose</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Status</th>
                 <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Issued</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -288,7 +291,10 @@ export default function CertificatesListPage() {
                     </div>
                   </td>
                   <td className="max-w-55 truncate px-4 py-3 text-[12px] text-[#6B7280]">{c.purpose}</td>
-                  <td className="px-4 py-3 text-[12px] text-[#6B7280]">{formatISODate(c.issued_at)}</td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={c.status} />
+                  </td>
+                  <td className="px-4 py-3 text-[12px] text-[#6B7280]">{formatISODate(certDisplayDate(c))}</td>
                   <td className="px-4 py-3 text-right">
                     <ChevronRight size={15} className="ml-auto text-[#D1D5DB]" />
                   </td>

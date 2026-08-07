@@ -42,6 +42,7 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
       hearing_date: "hearing_date" in body ? body.hearing_date ?? null : undefined,
       escalated: body.escalated,
       incident_narrative: body.incident_narrative,
+      incident_type: body.incident_type,
     },
   });
 

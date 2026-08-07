@@ -20,6 +20,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
   const escalated = searchParams.get("escalated");
+  const incident_type = searchParams.get("incident_type");
   const search = searchParams.get("search") || "";
   const date_from = searchParams.get("date_from");
   const date_to = searchParams.get("date_to");
@@ -33,6 +34,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
     AND: [
       status ? { status } : {},
       escalated ? { escalated: escalated === "true" } : {},
+      incident_type ? { incident_type } : {},
       date_from ? { incident_date: { gte: new Date(date_from) } } : {},
       date_to ? { incident_date: { lte: new Date(date_to) } } : {},
       search
@@ -84,6 +86,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       respondent_name: body.respondent_name,
       incident_narrative: body.incident_narrative,
       incident_date: body.incident_date,
+      incident_type: body.incident_type,
       hearing_date: body.hearing_date ?? null,
     },
   });

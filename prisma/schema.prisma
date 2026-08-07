@@ -30,6 +30,15 @@ model User {
   vaccinations         Vaccination[]
   barangay_ids         BarangayId[]
   certificate_templates_updated CertificateTemplate[]
+
+  visitor_logs         VisitorLog[]
+  deceased_records     DeceasedRecord[]
+  calendar_events      CalendarEvent[]
+  fund_sources         FundSource[]
+  appropriations       Appropriation[]
+  revenues             Revenue[]
+  disbursements        Disbursement[]
+  dashboard_preferences DashboardPreference[]
 }
 
 enum Role {
@@ -64,9 +73,37 @@ model Household {
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 
+  // ── DILG/BIMS enhancements (2.8) ──
+  tenure_status        String?  // OWNER, RENTER, CARETAKER, SHARER, OTHER
+  tenure_other         String?  // free text when tenure_status = OTHER
+  housing_type_other   String?  // free text when housing_type = OTHER
+  household_unit       String?  // SINGLE_HOUSE, DUPLEX, APARTMENT, OTHER
+  household_unit_other String?
+  no_of_families       Int?
+  monthly_income       Decimal? @db.Decimal(12, 2)
+  waste_disposal       String?  // COLLECTED, BURNED, BURIED, COMPOSTED, OTHER
+  power_supply         String?  // ELECTRIC_METERED, ELECTRIC_SHARED, SOLAR, NONE, OTHER
+
   purok          Purok      @relation(fields: [purok_id], references: [id])
   household_head Resident?  @relation("HouseholdHead", fields: [household_head_id], references: [id])
   members        Resident[] @relation("HouseholdMembers")
+  migrants       Migrant[]
+}
+
+// ── MIGRANTS (2.8) ─────────────────────────────────────────────
+model Migrant {
+  id                Int      @id @default(autoincrement())
+  household_id      Int
+  name              String
+  previous_location String?
+  reason            String?
+  transferred_to    String?
+  duration_here     String?
+  has_returned      Boolean  @default(false)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  household Household @relation(fields: [household_id], references: [id])
 }
 
 // ─── RESIDENTS ──────────────────────────────────────────────
@@ -90,10 +127,43 @@ model Resident {
   educational_attainment String?
   occupation             String?
   income_bracket         String?
-  sector                 String?     // SENIOR, PWD, YOUTH, 4PS, N/A
+  sector                 String?     // SENIOR, PWD, YOUTH, 4PS, N/A — kept for backward compatibility; ResidentSector below supersedes it for new records
   is_archived            Boolean     @default(false)
+  is_deceased            Boolean     @default(false)
   created_at             DateTime    @default(now())
   updated_at             DateTime    @updatedAt
+
+  // ── Contact (2.9) ──
+  email                  String?
+  mobile                 String?
+  tel_no                 String?
+
+  // ── Granular address (2.9) — resident-specific overrides; falls back to household address in the UI ──
+  house_block_lot_no     String?
+  street                 String?
+  subdivision_village    String?
+  barangay               String?
+  city_municipality      String?
+  province               String?
+  region                 String?
+  zip_code               String?
+
+  // ── Identity (2.9) ──
+  philsys_card_no             String?
+  gender                       String?  // distinct from `sex` — self-identified gender
+  residence_of_mother_upon_birth String?
+  type_of_resident             String?  // e.g. PERMANENT, TEMPORARY, TRANSIENT
+  mothers_maiden_name          String?
+  ethnicity                    String?
+  blood_type                   String?
+  height_m                     Decimal? @db.Decimal(4, 2)
+  weight_kg                    Decimal? @db.Decimal(5, 2)
+  complexion                   String?
+
+  // ── Voter info (2.9) ──
+  is_registered_voter    Boolean  @default(false)
+  is_resident_voter      Boolean  @default(false)
+  last_voted_year        Int?
 
   household              Household?          @relation("HouseholdMembers", fields: [household_id], references: [id])
   purok                  Purok?              @relation(fields: [purok_id], references: [id])
@@ -107,6 +177,33 @@ model Resident {
   vaccinations           Vaccination[]
   equipment_borrowings   EquipmentBorrowing[]
   barangay_ids           BarangayId[]
+  deceased_record        DeceasedRecord?
+  sectors                ResidentSector[]
+  government_assistance  GovernmentAssistance[]
+}
+
+// ── SECTORAL AFFILIATIONS (2.9) — replaces the single `sector` string, allows multi-value ──
+model ResidentSector {
+  id          Int      @id @default(autoincrement())
+  resident_id Int
+  sector_type String   // SENIOR, PWD, YOUTH, SOLO_PARENT, 4PS, SOLO_BREADWINNER, INDIGENOUS, OTHER
+  created_at  DateTime @default(now())
+
+  resident Resident @relation(fields: [resident_id], references: [id])
+
+  @@unique([resident_id, sector_type])
+}
+
+// ── GOVERNMENT ASSISTANCE (2.9) — replaces the single `is_4ps_beneficiary` boolean ──
+model GovernmentAssistance {
+  id            Int       @id @default(autoincrement())
+  resident_id   Int
+  program_name  String
+  date_enrolled DateTime?
+  notes         String?
+  created_at    DateTime  @default(now())
+
+  resident Resident @relation(fields: [resident_id], references: [id])
 }
 
 enum CivilStatus {
@@ -126,13 +223,32 @@ model Certificate {
   issued_by        Int
   certificate_type CertificateType
   purpose          String
-  issued_at        DateTime        @default(now())
+  issued_at        DateTime?       // now only set when the request is actually RELEASED
   flagged_manual   Boolean         @default(false)
   manual_name      String?
   manual_address   String?
 
+  // ── Document Request Workflow (2.7) ──
+  queue_number     String          @unique // auto-generated at creation, e.g. Q-2026-0001
+  payment_status   PaymentStatus   @default(PENDING)
+  status           RequestStatus   @default(PENDING)
+  requested_at     DateTime        @default(now())
+
   resident Resident? @relation(fields: [resident_id], references: [id])
   issuer   User      @relation(fields: [issued_by], references: [id])
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  WAIVED
+}
+
+enum RequestStatus {
+  PENDING
+  PROCESSING
+  RELEASED
+  CANCELLED
 }
 
 enum CertificateType {
@@ -177,6 +293,7 @@ model BlotterCase {
   respondent_name     String
   incident_narrative  String
   incident_date       DateTime
+  incident_type       String        // FK-like reference to IncidentType.name — kept as a plain string so existing free-text cases stay valid; new cases are populated from the /api/incident-types dropdown
   hearing_date        DateTime?
   status              BlotterStatus @default(FILED)
   escalated           Boolean       @default(false)
@@ -185,6 +302,13 @@ model BlotterCase {
   complainant Resident?     @relation("Complainant", fields: [complainant_id], references: [id])
   respondent  Resident?     @relation("Respondent", fields: [respondent_id], references: [id])
   updates     BlotterUpdate[]
+}
+
+// ── Admin-managed list of incident types (2.10 / 2.11), same CRUD pattern as Purok ──
+model IncidentType {
+  id        Int     @id @default(autoincrement())
+  name      String  @unique
+  is_active Boolean @default(true)
 }
 
 enum BlotterStatus {
@@ -292,12 +416,31 @@ model Equipment {
   id            Int             @id @default(autoincrement())
   name          String
   quantity      Int             @default(1)
-  condition     String?
+  condition     AssetCondition? // GOOD, FAIR, POOR, NEEDS_REPAIR, DECOMMISSIONED — enum values must match display-layer label lookup exactly
   status        EquipmentStatus @default(SERVICEABLE)
   date_acquired DateTime?
   created_at    DateTime        @default(now())
 
+  // ── Assets module (2.5) ──
+  image_url      String?
+  serial_number  String?
+  purchase_cost  Decimal?  @db.Decimal(12, 2)
+  current_value  Decimal?  @db.Decimal(12, 2)
+  purchase_date  DateTime?
+  assigned_to    String?
+  location       String?
+  description    String?
+  asset_type     String?   // e.g. "Furniture", "Electronics", "Tools" — the filterable "Type" column
+
   borrowings EquipmentBorrowing[]
+}
+
+enum AssetCondition {
+  GOOD
+  FAIR
+  POOR
+  NEEDS_REPAIR
+  DECOMMISSIONED
 }
 
 enum EquipmentStatus {
@@ -334,7 +477,40 @@ model MeetingRecord {
   recorded_by  Int
   created_at   DateTime    @default(now())
 
-  recorder User @relation(fields: [recorded_by], references: [id])
+  // ── Meeting Agenda Items (2.4) ──
+  title        String?
+  location     String?
+  status       MeetingStatus @default(SCHEDULED)
+
+  recorder      User          @relation(fields: [recorded_by], references: [id])
+  agenda_items  AgendaItem[]
+  calendar_event CalendarEvent?
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model AgendaItem {
+  id          Int              @id @default(autoincrement())
+  meeting_id  Int
+  title       String
+  description String?
+  sort_order  Int              @default(0)
+  status      AgendaItemStatus @default(PENDING)
+  minutes     String?
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @updatedAt
+
+  meeting MeetingRecord @relation(fields: [meeting_id], references: [id])
+}
+
+enum AgendaItemStatus {
+  PENDING
+  DISCUSSED
+  APPROVED
 }
 
 enum MeetingType {
@@ -387,4 +563,157 @@ model SystemSetting {
   key        String   @unique
   value      String
   updated_at DateTime @updatedAt
+}
+
+// ─── VISITOR LOG (2.1) ────────────────────────────────────────
+model VisitorLog {
+  id              Int       @id @default(autoincrement())
+  visitor_name    String
+  contact         String?
+  purpose         String
+  person_to_visit String?
+  time_in         DateTime  @default(now())
+  time_out        DateTime? // null = still checked in / "Active"
+  recorded_by     Int
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  recorder User @relation(fields: [recorded_by], references: [id])
+}
+
+// ─── DECEASED RECORDS (2.2) ───────────────────────────────────
+model DeceasedRecord {
+  id               Int      @id @default(autoincrement())
+  resident_id      Int      @unique
+  date_of_death    DateTime
+  immediate_cause  String
+  underlying_cause String?
+  recorded_by      Int
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  resident Resident @relation(fields: [resident_id], references: [id])
+  recorder User     @relation(fields: [recorded_by], references: [id])
+}
+
+// ─── CALENDAR (2.3) ────────────────────────────────────────────
+model CalendarEvent {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  event_date  DateTime
+  event_type  String?  // e.g. "Meeting", "Holiday", "Deadline"
+  meeting_id  Int?     @unique
+  created_by  Int
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  meeting MeetingRecord? @relation(fields: [meeting_id], references: [id])
+  creator User           @relation(fields: [created_by], references: [id])
+}
+
+// ─── FINANCE SUITE (2.6) ───────────────────────────────────────
+
+model FundSource {
+  id               Int              @id @default(autoincrement())
+  name             String
+  code             String?
+  statutory_rule   String?
+  status           FundSourceStatus @default(ACTIVE)
+  original_balance Decimal?         @db.Decimal(14, 2)
+  current_balance  Decimal          @default(0) @db.Decimal(14, 2)
+  recorded_by      Int?
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+
+  recorder       User?           @relation(fields: [recorded_by], references: [id])
+  appropriations Appropriation[]
+  revenues       Revenue[]
+  disbursements  Disbursement[]
+}
+
+enum FundSourceStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Appropriation {
+  id                  Int                 @id @default(autoincrement())
+  item_name           String
+  category            AppropriationCategory
+  appropriated_amount Decimal             @db.Decimal(14, 2)
+  obligated_amount    Decimal             @default(0) @db.Decimal(14, 2)
+  disbursed_amount    Decimal             @default(0) @db.Decimal(14, 2)
+  payee               String?
+  status              AppropriationStatus @default(PENDING)
+  fund_source_id      Int?
+  recorded_by         Int?
+  created_at          DateTime            @default(now())
+  updated_at          DateTime            @updatedAt
+
+  fund_source   FundSource?    @relation(fields: [fund_source_id], references: [id])
+  recorder      User?          @relation(fields: [recorded_by], references: [id])
+  disbursements Disbursement[]
+}
+
+enum AppropriationCategory {
+  PS   // Personnel Services
+  MOOE // Maintenance & Other Operating Expenses
+  CO   // Capital Outlay
+}
+
+enum AppropriationStatus {
+  PENDING
+  APPROVED
+  COMPLETED
+}
+
+model Revenue {
+  id             Int      @id @default(autoincrement())
+  amount         Decimal  @db.Decimal(14, 2) // never nullable — avoids NaN-display bugs
+  date           DateTime
+  source         String
+  category       String?
+  income_account String?
+  coa_code       String?
+  fund_source_id Int?
+  or_number      String?
+  recorded_by    Int?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  fund_source FundSource? @relation(fields: [fund_source_id], references: [id])
+  recorder    User?       @relation(fields: [recorded_by], references: [id])
+}
+
+model Disbursement {
+  id               Int      @id @default(autoincrement())
+  amount           Decimal  @db.Decimal(14, 2)
+  date             DateTime
+  payee            String
+  particular       String?
+  check_number     String?
+  or_number        String?
+  appropriation_id Int?
+  item             String?
+  fund_source_id   Int?
+  recorded_by      Int?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  appropriation Appropriation? @relation(fields: [appropriation_id], references: [id])
+  fund_source   FundSource?    @relation(fields: [fund_source_id], references: [id])
+  recorder      User?          @relation(fields: [recorded_by], references: [id])
+}
+
+// ─── DASHBOARD CUSTOMIZATION (2.12) ────────────────────────────
+model DashboardPreference {
+  id          Int     @id @default(autoincrement())
+  user_id     Int
+  widget_key  String  // e.g. "kpi_residents", "kpi_document_requests", "quick_actions", "priority_tasks", "activity_feed", "document_status_chart"
+  is_enabled  Boolean @default(true)
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, widget_key])
 }

@@ -12,6 +12,7 @@ import {
   isEligibleByResidency,
   findRecentDuplicate,
   formatISODate,
+  certDisplayDate,
 } from "@/lib/mock/certificates";
 
 export default function NewCertificatePage() {
@@ -68,7 +69,7 @@ export default function NewCertificatePage() {
     if (duplicateWarning) {
       setError(
         `A ${certType} certificate was already issued to this resident within the last 30 days (${formatISODate(
-          duplicateWarning.issued_at
+          certDisplayDate(duplicateWarning)
         )}). Please confirm before proceeding.`
       );
       return;
@@ -80,7 +81,7 @@ export default function NewCertificatePage() {
     await new Promise((r) => setTimeout(r, 500));
     setSubmitting(false);
     alert(
-      `[MOCK] Certificate issued for ${walkIn ? manualName : `${resident?.lname}, ${resident?.fname}`}.\nA real save will redirect to the new certificate's preview page.`
+      `[MOCK] Certificate request filed for ${walkIn ? manualName : `${resident?.lname}, ${resident?.fname}`}.\nA real save will redirect to the new request's detail page in the Document Queue.`
     );
     router.push("/certificates");
 
@@ -124,7 +125,7 @@ export default function NewCertificatePage() {
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937]">Issue Certificate</h1>
+        <h1 className="text-xl font-bold text-[#1F2937]">Request Certificate</h1>
         <p className="mt-0.5 text-[13px] text-[#9CA3AF]">
           Auto-fills from the residents profile. A certificate number will be generated automatically.
         </p>
@@ -247,7 +248,7 @@ export default function NewCertificatePage() {
                 <AlertTriangle size={14} className="mt-0.5 shrink-0 text-[#DC2626]" />
                 <p className="text-[11px] leading-relaxed text-[#DC2626]">
                   Same certificate type was already issued to this resident on{" "}
-                  <span className="font-semibold">{formatISODate(duplicateWarning.issued_at)}</span> (within the last
+                  <span className="font-semibold">{formatISODate(certDisplayDate(duplicateWarning))}</span> (within the last
                   30 days). Filing will require override confirmation.
                 </p>
               </div>
@@ -278,7 +279,7 @@ export default function NewCertificatePage() {
             disabled={submitting}
             className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-60"
           >
-            {submitting ? "Issuing..." : "Issue Certificate"}
+            {submitting ? "Submitting..." : "Submit Request"}
           </button>
         </div>
       </div>

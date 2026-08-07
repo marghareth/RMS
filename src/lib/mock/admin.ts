@@ -1,3 +1,4 @@
+// FILE: src/lib/mock/admin.ts
 // ── MOCK DATA ──────────────────────────────────────────────────────────────
 // Temporary in-memory data standing in for the Prisma/DB layer while the
 // Admin / Settings UI is being built. Shapes mirror the `SystemSetting`,
@@ -38,6 +39,7 @@ export interface GeneralSettings {
   city: string;
   province: string;
   region: string;
+  postal_code: string;
   contact_phone: string;
   contact_email: string;
   captain_override_name: string;
@@ -50,6 +52,7 @@ export const MOCK_SETTINGS: GeneralSettings = {
   city: "Danao City",
   province: "Cebu",
   region: "Region VII (Central Visayas)",
+  postal_code: "6004",
   contact_phone: "0917-000-1122",
   contact_email: "brgy.quisol@danaocity.gov.ph",
   captain_override_name: "",

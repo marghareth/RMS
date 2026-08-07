@@ -58,16 +58,36 @@ export interface CertIssuerMock {
   role: string;
 }
 
+export type RequestStatus = "PENDING" | "PROCESSING" | "RELEASED" | "CANCELLED";
+export type PaymentStatus = "PENDING" | "PAID" | "WAIVED";
+
+export const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
+  PENDING: "Pending",
+  PROCESSING: "Processing",
+  RELEASED: "Released",
+  CANCELLED: "Cancelled",
+};
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  PENDING: "Unpaid",
+  PAID: "Paid",
+  WAIVED: "Waived",
+};
+
 export interface CertificateMock {
   id: number;
   certificate_no: string;
+  queue_number: string;
   resident_id: number | null;
   resident: CertResidentMock | null;
   issued_by: number;
   issuer: CertIssuerMock;
   certificate_type: CertificateType;
   purpose: string;
-  issued_at: string; // ISO datetime
+  requested_at: string; // ISO datetime — always set, the moment the request was filed
+  issued_at: string | null; // ISO datetime — only set once status becomes RELEASED
+  status: RequestStatus;
+  payment_status: PaymentStatus;
   flagged_manual: boolean;
   manual_name: string | null;
   manual_address: string | null;
@@ -149,13 +169,17 @@ export const MOCK_CERTIFICATES: CertificateMock[] = [
   {
     id: 1,
     certificate_no: "CERT-2026-1042",
+    queue_number: "Q-2026-0001",
     resident_id: 12,
     resident: MOCK_RESIDENTS_POOL[0],
     issued_by: 3,
     issuer: MOCK_ISSUER,
     certificate_type: "RESIDENCY",
     purpose: "Requirement for school enrollment of dependent",
+    requested_at: "2026-06-28T09:15:00Z",
     issued_at: "2026-06-28T09:15:00Z",
+    status: "RELEASED",
+    payment_status: "PAID",
     flagged_manual: false,
     manual_name: null,
     manual_address: null,
@@ -163,13 +187,17 @@ export const MOCK_CERTIFICATES: CertificateMock[] = [
   {
     id: 2,
     certificate_no: "CERT-2026-1041",
+    queue_number: "Q-2026-0002",
     resident_id: 8,
     resident: MOCK_RESIDENTS_POOL[1],
     issued_by: 3,
     issuer: MOCK_ISSUER,
     certificate_type: "CLEARANCE",
     purpose: "Local employment application",
+    requested_at: "2026-06-27T14:02:00Z",
     issued_at: "2026-06-27T14:02:00Z",
+    status: "RELEASED",
+    payment_status: "PAID",
     flagged_manual: false,
     manual_name: null,
     manual_address: null,
@@ -177,13 +205,17 @@ export const MOCK_CERTIFICATES: CertificateMock[] = [
   {
     id: 3,
     certificate_no: "CERT-2026-1040",
+    queue_number: "Q-2026-0003",
     resident_id: null,
     resident: null,
     issued_by: 3,
     issuer: MOCK_ISSUER,
     certificate_type: "INDIGENCY",
     purpose: "Medical assistance request at city hospital",
+    requested_at: "2026-06-25T10:40:00Z",
     issued_at: "2026-06-25T10:40:00Z",
+    status: "RELEASED",
+    payment_status: "PAID",
     flagged_manual: true,
     manual_name: "Teresita M. Villanueva",
     manual_address: "Purok III, Brgy. Quisol (walk-in, not yet in RBI)",
@@ -191,13 +223,17 @@ export const MOCK_CERTIFICATES: CertificateMock[] = [
   {
     id: 4,
     certificate_no: "CERT-2026-1039",
+    queue_number: "Q-2026-0004",
     resident_id: 21,
     resident: MOCK_RESIDENTS_POOL[3],
     issued_by: 1,
     issuer: { id: 1, username: "captain_garcia", role: "CAPTAIN" },
     certificate_type: "SOLO_PARENT",
     purpose: "Application for solo parent ID at DSWD",
+    requested_at: "2026-06-20T08:30:00Z",
     issued_at: "2026-06-20T08:30:00Z",
+    status: "RELEASED",
+    payment_status: "PAID",
     flagged_manual: false,
     manual_name: null,
     manual_address: null,
@@ -205,13 +241,17 @@ export const MOCK_CERTIFICATES: CertificateMock[] = [
   {
     id: 5,
     certificate_no: "CERT-2026-1038",
+    queue_number: "Q-2026-0005",
     resident_id: 8,
     resident: MOCK_RESIDENTS_POOL[1],
     issued_by: 3,
     issuer: MOCK_ISSUER,
     certificate_type: "GOOD_MORAL",
     purpose: "College application requirement",
+    requested_at: "2026-06-18T11:00:00Z",
     issued_at: "2026-06-18T11:00:00Z",
+    status: "RELEASED",
+    payment_status: "PAID",
     flagged_manual: false,
     manual_name: null,
     manual_address: null,
@@ -219,13 +259,17 @@ export const MOCK_CERTIFICATES: CertificateMock[] = [
   {
     id: 6,
     certificate_no: "CERT-2026-1037",
+    queue_number: "Q-2026-0006",
     resident_id: 12,
     resident: MOCK_RESIDENTS_POOL[0],
     issued_by: 3,
     issuer: MOCK_ISSUER,
     certificate_type: "BUSINESS_PERMIT",
     purpose: "Sari-sari store permit renewal endorsement",
+    requested_at: "2026-05-30T13:20:00Z",
     issued_at: "2026-05-30T13:20:00Z",
+    status: "RELEASED",
+    payment_status: "PAID",
     flagged_manual: false,
     manual_name: null,
     manual_address: null,
@@ -233,13 +277,17 @@ export const MOCK_CERTIFICATES: CertificateMock[] = [
   {
     id: 7,
     certificate_no: "CERT-2026-1036",
+    queue_number: "Q-2026-0007",
     resident_id: null,
     resident: null,
     issued_by: 3,
     issuer: MOCK_ISSUER,
     certificate_type: "FIRST_TIME_JOB_SEEKER",
     purpose: "RA 11261 job application exemption certificate",
+    requested_at: "2026-05-22T09:45:00Z",
     issued_at: "2026-05-22T09:45:00Z",
+    status: "RELEASED",
+    payment_status: "PAID",
     flagged_manual: true,
     manual_name: "Kenneth D. Aranas",
     manual_address: "Purok V, Brgy. Quisol (walk-in, not yet in RBI)",
@@ -267,7 +315,7 @@ export function findRecentDuplicate(
       (c) =>
         c.resident_id === residentId &&
         c.certificate_type === type &&
-        new Date(c.issued_at) >= thirtyDaysAgo
+        new Date(c.requested_at) >= thirtyDaysAgo
     ) ?? null
   );
 }
@@ -287,7 +335,8 @@ export function formatISODate(iso: string | null) {
   });
 }
 
-export function formatISODateTime(iso: string) {
+export function formatISODateTime(iso: string | null) {
+  if (!iso) return null;
   return new Date(iso).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
@@ -295,4 +344,11 @@ export function formatISODateTime(iso: string) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+// Falls back to `requested_at` when a request hasn't been RELEASED yet (so
+// `issued_at` is still null) — used anywhere the UI wants "the most relevant
+// date for this record" without caring which lifecycle stage produced it.
+export function certDisplayDate(c: Pick<CertificateMock, "issued_at" | "requested_at">) {
+  return c.issued_at ?? c.requested_at;
 }

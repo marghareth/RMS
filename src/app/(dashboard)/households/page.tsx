@@ -3,11 +3,11 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Home, Users, MapPin, UserX, Search, Plus, ChevronRight } from "lucide-react";
+import { Home, Users, MapPin, UserX, Search, Plus, ChevronRight, Download } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
-import { memberFullName } from "@/lib/mock/households";
+import { memberFullName, buildBimsCsv, downloadCsv } from "@/lib/mock/households";
 import type { PurokMock, HouseholdMock } from "@/lib/mock/households";
 
 const HOUSING_LABEL: Record<string, string> = {
@@ -20,15 +20,14 @@ const HOUSING_LABEL: Record<string, string> = {
 export default function HouseholdsListPage() {
   const router = useRouter();
 
-
   const [search, setSearch] = useState("");
   const [purokFilter, setPurokFilter] = useState("");
 
-  
   const [households, setHouseholds] = useState<HouseholdMock[]>([]);
   const [puroks, setPuroks] = useState<PurokMock[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [exporting, setExporting] = useState(false);
+
   useEffect(() => {
     let ignore = false;
 
@@ -47,7 +46,7 @@ export default function HouseholdsListPage() {
 
     return () => { ignore = true; };
   }, []);
-  
+
    useEffect(() => {
      async function loadHouseholds() {
        setLoading(true);
@@ -92,19 +91,49 @@ export default function HouseholdsListPage() {
     };
   }, [households]);
 
+  // Exports the FULL dataset (not just the current filtered/paginated page)
+  // so the BIMS submission is always complete — fetches fresh rather than
+  // relying on the `households` state, which is capped at limit=50 above.
+  async function handleExportCsv() {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams({ limit: "1000" });
+      if (purokFilter) params.set("purok_id", purokFilter);
+      const res = await fetch(`/api/households?${params}`);
+      const data = await res.json();
+      const csv = buildBimsCsv(data.households ?? []);
+      const today = new Date().toISOString().slice(0, 10);
+      downloadCsv(`bims-households-${today}.csv`, csv);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div>
       <PageHeader
         title="Households"
         subtitle="Manage household records, heads, and members"
         actions={
-          <button
-            onClick={() => router.push("/households/new")}
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
-          >
-            <Plus size={15} />
-            Add Household
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportCsv}
+              disabled={exporting}
+              className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-4 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7] disabled:opacity-60"
+            >
+              <Download size={14} />
+              {exporting ? "Exporting..." : "Export CSV (BIMS)"}
+            </button>
+            <button
+              onClick={() => router.push("/households/new")}
+              className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
+            >
+              <Plus size={15} />
+              Add Household
+            </button>
+          </div>
         }
       />
 

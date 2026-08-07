@@ -1,4 +1,5 @@
 "use client";
+// FILE: src/app/(dashboard)/meetings/page.tsx
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -13,10 +14,13 @@ import {
   Plus,
   X,
   FileText,
+  MapPin,
+  ListChecks,
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
+import StatusBadge from "@/components/shared/StatusBadge";
 import {
   MeetingRecordMock,
   meetingTypeLabel,
@@ -24,64 +28,65 @@ import {
   formatISOTime,
   isUpcoming,
   minutesPreview,
+  MEETING_STATUSES,
 } from "@/lib/mock/meetings";
 
 interface FilterState {
   meeting_type: string;
+  status: string;
+  location: string;
   date_from: string;
   date_to: string;
 }
 
-const EMPTY_FILTERS: FilterState = { meeting_type: "", date_from: "", date_to: "" };
+const EMPTY_FILTERS: FilterState = { meeting_type: "", status: "", location: "", date_from: "", date_to: "" };
 
 export default function AssemblyListPage() {
   const router = useRouter();
-
 
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
 
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
   const [meetings, setMeetings] = useState<MeetingRecordMock[]>([]);
   const [loading, setLoading] = useState(true);
-  //
+
   useEffect(() => {
-     async function loadMeetings() {
-       setLoading(true);
-     try {
-         const params = new URLSearchParams({ limit: "50" });
-         if (filters.meeting_type) params.set("meeting_type", filters.meeting_type);
-         if (filters.date_from) params.set("date_from", filters.date_from);
-         if (filters.date_to) params.set("date_to", filters.date_to);
-  
-         const res = await fetch(`/api/meetings?${params}`);
-         const data = await res.json();
-         setMeetings(data.meetings ?? []);
-       } catch (e) {
-         console.error(e);
-       } finally {
-         setLoading(false);
-       }
-     }
-     loadMeetings();
-   }, [filters]);
+    async function loadMeetings() {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({ limit: "50" });
+        if (filters.meeting_type) params.set("meeting_type", filters.meeting_type);
+        if (filters.status) params.set("status", filters.status);
+        if (filters.location) params.set("location", filters.location);
+        if (filters.date_from) params.set("date_from", filters.date_from);
+        if (filters.date_to) params.set("date_to", filters.date_to);
+        if (search.trim()) params.set("title", search.trim());
+
+        const res = await fetch(`/api/meetings?${params}`);
+        const data = await res.json();
+        setMeetings(data.meetings ?? []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadMeetings();
+  }, [filters, search]);
 
   const filtered = useMemo(() => {
     return meetings
       .filter((m) => {
-        if (filters.meeting_type && m.meeting_type !== filters.meeting_type) return false;
-        if (filters.date_from && m.meeting_date.slice(0, 10) < filters.date_from) return false;
-        if (filters.date_to && m.meeting_date.slice(0, 10) > filters.date_to) return false;
         if (search.trim()) {
           const q = search.toLowerCase();
-          const hay = `${meetingTypeLabel(m.meeting_type)} ${m.minutes ?? ""}`.toLowerCase();
+          const hay = `${m.title ?? ""} ${meetingTypeLabel(m.meeting_type)} ${m.location ?? ""} ${m.minutes ?? ""}`.toLowerCase();
           if (!hay.includes(q)) return false;
         }
         return true;
       })
       .sort((a, b) => new Date(b.meeting_date).getTime() - new Date(a.meeting_date).getTime());
-  }, [meetings, search, filters]);
+  }, [meetings, search]);
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -92,20 +97,25 @@ export default function AssemblyListPage() {
     return { total: meetings.length, sb, assembly, upcoming, thisYear };
   }, [meetings]);
 
-  const activeFilterCount = (filters.meeting_type ? 1 : 0) + (filters.date_from ? 1 : 0) + (filters.date_to ? 1 : 0);
+  const activeFilterCount =
+    (filters.meeting_type ? 1 : 0) +
+    (filters.status ? 1 : 0) +
+    (filters.location ? 1 : 0) +
+    (filters.date_from ? 1 : 0) +
+    (filters.date_to ? 1 : 0);
 
   return (
     <div>
       <PageHeader
         title="Assembly / Meeting Records"
-        subtitle="SB meetings and barangay assemblies, with minutes"
+        subtitle="SB meetings and barangay assemblies, with agenda items and minutes"
         actions={
           <button
             onClick={() => router.push("/meetings/new")}
             className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
           >
             <Plus size={15} />
-            New Meeting Record
+            New Meeting
           </button>
         }
       />
@@ -125,7 +135,7 @@ export default function AssemblyListPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search meeting type or minutes"
+            placeholder="Search title, type, location, or minutes"
             className="w-full rounded-xl border border-[#E9EAEC] bg-white py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6]"
           />
         </div>
@@ -165,6 +175,36 @@ export default function AssemblyListPage() {
                 <option value="SB_MEETING">SB Meeting</option>
                 <option value="BARANGAY_ASSEMBLY">Barangay Assembly</option>
               </select>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                Status
+              </label>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
+                className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2 text-[12px] outline-none focus:border-[#3B82F6]"
+              >
+                <option value="">All Statuses</option>
+                {MEETING_STATUSES.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                Location
+              </label>
+              <input
+                value={filters.location}
+                onChange={(e) => setFilters((f) => ({ ...f, location: e.target.value }))}
+                placeholder="e.g. Barangay Hall"
+                className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2 text-[12px] outline-none focus:border-[#3B82F6]"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -226,6 +266,7 @@ export default function AssemblyListPage() {
           filtered.map((m) => {
             const upcoming = isUpcoming(m.meeting_date);
             const preview = minutesPreview(m.minutes);
+            const agendaCount = m._count?.agenda_items ?? m.agenda_items?.length ?? 0;
             return (
               <button
                 key={m.id}
@@ -246,21 +287,36 @@ export default function AssemblyListPage() {
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="text-[13px] font-bold text-[#1F2937]">{meetingTypeLabel(m.meeting_type)}</p>
-                    {upcoming && (
+                    <p className="truncate text-[13px] font-bold text-[#1F2937]">
+                      {m.title || meetingTypeLabel(m.meeting_type)}
+                    </p>
+                    <StatusBadge status={m.status} />
+                    {upcoming && m.status === "SCHEDULED" && (
                       <span className="rounded-full bg-[#FEF3C7] px-2 py-0.5 text-[10px] font-bold uppercase text-[#D97706]">
                         Upcoming
                       </span>
                     )}
-                    {!m.minutes && !upcoming && (
-                      <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-bold uppercase text-[#DC2626]">
-                        Minutes Pending
+                  </div>
+                  <p className="mt-0.5 flex items-center gap-3 truncate text-[12px] text-[#9CA3AF]">
+                    <span>{meetingTypeLabel(m.meeting_type)}</span>
+                    {m.location && (
+                      <span className="flex items-center gap-1">
+                        <MapPin size={11} />
+                        {m.location}
                       </span>
                     )}
-                  </div>
-                  <p className="mt-0.5 truncate text-[12px] text-[#9CA3AF]">
-                    {preview ?? "No minutes encoded yet"}
+                    {agendaCount > 0 && (
+                      <span className="flex items-center gap-1">
+                        <ListChecks size={11} />
+                        {agendaCount} item{agendaCount === 1 ? "" : "s"}
+                      </span>
+                    )}
                   </p>
+                  {!m.title && (
+                    <p className="mt-0.5 truncate text-[12px] text-[#9CA3AF]">
+                      {preview ?? "No minutes encoded yet"}
+                    </p>
+                  )}
                 </div>
 
                 <div className="shrink-0 text-right">

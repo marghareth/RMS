@@ -27,11 +27,19 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id } = await context!.params;
-  const body = z.object({ purpose: z.string().trim().min(1, "Required") }).parse(await req.json());
+  const body = z
+    .object({
+      purpose: z.string().trim().min(1, "Required").optional(),
+      payment_status: z.enum(["PENDING", "PAID", "WAIVED"]).optional(),
+    })
+    .parse(await req.json());
 
   const certificate = await prisma.certificate.update({
     where: { id: parseInt(id) },
-    data: { purpose: body.purpose },
+    data: {
+      purpose: body.purpose,
+      payment_status: body.payment_status,
+    },
   });
 
   return NextResponse.json(certificate);

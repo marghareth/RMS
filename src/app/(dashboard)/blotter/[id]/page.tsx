@@ -17,6 +17,7 @@ import {
   MapPin,
   Send,
   Printer,
+  Tag,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -27,6 +28,12 @@ import {
   BlotterUpdateMock,
   formatISODate,
 } from "@/lib/mock/blotter";
+
+interface IncidentType {
+  id: number;
+  name: string;
+  is_active: boolean;
+}
 
 function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string | null }) {
   return (
@@ -80,18 +87,33 @@ export default function BlotterCaseDetailPage() {
   const [newStatus, setNewStatus] = useState<BlotterStatus | "">("");
   const [hearingDate, setHearingDate] = useState("");
   const [escalate, setEscalate] = useState(false);
+  const [incidentType, setIncidentType] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Incident types (admin-managed, /admin/settings) for the reassign dropdown.
+  const [incidentTypes, setIncidentTypes] = useState<IncidentType[]>([]);
+  useEffect(() => {
+    let ignore = false;
+    fetch("/api/incident-types")
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+      .then((json) => {
+        if (!ignore && Array.isArray(json)) setIncidentTypes(json);
+      })
+      .catch((e) => console.error("Failed to load incident types:", e));
+    return () => { ignore = true; };
+  }, []);
+
   // blotterCase loads asynchronously after mount, so the initial
-  // `useState(false)` above can't see its real `escalated` value yet.
-  // Rather than syncing it in an effect (which is unnecessary-effect /
-  // derived-state territory), adjust it directly during render the first
-  // time we see this case's data — the officially recommended pattern for
-  // resetting/seeding state when an external value changes.
+  // `useState(false)` above can't see its real `escalated`/`incident_type`
+  // values yet. Rather than syncing it in an effect (which is unnecessary-
+  // effect / derived-state territory), adjust it directly during render the
+  // first time we see this case's data — the officially recommended pattern
+  // for resetting/seeding state when an external value changes.
   const [syncedCaseId, setSyncedCaseId] = useState<number | null>(null);
   if (blotterCase && syncedCaseId !== blotterCase.id) {
     setSyncedCaseId(blotterCase.id);
     setEscalate(blotterCase.escalated);
+    setIncidentType(blotterCase.incident_type);
   }
 
   const sortedUpdates = useMemo(() => {
@@ -111,13 +133,14 @@ export default function BlotterCaseDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes, new_status: newStatus || undefined }),
       });
-      if (hearingDate || escalate !== blotterCase.escalated) {
+      if (hearingDate || escalate !== blotterCase.escalated || incidentType !== blotterCase.incident_type) {
         await fetch(`/api/blotter/${caseId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             hearing_date: hearingDate || undefined,
             escalated: escalate,
+            incident_type: incidentType !== blotterCase.incident_type ? incidentType : undefined,
           }),
         });
       }
@@ -228,6 +251,7 @@ export default function BlotterCaseDetailPage() {
             </p>
             <p className="text-[13px] leading-relaxed text-[#374151]">{blotterCase.incident_narrative}</p>
             <div className="mt-4 grid grid-cols-2 gap-4 border-t border-[#F4F5F7] pt-3">
+              <InfoRow icon={Tag} label="Incident Type" value={blotterCase.incident_type} />
               <InfoRow icon={Calendar} label="Incident Date" value={formatISODate(blotterCase.incident_date)} />
               <InfoRow icon={Clock} label="Hearing Date" value={formatISODate(blotterCase.hearing_date) ?? "Not scheduled"} />
             </div>
@@ -309,6 +333,29 @@ export default function BlotterCaseDetailPage() {
                   <option value="ONGOING">Ongoing</option>
                   <option value="RESOLVED">Resolved</option>
                   <option value="DISMISSED">Dismissed</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                  Incident Type
+                </label>
+                <select
+                  value={incidentType}
+                  onChange={(e) => setIncidentType(e.target.value)}
+                  className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition focus:border-[#3B82F6]"
+                >
+                  {/* Always include the case's current type even if it was
+                      later deactivated, so the select never silently
+                      shows something the case doesn't actually have. */}
+                  {!incidentTypes.some((t) => t.name === blotterCase.incident_type) && (
+                    <option value={blotterCase.incident_type}>{blotterCase.incident_type}</option>
+                  )}
+                  {incidentTypes
+                    .filter((t) => t.is_active || t.name === blotterCase.incident_type)
+                    .map((t) => (
+                      <option key={t.id} value={t.name}>{t.name}</option>
+                    ))}
                 </select>
               </div>
 

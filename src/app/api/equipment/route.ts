@@ -12,12 +12,21 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
 
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
+  const asset_type = searchParams.get("asset_type");
   const search = searchParams.get("search") || "";
 
   const where: any = {
     AND: [
       status ? { status } : {},
-      search ? { name: { contains: search, mode: "insensitive" } } : {},
+      asset_type ? { asset_type } : {},
+      search
+        ? {
+            OR: [
+              { name: { contains: search, mode: "insensitive" } },
+              { serial_number: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {},
     ],
   };
 
@@ -45,6 +54,15 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       condition: body.condition ?? null,
       status: body.status ?? "SERVICEABLE",
       date_acquired: body.date_acquired ?? null,
+      image_url: body.image_url ?? null,
+      serial_number: body.serial_number ?? null,
+      purchase_cost: body.purchase_cost ?? null,
+      current_value: body.current_value ?? null,
+      purchase_date: body.purchase_date ?? null,
+      assigned_to: body.assigned_to ?? null,
+      location: body.location ?? null,
+      description: body.description ?? null,
+      asset_type: body.asset_type ?? null,
     },
   });
 

@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/equipment/new/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,7 +14,24 @@ interface EquipmentForm {
   condition:     string;
   status:        EquipmentStatus;
   date_acquired: string;
+  asset_type:    string;
+  serial_number: string;
+  image_url:     string;
+  purchase_cost: string;
+  current_value: string;
+  purchase_date: string;
+  assigned_to:   string;
+  location:      string;
+  description:   string;
 }
+
+const CONDITION_OPTIONS = [
+  { value: "GOOD", label: "Good" },
+  { value: "FAIR", label: "Fair" },
+  { value: "POOR", label: "Poor" },
+  { value: "NEEDS_REPAIR", label: "Needs Repair" },
+  { value: "DECOMMISSIONED", label: "Decommissioned" },
+];
 
 // ─── FIELD COMPONENTS ─────────────────────────────────────────────────────────
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
@@ -101,6 +119,8 @@ export default function NewEquipmentPage() {
 
   const [form, setForm] = useState<EquipmentForm>({
     name: "", quantity: "1", condition: "", status: "SERVICEABLE", date_acquired: "",
+    asset_type: "", serial_number: "", image_url: "", purchase_cost: "", current_value: "",
+    purchase_date: "", assigned_to: "", location: "", description: "",
   });
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState("");
@@ -125,6 +145,15 @@ export default function NewEquipmentPage() {
           condition:     form.condition || null,
           status:        form.status,
           date_acquired: form.date_acquired || null,
+          asset_type:    form.asset_type || null,
+          serial_number: form.serial_number || null,
+          image_url:     form.image_url || null,
+          purchase_cost: form.purchase_cost ? parseFloat(form.purchase_cost) : null,
+          current_value: form.current_value ? parseFloat(form.current_value) : null,
+          purchase_date: form.purchase_date || null,
+          assigned_to:   form.assigned_to || null,
+          location:      form.location || null,
+          description:   form.description || null,
         }),
       });
       if (!res.ok) throw new Error("Failed to save equipment");
@@ -193,13 +222,37 @@ export default function NewEquipmentPage() {
                 className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] transition bg-white"
               />
             </div>
-            <TextInput
+            <SelectInput
               label="Condition"
               value={form.condition}
               onChange={v => set("condition", v)}
-              placeholder="e.g. Good, Fair, Damaged"
+              options={CONDITION_OPTIONS}
             />
           </div>
+
+          {/* Type + Serial Number */}
+          <div className="grid grid-cols-2 gap-4">
+            <TextInput
+              label="Type"
+              value={form.asset_type}
+              onChange={v => set("asset_type", v)}
+              placeholder="e.g. Furniture, Electronics, Tools"
+            />
+            <TextInput
+              label="Serial Number"
+              value={form.serial_number}
+              onChange={v => set("serial_number", v)}
+              placeholder="e.g. SN-00123"
+            />
+          </div>
+
+          {/* Image URL */}
+          <TextInput
+            label="Photo URL"
+            value={form.image_url}
+            onChange={v => set("image_url", v)}
+            placeholder="https://…"
+          />
 
           {/* Date Acquired */}
           <TextInput
@@ -208,6 +261,58 @@ export default function NewEquipmentPage() {
             onChange={v => set("date_acquired", v)}
             type="date"
           />
+
+          {/* Valuation */}
+          <div className="grid grid-cols-2 gap-4">
+            <TextInput
+              label="Purchase Cost (₱)"
+              value={form.purchase_cost}
+              onChange={v => set("purchase_cost", v)}
+              placeholder="0.00"
+              type="number"
+            />
+            <TextInput
+              label="Current Value (₱)"
+              value={form.current_value}
+              onChange={v => set("current_value", v)}
+              placeholder="0.00"
+              type="number"
+            />
+          </div>
+          <TextInput
+            label="Purchase Date"
+            value={form.purchase_date}
+            onChange={v => set("purchase_date", v)}
+            type="date"
+          />
+
+          {/* Assignment */}
+          <div className="grid grid-cols-2 gap-4">
+            <TextInput
+              label="Assigned To"
+              value={form.assigned_to}
+              onChange={v => set("assigned_to", v)}
+              placeholder="e.g. Barangay Hall Office"
+            />
+            <TextInput
+              label="Location"
+              value={form.location}
+              onChange={v => set("location", v)}
+              placeholder="e.g. Storage Room B"
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <FieldLabel>Description</FieldLabel>
+            <textarea
+              value={form.description}
+              onChange={e => set("description", e.target.value)}
+              rows={3}
+              placeholder="Additional notes about this item…"
+              className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] placeholder:text-[#D1D5DB] transition bg-white resize-none"
+            />
+          </div>
 
           {/* Status */}
           <div>

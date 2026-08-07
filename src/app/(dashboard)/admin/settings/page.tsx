@@ -1,8 +1,10 @@
+// FILE: src/app/(dashboard)/admin/settings/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { Landmark, Phone, UserCheck, Save, CheckCircle2 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+import IncidentTypesManager from "@/components/shared/IncidentTypesManager";
 import { GeneralSettings } from "@/lib/mock/admin";
 
 const DEFAULT_SETTINGS: GeneralSettings = {
@@ -11,6 +13,7 @@ const DEFAULT_SETTINGS: GeneralSettings = {
   city: "",
   province: "",
   region: "",
+  postal_code: "",
   contact_phone: "",
   contact_email: "",
   captain_override_name: "",
@@ -128,6 +131,12 @@ export default function GeneralSettingsPage() {
               <Field label="Province" value={settings.province} onChange={(v) => update("province", v)} />
               <Field label="Region" value={settings.region} onChange={(v) => update("region", v)} />
             </div>
+            <Field
+              label="Postal Code"
+              value={settings.postal_code}
+              onChange={(v) => update("postal_code", v)}
+              placeholder="6004"
+            />
           </div>
         </div>
 
@@ -175,6 +184,9 @@ export default function GeneralSettingsPage() {
             />
           </div>
         </div>
+
+        {/* Incident Types (2.11) */}
+        <IncidentTypesManager />
 
         {/* Save */}
         <div className="flex items-center justify-end gap-3 pb-8">
