@@ -36,8 +36,6 @@ export const GET = withErrorHandling(async () => {
   const startOfMonth      = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfLastMonth  = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const startOfYear       = new Date(now.getFullYear(), 0, 1);
-  const startOfToday      = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfTomorrow   = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
   // NOTE ON BATCHING: this route needs ~17 separate counts/queries to build
   // the dashboard. Firing all 17 at once via a single Promise.all() opens
@@ -57,7 +55,20 @@ export const GET = withErrorHandling(async () => {
       prisma.certificate.count({ where: { issued_at: { gte: startOfYear } } }),
     ]);
 
-  const [residentsByPurok, residentsBySex, recentActivity, recentBlotterCases] =
+  // ── Batch 11 (Dashboard Customization) widget counts ──
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfTomorrow = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
+
+  const [documentRequestsPending, visitorsActive, meetingsToday, settledCases, totalAssets] =
+    await Promise.all([
+      prisma.certificate.count({ where: { status: "PENDING" } }).catch(() => 0),
+      prisma.visitorLog.count({ where: { time_out: null } }).catch(() => 0),
+      prisma.meetingRecord.count({ where: { meeting_date: { gte: startOfToday, lt: startOfTomorrow } } }).catch(() => 0),
+      prisma.blotterCase.count({ where: { status: { in: ["RESOLVED", "DISMISSED"] } } }),
+      prisma.equipment.count(),
+    ]);
+
+  const [residentsByPurok, residentsBySex, recentActivity, recentBlotterCases, documentsByStatus] =
     await Promise.all([
       prisma.resident.groupBy({
         by: ["purok_id"],
@@ -79,6 +90,7 @@ export const GET = withErrorHandling(async () => {
         orderBy: { created_at: "desc" },
         select: { id: true, case_number: true, complainant_name: true, respondent_name: true, status: true },
       }),
+      prisma.certificate.groupBy({ by: ["status"], _count: true }).catch(() => []),
     ]);
 
   // ── Month-over-month comparison counts ──
@@ -96,28 +108,6 @@ export const GET = withErrorHandling(async () => {
       prisma.equipmentBorrowing.count({ where: { date_borrowed: { gte: startOfMonth } } }),
       prisma.equipmentBorrowing.count({ where: { date_borrowed: { gte: startOfLastMonth, lt: startOfMonth } } }),
     ]);
-
-  // ── New KPI/panel widgets (Batch 11: Dashboard Customization) ──
-  // Kept in its own small batch for the same connection-pool reason noted
-  // above, rather than folding into the first Promise.all().
-  const [
-    visitorsActive, meetingsToday, settledCases,
-    overdueEquipmentReturns, filedBlotterCases, overdueHearings,
-    documentStatusRaw,
-  ] = await Promise.all([
-    prisma.visitorLog.count({ where: { time_out: null } }),
-    prisma.meetingRecord.count({ where: { meeting_date: { gte: startOfToday, lt: startOfTomorrow } } }),
-    prisma.blotterCase.count({ where: { status: { in: ["RESOLVED", "DISMISSED"] } } }),
-    prisma.equipmentBorrowing.count({ where: { actual_return: null, is_overdue: true } }),
-    prisma.blotterCase.count({ where: { status: "FILED" } }),
-    prisma.blotterCase.count({ where: { status: "ONGOING", hearing_date: { lt: now } } }),
-    prisma.certificate.groupBy({ by: ["status"], _count: true }),
-  ]);
-
-  const documentStatusCounts = (["PENDING", "PROCESSING", "RELEASED", "CANCELLED"] as const).map((status) => ({
-    status,
-    count: documentStatusRaw.find((s) => s.status === status)?._count ?? 0,
-  }));
 
   // % change helper. Returns null when there's no prior-month baseline to
   // compare against (0 last month) — the frontend shows "New" instead of
@@ -138,22 +128,18 @@ export const GET = withErrorHandling(async () => {
     residentsBySex,
     recentActivity,
     recentBlotterCases,
+    // ── Batch 11 (Dashboard Customization) ──
+    documentRequestsPending,
+    visitorsActive,
+    meetingsToday,
+    settledCases,
+    totalAssets,
+    documentsByStatus: documentsByStatus.map((d: any) => ({ status: d.status, count: d._count })),
     trends: {
       residents:    pctChange(residentsThisMonth, residentsLastMonth),
       households:   pctChange(householdsThisMonth, householdsLastMonth),
       certsMonth:   pctChange(certsThisMonth, certsLastMonth),
       equipment:    pctChange(equipmentThisMonth, equipmentLastMonth),
-    },
-
-    // ── Batch 11 additions ──
-    visitorsActive,
-    meetingsToday,
-    settledCases,
-    documentStatusCounts,
-    priorityTasks: {
-      overdueEquipmentReturns,
-      filedBlotterCases,
-      overdueHearings,
     },
   });
 });

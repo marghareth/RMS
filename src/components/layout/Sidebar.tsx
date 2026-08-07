@@ -9,11 +9,13 @@ import {
   HeartPulse,
   Package,
   DollarSign,
+  Landmark,
   Users2,
   UserCheck,
   BarChart2,
   ShieldCheck,
   Settings,
+  LogIn,
 } from "lucide-react";
 import NavItem from "./NavItem";
 import NavGroup from "./NavGroup";
@@ -22,6 +24,13 @@ import NavGroup from "./NavGroup";
 const mainNav = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, type: "link" as const },
   {
+    label: "Visitor Log",
+    href: "/visitors",
+    icon: LogIn,
+    addHref: "/visitors/new",
+    type: "link" as const,
+  },
+  {
     label: "RBI",
     icon: Users,
     basePath: "/residents",
@@ -29,6 +38,7 @@ const mainNav = [
     children: [
       { label: "Residents", href: "/residents", addHref: "/residents/new" },
       { label: "Households", href: "/households", addHref: "/households/new" },
+      { label: "Deceased Records", href: "/deceased-records", addHref: "/deceased-records/new" },
     ],
   },
   {
@@ -90,6 +100,23 @@ const mainNav = [
     children: [
       { label: "Records", href: "/financial", addHref: "/financial/new" },
       { label: "Summary", href: "/financial/summary" },
+    ],
+  },
+  {
+    // Finance Suite (2.6) — appropriations/revenue/fund-source/disbursement
+    // tracking, distinct from the legacy income/expense "Financial" module
+    // above. Kept as its own group rather than merged into "Financial" so
+    // existing links into that module don't shift meaning.
+    label: "Finance",
+    icon: Landmark,
+    basePath: "/finance",
+    type: "group" as const,
+    children: [
+      { label: "Budget Overview", href: "/finance/overview" },
+      { label: "Appropriations", href: "/finance/appropriations" },
+      { label: "Revenue Tracking", href: "/finance/revenues" },
+      { label: "Fund Sources", href: "/finance/fund-sources" },
+      { label: "Disbursements", href: "/finance/disbursements" },
     ],
   },
   {
