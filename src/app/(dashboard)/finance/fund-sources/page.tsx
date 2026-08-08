@@ -2,19 +2,18 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Landmark, Plus, X, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
+import FundSourceDetailSheet from "@/components/finance/FundSourceDetailSheet";
 import { fmtCurrency, FundSourceRecord } from "@/lib/finance";
 
 const EMPTY_FORM = { name: "", code: "", statutory_rule: "", original_balance: "" };
 
 export default function FundSourcesPage() {
-  const router = useRouter();
-
   const [items, setItems] = useState<FundSourceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -170,7 +169,7 @@ export default function FundSourcesPage() {
           {items.map((f) => (
             <button
               key={f.id}
-              onClick={() => router.push(`/finance/fund-sources/${f.id}`)}
+              onClick={() => setSelectedId(f.id)}
               className="rounded-xl border border-[#E9EAEC] bg-white p-5 text-left transition hover:border-[#3B82F6] hover:shadow-sm"
             >
               <div className="mb-3 flex items-start justify-between">
@@ -197,6 +196,8 @@ export default function FundSourcesPage() {
           ))}
         </div>
       )}
+
+      <FundSourceDetailSheet fundSourceId={selectedId} onClose={() => setSelectedId(null)} />
     </div>
   );
 }

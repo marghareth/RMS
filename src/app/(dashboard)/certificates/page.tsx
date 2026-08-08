@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/certificates/page.tsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -18,6 +19,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import StatusBadge from "@/components/shared/StatusBadge";
+import CertificateDetailSheet from "@/components/certificates/CertificateDetailSheet";
 import {
   CERTIFICATE_TYPES,
   CertificateMock,
@@ -48,6 +50,7 @@ export default function CertificatesListPage() {
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
   const [certificates, setCertificates] = useState<CertificateMock[]>([]);
@@ -271,7 +274,7 @@ export default function CertificatesListPage() {
               {filtered.map((c) => (
                 <tr
                   key={c.id}
-                  onClick={() => router.push(`/certificates/${c.id}`)}
+                  onClick={() => setSelectedId(c.id)}
                   className="cursor-pointer border-b border-[#F4F5F7] transition last:border-b-0 hover:bg-[#F9FAFB]"
                 >
                   <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937]">{c.certificate_no}</td>
@@ -304,6 +307,8 @@ export default function CertificatesListPage() {
           </table>
         )}
       </div>
+
+      <CertificateDetailSheet certificateId={selectedId} onClose={() => setSelectedId(null)} />
     </div>
   );
 }
