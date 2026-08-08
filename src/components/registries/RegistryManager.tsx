@@ -2,10 +2,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import { Plus, Search, X, Loader2 } from "lucide-react";
 import ResidentPicker, { type PickedResident } from "@/components/shared/ResidentPicker";
+import RegistryDetailSheet from "@/components/registries/RegistryDetailSheet";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type RegistryType = "FOUR_PS" | "PWD" | "SENIOR_CITIZEN";
@@ -163,11 +163,11 @@ export default function RegistryManager({
   minAge,
   detailBase,
 }: RegistryManagerProps) {
-  const router = useRouter();
   const [search, setSearch] = useState("");
   const [entries, setEntries] = useState<RegistryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
 
   const loadEntries = useCallback(async () => {
     setLoading(true);
@@ -251,7 +251,7 @@ export default function RegistryManager({
             {filteredEntries.map((entry) => (
               <button
                 key={entry.id}
-                onClick={() => router.push(`${detailBase}/${entry.id}`)}
+                onClick={() => setSelectedEntryId(entry.id)}
                 className="flex w-full items-center justify-between rounded-xl border border-[#E9EAEC] px-4 py-3 text-left transition hover:bg-[#F9FAFB]"
               >
                 <div>
@@ -282,6 +282,16 @@ export default function RegistryManager({
           }}
         />
       )}
+
+      <RegistryDetailSheet
+        entryId={selectedEntryId}
+        title={title}
+        icon={Icon}
+        iconBg={iconBg}
+        listBase={detailBase}
+        onClose={() => setSelectedEntryId(null)}
+        onRemoved={loadEntries}
+      />
     </div>
   );
 }

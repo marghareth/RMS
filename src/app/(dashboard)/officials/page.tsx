@@ -23,6 +23,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import OfficialEditSheet from "@/components/officials/OfficialEditSheet";
 import {
   BrgyOfficialMock,
   residentFullName,
@@ -70,6 +71,7 @@ export default function OfficialsListPage() {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(officials[0]?.id ?? null);
   const [deleteTarget, setDeleteTarget] = useState<BrgyOfficialMock | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
 
   const filtered = useMemo(() => {
@@ -258,7 +260,7 @@ export default function OfficialsListPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => router.push(`/officials/${selected.id}/edit`)}
+                    onClick={() => setEditId(selected.id)}
                     className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-[#374151] transition hover:bg-[#F4F5F7]"
                   >
                     <Pencil size={12} />
@@ -322,6 +324,14 @@ export default function OfficialsListPage() {
         loading={busy}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <OfficialEditSheet
+        officialId={editId}
+        onClose={() => setEditId(null)}
+        onSaved={(updated) => {
+          setOfficials((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
+        }}
       />
     </div>
   );

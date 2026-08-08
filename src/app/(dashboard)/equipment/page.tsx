@@ -7,6 +7,7 @@ import {
   Search, Plus, Package, ChevronRight,
   CheckCircle2, AlertTriangle, XCircle, Clock,
 } from "lucide-react";
+import EquipmentDetailSheet from "@/components/equipment/EquipmentDetailSheet";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type EquipmentStatus = "SERVICEABLE" | "UNSERVICEABLE" | "MISSING";
@@ -109,6 +110,7 @@ export default function EquipmentPage() {
   const [filterStatus,  setFilterStatus]  = useState<EquipmentStatus | "ALL">("ALL");
   const [filterType,    setFilterType]    = useState("");
   const [selectedId,    setSelectedId]    = useState<number | null>(null);
+  const [detailSheetId, setDetailSheetId] = useState<number | null>(null);
 
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading,   setLoading]   = useState(true);
@@ -138,6 +140,19 @@ export default function EquipmentPage() {
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [search, filterStatus, filterType]);
+
+  // Re-fetch after the detail sheet closes, in case a borrow/return there
+  // changed a status this list is filtering/displaying (e.g. Overdue count).
+  function reloadEquipment() {
+    const params = new URLSearchParams();
+    if (search)                 params.set("search", search);
+    if (filterStatus !== "ALL") params.set("status", filterStatus);
+    if (filterType)              params.set("asset_type", filterType);
+    fetch(`/api/equipment?${params}`)
+      .then(r => r.json())
+      .then(setEquipment)
+      .catch(console.error);
+  }
 
   // Distinct asset types across the currently-loaded list, for the Type
   // filter dropdown — recomputed client-side rather than a separate
@@ -315,7 +330,7 @@ export default function EquipmentPage() {
                   Edit
                 </button>
                 <button
-                  onClick={() => router.push(`/equipment/${selected.id}`)}
+                  onClick={() => setDetailSheetId(selected.id)}
                   className="px-3 py-1.5 rounded-lg bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] transition"
                 >
                   Full Details
@@ -468,7 +483,7 @@ export default function EquipmentPage() {
                 Lend Out
               </button>
               <button
-                onClick={() => router.push(`/equipment/${selected.id}`)}
+                onClick={() => setDetailSheetId(selected.id)}
                 className="flex-1 py-2.5 rounded-xl border border-[#E9EAEC] text-[#6B7280] text-[13px] font-bold hover:bg-[#F4F5F7] transition"
               >
                 View Borrow History
@@ -485,6 +500,12 @@ export default function EquipmentPage() {
           </div>
         )}
       </div>
+
+      <EquipmentDetailSheet
+        equipmentId={detailSheetId}
+        onClose={() => setDetailSheetId(null)}
+        onUpdated={reloadEquipment}
+      />
     </div>
   );
 }

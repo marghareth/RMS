@@ -34,6 +34,8 @@ import {
   Activity, ShieldCheck,
 } from "lucide-react";
 import StatCard from "@/components/shared/StatCard";
+import VaccinationDetailSheet from "@/components/health/VaccinationDetailSheet";
+import HealthRecordDetailSheet from "@/components/health/HealthRecordDetailSheet";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Resident { id: number; fname: string; lname: string; purok?: { name: string } | null }
@@ -130,6 +132,22 @@ export default function HealthPage() {
   const [healthTotal,    setHealthTotal]    = useState(0);
   const [vaccinationTotal, setVaccinationTotal] = useState(0);
   const [loading,        setLoading]        = useState(true);
+  const [selectedVaccinationId, setSelectedVaccinationId] = useState<number | null>(null);
+  const [selectedHealthRecordId, setSelectedHealthRecordId] = useState<number | null>(null);
+
+  function reloadData() {
+    const params = new URLSearchParams({ limit: "50" });
+    if (search) params.set("search", search);
+    Promise.all([
+      fetch(`/api/health?${params}`).then(r => r.json()),
+      fetch(`/api/health/vaccinations?${params}`).then(r => r.json()),
+    ]).then(([hData, vData]) => {
+      setHealthRecords(hData.records ?? []);
+      setHealthTotal(hData.total ?? (hData.records ?? []).length);
+      setVaccinations(vData.vaccinations ?? []);
+      setVaccinationTotal(vData.total ?? (vData.vaccinations ?? []).length);
+    });
+  }
 
   useEffect(() => {
     const params = new URLSearchParams({ limit: "50" });
@@ -260,7 +278,7 @@ export default function HealthPage() {
                   {/* Action */}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => router.push(`/health/${r.id}`)}
+                      onClick={() => setSelectedHealthRecordId(r.id)}
                       className="flex items-center gap-1 text-[11px] font-bold text-[#3B82F6] hover:text-[#1D4ED8] transition"
                     >
                       View <ChevronRight size={12} />
@@ -323,7 +341,7 @@ export default function HealthPage() {
 
                   {/* Action */}
                   <button
-                    onClick={() => router.push(`/health/vaccinations/${v.id}`)}
+                    onClick={() => setSelectedVaccinationId(v.id)}
                     className="flex items-center gap-1 text-[11px] font-bold text-[#3B82F6] hover:text-[#1D4ED8] transition"
                   >
                     View <ChevronRight size={12} />
@@ -334,6 +352,17 @@ export default function HealthPage() {
           </div>
         )}
       </div>
+
+      <VaccinationDetailSheet
+        vaccinationId={selectedVaccinationId}
+        onClose={() => setSelectedVaccinationId(null)}
+        onDeleted={reloadData}
+      />
+      <HealthRecordDetailSheet
+        recordId={selectedHealthRecordId}
+        onClose={() => setSelectedHealthRecordId(null)}
+        onDeleted={reloadData}
+      />
     </div>
   );
 }

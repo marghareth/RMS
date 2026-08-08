@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/admin/users/page.tsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -7,6 +8,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import UserEditSheet from "@/components/admin/UserEditSheet";
 import { UserMock, roleLabel, formatISODate } from "@/lib/mock/admin";
 
 export default function UsersListPage() {
@@ -42,6 +44,7 @@ export default function UsersListPage() {
 
   const [search, setSearch] = useState("");
   const [deactivateTarget, setDeactivateTarget] = useState<UserMock | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
 
   const filtered = useMemo(() => {
@@ -163,7 +166,7 @@ export default function UsersListPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={() => router.push(`/admin/users/${u.id}/edit`)}
+                        onClick={() => setEditId(u.id)}
                         className="flex w-20 items-center justify-center gap-1.5 rounded-lg border border-[#E9EAEC] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#374151] transition hover:bg-[#F4F5F7]"
                       >
                         <Pencil size={11} />
@@ -204,6 +207,12 @@ export default function UsersListPage() {
         loading={busy}
         onConfirm={handleToggleActive}
         onCancel={() => setDeactivateTarget(null)}
+      />
+
+      <UserEditSheet
+        userId={editId}
+        onClose={() => setEditId(null)}
+        onSaved={loadUsers}
       />
     </div>
   );
