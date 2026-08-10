@@ -161,7 +161,7 @@ export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: Blotter
 
   return (
     <Sheet open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
-      <SheetContent widthClassName="max-w-3xl" className="p-0">
+      <SheetContent className="p-0">
         {loading || !blotterCase ? (
           <div className="flex h-full flex-col">
             <SheetHeader>

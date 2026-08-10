@@ -165,32 +165,47 @@ export default function FundSourcesPage() {
           <EmptyState icon={Landmark} title="No fund sources found" description="Add a fund source to start tracking its balance." />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((f) => (
+        <div className="overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
+          {/* Table header */}
+          <div className="grid grid-cols-[2fr_1fr_1fr_0.4fr] gap-4 border-b border-[#E9EAEC] bg-[#F9FAFB] px-5 py-2.5">
+            {["Fund Source", "Status", "Current Balance", ""].map((h) => (
+              <span key={h} className="text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF]">{h}</span>
+            ))}
+          </div>
+
+          {/* Rows */}
+          {items.map((f, i) => (
             <button
               key={f.id}
               onClick={() => setSelectedId(f.id)}
-              className="rounded-xl border border-[#E9EAEC] bg-white p-5 text-left transition hover:border-[#3B82F6] hover:shadow-sm"
+              className={`grid w-full grid-cols-[2fr_1fr_1fr_0.4fr] items-center gap-4 border-b border-[#F4F5F7] px-5 py-3.5 text-left transition last:border-0 hover:bg-[#F9FAFB] ${i % 2 !== 0 ? "bg-[#FAFAFA]" : "bg-white"}`}
             >
-              <div className="mb-3 flex items-start justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
-                  <Landmark size={18} className="text-blue-500" />
+              {/* Fund Source */}
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50">
+                  <Landmark size={15} className="text-blue-500" />
                 </div>
-                <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-                    f.status === "ACTIVE" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  {f.status === "ACTIVE" ? "Active" : "Inactive"}
-                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-[13px] font-bold text-[#1F2937]">{f.name}</p>
+                  {f.code && <p className="mt-0.5 truncate text-[10px] text-[#9CA3AF]">{f.code}</p>}
+                </div>
               </div>
-              <p className="text-[14px] font-bold text-[#1F2937]">{f.name}</p>
-              {f.code && <p className="text-[11px] text-[#9CA3AF]">{f.code}</p>}
-              <p className="mt-3 text-[20px] font-black text-[#1F2937]">{fmtCurrency(f.current_balance)}</p>
-              <p className="text-[11px] text-[#9CA3AF]">Current balance</p>
-              <div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-[#3B82F6]">
-                View transaction history
-                <ChevronRight size={13} />
+
+              {/* Status */}
+              <span
+                className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                  f.status === "ACTIVE" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                {f.status === "ACTIVE" ? "Active" : "Inactive"}
+              </span>
+
+              {/* Current Balance */}
+              <span className="text-[13px] font-bold text-[#1F2937]">{fmtCurrency(f.current_balance)}</span>
+
+              {/* Chevron */}
+              <div className="flex justify-end">
+                <ChevronRight size={16} className="text-[#D1D5DB]" />
               </div>
             </button>
           ))}

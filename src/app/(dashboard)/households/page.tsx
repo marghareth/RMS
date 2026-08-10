@@ -1,7 +1,7 @@
 // FILE: src/app/(dashboard)/households/page.tsx
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Home, Users, MapPin, UserX, Search, Plus, ChevronRight, Download } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
@@ -9,6 +9,7 @@ import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import { memberFullName, buildBimsCsv, downloadCsv } from "@/lib/mock/households";
 import type { PurokMock, HouseholdMock } from "@/lib/mock/households";
+import HouseholdDetailSheet from "@/components/households/HouseholdDetailSheet";
 
 const HOUSING_LABEL: Record<string, string> = {
   OWN: "Own",
@@ -27,6 +28,7 @@ export default function HouseholdsListPage() {
   const [puroks, setPuroks] = useState<PurokMock[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -47,23 +49,25 @@ export default function HouseholdsListPage() {
     return () => { ignore = true; };
   }, []);
 
-   useEffect(() => {
-     async function loadHouseholds() {
-       setLoading(true);
-       try {
-         const params = new URLSearchParams({ limit: "50" });
-         if (purokFilter) params.set("purok_id", purokFilter);
-         const res = await fetch(`/api/households?${params}`);
-         const data = await res.json();
-         setHouseholds(data.households ?? []);
-       } catch (e) {
-         console.error(e);
-       } finally {
-         setLoading(false);
-       }
+   const loadHouseholds = useCallback(async () => {
+     setLoading(true);
+     try {
+       const params = new URLSearchParams({ limit: "50" });
+       if (purokFilter) params.set("purok_id", purokFilter);
+       const res = await fetch(`/api/households?${params}`);
+       const data = await res.json();
+       setHouseholds(data.households ?? []);
+     } catch (e) {
+       console.error(e);
+     } finally {
+       setLoading(false);
      }
-     loadHouseholds();
    }, [purokFilter]);
+
+   useEffect(() => {
+     // eslint-disable-next-line react-hooks/set-state-in-effect
+     loadHouseholds();
+   }, [loadHouseholds]);
 
   // ── CLIENT-SIDE FILTERING (stands in for the API query above) ───────────
   const filtered = useMemo(() => {
@@ -199,7 +203,7 @@ export default function HouseholdsListPage() {
               {filtered.map((h) => (
                 <tr
                   key={h.id}
-                  onClick={() => router.push(`/households/${h.id}`)}
+                  onClick={() => setSelectedId(h.id)}
                   className="cursor-pointer border-b border-[#F4F5F7] transition last:border-b-0 hover:bg-[#F9FAFB]"
                 >
                   <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937]">{h.household_no}</td>
@@ -223,6 +227,12 @@ export default function HouseholdsListPage() {
           </table>
         )}
       </div>
+
+      <HouseholdDetailSheet
+        householdId={selectedId}
+        onClose={() => setSelectedId(null)}
+        onDeleted={loadHouseholds}
+      />
     </div>
   );
 }
