@@ -197,7 +197,7 @@ export default function EquipmentDetailSheet({ equipmentId, onClose, onUpdated }
 
   return (
     <Sheet open={open} onOpenChange={(next) => { if (!next) { onUpdated?.(); onClose(); } }}>
-      <SheetContent widthClassName="max-w-4xl" className="p-0">
+      <SheetContent className="p-0">
         {loading || !equipment ? (
           <div className="flex h-full flex-col">
             <SheetHeader>

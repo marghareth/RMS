@@ -1,5 +1,7 @@
+// FILE: src/components/layout/Sidebar.tsx
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -38,7 +40,7 @@ const mainNav = [
     children: [
       { label: "Residents", href: "/residents", addHref: "/residents/new" },
       { label: "Households", href: "/households", addHref: "/households/new" },
-      { label: "Deceased Records", href: "/deceased-records", addHref: "/deceased-records/new" },
+      { label: "Deceased Records", href: "/deceased" },
     ],
   },
   {
@@ -179,6 +181,24 @@ export default function Sidebar({
   onToggle: () => void;
   className?: string;
 }) {
+  // Barangay name comes from Settings (General Settings → Barangay
+  // Information) so the sidebar brand reflects whichever barangay this
+  // instance is deployed for, instead of a hardcoded name.
+  const [barangayName, setBarangayName] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/settings/branding")
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data) => {
+        if (!cancelled && data?.barangay_name) setBarangayName(data.barangay_name);
+      })
+      .catch(() => {
+        // Non-fatal — the brand just falls back to the generic label below.
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   return (
     <aside
       className={`flex h-screen shrink-0 flex-col overflow-hidden border-r border-[#E9EAEC] bg-white transition-[width] duration-200 ease-in-out ${
@@ -186,7 +206,7 @@ export default function Sidebar({
       } ${className}`}
     >
       {/* Brand */}
-      <div className="flex h-15 shrink-0 items-center justify-center border-b border-[#E9EAEC] px-5">
+      <div className="flex h-15 shrink-0 items-center gap-2.5 border-b border-[#E9EAEC] px-5">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#3B82F6] shadow-sm">
           <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
             <path
@@ -195,6 +215,12 @@ export default function Sidebar({
             />
             <rect x="9" y="12" width="6" height="10" fill="#3B82F6" />
           </svg>
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-[13px] font-black uppercase tracking-wide text-[#1F2937]">
+            {barangayName || "Barangay RMS"}
+          </p>
+          <p className="truncate text-[10px] text-[#9CA3AF]">Records Management</p>
         </div>
       </div>
 

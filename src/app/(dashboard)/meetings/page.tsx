@@ -1,7 +1,7 @@
 "use client";
 // FILE: src/app/(dashboard)/meetings/page.tsx
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Users2,
@@ -21,6 +21,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import StatusBadge from "@/components/shared/StatusBadge";
+import MeetingDetailSheet from "@/components/meetings/MeetingDetailSheet";
 import {
   MeetingRecordMock,
   meetingTypeLabel,
@@ -50,30 +51,33 @@ export default function AssemblyListPage() {
 
   const [meetings, setMeetings] = useState<MeetingRecordMock[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const loadMeetings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: "50" });
+      if (filters.meeting_type) params.set("meeting_type", filters.meeting_type);
+      if (filters.status) params.set("status", filters.status);
+      if (filters.location) params.set("location", filters.location);
+      if (filters.date_from) params.set("date_from", filters.date_from);
+      if (filters.date_to) params.set("date_to", filters.date_to);
+      if (search.trim()) params.set("title", search.trim());
+
+      const res = await fetch(`/api/meetings?${params}`);
+      const data = await res.json();
+      setMeetings(data.meetings ?? []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, search]);
 
   useEffect(() => {
-    async function loadMeetings() {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams({ limit: "50" });
-        if (filters.meeting_type) params.set("meeting_type", filters.meeting_type);
-        if (filters.status) params.set("status", filters.status);
-        if (filters.location) params.set("location", filters.location);
-        if (filters.date_from) params.set("date_from", filters.date_from);
-        if (filters.date_to) params.set("date_to", filters.date_to);
-        if (search.trim()) params.set("title", search.trim());
-
-        const res = await fetch(`/api/meetings?${params}`);
-        const data = await res.json();
-        setMeetings(data.meetings ?? []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadMeetings();
-  }, [filters, search]);
+  }, [loadMeetings]);
 
   const filtered = useMemo(() => {
     return meetings
@@ -270,7 +274,7 @@ export default function AssemblyListPage() {
             return (
               <button
                 key={m.id}
-                onClick={() => router.push(`/meetings/${m.id}`)}
+                onClick={() => setSelectedId(m.id)}
                 className="flex w-full items-center gap-4 border-b border-[#F4F5F7] px-5 py-4 text-left transition last:border-b-0 hover:bg-[#F9FAFB]"
               >
                 <div
@@ -335,6 +339,12 @@ export default function AssemblyListPage() {
           })
         )}
       </div>
+
+      <MeetingDetailSheet
+        meetingId={selectedId}
+        onClose={() => setSelectedId(null)}
+        onUpdated={loadMeetings}
+      />
     </div>
   );
 }

@@ -111,7 +111,7 @@ export default function VaccinationDetailSheet({ vaccinationId, onClose, onDelet
   return (
     <>
     <Sheet open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
-      <SheetContent widthClassName="max-w-3xl" className="p-0">
+      <SheetContent className="p-0">
         {loading || !vaccination ? (
           <div className="flex h-full flex-col">
             <SheetHeader>

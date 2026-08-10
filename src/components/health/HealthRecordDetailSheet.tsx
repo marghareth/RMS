@@ -132,7 +132,7 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
   return (
     <>
     <Sheet open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
-      <SheetContent widthClassName="max-w-3xl" className="p-0">
+      <SheetContent className="p-0">
         {loading || !record || !cfg ? (
           <div className="flex h-full flex-col">
             <SheetHeader>

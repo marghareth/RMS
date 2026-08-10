@@ -72,7 +72,7 @@ export default function FundSourceDetailSheet({ fundSourceId, onClose }: FundSou
 
   return (
     <Sheet open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
-      <SheetContent widthClassName="max-w-4xl" className="p-0">
+      <SheetContent className="p-0">
         {loading || !fundSource ? (
           <div className="flex h-full flex-col">
             <SheetHeader>

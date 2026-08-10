@@ -7,6 +7,7 @@ import {
   Search, SlidersHorizontal, ChevronRight,
   Plus, X, Users,
 } from "lucide-react";
+import ResidentDetailSheet from "@/components/residents/ResidentDetailSheet";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Purok { id: number; name: string }
@@ -107,6 +108,7 @@ export default function ResidentsPage() {
   const [loading,    setLoading]    = useState(true);
   const [showFilter, setShowFilter] = useState(false);
   const [filters,    setFilters]    = useState<FilterState>({ sex: "", civil_status: "", purok_id: "" });
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -236,7 +238,7 @@ export default function ResidentsPage() {
             {residents.map((r, i) => (
               <button
                 key={r.id}
-                onClick={() => router.push(`/residents/${r.id}`)}
+                onClick={() => setSelectedId(r.id)}
                 className={`w-full text-left grid grid-cols-[2fr_1fr_1fr_1fr_0.4fr] gap-4 px-5 py-3.5 items-center border-b border-[#F4F5F7] hover:bg-[#F9FAFB] transition group last:border-0 ${i % 2 !== 0 ? "bg-[#FAFAFA]" : "bg-white"}`}
               >
                 {/* Name */}
@@ -285,6 +287,12 @@ export default function ResidentsPage() {
           <Plus size={20} />
         </button>
       </div>
+
+      <ResidentDetailSheet
+        residentId={selectedId}
+        onClose={() => setSelectedId(null)}
+        onArchived={loadResidents}
+      />
     </div>
   );
 }

@@ -39,14 +39,20 @@ function SheetBackdrop({ className, ...props }: React.ComponentProps<typeof Dial
 
 interface SheetContentProps extends React.ComponentProps<typeof Dialog.Popup> {
   side?: "right" | "left";
-  /** Tailwind width class, e.g. "max-w-xl". Defaults to a sensible reading width. */
+  /**
+   * Tailwind width class. Defaults to "w-full sm:w-1/2" — full width on
+   * mobile, exactly half the viewport on larger screens — so every sheet
+   * in the app is the same size by default. Only override this for a
+   * deliberately compact form-style sheet (e.g. a single-field add/edit
+   * dialog); detail/info sheets should use the default for consistency.
+   */
   widthClassName?: string;
 }
 
 function SheetContent({
   className,
   side = "right",
-  widthClassName = "max-w-2xl",
+  widthClassName = "w-full sm:w-1/2",
   children,
   ...props
 }: SheetContentProps) {
