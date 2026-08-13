@@ -458,8 +458,11 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
             </SheetHeader>
 
             <SheetBody>
-              {/* Content grid */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {/* Content grid — single column so each section reads as one
+                  full-width card top-to-bottom instead of two cramped
+                  side-by-side columns; the sheet already scrolls, so
+                  there's no need to fit everything within one viewport. */}
+              <div className="flex flex-col gap-4">
 
                 {/* 1. Personal Information */}
                 <Section title="Personal Information">

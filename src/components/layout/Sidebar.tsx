@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   LayoutDashboard,
   Users,
@@ -18,19 +19,29 @@ import {
   ShieldCheck,
   Settings,
   LogIn,
+  Calendar,
 } from "lucide-react";
 import NavItem from "./NavItem";
 import NavGroup from "./NavGroup";
+import { hasPermission } from "@/lib/permission";
+
+// Every link/child below carries a `permission` — the exact string (or,
+// for pages that fan out to several endpoints, list of strings — ALL
+// required) that its page's underlying API route(s) check via
+// requirePermission(). Sourced directly from src/app/api/**/route.ts, not
+// guessed, so a role only ever sees a link it can actually load without
+// hitting a 403.
 
 // Grouped + single items, in display order
 const mainNav = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, type: "link" as const },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, type: "link" as const, permission: "dashboard:read" },
   {
     label: "Visitor Log",
     href: "/visitors",
     icon: LogIn,
     addHref: "/visitors/new",
     type: "link" as const,
+    permission: "visitors:read",
   },
   {
     label: "RBI",
@@ -38,9 +49,9 @@ const mainNav = [
     basePath: "/residents",
     type: "group" as const,
     children: [
-      { label: "Residents", href: "/residents", addHref: "/residents/new" },
-      { label: "Households", href: "/households", addHref: "/households/new" },
-      { label: "Deceased Records", href: "/deceased" },
+      { label: "Residents", href: "/residents", addHref: "/residents/new", permission: "residents:read" },
+      { label: "Households", href: "/households", addHref: "/households/new", permission: "households:read" },
+      { label: "Deceased Records", href: "/deceased", permission: "deceased:read" },
     ],
   },
   {
@@ -49,9 +60,9 @@ const mainNav = [
     basePath: "/registries",
     type: "group" as const,
     children: [
-      { label: "Senior Citizens", href: "/registries/senior-citizens" },
-      { label: "PWD", href: "/registries/pwd" },
-      { label: "4Ps Beneficiaries", href: "/registries/four-ps" },
+      { label: "Senior Citizens", href: "/registries/senior-citizens", permission: "registries:read" },
+      { label: "PWD", href: "/registries/pwd", permission: "registries:read" },
+      { label: "4Ps Beneficiaries", href: "/registries/four-ps", permission: "registries:read" },
     ],
   },
   {
@@ -60,10 +71,10 @@ const mainNav = [
     basePath: "/certificates",
     type: "group" as const,
     children: [
-      { label: "All Certificates", href: "/certificates", addHref: "/certificates/new" },
-      { label: "Document Queue", href: "/document-queue" },
-      { label: "Document Release", href: "/document-release" },
-      { label: "Barangay ID", href: "/barangay_id", addHref: "/barangay_id/new" },
+      { label: "All Certificates", href: "/certificates", addHref: "/certificates/new", permission: "certificates:read" },
+      { label: "Document Queue", href: "/document-queue", permission: "certificates:read" },
+      { label: "Document Release", href: "/document-release", permission: "certificates:read" },
+      { label: "Barangay ID", href: "/barangay_id", addHref: "/barangay_id/new", permission: "barangay_id:read" },
     ],
   },
   {
@@ -72,6 +83,7 @@ const mainNav = [
     icon: ScrollText,
     addHref: "/blotter/new",
     type: "link" as const,
+    permission: "blotter:read",
   },
   {
     label: "Health",
@@ -79,8 +91,8 @@ const mainNav = [
     basePath: "/health",
     type: "group" as const,
     children: [
-      { label: "Health Records", href: "/health", addHref: "/health/new" },
-      { label: "Vaccinations", href: "/health/vaccinations", addHref: "/health/vaccinations/new" },
+      { label: "Health Records", href: "/health", addHref: "/health/new", permission: "health:read" },
+      { label: "Vaccinations", href: "/health/vaccinations", addHref: "/health/vaccinations/new", permission: "health:read" },
     ],
   },
   {
@@ -89,9 +101,9 @@ const mainNav = [
     basePath: "/equipment",
     type: "group" as const,
     children: [
-      { label: "Equipment", href: "/equipment", addHref: "/equipment/new" },
-      { label: "Borrow Item", href: "/equipment/borrow" },
-      { label: "Return Item", href: "/equipment/return" },
+      { label: "Equipment", href: "/equipment", addHref: "/equipment/new", permission: "equipment:read" },
+      { label: "Borrow Item", href: "/equipment/borrow", permission: "equipment:read" },
+      { label: "Return Item", href: "/equipment/return", permission: "equipment:read" },
     ],
   },
   {
@@ -100,8 +112,8 @@ const mainNav = [
     basePath: "/financial",
     type: "group" as const,
     children: [
-      { label: "Records", href: "/financial", addHref: "/financial/new" },
-      { label: "Summary", href: "/financial/summary" },
+      { label: "Records", href: "/financial", addHref: "/financial/new", permission: "financial:read" },
+      { label: "Summary", href: "/financial/summary", permission: "financial:read" },
     ],
   },
   {
@@ -114,11 +126,17 @@ const mainNav = [
     basePath: "/finance",
     type: "group" as const,
     children: [
-      { label: "Budget Overview", href: "/finance/overview" },
-      { label: "Appropriations", href: "/finance/appropriations" },
-      { label: "Revenue Tracking", href: "/finance/revenues" },
-      { label: "Fund Sources", href: "/finance/fund-sources" },
-      { label: "Disbursements", href: "/finance/disbursements" },
+      // Overview fans out to all four endpoints in parallel — only show it
+      // if the role can actually load every one of them.
+      {
+        label: "Budget Overview",
+        href: "/finance/overview",
+        permission: ["fund-sources:read", "appropriations:read", "revenues:read", "disbursements:read"],
+      },
+      { label: "Appropriations", href: "/finance/appropriations", permission: "appropriations:read" },
+      { label: "Revenue Tracking", href: "/finance/revenues", permission: "revenues:read" },
+      { label: "Fund Sources", href: "/finance/fund-sources", permission: "fund-sources:read" },
+      { label: "Disbursements", href: "/finance/disbursements", permission: "disbursements:read" },
     ],
   },
   {
@@ -127,6 +145,14 @@ const mainNav = [
     icon: Users2,
     addHref: "/meetings/new",
     type: "link" as const,
+    permission: "meetings:read",
+  },
+  {
+    label: "Calendar",
+    href: "/calendar",
+    icon: Calendar,
+    type: "link" as const,
+    permission: "calendar:read",
   },
   {
     label: "Officials",
@@ -134,6 +160,7 @@ const mainNav = [
     icon: UserCheck,
     addHref: "/officials/new",
     type: "link" as const,
+    permission: "officials:read",
   },
   {
     label: "Reports",
@@ -141,13 +168,13 @@ const mainNav = [
     basePath: "/reports",
     type: "group" as const,
     children: [
-      { label: "Overview", href: "/reports" },
-      { label: "Population", href: "/reports/population" },
-      { label: "Registries", href: "/reports/registries" },
-      { label: "Certificates", href: "/reports/certificates" },
-      { label: "Blotter", href: "/reports/blotter" },
-      { label: "Financial", href: "/reports/financial" },
-      { label: "Inventory", href: "/reports/inventory" },
+      { label: "Overview", href: "/reports", permission: "reports:read" },
+      { label: "Population", href: "/reports/population", permission: "reports:read" },
+      { label: "Registries", href: "/reports/registries", permission: "reports:read" },
+      { label: "Certificates", href: "/reports/certificates", permission: "reports:read" },
+      { label: "Blotter", href: "/reports/blotter", permission: "reports:read" },
+      { label: "Financial", href: "/reports/financial", permission: "reports:read" },
+      { label: "Inventory", href: "/reports/inventory", permission: "reports:read" },
     ],
   },
 ];
@@ -159,10 +186,15 @@ const bottomNav = [
     basePath: "/admin",
     type: "group" as const,
     children: [
-      { label: "Users", href: "/admin/users", addHref: "/admin/users/new" },
-      { label: "Puroks", href: "/admin/puroks" },
-      { label: "Audit Logs", href: "/admin/audit-logs" },
-      { label: "Backup", href: "/admin/backup" },
+      { label: "Users", href: "/admin/users", addHref: "/admin/users/new", permission: "users:read" },
+      // GET /api/puroks only requires residents:read (any role viewing
+      // residents can view the purok list) — write actions are separately
+      // gated behind settings:write inside the page itself.
+      { label: "Puroks", href: "/admin/puroks", permission: "residents:read" },
+      { label: "Audit Logs", href: "/admin/audit-logs", permission: "audit-logs:read" },
+      // No dedicated backup:read — GET /api/backup is gated behind
+      // backup:write too, which only ADMIN holds.
+      { label: "Backup", href: "/admin/backup", permission: "backup:write" },
     ],
   },
   {
@@ -170,8 +202,16 @@ const bottomNav = [
     href: "/admin/settings",
     icon: Settings,
     type: "link" as const,
+    permission: "settings:read",
   },
 ];
+
+// `permission` is either one required string, or a list where ALL must be
+// held (used by pages that fan out to several endpoints at once).
+function isAllowed(role: string, permission: string | string[]): boolean {
+  if (Array.isArray(permission)) return permission.every((p) => hasPermission(role, p));
+  return hasPermission(role, permission);
+}
 
 export default function Sidebar({
   collapsed,
@@ -185,6 +225,8 @@ export default function Sidebar({
   // Information) so the sidebar brand reflects whichever barangay this
   // instance is deployed for, instead of a hardcoded name.
   const [barangayName, setBarangayName] = useState("");
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role ?? "";
 
   useEffect(() => {
     let cancelled = false;
@@ -198,6 +240,22 @@ export default function Sidebar({
       });
     return () => { cancelled = true; };
   }, []);
+
+  const visibleMainNav = mainNav
+    .map((item) =>
+      item.type === "group"
+        ? { ...item, children: item.children.filter((c) => isAllowed(role, c.permission)) }
+        : item
+    )
+    .filter((item) => (item.type === "group" ? item.children.length > 0 : isAllowed(role, item.permission)));
+
+  const visibleBottomNav = bottomNav
+    .map((item) =>
+      item.type === "group"
+        ? { ...item, children: item.children.filter((c) => isAllowed(role, c.permission)) }
+        : item
+    )
+    .filter((item) => (item.type === "group" ? item.children.length > 0 : isAllowed(role, item.permission)));
 
   return (
     <aside
@@ -227,7 +285,7 @@ export default function Sidebar({
       {/* Nav */}
       <nav className="flex flex-1 flex-col overflow-y-auto px-3 py-4">
         <div className="flex flex-col gap-1">
-          {mainNav.map((item) =>
+          {visibleMainNav.map((item) =>
             item.type === "group" ? (
               <NavGroup
                 key={item.label}
@@ -249,7 +307,7 @@ export default function Sidebar({
         </div>
 
         <div className="mt-auto flex flex-col gap-1 border-t border-[#E9EAEC] pt-4">
-          {bottomNav.map((item) =>
+          {visibleBottomNav.map((item) =>
             item.type === "group" ? (
               <NavGroup
                 key={item.label}
