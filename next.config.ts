@@ -7,7 +7,18 @@
 // this app could be embedded in a hidden/disguised iframe on a malicious
 // page and clickjacked. Adding a conservative baseline set below; loosen
 // the CSP only as specific third-party resources actually require it.
+//
+// DEV FIX: the CSP's `script-src` had no `'unsafe-eval'`, and this whole
+// header set was applied unconditionally to every environment. Next.js's
+// dev-mode tooling (React Fast Refresh, error-overlay stack-trace
+// reconstruction) calls `eval()` — with no 'unsafe-eval' the browser
+// blocked it and logged "eval() is not supported in this environment" on
+// every page. React never uses eval() in production, so the fix is to
+// only relax script-src in development rather than weakening the
+// production policy.
 import type { NextConfig } from "next";
+
+const isDev = process.env.NODE_ENV !== "production";
 
 const securityHeaders = [
   // Prevents the app from being framed by any other origin — mitigates
@@ -31,11 +42,14 @@ const securityHeaders = [
   // sub-resources this app is already known to load (Google Fonts CSS —
   // see note in (dashboard)/layout.tsx about removing that; keep this
   // entry only if a self-hosted font migration hasn't happened yet).
+  // 'unsafe-eval' is only added in development — Next.js dev tooling
+  // needs it, but production React never calls eval() so the real policy
+  // stays strict where it actually matters.
   {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob:",

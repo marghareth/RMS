@@ -11,6 +11,19 @@
 //
 // Fix: before an update/deactivation would result in fewer than one
 // active ADMIN, reject it with a clear 409.
+//
+// TS FIX: `userUpdateSchema` is `userCreateSchema.partial().extend(...)`,
+// so `body.role` and `body.is_active` are typed `string | undefined` /
+// `boolean | undefined` — TS2345 correctly flagged passing those straight
+// into `wouldRemoveLastActiveAdmin`, which requires non-optional values.
+// This wasn't just a type-checker nag: at runtime, a caller PATCHing only
+// `{ password: "..." }` (a legitimate partial update) would send `role`
+// and `is_active` as `undefined`, and the old code passed them through
+// as-is — silently bypassing the last-admin check instead of falling back
+// to the user's current values. Fixed by loading the existing user first
+// and resolving each field to `body.field ?? existing.field` before the
+// check and before the write, so partial updates are evaluated against
+// what the record will actually become.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -54,7 +67,19 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   const id = parseInt(idParam);
   const body = userUpdateSchema.parse(await req.json());
 
-  if (await wouldRemoveLastActiveAdmin(id, body.role, body.is_active)) {
+  const existing = await prisma.user.findUnique({
+    where: { id },
+    select: { role: true, is_active: true },
+  });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Resolve to what the record will actually become after this PATCH —
+  // body.role / body.is_active are optional (partial update), so an
+  // omitted field means "leave as-is", not "clear it".
+  const resolvedRole = body.role ?? existing.role;
+  const resolvedIsActive = body.is_active ?? existing.is_active;
+
+  if (await wouldRemoveLastActiveAdmin(id, resolvedRole, resolvedIsActive)) {
     throw new ApiError(
       409,
       "LAST_ADMIN",
@@ -62,7 +87,7 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
     );
   }
 
-  const data: any = { role: body.role, is_active: body.is_active };
+  const data: any = { role: resolvedRole, is_active: resolvedIsActive };
   if (body.password) {
     data.password_hash = await bcrypt.hash(body.password, 10);
   }

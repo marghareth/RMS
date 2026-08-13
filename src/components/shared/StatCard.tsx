@@ -8,28 +8,38 @@ interface StatCardProps {
   color?: "blue" | "amber" | "green" | "red" | "purple" | "teal";
 }
 
-const colorMap = {
-  blue:   { bg: "bg-blue-50",   icon: "text-blue-500",   value: "text-blue-600"   },
-  amber:  { bg: "bg-amber-50",  icon: "text-amber-500",  value: "text-amber-600"  },
-  green:  { bg: "bg-green-50",  icon: "text-green-500",  value: "text-green-600"  },
-  red:    { bg: "bg-red-50",    icon: "text-red-500",    value: "text-red-600"    },
-  purple: { bg: "bg-purple-50", icon: "text-purple-500", value: "text-purple-600" },
-  teal:   { bg: "bg-teal-50",   icon: "text-teal-500",   value: "text-teal-600"   },
+// Muted "civic ledger" hues — same family used on the Dashboard (seal
+// green / slate blue / brick red / amber). These color the icon only,
+// as a light semantic cue; the card chrome and the value itself stay a
+// consistent ink-on-white regardless of color, so every stat card across
+// every page in the app reads the same way.
+const colorMap: Record<NonNullable<StatCardProps["color"]>, string> = {
+  blue:   "text-[#3E5C76]",
+  amber:  "text-[#B45309]",
+  green:  "text-[#0B6E4F]",
+  red:    "text-[#B3261E]",
+  purple: "text-[#6D4AFF]",
+  teal:   "text-[#0E7490]",
 };
 
 export default function StatCard({ label, value, sub, icon: Icon, color = "blue" }: StatCardProps) {
-  const c = colorMap[color];
+  const iconColor = colorMap[color] ?? colorMap.blue;
   return (
-    <div className="bg-white rounded-xl border border-[#E9EAEC] px-4 py-3.5 flex items-center gap-3.5">
-      <div className={`w-10 h-10 ${c.bg} rounded-xl flex items-center justify-center shrink-0`}>
-        <Icon size={18} className={c.icon} />
+    <div className="flex items-center gap-3.5 rounded-xl border border-[#E9EAEC] bg-white px-5 py-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F4F5F7]">
+        <Icon size={18} className={iconColor} />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-widest leading-none mb-1">
+        <p className="mb-1 text-[10px] font-bold uppercase tracking-widest leading-none text-[#9CA3AF]">
           {label}
         </p>
-        <p className={`text-[22px] font-bold leading-none ${c.value}`}>{value}</p>
-        {sub && <p className="text-[11px] text-[#9CA3AF] mt-1">{sub}</p>}
+        <p
+          className="text-[22px] font-bold leading-none text-[#1B2430] tabular-nums"
+          style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" }}
+        >
+          {value}
+        </p>
+        {sub && <p className="mt-1 text-[11px] text-[#9CA3AF]">{sub}</p>}
       </div>
     </div>
   );
