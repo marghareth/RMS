@@ -1,36 +1,47 @@
-// FILE PATH: src/app/api/dashboard/route.ts
-// Replace the entire contents of this file with the code below.
+// FILE: src/app/api/dashboard/route.ts
 //
-// WHAT WAS WRONG: this route already existed and already computed real
-// totals (totalResidents, totalHouseholds, activeCases, etc.) — that part
-// was fine. The problem was entirely on the frontend: the dashboard PAGE
-// (src/app/(dashboard)/dashboard/page.tsx) never called this endpoint at
-// all. It rendered six stat cards and two "recent" panels from hardcoded
-// arrays (const stats = [...], const recentBlotter = [...], const
-// recentActivity = [...]) with fixed numbers like "2,847" residents and
-// "+12.5%" trends that never changed no matter what was in the database.
+// SECURITY FIX: this route was gated by a single `requirePermission("residents:read")`
+// check, but the response bundled in data that requires much narrower
+// permissions than that — most seriously `recentActivity`, which is the
+// 10 most recent AUDIT LOG entries (who did what, when). Audit logs are
+// supposed to require "audit-logs:read" (only ADMIN/CAPTAIN hold that —
+// not even SECRETARY), yet almost every role has "residents:read", so
+// BHW/ENCODER/KAGAWAD/SECRETARY could all read the full audit trail
+// through this one dashboard call. The same problem applied to
+// `recentBlotterCases`/`activeCases`/`settledCases` (needs "blotter:read"),
+// certificate counts + `documentsByStatus` (needs "certificates:read"),
+// `visitorsActive` (needs "visitors:read"), `meetingsToday` (needs
+// "meetings:read"), and `totalAssets`/`borrowedEquipment` (needs
+// "equipment:read").
 //
-// This file adds two things the page needs that the old route didn't
-// return:
-//   1. recentBlotterCases — the 5 most recent blotter cases, for the
-//      "Recent Blotter Cases" panel (previously hardcoded).
-//   2. Real month-over-month trend data (this month's count vs last
-//      month's count) for residents, households, certificates issued,
-//      and equipment borrowed — so the trend arrows/percentages on the
-//      stat cards can reflect the database instead of being fabricated.
-//      "Active Blotter Cases" has no meaningful monthly trend (it's a
-//      live snapshot, not something with a natural month-over-month
-//      count), so no trend is computed for it — the frontend just won't
-//      show a trend badge on that card.
+// Fix: keep the single auth check for the base "you're allowed on the
+// dashboard at all" gate, but scope each section's data to whether the
+// caller's role actually holds the permission that section represents.
+// Sections the role can't see come back as safe empty defaults (0 / [] /
+// null) rather than being omitted — the frontend already treats those as
+// "nothing to show" (see dashboard/page.tsx's `.length === 0` checks), so
+// no shape changes are needed there.
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
+import { hasPermission } from "@/lib/permission";
 import { withErrorHandling } from "@/lib/api-handler";
 
 export const GET = withErrorHandling(async () => {
-  const auth = await requirePermission("residents:read");
+  const auth = await requirePermission("dashboard:read");
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+  const role = (auth.session.user as any)?.role as string;
+
+  const canReadBlotter = hasPermission(role, "blotter:read");
+  const canReadCertificates = hasPermission(role, "certificates:read");
+  const canReadVisitors = hasPermission(role, "visitors:read");
+  const canReadMeetings = hasPermission(role, "meetings:read");
+  const canReadEquipment = hasPermission(role, "equipment:read");
+  const canReadAuditLogs = hasPermission(role, "audit-logs:read");
+  const canReadResidents = hasPermission(role, "residents:read");
+  const canReadHouseholds = hasPermission(role, "households:read");
 
   const now = new Date();
   const startOfMonth      = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -44,15 +55,25 @@ export const GET = withErrorHandling(async () => {
   // pool_size: 15"), especially with other requests also holding
   // connections. Splitting into smaller sequential batches keeps peak
   // concurrent connections low while still being far faster than running
-  // all 17 one-by-one.
+  // all 17 one-by-one. Each query below is additionally short-circuited to
+  // a cheap default when the caller's role can't see that resource, so we
+  // don't even pay the query cost for data we're about to withhold.
   const [totalResidents, totalHouseholds, activeCases, borrowedEquipment, certsThisMonth, certsThisYear] =
     await Promise.all([
-      prisma.resident.count({ where: { is_archived: false } }),
-      prisma.household.count(),
-      prisma.blotterCase.count({ where: { status: { in: ["FILED", "ONGOING"] } } }),
-      prisma.equipmentBorrowing.count({ where: { actual_return: null } }),
-      prisma.certificate.count({ where: { issued_at: { gte: startOfMonth } } }),
-      prisma.certificate.count({ where: { issued_at: { gte: startOfYear } } }),
+      canReadResidents ? prisma.resident.count({ where: { is_archived: false } }) : Promise.resolve(0),
+      canReadHouseholds ? prisma.household.count() : Promise.resolve(0),
+      canReadBlotter
+        ? prisma.blotterCase.count({ where: { status: { in: ["FILED", "ONGOING"] } } })
+        : Promise.resolve(0),
+      canReadEquipment
+        ? prisma.equipmentBorrowing.count({ where: { actual_return: null } })
+        : Promise.resolve(0),
+      canReadCertificates
+        ? prisma.certificate.count({ where: { issued_at: { gte: startOfMonth } } })
+        : Promise.resolve(0),
+      canReadCertificates
+        ? prisma.certificate.count({ where: { issued_at: { gte: startOfYear } } })
+        : Promise.resolve(0),
     ]);
 
   // ── Batch 11 (Dashboard Customization) widget counts ──
@@ -61,52 +82,72 @@ export const GET = withErrorHandling(async () => {
 
   const [documentRequestsPending, visitorsActive, meetingsToday, settledCases, totalAssets] =
     await Promise.all([
-      prisma.certificate.count({ where: { status: "PENDING" } }).catch(() => 0),
-      prisma.visitorLog.count({ where: { time_out: null } }).catch(() => 0),
-      prisma.meetingRecord.count({ where: { meeting_date: { gte: startOfToday, lt: startOfTomorrow } } }).catch(() => 0),
-      prisma.blotterCase.count({ where: { status: { in: ["RESOLVED", "DISMISSED"] } } }),
-      prisma.equipment.count(),
+      canReadCertificates
+        ? prisma.certificate.count({ where: { status: "PENDING" } }).catch(() => 0)
+        : Promise.resolve(0),
+      canReadVisitors
+        ? prisma.visitorLog.count({ where: { time_out: null } }).catch(() => 0)
+        : Promise.resolve(0),
+      canReadMeetings
+        ? prisma.meetingRecord.count({ where: { meeting_date: { gte: startOfToday, lt: startOfTomorrow } } }).catch(() => 0)
+        : Promise.resolve(0),
+      canReadBlotter
+        ? prisma.blotterCase.count({ where: { status: { in: ["RESOLVED", "DISMISSED"] } } })
+        : Promise.resolve(0),
+      canReadEquipment ? prisma.equipment.count() : Promise.resolve(0),
     ]);
 
   const [residentsByPurok, residentsBySex, recentActivity, recentBlotterCases, documentsByStatus] =
     await Promise.all([
-      prisma.resident.groupBy({
-        by: ["purok_id"],
-        where: { is_archived: false },
-        _count: true,
-      }),
-      prisma.resident.groupBy({
-        by: ["sex"],
-        where: { is_archived: false },
-        _count: true,
-      }),
-      prisma.auditLog.findMany({
-        take: 10,
-        orderBy: { performed_at: "desc" },
-        include: { user: { select: { username: true } } },
-      }),
-      prisma.blotterCase.findMany({
-        take: 5,
-        orderBy: { created_at: "desc" },
-        select: { id: true, case_number: true, complainant_name: true, respondent_name: true, status: true },
-      }),
-      prisma.certificate.groupBy({ by: ["status"], _count: true }).catch(() => []),
+      canReadResidents
+        ? prisma.resident.groupBy({ by: ["purok_id"], where: { is_archived: false }, _count: true })
+        : Promise.resolve([]),
+      canReadResidents
+        ? prisma.resident.groupBy({ by: ["sex"], where: { is_archived: false }, _count: true })
+        : Promise.resolve([]),
+      canReadAuditLogs
+        ? prisma.auditLog.findMany({
+            take: 10,
+            orderBy: { performed_at: "desc" },
+            include: { user: { select: { username: true } } },
+          })
+        : Promise.resolve([]),
+      canReadBlotter
+        ? prisma.blotterCase.findMany({
+            take: 5,
+            orderBy: { created_at: "desc" },
+            select: { id: true, case_number: true, complainant_name: true, respondent_name: true, status: true },
+          })
+        : Promise.resolve([]),
+      canReadCertificates
+        ? prisma.certificate.groupBy({ by: ["status"], _count: true }).catch(() => [])
+        : Promise.resolve([]),
     ]);
 
   // ── Month-over-month comparison counts ──
   const [residentsThisMonth, residentsLastMonth, householdsThisMonth, householdsLastMonth] =
     await Promise.all([
-      prisma.resident.count({ where: { created_at: { gte: startOfMonth } } }),
-      prisma.resident.count({ where: { created_at: { gte: startOfLastMonth, lt: startOfMonth } } }),
-      prisma.household.count({ where: { created_at: { gte: startOfMonth } } }),
-      prisma.household.count({ where: { created_at: { gte: startOfLastMonth, lt: startOfMonth } } }),
+      canReadResidents ? prisma.resident.count({ where: { created_at: { gte: startOfMonth } } }) : Promise.resolve(0),
+      canReadResidents
+        ? prisma.resident.count({ where: { created_at: { gte: startOfLastMonth, lt: startOfMonth } } })
+        : Promise.resolve(0),
+      canReadHouseholds ? prisma.household.count({ where: { created_at: { gte: startOfMonth } } }) : Promise.resolve(0),
+      canReadHouseholds
+        ? prisma.household.count({ where: { created_at: { gte: startOfLastMonth, lt: startOfMonth } } })
+        : Promise.resolve(0),
     ]);
 
   const [certsLastMonth, equipmentThisMonth, equipmentLastMonth] =
     await Promise.all([
-      prisma.certificate.count({ where: { issued_at: { gte: startOfLastMonth, lt: startOfMonth } } }),
-      prisma.equipmentBorrowing.count({ where: { date_borrowed: { gte: startOfMonth } } }),
-      prisma.equipmentBorrowing.count({ where: { date_borrowed: { gte: startOfLastMonth, lt: startOfMonth } } }),
+      canReadCertificates
+        ? prisma.certificate.count({ where: { issued_at: { gte: startOfLastMonth, lt: startOfMonth } } })
+        : Promise.resolve(0),
+      canReadEquipment
+        ? prisma.equipmentBorrowing.count({ where: { date_borrowed: { gte: startOfMonth } } })
+        : Promise.resolve(0),
+      canReadEquipment
+        ? prisma.equipmentBorrowing.count({ where: { date_borrowed: { gte: startOfLastMonth, lt: startOfMonth } } })
+        : Promise.resolve(0),
     ]);
 
   // % change helper. Returns null when there's no prior-month baseline to
@@ -136,10 +177,10 @@ export const GET = withErrorHandling(async () => {
     totalAssets,
     documentsByStatus: documentsByStatus.map((d: any) => ({ status: d.status, count: d._count })),
     trends: {
-      residents:    pctChange(residentsThisMonth, residentsLastMonth),
-      households:   pctChange(householdsThisMonth, householdsLastMonth),
-      certsMonth:   pctChange(certsThisMonth, certsLastMonth),
-      equipment:    pctChange(equipmentThisMonth, equipmentLastMonth),
+      residents:    canReadResidents ? pctChange(residentsThisMonth, residentsLastMonth) : null,
+      households:   canReadHouseholds ? pctChange(householdsThisMonth, householdsLastMonth) : null,
+      certsMonth:   canReadCertificates ? pctChange(certsThisMonth, certsLastMonth) : null,
+      equipment:    canReadEquipment ? pctChange(equipmentThisMonth, equipmentLastMonth) : null,
     },
   });
 });

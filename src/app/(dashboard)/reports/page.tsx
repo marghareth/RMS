@@ -13,18 +13,6 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
 
-const CERT_TYPE_LABELS: Record<string, string> = {
-  RESIDENCY: "Residency",
-  INDIGENCY: "Indigency",
-  CLEARANCE: "Clearance",
-  GOOD_MORAL: "Good Moral",
-  BUSINESS_PERMIT: "Business",
-  COHABITATION: "Cohabitation",
-  SOLO_PARENT: "Solo Parent",
-  FIRST_TIME_JOB_SEEKER: "1st Time Job Seeker",
-  LATE_REGISTRATION: "Late Registration",
-};
-
 const BLOTTER_STATUS_COLORS: Record<string, string> = {
   FILED: "#3B82F6",
   ONGOING: "#F59E0B",
@@ -64,28 +52,46 @@ const EMPTY_SUMMARY: Summary = {
   seniorCitizens: 0, pwdCount: 0, fourPsCount: 0, monthlyIncome: 0, monthlyExpense: 0,
 };
 
+// The five report types GET /api/pdf/report/[type] actually accepts —
+// mirrors REPORT_TYPES in src/app/api/pdf/report/[type]/route.ts. Kept
+// separate from the on-screen REPORT_MODULES list below since "population"
+// is a module on this page but isn't one of this PDF route's types (it has
+// its own dedicated PopulationReportPDF export instead).
+const EXPORTABLE_REPORT_TYPES = ["certificates", "financial", "blotter", "inventory", "registries"] as const;
+
 export default function ReportsPage() {
   const router = useRouter();
-  const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const now = new Date();
+  const today = now.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   const [summary, setSummary] = useState<Summary>(EMPTY_SUMMARY);
   const [populationByPurok, setPopulationByPurok] = useState<PurokDatum[]>([]);
   const [certByType, setCertByType] = useState<CertDatum[]>([]);
   const [blotterByStatus, setBlotterByStatus] = useState<BlotterDatum[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+
+    // BUG FIX: GET /api/reports only ever reads `year` / `month` query
+    // params (see parseYearMonth() in src/app/api/reports/route.ts) — it
+    // has never read `date_from`. Passing `date_from=${monthStart}` here
+    // was silently ignored, so the route fell back to its default of "the
+    // whole current year", meaning the "Certs This Month" stat and the
+    // income/expense figures were actually year-to-date totals mislabeled
+    // as monthly ones. Sending the params the route actually parses fixes
+    // that.
+    const currentYear = String(now.getFullYear());
+    const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 
     async function load() {
       const [dashboardRes, certsRes, blotterRes, financialRes, inventoryRes, registriesRes, puroksRes] =
         await Promise.all([
           fetch("/api/dashboard"),
-          fetch(`/api/reports?type=certificates&date_from=${monthStart}`),
+          fetch(`/api/reports?type=certificates&year=${currentYear}&month=${currentMonth}`),
           fetch("/api/reports?type=blotter"),
-          fetch(`/api/reports?type=financial&date_from=${monthStart}`),
+          fetch(`/api/reports?type=financial&year=${currentYear}&month=${currentMonth}`),
           fetch("/api/reports?type=inventory"),
           fetch("/api/reports?type=registries"),
           fetch("/api/puroks"),
@@ -105,16 +111,16 @@ export default function ReportsPage() {
 
       const purokNameById = new Map<number, string>(puroks.map((p: { id: number; name: string }) => [p.id, p.name]));
 
-      const income = financial.find((f: { transaction_type: string }) => f.transaction_type === "INCOME")?._sum.amount ?? 0;
-      const expense = financial.find((f: { transaction_type: string }) => f.transaction_type === "EXPENSE")?._sum.amount ?? 0;
+      const income = financial.totalIncome ?? 0;
+      const expense = financial.totalExpense ?? 0;
 
-      const seniorCount = registries.find((r: { registry_type: string }) => r.registry_type === "SENIOR_CITIZEN")?._count ?? 0;
-      const pwdCount = registries.find((r: { registry_type: string }) => r.registry_type === "PWD")?._count ?? 0;
-      const fourPsCount = registries.find((r: { registry_type: string }) => r.registry_type === "FOUR_PS")?._count ?? 0;
+      const seniorCount = registries.seniors?.total ?? 0;
+      const pwdCount = registries.pwd?.total ?? 0;
+      const fourPsCount = registries.fourPs?.total ?? 0;
 
       setSummary({
         totalResidents: dashboard.totalResidents ?? 0,
-        certificatesMonth: certs.total ?? 0,
+        certificatesMonth: certs.totalThisMonth ?? 0,
         activeBlotter: dashboard.activeCases ?? 0,
         totalEquipment: inventory.total ?? 0,
         seniorCitizens: seniorCount,
@@ -135,20 +141,22 @@ export default function ReportsPage() {
 
       setCertByType(
         (certs.byType ?? [])
-          .map((c: { certificate_type: string; _count: number }) => ({
-            name: CERT_TYPE_LABELS[c.certificate_type] ?? c.certificate_type,
-            value: c._count,
+          .map((c: { type: string; count: number }) => ({
+            name: c.type,
+            value: c.count,
           }))
           .sort((a: CertDatum, b: CertDatum) => b.value - a.value)
           .slice(0, 5)
       );
 
       setBlotterByStatus(
-        (blotter.byStatus ?? []).map((b: { status: string; _count: number }) => ({
-          name: BLOTTER_STATUS_LABELS[b.status] ?? b.status,
-          value: b._count,
-          color: BLOTTER_STATUS_COLORS[b.status] ?? "#9CA3AF",
-        }))
+        (["FILED", "ONGOING", "RESOLVED", "DISMISSED"] as const)
+          .map((status) => ({
+            name: BLOTTER_STATUS_LABELS[status],
+            value: blotter[status.toLowerCase() as "filed" | "ongoing" | "resolved" | "dismissed"] ?? 0,
+            color: BLOTTER_STATUS_COLORS[status],
+          }))
+          .filter((b) => b.value > 0)
       );
 
       setLoading(false);
@@ -156,9 +164,23 @@ export default function ReportsPage() {
 
     load();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const netBalance = summary.monthlyIncome - summary.monthlyExpense;
+
+  // ENHANCEMENT: "Export All" previously had no onClick handler at all —
+  // opens a PDF for every exportable report type for the current year,
+  // one tab per report, reusing the same /api/pdf/report/[type] route the
+  // individual report pages use.
+  function handleExportAll() {
+    setExporting(true);
+    const year = String(now.getFullYear());
+    EXPORTABLE_REPORT_TYPES.forEach((type) => {
+      window.open(`/api/pdf/report/${type}?year=${year}`, "_blank");
+    });
+    setExporting(false);
+  }
 
   const REPORT_MODULES = [
     {
@@ -210,9 +232,13 @@ export default function ReportsPage() {
             Overview as of {today}
           </p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] text-[#6B7280] text-[13px] font-bold hover:bg-[#F4F5F7] transition">
+        <button
+          onClick={handleExportAll}
+          disabled={exporting}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] text-[#6B7280] text-[13px] font-bold hover:bg-[#F4F5F7] transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Download size={14} />
-          Export All
+          {exporting ? "Exporting…" : "Export All"}
         </button>
       </div>
 

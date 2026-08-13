@@ -275,10 +275,13 @@ export default function RegistryDetailSheet({
                 )}
               </div>
 
-              {/* 2-column card grid */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {/* Column 1 */}
-                <div className="space-y-4">
+              {/* Single-column card stack — was a 2-column grid split into
+                  "Column 1"/"Column 2" divs, which crammed two sections
+                  side by side and made each one hard to scan. The sheet
+                  already scrolls vertically, so stacking every section
+                  full-width and letting the user scroll is easier to read
+                  than fitting things side by side. */}
+              <div className="flex flex-col gap-4">
                   <SectionCard title="Personal Information" icon={User} iconBg="bg-[#3B82F6]">
                     <InfoRow label="RBI ID" value={rbiId(r.id)} />
                     <InfoRow label="Date of Birth" value={fmtDate(r.birthdate)} />
@@ -305,10 +308,7 @@ export default function RegistryDetailSheet({
                       <InfoRow label="4Ps Status" value={entry.is_4ps_beneficiary ? "Active" : "Inactive"} />
                     )}
                   </SectionCard>
-                </div>
 
-                {/* Column 2 */}
-                <div className="space-y-4">
                   <SectionCard title="Address & Household" icon={Home} iconBg="bg-amber-500">
                     <InfoRow label="Purok" value={r.purok?.name} />
                     <InfoRow label="Household No." value={r.household?.household_no} />
@@ -398,7 +398,6 @@ export default function RegistryDetailSheet({
                       </div>
                     )}
                   </SectionCard>
-                </div>
               </div>
             </SheetBody>
 
