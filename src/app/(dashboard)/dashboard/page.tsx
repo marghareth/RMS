@@ -1,9 +1,23 @@
-// FILE: src/app/(dashboard)/dashboard/page.tsx
 "use client";
 
+// FILE: src/app/(dashboard)/dashboard/page.tsx
+//
+// UI REDESIGN (v2): same /api/dashboard + /api/dashboard-preferences data
+// contract and the same DashboardPreference widget keys as before — this is
+// a visual pass only, DashboardCustomizeSheet and per-role defaults in
+// dashboard-defaults.ts are untouched.
+//
+// Design direction: this is an internal records/registry tool for a
+// barangay office (RBI = registry of inhabitants, blotter = an actual
+// police-style ledger, certificates already carry sequential queue
+// numbers like "Q-2026-0001"). So the KPI row is built as a literal
+// ledger — a single bordered grid of cells sharing hairlines, tabular
+// figures — instead of a scatter of separate colored icon-badge cards.
+// Kept deliberately quiet: one ink color for structure, one accent
+// (seal green) used sparingly for the one interactive/active moment,
+// muted status colors only where status is literally being reported.
 import { useEffect, useState } from "react";
 import {
-  Users, FileText, Shield, Package, DoorOpen, CalendarClock, CheckCircle2,
   ArrowUpRight, ArrowDownRight, SlidersHorizontal,
   UserPlus, FilePlus2, ScrollText, LogIn,
 } from "lucide-react";
@@ -66,98 +80,105 @@ function formatRelativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+function formatClock(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
 function activityLabel(a: ActivityRow): string {
   return a.details ?? `${a.action} — ${a.table_affected}`;
 }
 
-function TrendBadge({ value }: { value: number | null | undefined }) {
+function initials(name: string): string {
+  return name.trim().charAt(0).toUpperCase() || "?";
+}
+
+function Monogram({ name }: { name: string }) {
+  return (
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#E4E1D8] bg-white text-[10px] font-bold text-[#1B2430]">
+      {initials(name)}
+    </span>
+  );
+}
+
+function Trend({ value }: { value: number | null | undefined }) {
   if (value === undefined) return null;
   if (value === null) {
-    return (
-      <span className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 bg-[#EBF3FF] text-[#2563EB]">
-        New
-      </span>
-    );
+    return <span className="text-[11px] font-semibold text-[#3E5C76]">New</span>;
   }
   const up = value >= 0;
   return (
-    <span
-      className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0
-        ${up ? "bg-[#D1FAE5] text-[#059669]" : "bg-[#FEE2E2] text-[#DC2626]"}`}
-    >
-      {up ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+    <span className={`inline-flex items-center gap-0.5 text-[11px] font-semibold ${up ? "text-[#0B6E4F]" : "text-[#B3261E]"}`}>
+      {up ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
       {up ? "+" : ""}{value}%
     </span>
   );
 }
 
-// ─── STAT CARD ────────────────────────────────────────────────────────────────
-interface StatCardDef {
+// ─── LEDGER STAT STRIP ──────────────────────────────────────────────────────
+// One bordered grid, hairlines between every cell (via bg-border + gap-px),
+// tabular figures — a registry row, not a stack of separate cards.
+interface StatCell {
   key: WidgetKey;
   label: string;
   value: string;
   trend?: number | null;
-  sub: string;
-  desc: string;
-  icon: React.ElementType;
-  valueColor: string;
-  iconBg: string;
-  iconColor: string;
+  caption: string;
   href: string;
 }
 
-function StatCard({ s }: { s: StatCardDef }) {
-  const Icon = s.icon;
+function LedgerStatStrip({ stats }: { stats: StatCell[] }) {
   return (
-    <Link
-      href={s.href}
-      className="flex flex-col gap-4 rounded-xl border border-[#E9EAEC] bg-white px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition hover:border-[#3B82F6]/40"
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-1 min-w-0">
-          <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wider">{s.label}</p>
-          <p className={`text-4xl font-bold leading-none ${s.valueColor}`}>{s.value}</p>
-        </div>
-        <TrendBadge value={s.trend} />
-      </div>
-      <div className="flex items-center justify-between pt-4 border-t border-[#F4F5F7]">
-        <div className="flex flex-col gap-0.5 min-w-0">
-          <p className="text-sm font-medium text-[#374151]">{s.sub}</p>
-          <p className="text-xs text-[#9CA3AF]">{s.desc}</p>
-        </div>
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ml-4 ${s.iconBg}`}>
-          <Icon size={18} className={s.iconColor} />
-        </div>
-      </div>
-    </Link>
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {stats.map((s) => (
+        <Link
+          key={s.key}
+          href={s.href}
+          className="flex flex-col justify-between gap-4 rounded-xl border border-[#E9EAEC] bg-white px-5 py-4 transition hover:border-[#0B6E4F]/30 hover:bg-[#E8F3EE]/50"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-[10.5px] font-bold uppercase tracking-widest text-[#9CA3AF]">{s.label}</p>
+            <Trend value={s.trend} />
+          </div>
+          <div>
+            <p
+              className="text-[28px] font-bold leading-none text-[#1B2430] tabular-nums"
+              style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" }}
+            >
+              {s.value}
+            </p>
+            <p className="mt-1.5 text-[11px] text-[#9CA3AF]">{s.caption}</p>
+          </div>
+        </Link>
+      ))}
+    </div>
   );
 }
 
-// ─── QUICK ACTIONS ────────────────────────────────────────────────────────────
+// ─── QUICK ACTIONS (toolbar) ───────────────────────────────────────────────────
 const QUICK_ACTIONS = [
-  { label: "New Resident", href: "/residents/new", icon: UserPlus, bg: "bg-[#EBF3FF]", color: "text-[#2563EB]" },
-  { label: "New Certificate", href: "/certificates/new", icon: FilePlus2, bg: "bg-[#FEF3C7]", color: "text-[#D97706]" },
-  { label: "File Blotter Case", href: "/blotter/new", icon: ScrollText, bg: "bg-[#FEE2E2]", color: "text-[#DC2626]" },
-  { label: "Log Visitor", href: "/visitors/new", icon: LogIn, bg: "bg-[#D1FAE5]", color: "text-[#059669]" },
+  { label: "New Resident", href: "/residents/new", icon: UserPlus },
+  { label: "New Certificate", href: "/certificates/new", icon: FilePlus2 },
+  { label: "File Blotter Case", href: "/blotter/new", icon: ScrollText },
+  { label: "Log Visitor", href: "/visitors/new", icon: LogIn },
 ];
 
 function QuickActionsPanel() {
   return (
-    <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-      <h2 className="text-base font-semibold text-[#1F2937] mb-4">Quick Actions</h2>
-      <div className="grid grid-cols-2 gap-3">
+    <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5">
+      <h2 className="text-[13px] font-bold text-[#1B2430]">Quick Actions</h2>
+      <p className="mt-0.5 text-[11px] text-[#9CA3AF]">Jump straight to a new entry</p>
+      <div className="mt-4 flex flex-col gap-2">
         {QUICK_ACTIONS.map((a) => {
           const Icon = a.icon;
           return (
             <Link
               key={a.label}
               href={a.href}
-              className="flex flex-col items-start gap-2.5 rounded-xl border border-[#E9EAEC] p-4 transition hover:border-[#3B82F6]/40 hover:bg-[#F9FAFB]"
+              className="group flex items-center gap-3 rounded-lg border border-[#E9EAEC] px-3.5 py-2.5 transition hover:border-[#0B6E4F]/30 hover:bg-[#E8F3EE]/50"
             >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${a.bg}`}>
-                <Icon size={16} className={a.color} />
-              </div>
-              <p className="text-[13px] font-semibold text-[#1F2937] leading-tight">{a.label}</p>
+              <Icon size={15} className="shrink-0 text-[#6B7280] transition group-hover:text-[#0B6E4F]" />
+              <p className="flex-1 text-[13px] font-medium text-[#374151] transition group-hover:text-[#0B6E4F]">{a.label}</p>
+              <ArrowUpRight size={13} className="shrink-0 text-[#D1D5DB] transition group-hover:text-[#0B6E4F]" />
             </Link>
           );
         })}
@@ -173,44 +194,44 @@ function PriorityTasksPanel({ data }: { data: DashboardData }) {
       label: `${data.documentRequestsPending} document request${data.documentRequestsPending === 1 ? "" : "s"} pending`,
       show: data.documentRequestsPending > 0,
       href: "/certificates",
-      color: "bg-amber-500",
+      dot: "bg-amber-500",
     },
     {
       label: `${data.activeCases} blotter case${data.activeCases === 1 ? "" : "s"} awaiting resolution`,
       show: data.activeCases > 0,
       href: "/blotter",
-      color: "bg-red-500",
+      dot: "bg-[#B3261E]",
     },
     {
       label: `${data.visitorsActive} visitor${data.visitorsActive === 1 ? "" : "s"} still checked in`,
       show: data.visitorsActive > 0,
       href: "/visitors",
-      color: "bg-blue-500",
+      dot: "bg-[#3E5C76]",
     },
     {
       label: `${data.meetingsToday} meeting${data.meetingsToday === 1 ? "" : "s"} scheduled today`,
       show: data.meetingsToday > 0,
       href: "/meetings",
-      color: "bg-green-500",
+      dot: "bg-[#0B6E4F]",
     },
   ].filter((t) => t.show);
 
   return (
-    <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-      <h2 className="text-base font-semibold text-[#1F2937] mb-1">Priority Tasks</h2>
-      <p className="text-xs text-[#9CA3AF] mb-4">Things that may need your attention</p>
+    <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5">
+      <h2 className="text-[13px] font-bold text-[#1B2430]">Priority Tasks</h2>
+      <p className="mt-0.5 text-[11px] text-[#9CA3AF]">Things that may need your attention</p>
 
       {tasks.length === 0 ? (
         <p className="py-6 text-center text-xs text-[#9CA3AF]">Nothing pending — you&apos;re all caught up.</p>
       ) : (
-        <div className="flex flex-col divide-y divide-[#F4F5F7]">
+        <div className="mt-4 flex flex-col divide-y divide-[#F4F5F7]">
           {tasks.map((t) => (
-            <Link key={t.label} href={t.href} className="flex items-center gap-3 py-3 group">
-              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${t.color}`} />
-              <p className="text-sm font-medium text-[#1F2937] group-hover:text-[#3B82F6] transition flex-1">
+            <Link key={t.label} href={t.href} className="group flex items-center gap-3 py-3">
+              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${t.dot}`} />
+              <p className="flex-1 text-[13px] font-medium text-[#1B2430] transition group-hover:text-[#0B6E4F]">
                 {t.label}
               </p>
-              <ArrowUpRight size={14} className="text-[#D1D5DB] group-hover:text-[#3B82F6] transition shrink-0" />
+              <ArrowUpRight size={14} className="shrink-0 text-[#D1D5DB] transition group-hover:text-[#0B6E4F]" />
             </Link>
           ))}
         </div>
@@ -219,26 +240,26 @@ function PriorityTasksPanel({ data }: { data: DashboardData }) {
   );
 }
 
-// ─── DOCUMENT STATUS CHART ────────────────────────────────────────────────────
+// ─── DOCUMENT STATUS ────────────────────────────────────────────────────────────
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-amber-400",
-  PROCESSING: "bg-blue-400",
-  RELEASED: "bg-green-500",
+  PROCESSING: "bg-[#3E5C76]",
+  RELEASED: "bg-[#0B6E4F]",
   CANCELLED: "bg-gray-300",
 };
 
 function DocumentStatusChart({ data }: { data: DashboardData }) {
   const total = data.documentsByStatus.reduce((sum, d) => sum + d.count, 0);
   return (
-    <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-      <h2 className="text-base font-semibold text-[#1F2937] mb-1">Document Status</h2>
-      <p className="text-xs text-[#9CA3AF] mb-4">Breakdown of all document requests</p>
+    <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5">
+      <h2 className="text-[13px] font-bold text-[#1B2430]">Document Status</h2>
+      <p className="mt-0.5 text-[11px] text-[#9CA3AF]">Breakdown of all document requests</p>
 
       {total === 0 ? (
         <p className="py-6 text-center text-xs text-[#9CA3AF]">No document requests on file yet.</p>
       ) : (
         <>
-          <div className="flex h-3 w-full overflow-hidden rounded-full bg-[#F4F5F7] mb-4">
+          <div className="mb-4 mt-4 flex h-2.5 w-full overflow-hidden rounded-full bg-[#F4F5F7]">
             {data.documentsByStatus.map((d) => (
               <div
                 key={d.status}
@@ -248,18 +269,65 @@ function DocumentStatusChart({ data }: { data: DashboardData }) {
               />
             ))}
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             {data.documentsByStatus.map((d) => (
               <div key={d.status} className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${STATUS_COLORS[d.status] ?? "bg-gray-300"}`} />
+                <span className={`h-2 w-2 shrink-0 rounded-full ${STATUS_COLORS[d.status] ?? "bg-gray-300"}`} />
                 <p className="text-xs text-[#374151]">
                   {d.status.charAt(0) + d.status.slice(1).toLowerCase()}{" "}
-                  <span className="text-[#9CA3AF]">({d.count})</span>
+                  <span className="text-[#9CA3AF] tabular-nums">({d.count})</span>
                 </p>
               </div>
             ))}
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+// ─── RECENT ACTIVITY (ledger table) ─────────────────────────────────────────────
+function RecentActivityTable({ data }: { data: DashboardData }) {
+  return (
+    <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5">
+      <h2 className="text-[13px] font-bold text-[#1B2430]">Recent Activity</h2>
+      <p className="mt-0.5 text-[11px] text-[#9CA3AF]">Latest actions across all modules</p>
+
+      {data.recentActivity.length === 0 ? (
+        <p className="py-6 text-center text-xs text-[#9CA3AF]">No activity recorded yet.</p>
+      ) : (
+        <table className="mt-4 w-full table-fixed border-collapse">
+          <thead>
+            <tr className="border-b border-[#E9EAEC]">
+              <th className="pb-2 text-left text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">Entry</th>
+              <th className="hidden w-28 pb-2 text-left text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] sm:table-cell">Module</th>
+              <th className="w-20 pb-2 text-right text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">Time</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#F4F5F7]">
+            {data.recentActivity.map((a) => (
+              <tr key={a.id}>
+                <td className="py-3 pr-3">
+                  <div className="flex items-center gap-2.5">
+                    <Monogram name={a.user.username} />
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-medium text-[#1B2430]">{activityLabel(a)}</p>
+                      <p className="text-[11px] text-[#9CA3AF]">{a.user.username}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="hidden py-3 pr-3 sm:table-cell">
+                  <span className="block w-fit max-w-full truncate rounded border border-[#E9EAEC] px-2 py-0.5 text-[10px] font-semibold text-[#6B7280]">
+                    {a.table_affected}
+                  </span>
+                </td>
+                <td className="whitespace-nowrap py-3 text-right text-[11px] tabular-nums text-[#9CA3AF]" title={formatClock(a.performed_at)}>
+                  {formatRelativeTime(a.performed_at)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
@@ -290,7 +358,7 @@ export default function DashboardPage() {
       });
   }, []);
 
-  const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 
   function isOn(key: WidgetKey) {
     return preferences ? preferences[key] : true;
@@ -307,48 +375,40 @@ export default function DashboardPage() {
     );
   }
 
-  const allStats: StatCardDef[] = [
+  const allStats: StatCell[] = [
     {
       key: "kpi_residents", label: "Residents", value: data.totalResidents.toLocaleString(),
-      trend: data.trends.residents, sub: "Active registered residents",
-      desc: "Non-archived residents in RBI", icon: Users,
-      valueColor: "text-[#2563EB]", iconBg: "bg-[#EBF3FF]", iconColor: "text-[#2563EB]",
+      trend: data.trends.residents, caption: `${data.totalHouseholds.toLocaleString()} households`,
       href: "/residents",
     },
     {
-      key: "kpi_document_requests", label: "Document Requests", value: data.documentRequestsPending.toLocaleString(),
-      sub: "Pending certificates", desc: "Awaiting processing", icon: FileText,
-      valueColor: "text-[#D97706]", iconBg: "bg-[#FEF3C7]", iconColor: "text-[#D97706]",
+      key: "kpi_document_requests", label: "Documents", value: data.documentRequestsPending.toLocaleString(),
+      caption: "pending requests",
       href: "/certificates",
     },
     {
-      key: "kpi_blotter_cases", label: "Blotter Cases", value: data.activeCases.toLocaleString(),
-      sub: "Filed and ongoing cases", desc: "Cases awaiting resolution", icon: Shield,
-      valueColor: "text-[#DC2626]", iconBg: "bg-[#FEE2E2]", iconColor: "text-[#DC2626]",
+      key: "kpi_blotter_cases", label: "Blotter", value: data.activeCases.toLocaleString(),
+      caption: "cases awaiting resolution",
       href: "/blotter",
     },
     {
-      key: "kpi_visitors", label: "Visitors", value: data.visitorsActive.toLocaleString(),
-      sub: "Currently checked in", desc: "Active visitor log entries", icon: DoorOpen,
-      valueColor: "text-[#059669]", iconBg: "bg-[#D1FAE5]", iconColor: "text-[#059669]",
-      href: "/visitors",
-    },
-    {
-      key: "kpi_meetings_today", label: "Meetings Today", value: data.meetingsToday.toLocaleString(),
-      sub: "Scheduled for today", desc: "SB meetings & assemblies", icon: CalendarClock,
-      valueColor: "text-[#7C3AED]", iconBg: "bg-[#EDE9FE]", iconColor: "text-[#7C3AED]",
-      href: "/meetings",
-    },
-    {
       key: "kpi_assets", label: "Assets", value: data.totalAssets.toLocaleString(),
-      trend: data.trends.equipment, sub: "Inventory items", desc: `${data.borrowedEquipment} currently borrowed`, icon: Package,
-      valueColor: "text-[#D97706]", iconBg: "bg-[#FEF3C7]", iconColor: "text-[#D97706]",
+      trend: data.trends.equipment, caption: `${data.borrowedEquipment} currently borrowed`,
       href: "/equipment",
     },
     {
-      key: "kpi_settled_cases", label: "Settled Cases", value: data.settledCases.toLocaleString(),
-      sub: "Resolved & dismissed", desc: "Total blotter cases closed", icon: CheckCircle2,
-      valueColor: "text-[#059669]", iconBg: "bg-[#D1FAE5]", iconColor: "text-[#059669]",
+      key: "kpi_visitors", label: "Visitors", value: data.visitorsActive.toLocaleString(),
+      caption: "checked in now",
+      href: "/visitors",
+    },
+    {
+      key: "kpi_meetings_today", label: "Meetings", value: data.meetingsToday.toLocaleString(),
+      caption: "scheduled today",
+      href: "/meetings",
+    },
+    {
+      key: "kpi_settled_cases", label: "Settled", value: data.settledCases.toLocaleString(),
+      caption: "cases closed to date",
       href: "/blotter",
     },
   ];
@@ -356,29 +416,31 @@ export default function DashboardPage() {
   const visibleStats = allStats.filter((s) => isOn(s.key));
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-7">
 
-      {/* Page header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-[26px] font-bold leading-tight tracking-tight text-[#1F2937]">Dashboard</h1>
-          <p className="mt-1.5 text-sm text-[#9CA3AF]">{today}</p>
+      {/* Page header — double hairline underneath is the one recurring
+          "letterhead" device used across the redesigned overview pages */}
+      <div>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-[#9CA3AF]">Overview</p>
+            <h1 className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-[#1B2430]">Dashboard</h1>
+            <p className="mt-1 text-[13px] text-[#9CA3AF]">{today}</p>
+          </div>
+          <button
+            onClick={() => setCustomizeOpen(true)}
+            className="flex shrink-0 items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-4 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7]"
+          >
+            <SlidersHorizontal size={14} />
+            Customize
+          </button>
         </div>
-        <button
-          onClick={() => setCustomizeOpen(true)}
-          className="flex shrink-0 items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-4 py-2.5 text-[13px] font-bold text-[#374151] shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition hover:bg-[#F4F5F7]"
-        >
-          <SlidersHorizontal size={14} />
-          Customize
-        </button>
+        <div className="mt-4 h-px bg-[#1B2430]" />
+        <div className="mt-0.75 h-px bg-[#E9EAEC]" />
       </div>
 
-      {/* KPI stat cards */}
-      {visibleStats.length > 0 && (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {visibleStats.map((s) => <StatCard key={s.key} s={s} />)}
-        </div>
-      )}
+      {/* KPI ledger strip */}
+      {visibleStats.length > 0 && <LedgerStatStrip stats={visibleStats} />}
 
       {/* Quick Actions + Priority Tasks */}
       {(isOn("quick_actions") || isOn("priority_tasks")) && (
@@ -388,50 +450,24 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Activity Feed + Document Status Chart */}
+      {/* Activity Feed + Document Status */}
       {(isOn("activity_feed") || isOn("document_status_chart")) && (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          {isOn("activity_feed") && (
-            <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-              <div className="mb-5">
-                <h2 className="text-base font-semibold text-[#1F2937]">Recent Activity</h2>
-                <p className="text-xs text-[#9CA3AF] mt-0.5">Latest actions across all modules</p>
-              </div>
-
-              {data.recentActivity.length === 0 ? (
-                <p className="py-6 text-center text-xs text-[#9CA3AF]">No activity recorded yet.</p>
-              ) : (
-                <div className="flex flex-col divide-y divide-[#F4F5F7]">
-                  {data.recentActivity.map((a) => (
-                    <div key={a.id} className="flex items-start gap-3 py-3">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#3B82F6] shrink-0 mt-1.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[#1F2937] leading-snug">{activityLabel(a)}</p>
-                        <p className="text-xs text-[#9CA3AF] mt-0.5">{a.user.username} · {formatRelativeTime(a.performed_at)}</p>
-                      </div>
-                      <span className="text-[11px] font-semibold bg-[#F4F5F7] text-[#6B7280] px-2.5 py-1 rounded-full whitespace-nowrap shrink-0">
-                        {a.table_affected}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          {isOn("activity_feed") && <RecentActivityTable data={data} />}
           {isOn("document_status_chart") && <DocumentStatusChart data={data} />}
         </div>
       )}
 
       {/* Recent Blotter Cases — always shown; not user-togglable per spec */}
-      <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-        <div className="flex items-start justify-between mb-5">
+      <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5">
+        <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-base font-semibold text-[#1F2937]">Recent Blotter Cases</h2>
-            <p className="text-xs text-[#9CA3AF] mt-0.5">Latest filed and ongoing cases</p>
+            <h2 className="text-[13px] font-bold text-[#1B2430]">Recent Blotter Cases</h2>
+            <p className="mt-0.5 text-[11px] text-[#9CA3AF]">Latest filed and ongoing cases</p>
           </div>
           <Link
             href="/blotter"
-            className="flex items-center gap-1 text-xs font-semibold text-[#3B82F6] hover:text-[#2563EB] transition shrink-0 mt-0.5"
+            className="mt-0.5 flex shrink-0 items-center gap-1 text-xs font-semibold text-[#0B6E4F] transition hover:text-[#095c41]"
           >
             View all <ArrowUpRight size={12} />
           </Link>
@@ -440,19 +476,33 @@ export default function DashboardPage() {
         {data.recentBlotterCases.length === 0 ? (
           <p className="py-6 text-center text-xs text-[#9CA3AF]">No blotter cases filed yet.</p>
         ) : (
-          <div className="flex flex-col divide-y divide-[#F4F5F7]">
-            {data.recentBlotterCases.map((b) => (
-              <div key={b.id} className="flex items-center justify-between py-3 gap-4">
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-[#1F2937] truncate">{b.case_number}</p>
-                  <p className="text-xs text-[#9CA3AF] mt-0.5 truncate">
-                    {b.complainant_name} vs {b.respondent_name}
-                  </p>
-                </div>
-                <StatusBadge status={b.status} />
-              </div>
-            ))}
-          </div>
+          <table className="mt-4 w-full table-fixed border-collapse">
+            <thead>
+              <tr className="border-b border-[#E9EAEC]">
+                <th className="w-28 pb-2 text-left text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] sm:w-36">Case No.</th>
+                <th className="pb-2 text-left text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">Parties</th>
+                <th className="w-24 pb-2 text-right text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] sm:w-28">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F4F5F7]">
+              {data.recentBlotterCases.map((b) => (
+                <tr key={b.id}>
+                  <td
+                    className="truncate py-3 pr-3 text-[13px] font-bold text-[#1B2430] tabular-nums"
+                    style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" }}
+                  >
+                    {b.case_number}
+                  </td>
+                  <td className="truncate py-3 pr-3 text-[13px] text-[#374151]">
+                    {b.complainant_name} <span className="text-[#9CA3AF]">vs</span> {b.respondent_name}
+                  </td>
+                  <td className="py-3 text-right">
+                    <StatusBadge status={b.status} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
 

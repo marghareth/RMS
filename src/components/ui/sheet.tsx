@@ -54,6 +54,7 @@ function SheetContent({
   side = "right",
   widthClassName = "w-full sm:w-1/2",
   children,
+  style,
   ...props
 }: SheetContentProps) {
   const edge = side === "right" ? "right-0" : "left-0";
@@ -73,6 +74,12 @@ function SheetContent({
           closedTransform,
           className
         )}
+        // Matches the font stack used in (dashboard)/layout.tsx. Declared
+        // explicitly (not just inherited) because this content is portaled
+        // to document.body, outside that layout's wrapper div, so it
+        // wouldn't otherwise pick up the same font declaration. Spread
+        // after so a caller-supplied `style` can still override it.
+        style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif", ...style }}
         {...props}
       >
         {children}

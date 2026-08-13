@@ -15,6 +15,16 @@
   --color-text-main: #1f2937;
   --color-text-muted: #6b7280;
   --color-text-light: #9ca3af;
+
+  /* ── Registry accent (dashboard/overview redesign) ─────────────────────
+     A quiet "civic ledger" accent for KPI strips, tables, and status
+     dots on the dashboard + overview pages — additive to the tokens
+     above, which are untouched and still used everywhere else. */
+  --color-ink: #1b2430;
+  --color-seal: #0b6e4f;
+  --color-seal-hover: #095c41;
+  --color-seal-tint: #e8f3ee;
+  --color-hairline: #e4e1d8;
 }
 
 *,
