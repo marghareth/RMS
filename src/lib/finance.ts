@@ -36,10 +36,14 @@ export const APPROPRIATION_CATEGORY_LABELS: Record<AppropriationCategory, string
   CO: "Capital Outlay",
 };
 
+// Same "civic ledger" hues as StatCard's colorMap (src/components/shared/
+// StatCard.tsx) — kept here as the single source of truth for category
+// colors so anywhere that renders a PS/MOOE/CO badge or chart segment
+// (this page, disbursements, revenues, appropriations) reads consistently.
 export const APPROPRIATION_CATEGORY_COLORS: Record<AppropriationCategory, string> = {
-  PS: "#3B82F6",
-  MOOE: "#F59E0B",
-  CO: "#059669",
+  PS: "#3E5C76",   // slate blue  — StatCard "blue"
+  MOOE: "#B45309", // amber       — StatCard "amber"
+  CO: "#0B6E4F",   // seal green  — StatCard "green"
 };
 
 export type AppropriationStatus = "PENDING" | "APPROVED" | "COMPLETED";

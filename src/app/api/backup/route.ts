@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
-import { withErrorHandling } from "@/lib/api-handler";
+import { withErrorHandling, ApiError } from "@/lib/api-handler";
+import { runDatabaseBackup, BackupError } from "@/lib/backup";
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("backup:write");
@@ -21,10 +22,18 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("backup:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  let result;
+  try {
+    result = await runDatabaseBackup();
+  } catch (err) {
+    if (err instanceof BackupError) throw new ApiError(500, "BACKUP_FAILED", err.message);
+    throw err;
+  }
+
   const backup = await prisma.backup.create({
     data: {
       triggered_by: parseInt(auth.session.user.id),
-      file_reference: `backup-${Date.now()}.sql`,
+      file_reference: result.relativePath,
     },
   });
 
@@ -33,8 +42,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     action: "BACKUP",
     table_affected: "System",
     record_id: backup.id,
-    details: `Manual backup triggered`,
+    details: `Manual backup created: ${result.relativePath} (${(result.sizeBytes / 1024).toFixed(1)} KB)`,
   });
 
-  return NextResponse.json(backup, { status: 201 });
+  return NextResponse.json({ ...backup, sizeBytes: result.sizeBytes }, { status: 201 });
 });

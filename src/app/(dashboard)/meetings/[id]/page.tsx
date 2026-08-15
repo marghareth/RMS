@@ -19,6 +19,9 @@ import {
   Plus,
   Trash2,
   ListChecks,
+  Sparkles,
+  Loader2,
+  Copy,
 } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import StatusBadge from "@/components/shared/StatusBadge";
@@ -63,10 +66,81 @@ export default function MeetingDetailPage() {
     loadMeeting();
   }, [loadMeeting]);
 
+  // ── Duplicate meeting ─────────────────────────────────────────────────
+  // Lightweight alternative to full recurrence rules: clone this meeting's
+  // type/title/location/agenda structure onto a new date instead of
+  // rebuilding the same weekly agenda from scratch each time.
+  const [duplicateOpen, setDuplicateOpen] = useState(false);
+  const [duplicateDate, setDuplicateDate] = useState("");
+  const [duplicating, setDuplicating] = useState(false);
+  const [duplicateError, setDuplicateError] = useState("");
+
+  async function handleDuplicate() {
+    if (!duplicateDate) return;
+    setDuplicating(true);
+    setDuplicateError("");
+    try {
+      const res = await fetch(`/api/meetings/${meetingId}/duplicate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ meeting_date: duplicateDate }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setDuplicateError(data.message || "Couldn't duplicate this meeting.");
+        return;
+      }
+      router.push(`/meetings/${data.id}`);
+    } catch (e) {
+      console.error(e);
+      setDuplicateError("Couldn't duplicate this meeting.");
+    } finally {
+      setDuplicating(false);
+    }
+  }
+
   // ── Minutes inline edit ──────────────────────────────────────────────
   const [editingMinutes, setEditingMinutes] = useState(false);
   const [draftMinutes, setDraftMinutes] = useState("");
   const [savingMinutes, setSavingMinutes] = useState(false);
+
+  // ── AI minutes draft ───────────────────────────────────────────────────
+  // Staff jots raw notes during/after the meeting; AI turns them into a
+  // properly formatted draft grounded in this meeting's actual agenda
+  // items (fetched server-side, not trusted from the client). Still just
+  // fills the same draftMinutes textarea above — nothing saves until the
+  // existing Save button is clicked, so staff always reviews before it's
+  // committed.
+  const [aiNotesOpen, setAiNotesOpen] = useState(false);
+  const [aiRawNotes, setAiRawNotes] = useState("");
+  const [aiDrafting, setAiDrafting] = useState(false);
+  const [aiMinutesError, setAiMinutesError] = useState("");
+
+  async function handleAiDraftMinutes() {
+    if (!aiRawNotes.trim()) return;
+    setAiDrafting(true);
+    setAiMinutesError("");
+    try {
+      const res = await fetch(`/api/ai/meeting-minutes/${meetingId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: aiRawNotes.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAiMinutesError(data.message || "Couldn't generate a draft. You can still write the minutes manually.");
+        return;
+      }
+      setDraftMinutes(data.minutes);
+      setAiNotesOpen(false);
+      setAiRawNotes("");
+    } catch (e) {
+      console.error(e);
+      setAiMinutesError("Couldn't generate a draft. You can still write the minutes manually.");
+    } finally {
+      setAiDrafting(false);
+    }
+  }
 
   // ── Meeting details inline edit ──────────────────────────────────────
   const [editingMeeting, setEditingMeeting] = useState(false);
@@ -122,6 +196,9 @@ export default function MeetingDetailPage() {
   function startEditMinutes() {
     setDraftMinutes(meeting!.minutes ?? "");
     setEditingMinutes(true);
+    setAiNotesOpen(false);
+    setAiRawNotes("");
+    setAiMinutesError("");
   }
 
   async function handleSaveMinutes() {
@@ -290,6 +367,13 @@ export default function MeetingDetailPage() {
                 Add Item
               </button>
               <button
+                onClick={() => setDuplicateOpen((v) => !v)}
+                className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-3 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7]"
+                title="Duplicate this meeting onto a new date"
+              >
+                <Copy size={14} />
+              </button>
+              <button
                 onClick={() => window.print()}
                 className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-3 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7]"
                 title="Print Minutes"
@@ -300,6 +384,37 @@ export default function MeetingDetailPage() {
           ) : null}
         </div>
       </div>
+
+      {duplicateOpen && (
+        <div className="mb-5 flex items-center gap-2 rounded-lg border border-[#E9EAEC] bg-[#F9FAFB] px-4 py-3 print:hidden">
+          <Copy size={14} className="text-[#6B7280]" />
+          <p className="text-[12px] text-[#374151]">
+            Duplicate this meeting&apos;s agenda ({meeting.agenda_items?.length ?? 0} item
+            {meeting.agenda_items?.length === 1 ? "" : "s"}) onto:
+          </p>
+          <input
+            type="date"
+            value={duplicateDate}
+            onChange={(e) => setDuplicateDate(e.target.value)}
+            className="rounded-lg border border-[#E9EAEC] px-2.5 py-1.5 text-[12px] outline-none focus:border-[#3B82F6]"
+          />
+          <button
+            onClick={handleDuplicate}
+            disabled={duplicating || !duplicateDate}
+            className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-[#2563EB] disabled:opacity-60"
+          >
+            {duplicating ? <Loader2 size={12} className="animate-spin" /> : <Copy size={12} />}
+            Create Duplicate
+          </button>
+          <button
+            onClick={() => setDuplicateOpen(false)}
+            className="text-[11px] font-semibold text-[#6B7280] hover:text-[#374151]"
+          >
+            Cancel
+          </button>
+          {duplicateError && <span className="text-[11px] text-[#DC2626]">{duplicateError}</span>}
+        </div>
+      )}
 
       {/* Edit Meeting inline form */}
       {editingMeeting && (
@@ -490,7 +605,17 @@ export default function MeetingDetailPage() {
               ) : (
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setEditingMinutes(false)}
+                    onClick={() => setAiNotesOpen((v) => !v)}
+                    className="flex items-center gap-1.5 rounded-lg border border-[#E9D5FF] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#7C3AED] transition hover:bg-[#FAF5FF]"
+                  >
+                    <Sparkles size={12} />
+                    Draft with AI
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingMinutes(false);
+                      setAiNotesOpen(false);
+                    }}
                     className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:bg-[#F4F5F7]"
                   >
                     <X size={12} />
@@ -507,6 +632,34 @@ export default function MeetingDetailPage() {
                 </div>
               )}
             </div>
+
+            {editingMinutes && aiNotesOpen && (
+              <div className="mb-3 rounded-lg border border-[#E9D5FF] bg-[#FAF5FF] p-3">
+                <p className="mb-2 text-[11px] text-[#6D28D9]">
+                  Paste or type your raw notes from the meeting — attendance, what was discussed, any
+                  resolutions. AI will draft formatted minutes from this and this meeting&apos;s agenda items.
+                </p>
+                <textarea
+                  value={aiRawNotes}
+                  onChange={(e) => setAiRawNotes(e.target.value)}
+                  rows={5}
+                  autoFocus
+                  placeholder="e.g. All kagawads present except Cruz. Discussed the drainage complaint from Purok 3, agreed to schedule an inspection next week..."
+                  className="w-full resize-none rounded-lg border border-[#E9D5FF] bg-white px-3 py-2 text-[12px] outline-none focus:border-[#7C3AED]"
+                />
+                <div className="mt-2 flex items-center justify-end gap-2">
+                  {aiMinutesError && <p className="mr-auto text-[11px] text-[#DC2626]">{aiMinutesError}</p>}
+                  <button
+                    onClick={handleAiDraftMinutes}
+                    disabled={aiDrafting || !aiRawNotes.trim()}
+                    className="flex items-center gap-1.5 rounded-lg bg-[#7C3AED] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-[#6D28D9] disabled:opacity-60"
+                  >
+                    {aiDrafting ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                    {aiDrafting ? "Drafting..." : "Generate Draft"}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {editingMinutes ? (
               <textarea

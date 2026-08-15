@@ -130,14 +130,14 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
     // ─── CERTIFICATES ─────────────────────────────────────────────────────
     case "certificates": {
       const CERT_LABELS: Record<string, { label: string; color: string }> = {
-        RESIDENCY:              { label: "Residency",              color: "#3B82F6" },
-        INDIGENCY:              { label: "Indigency",              color: "#10B981" },
-        CLEARANCE:              { label: "Clearance",              color: "#F59E0B" },
-        GOOD_MORAL:             { label: "Good Moral",             color: "#8B5CF6" },
-        BUSINESS_PERMIT:        { label: "Business Permit",        color: "#EC4899" },
-        COHABITATION:           { label: "Cohabitation",           color: "#06B6D4" },
-        SOLO_PARENT:            { label: "Solo Parent",            color: "#EF4444" },
-        FIRST_TIME_JOB_SEEKER:  { label: "First Time Job Seeker",  color: "#F97316" },
+        RESIDENCY:              { label: "Residency",              color: "#3E5C76" },
+        INDIGENCY:              { label: "Indigency",              color: "#0B6E4F" },
+        CLEARANCE:              { label: "Clearance",              color: "#B45309" },
+        GOOD_MORAL:             { label: "Good Moral",             color: "#6D4AFF" },
+        BUSINESS_PERMIT:        { label: "Business Permit",        color: "#0E7490" },
+        COHABITATION:           { label: "Cohabitation",           color: "#9CA3AF" },
+        SOLO_PARENT:            { label: "Solo Parent",            color: "#B3261E" },
+        FIRST_TIME_JOB_SEEKER:  { label: "First Time Job Seeker",  color: "#B45309" },
         LATE_REGISTRATION:      { label: "Late Registration",      color: "#6B7280" },
       };
 
@@ -322,9 +322,9 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
     case "inventory": {
       const now = new Date();
       const STATUS_COLOR: Record<string, string> = {
-        SERVICEABLE: "#10B981",
-        UNSERVICEABLE: "#F59E0B",
-        MISSING: "#EF4444",
+        SERVICEABLE: "#0B6E4F",
+        UNSERVICEABLE: "#B45309",
+        MISSING: "#B3261E",
       };
 
       const [total, byStatusRaw, currentlyOut, overdue, equipment, activeBorrowingsByEquipment, recentBorrowingsRaw] =

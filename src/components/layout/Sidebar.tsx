@@ -259,12 +259,12 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`flex h-screen shrink-0 flex-col overflow-hidden border-r border-[#E9EAEC] bg-white transition-[width] duration-200 ease-in-out ${
+      className={`flex h-screen shrink-0 flex-col overflow-hidden border-r border-[#E9EAEC] bg-white transition-[width] duration-200 ease-in-out dark:border-[#262626] dark:bg-[#111111] ${
         collapsed ? "w-0 border-r-0" : "w-60"
       } ${className}`}
     >
       {/* Brand */}
-      <div className="flex h-15 shrink-0 items-center gap-2.5 border-b border-[#E9EAEC] px-5">
+      <div className="flex h-15 shrink-0 items-center gap-2.5 border-b border-[#E9EAEC] px-5 dark:border-[#262626]">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#3B82F6] shadow-sm">
           <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
             <path
@@ -275,7 +275,7 @@ export default function Sidebar({
           </svg>
         </div>
         <div className="min-w-0">
-          <p className="truncate text-[13px] font-black uppercase tracking-wide text-[#1F2937]">
+          <p className="truncate text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
             {barangayName || "Barangay RMS"}
           </p>
           <p className="truncate text-[10px] text-[#9CA3AF]">Records Management</p>
@@ -306,7 +306,7 @@ export default function Sidebar({
           )}
         </div>
 
-        <div className="mt-auto flex flex-col gap-1 border-t border-[#E9EAEC] pt-4">
+        <div className="mt-auto flex flex-col gap-1 border-t border-[#E9EAEC] pt-4 dark:border-[#262626]">
           {visibleBottomNav.map((item) =>
             item.type === "group" ? (
               <NavGroup

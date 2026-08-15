@@ -68,45 +68,45 @@ export default function DocumentReleasePage() {
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-50">
-          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search control #, name…"
-            className="w-full rounded-xl border border-[#E9EAEC] bg-white py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6]"
+            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
           />
         </div>
         <input
           type="date"
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
-          className="rounded-xl border border-[#E9EAEC] bg-white px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition focus:border-[#3B82F6]"
+          className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
         />
-        <span className="text-[12px] text-[#9CA3AF]">to</span>
+        <span className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">to</span>
         <input
           type="date"
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
-          className="rounded-xl border border-[#E9EAEC] bg-white px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition focus:border-[#3B82F6]"
+          className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
         />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
+      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
           </div>
         ) : items.length === 0 ? (
           <EmptyState icon={CheckCircle2} title="No released documents found" description="Try adjusting your search or date range." />
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E9EAEC] bg-[#F9FAFB]">
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Control #</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Type</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Applicant</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Payment</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Released</th>
+              <tr className="border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Control #</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Type</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Applicant</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Payment</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Released</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -115,31 +115,31 @@ export default function DocumentReleasePage() {
                 <tr
                   key={c.id}
                   onClick={() => router.push(`/certificates/${c.id}`)}
-                  className="cursor-pointer border-b border-[#F4F5F7] transition last:border-b-0 hover:bg-[#F9FAFB]"
+                  className="cursor-pointer border-b border-[#F4F5F7] dark:border-[#262626] transition last:border-b-0 hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
                 >
-                  <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937]">{c.certificate_no}</td>
+                  <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937] dark:text-white">{c.certificate_no}</td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-[#EBF3FF] px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8]">
+                    <span className="inline-flex items-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
                       {certTypeLabel(c.certificate_type)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-[#374151]">
+                  <td className="px-4 py-3 text-[12px] text-[#374151] dark:text-[#D4D4D4]">
                     {c.resident ? residentFullName(c.resident) : c.manual_name}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                         c.payment_status === "PAID"
-                          ? "bg-green-50 text-green-600"
+                          ? "bg-green-50 dark:bg-green-500/15 text-green-600 dark:text-green-400"
                           : c.payment_status === "WAIVED"
-                          ? "bg-gray-100 text-gray-500"
-                          : "bg-amber-50 text-amber-600"
+                          ? "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-[#A3A3A3]"
+                          : "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400"
                       }`}
                     >
                       {PAYMENT_STATUS_LABELS[c.payment_status]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-[#6B7280]" title={c.issued_at ? formatISODateTime(c.issued_at) ?? "" : ""}>
+                  <td className="px-4 py-3 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]" title={c.issued_at ? formatISODateTime(c.issued_at) ?? "" : ""}>
                     {c.issued_at ? formatISODate(c.issued_at) : "—"}
                   </td>
                   <td className="px-4 py-3">
@@ -149,12 +149,12 @@ export default function DocumentReleasePage() {
                           e.stopPropagation();
                           router.push(`/certificates/${c.id}/preview`);
                         }}
-                        className="rounded-lg border border-[#E9EAEC] p-1.5 text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                        className="rounded-lg border border-[#E9EAEC] dark:border-[#262626] p-1.5 text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                         title="Print"
                       >
                         <Printer size={13} />
                       </button>
-                      <ChevronRight size={15} className="text-[#D1D5DB]" />
+                      <ChevronRight size={15} className="text-[#D1D5DB] dark:text-[#525252]" />
                     </div>
                   </td>
                 </tr>

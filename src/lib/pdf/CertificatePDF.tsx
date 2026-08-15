@@ -5,7 +5,7 @@
 // mirrors the on-screen layout in
 // src/app/(dashboard)/certificates/[id]/preview/page.tsx so the downloaded
 // file matches what was previewed.
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { COLORS } from "./reportStyles";
 
 const s = StyleSheet.create({
@@ -102,10 +102,19 @@ const s = StyleSheet.create({
     right: 54,
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     borderTop: `1 solid ${COLORS.border}`,
     paddingTop: 6,
     fontSize: 8,
     color: COLORS.grayLight,
+  },
+  footerText: {
+    flexDirection: "column",
+    gap: 2,
+  },
+  qrCode: {
+    width: 44,
+    height: 44,
   },
 });
 
@@ -123,6 +132,8 @@ interface CertificatePDFProps {
   city: string;
   province: string;
   region: string;
+  /** PNG data URL for the verification QR code (from the `qrcode` package). Omit to render without one. */
+  qrDataUrl?: string;
 }
 
 export default function CertificatePDF({
@@ -139,6 +150,7 @@ export default function CertificatePDF({
   city,
   province,
   region,
+  qrDataUrl,
 }: CertificatePDFProps) {
   return (
     <Document>
@@ -177,11 +189,15 @@ export default function CertificatePDF({
 
         {/* Footer meta */}
         <View style={s.footer} fixed>
-          <Text>Certificate No. {certificateNo}</Text>
-          <Text>
-            Applicant: {applicantName}
-            {flaggedManual ? "  •  Walk-in / Not Yet in RBI" : ""}
-          </Text>
+          <View style={s.footerText}>
+            <Text>Certificate No. {certificateNo}</Text>
+            <Text>
+              Applicant: {applicantName}
+              {flaggedManual ? "  •  Walk-in / Not Yet in RBI" : ""}
+            </Text>
+            {qrDataUrl && <Text>Scan to verify authenticity</Text>}
+          </View>
+          {qrDataUrl && <Image src={qrDataUrl} style={s.qrCode} />}
         </View>
       </Page>
     </Document>

@@ -46,27 +46,27 @@ function FilterPanel({
   const set = (k: keyof FilterState, v: string) => setLocal(p => ({ ...p, [k]: v }));
 
   return (
-    <div className="bg-white border-b border-[#E9EAEC] px-4 py-3 space-y-3">
+    <div className="bg-white dark:bg-[#171717] border-b border-[#E9EAEC] dark:border-[#262626] px-4 py-3 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-bold text-[#1F2937] uppercase tracking-widest">Filters</span>
-        <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#6B7280] transition">
+        <span className="text-[11px] font-bold text-[#1F2937] dark:text-white uppercase tracking-widest">Filters</span>
+        <button onClick={onClose} className="text-[#9CA3AF] dark:text-[#A3A3A3] hover:text-[#6B7280] dark:hover:text-[#D4D4D4] transition">
           <X size={14} />
         </button>
       </div>
       <div className="grid grid-cols-3 gap-2">
         <div>
-          <label className="text-[9px] font-semibold text-[#9CA3AF] uppercase tracking-wide block mb-1">Sex</label>
+          <label className="text-[9px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide block mb-1">Sex</label>
           <select value={local.sex} onChange={e => set("sex", e.target.value)}
-            className="w-full text-[11px] border border-[#E9EAEC] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] bg-white">
+            className="w-full text-[11px] border border-[#E9EAEC] dark:border-[#262626] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717]">
             <option value="">All</option>
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
           </select>
         </div>
         <div>
-          <label className="text-[9px] font-semibold text-[#9CA3AF] uppercase tracking-wide block mb-1">Civil Status</label>
+          <label className="text-[9px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide block mb-1">Civil Status</label>
           <select value={local.civil_status} onChange={e => set("civil_status", e.target.value)}
-            className="w-full text-[11px] border border-[#E9EAEC] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] bg-white">
+            className="w-full text-[11px] border border-[#E9EAEC] dark:border-[#262626] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717]">
             <option value="">All</option>
             <option value="SINGLE">Single</option>
             <option value="MARRIED">Married</option>
@@ -76,9 +76,9 @@ function FilterPanel({
           </select>
         </div>
         <div>
-          <label className="text-[9px] font-semibold text-[#9CA3AF] uppercase tracking-wide block mb-1">Purok</label>
+          <label className="text-[9px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide block mb-1">Purok</label>
           <select value={local.purok_id} onChange={e => set("purok_id", e.target.value)}
-            className="w-full text-[11px] border border-[#E9EAEC] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] bg-white">
+            className="w-full text-[11px] border border-[#E9EAEC] dark:border-[#262626] rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717]">
             <option value="">All Puroks</option>
             {puroks.map(p => <option key={p.id} value={String(p.id)}>{p.name}</option>)}
           </select>
@@ -86,11 +86,11 @@ function FilterPanel({
       </div>
       <div className="flex gap-2">
         <button onClick={() => setLocal({ sex: "", civil_status: "", purok_id: "" })}
-          className="flex-1 text-[11px] py-1.5 rounded-lg border border-[#E9EAEC] text-[#6B7280] hover:bg-[#F4F5F7] transition">
+          className="flex-1 text-[11px] py-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition">
           Clear
         </button>
         <button onClick={() => { onChange(local); onClose(); }}
-          className="flex-1 text-[11px] py-1.5 rounded-lg bg-[#3B82F6] text-white hover:bg-[#2563EB] transition font-semibold">
+          className="flex-1 text-[11px] py-1.5 rounded-lg bg-[#3B82F6] text-white hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] transition font-semibold">
           Apply
         </button>
       </div>
@@ -155,16 +155,16 @@ export default function ResidentsPage() {
       {/* ── Page header ── */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-[18px] font-black text-[#1F2937] uppercase tracking-wide">
+          <h1 className="text-[18px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">
             Residents
           </h1>
-          <p className="text-[12px] text-[#9CA3AF] mt-0.5">
+          <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">
             {loading ? "Loading…" : `${residents.length} resident${residents.length !== 1 ? "s" : ""} found`}
           </p>
         </div>
         <button
           onClick={() => router.push("/residents/new")}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[13px] font-bold transition shadow-sm"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] text-white text-[13px] font-bold transition shadow-sm"
         >
           <Plus size={14} />
           Add Resident
@@ -172,25 +172,25 @@ export default function ResidentsPage() {
       </div>
 
       {/* ── Search + filter bar ── */}
-      <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden mb-4">
+      <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden mb-4">
         <div className="flex items-center gap-2 px-4 py-3">
           <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search Name"
-              className="w-full pl-9 pr-3 py-2 text-[13px] bg-[#F4F5F7] rounded-xl border border-transparent focus:outline-none focus:border-[#3B82F6] focus:bg-white transition placeholder:text-[#9CA3AF] text-[#1F2937]"
+              className="w-full pl-9 pr-3 py-2 text-[13px] bg-[#F4F5F7] dark:bg-[#262626] rounded-xl border border-transparent focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:bg-white dark:focus:bg-[#171717] transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] text-[#1F2937] dark:text-white"
             />
           </div>
           <button
             onClick={() => setShowFilter(v => !v)}
             className={`w-9 h-9 flex items-center justify-center rounded-xl transition shrink-0 relative
-              ${showFilter || activeFilters > 0 ? "bg-[#3B82F6] text-white" : "bg-[#F4F5F7] text-[#6B7280] hover:bg-[#E5E7EB]"}`}
+              ${showFilter || activeFilters > 0 ? "bg-[#3B82F6] text-white" : "bg-[#F4F5F7] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#E5E7EB] dark:hover:bg-[#262626]"}`}
           >
             <SlidersHorizontal size={14} />
             {activeFilters > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] flex items-center justify-center font-bold">
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 dark:bg-red-500 text-white text-[9px] flex items-center justify-center font-bold">
                 {activeFilters}
               </span>
             )}
@@ -209,28 +209,28 @@ export default function ResidentsPage() {
       </div>
 
       {/* ── List ── */}
-      <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden flex-1">
+      <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden flex-1">
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 border-2 border-[#3B82F6] border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : residents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div className="w-12 h-12 rounded-full bg-[#F4F5F7] flex items-center justify-center">
-              <Users size={20} className="text-[#D1D5DB]" />
+            <div className="w-12 h-12 rounded-full bg-[#F4F5F7] dark:bg-[#262626] flex items-center justify-center">
+              <Users size={20} className="text-[#D1D5DB] dark:text-[#525252]" />
             </div>
             <div className="text-center">
-              <p className="text-[13px] font-semibold text-[#6B7280]">No residents found</p>
-              <p className="text-[11px] text-[#9CA3AF] mt-0.5">Try adjusting your search or filters</p>
+              <p className="text-[13px] font-semibold text-[#6B7280] dark:text-[#A3A3A3]">No residents found</p>
+              <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Try adjusting your search or filters</p>
             </div>
           </div>
         ) : (
           <div>
             {/* Table header */}
-            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_0.4fr] gap-4 px-5 py-2.5 bg-[#F9FAFB] border-b border-[#E9EAEC]">
+            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_0.4fr] gap-4 px-5 py-2.5 bg-[#F9FAFB] dark:bg-[#171717] border-b border-[#E9EAEC] dark:border-[#262626]">
               {["Name", "Sex", "Civil Status", "Purok", ""].map(h => (
-                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wide">{h}</span>
+                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>
               ))}
             </div>
 
@@ -239,16 +239,16 @@ export default function ResidentsPage() {
               <button
                 key={r.id}
                 onClick={() => setSelectedId(r.id)}
-                className={`w-full text-left grid grid-cols-[2fr_1fr_1fr_1fr_0.4fr] gap-4 px-5 py-3.5 items-center border-b border-[#F4F5F7] hover:bg-[#F9FAFB] transition group last:border-0 ${i % 2 !== 0 ? "bg-[#FAFAFA]" : "bg-white"}`}
+                className={`w-full text-left grid grid-cols-[2fr_1fr_1fr_1fr_0.4fr] gap-4 px-5 py-3.5 items-center border-b border-[#F4F5F7] dark:border-[#262626] hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F] transition group last:border-0 ${i % 2 !== 0 ? "bg-[#FAFAFA] dark:bg-[#171717]" : "bg-white dark:bg-[#171717]"}`}
               >
                 {/* Name */}
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0 text-[12px] font-black text-[#3B82F6]">
+                  <div className="w-8 h-8 rounded-full bg-[#EFF6FF] dark:bg-blue-500/15 flex items-center justify-center shrink-0 text-[12px] font-black text-[#3B82F6] dark:text-[#60A5FA]">
                     {r.fname[0]}{r.lname[0]}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[13px] font-bold text-[#1F2937] truncate">{fullName(r)}</p>
-                    <p className="text-[10px] text-[#9CA3AF] mt-0.5">
+                    <p className="text-[13px] font-bold text-[#1F2937] dark:text-white truncate">{fullName(r)}</p>
+                    <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">
                       BM{String(r.id).padStart(7, "0")}
                     </p>
                   </div>
@@ -261,16 +261,16 @@ export default function ResidentsPage() {
                 </span>
 
                 {/* Civil Status */}
-                <span className="text-[12px] text-[#6B7280] capitalize">
+                <span className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3] capitalize">
                   {r.civil_status.replace("_", "-").toLowerCase().replace(/^\w/, c => c.toUpperCase())}
                 </span>
 
                 {/* Purok */}
-                <span className="text-[12px] text-[#6B7280]">{r.purok?.name ?? "—"}</span>
+                <span className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{r.purok?.name ?? "—"}</span>
 
                 {/* Chevron */}
                 <div className="flex justify-end">
-                  <ChevronRight size={16} className="text-[#D1D5DB] group-hover:text-[#3B82F6] transition-colors" />
+                  <ChevronRight size={16} className="text-[#D1D5DB] dark:text-[#525252] group-hover:text-[#3B82F6] dark:group-hover:text-[#60A5FA] transition-colors" />
                 </div>
               </button>
             ))}
@@ -282,7 +282,7 @@ export default function ResidentsPage() {
       <div className="fixed bottom-6 right-6 z-10">
         <button
           onClick={() => router.push("/residents/new")}
-          className="w-12 h-12 rounded-full bg-[#F59E0B] hover:bg-[#D97706] text-white flex items-center justify-center shadow-lg transition"
+          className="w-12 h-12 rounded-full bg-[#F59E0B] hover:bg-[#D97706] dark:hover:bg-[#F59E0B] text-white flex items-center justify-center shadow-lg transition"
         >
           <Plus size={20} />
         </button>

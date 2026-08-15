@@ -85,10 +85,10 @@ function rbiId(id: number) { return `BM${String(id).padStart(7, "0")}`; }
 function InfoRow({ label, value }: { label: string; value?: string | number | null }) {
   return (
     <div className="flex gap-2 py-1.25">
-      <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide min-w-37.5 shrink-0">
+      <span className="text-[11px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide min-w-37.5 shrink-0">
         {label}
       </span>
-      <span className="text-[11px] font-medium text-[#374151]">: {value ?? "—"}</span>
+      <span className="text-[11px] font-medium text-[#374151] dark:text-[#D4D4D4]">: {value ?? "—"}</span>
     </div>
   );
 }
@@ -98,12 +98,12 @@ function SectionCard({ title, icon: Icon, iconBg, children }: {
   title: string; icon: any; iconBg: string; children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
-      <div className="flex items-center gap-2.5 px-5 py-3 border-b border-[#E9EAEC]">
+    <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+      <div className="flex items-center gap-2.5 px-5 py-3 border-b border-[#E9EAEC] dark:border-[#262626]">
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>
           <Icon size={13} className="text-white" />
         </div>
-        <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937]">{title}</p>
+        <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">{title}</p>
       </div>
       <div className="px-5 py-3">{children}</div>
     </div>
@@ -121,9 +121,9 @@ function Badge({ label, color }: { label: string; color: string }) {
 
 // ─── REGISTRY TYPE BANNER ────────────────────────────────────────────────────
 const REGISTRY_CFG: Record<RegistryType, { label: string; bg: string; border: string; text: string }> = {
-  SENIOR_CITIZEN: { label: "Senior Citizen", bg: "bg-amber-50",  border: "border-amber-100", text: "text-amber-700"  },
-  PWD:            { label: "PWD",            bg: "bg-blue-50",   border: "border-blue-100",  text: "text-blue-700"   },
-  FOUR_PS:        { label: "4Ps Beneficiary",bg: "bg-green-50",  border: "border-green-100", text: "text-green-700"  },
+  SENIOR_CITIZEN: { label: "Senior Citizen", bg: "bg-amber-50 dark:bg-amber-500/15",  border: "border-amber-100", text: "text-amber-700 dark:text-amber-400"  },
+  PWD:            { label: "PWD",            bg: "bg-blue-50 dark:bg-blue-500/15",   border: "border-blue-100",  text: "text-blue-700 dark:text-blue-400"   },
+  FOUR_PS:        { label: "4Ps Beneficiary",bg: "bg-green-50 dark:bg-green-500/15",  border: "border-green-100", text: "text-green-700 dark:text-green-400"  },
 };
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
@@ -165,7 +165,7 @@ export default function RegistryDetail({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
       </div>
     );
   }
@@ -183,9 +183,9 @@ export default function RegistryDetail({
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push(listBase)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] transition"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
           >
-            <ArrowLeft size={18} className="text-[#6B7280]" />
+            <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
           </button>
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
@@ -193,14 +193,14 @@ export default function RegistryDetail({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-[17px] font-black text-[#1F2937] uppercase tracking-wide">
+                <h1 className="text-[17px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">
                   {displayName}
                 </h1>
                 <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${cfg.bg} ${cfg.border} ${cfg.text} border`}>
                   {cfg.label}
                 </span>
               </div>
-              <p className="text-[11px] text-[#9CA3AF] mt-0.5">
+              <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">
                 {rbiId(r.id)} · {title} Registry
               </p>
             </div>
@@ -209,14 +209,14 @@ export default function RegistryDetail({
         <div className="flex gap-2">
           <button
             onClick={() => router.push(`/residents/${r.id}`)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#E9EAEC] text-[12px] font-bold text-[#6B7280] hover:bg-[#F4F5F7] transition"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
           >
             <User size={13} /> View RBI Profile
           </button>
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-red-200 text-red-500 text-[12px] font-bold hover:bg-red-50 transition disabled:opacity-50"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-red-200 text-red-500 dark:text-red-400 text-[12px] font-bold hover:bg-red-50 transition disabled:opacity-50"
           >
             <Trash2 size={13} /> Remove
           </button>
@@ -293,17 +293,17 @@ export default function RegistryDetail({
             <InfoRow label="Water Source" value={r.household?.water_source}     />
             <InfoRow label="CR"           value={r.household?.comfort_room}     />
             <div className="flex gap-2 py-1.25">
-              <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide min-w-1.25 shrink-0">
+              <span className="text-[11px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide min-w-1.25 shrink-0">
                 No. of Members
               </span>
-              <span className="text-[11px] font-medium text-[#374151]">
+              <span className="text-[11px] font-medium text-[#374151] dark:text-[#D4D4D4]">
                 : {r.household?._count?.members ?? "—"}
               </span>
             </div>
             {r.household && (
               <button
                 onClick={() => router.push(`/households/${r.household!.id}`)}
-                className="mt-1 text-[11px] font-bold text-[#3B82F6] hover:text-[#1D4ED8] transition"
+                className="mt-1 text-[11px] font-bold text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] transition"
               >
                 View Household Members →
               </button>
@@ -312,21 +312,21 @@ export default function RegistryDetail({
 
           <SectionCard title={`Certificates (${r.certificates.length})`} icon={FileText} iconBg="bg-green-500">
             {r.certificates.length === 0 ? (
-              <p className="text-[11px] text-[#9CA3AF] py-1">No certificates issued yet</p>
+              <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] py-1">No certificates issued yet</p>
             ) : (
               <div className="space-y-1.5">
                 {r.certificates.slice(0, 4).map(c => (
-                  <div key={c.id} className="flex items-center justify-between py-1 border-b border-[#F4F5F7] last:border-0">
-                    <p className="text-[11px] font-semibold text-[#1F2937] truncate pr-2">
+                  <div key={c.id} className="flex items-center justify-between py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
+                    <p className="text-[11px] font-semibold text-[#1F2937] dark:text-white truncate pr-2">
                       {c.certificate_type.replace(/_/g, " ")}
                     </p>
-                    <span className="text-[10px] text-[#9CA3AF] shrink-0">
+                    <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] shrink-0">
                       {fmtShort(c.issued_at)}
                     </span>
                   </div>
                 ))}
                 {r.certificates.length > 4 && (
-                  <p className="text-[10px] text-[#3B82F6] pt-1">+{r.certificates.length - 4} more</p>
+                  <p className="text-[10px] text-[#3B82F6] dark:text-[#60A5FA] pt-1">+{r.certificates.length - 4} more</p>
                 )}
               </div>
             )}
@@ -334,12 +334,12 @@ export default function RegistryDetail({
 
           <SectionCard title={`Barangay IDs (${r.barangay_ids.length})`} icon={CreditCard} iconBg="bg-[#1F2937]">
             {r.barangay_ids.length === 0 ? (
-              <p className="text-[11px] text-[#9CA3AF] py-1">No barangay ID issued</p>
+              <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] py-1">No barangay ID issued</p>
             ) : (
               r.barangay_ids.map(bid => (
-                <div key={bid.id} className="flex justify-between py-1.5 border-b border-[#F4F5F7] last:border-0">
-                  <p className="text-[12px] font-bold text-[#1F2937]">{bid.id_number}</p>
-                  <span className="text-[10px] text-[#9CA3AF]">{fmtShort(bid.issued_date)}</span>
+                <div key={bid.id} className="flex justify-between py-1.5 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
+                  <p className="text-[12px] font-bold text-[#1F2937] dark:text-white">{bid.id_number}</p>
+                  <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{fmtShort(bid.issued_date)}</span>
                 </div>
               ))
             )}
@@ -348,22 +348,22 @@ export default function RegistryDetail({
 
         {/* ── Column 3: Health + Vaccinations ── */}
         <div className="space-y-4">
-          <SectionCard title={`Health Records (${r.health_records.length})`} icon={Heart} iconBg="bg-red-500">
+          <SectionCard title={`Health Records (${r.health_records.length})`} icon={Heart} iconBg="bg-red-500 dark:bg-red-500">
             {r.health_records.length === 0 ? (
-              <p className="text-[11px] text-[#9CA3AF] py-1">No health records</p>
+              <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] py-1">No health records</p>
             ) : (
               <div className="space-y-1.5">
                 {r.health_records.slice(0, 5).map(hr => (
-                  <div key={hr.id} className="py-1 border-b border-[#F4F5F7] last:border-0">
+                  <div key={hr.id} className="py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
                     <div className="flex justify-between">
-                      <p className="text-[11px] font-semibold text-[#1F2937]">{hr.record_type}</p>
-                      <span className="text-[10px] text-[#9CA3AF]">{fmtShort(hr.recorded_at)}</span>
+                      <p className="text-[11px] font-semibold text-[#1F2937] dark:text-white">{hr.record_type}</p>
+                      <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{fmtShort(hr.recorded_at)}</span>
                     </div>
-                    {hr.notes && <p className="text-[10px] text-[#9CA3AF] mt-0.5 truncate">{hr.notes}</p>}
+                    {hr.notes && <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5 truncate">{hr.notes}</p>}
                   </div>
                 ))}
                 {r.health_records.length > 5 && (
-                  <p className="text-[10px] text-[#3B82F6] pt-1">+{r.health_records.length - 5} more</p>
+                  <p className="text-[10px] text-[#3B82F6] dark:text-[#60A5FA] pt-1">+{r.health_records.length - 5} more</p>
                 )}
               </div>
             )}
@@ -371,17 +371,17 @@ export default function RegistryDetail({
 
           <SectionCard title={`Vaccinations (${r.vaccinations.length})`} icon={Syringe} iconBg="bg-[#3B82F6]">
             {r.vaccinations.length === 0 ? (
-              <p className="text-[11px] text-[#9CA3AF] py-1">No vaccination records</p>
+              <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] py-1">No vaccination records</p>
             ) : (
               <div className="space-y-1.5">
                 {r.vaccinations.slice(0, 5).map(v => (
-                  <div key={v.id} className="flex justify-between py-1 border-b border-[#F4F5F7] last:border-0">
-                    <p className="text-[11px] font-semibold text-[#1F2937] truncate pr-2">{v.vaccine_name}</p>
-                    <span className="text-[10px] text-[#9CA3AF] shrink-0">{fmtShort(v.date_given)}</span>
+                  <div key={v.id} className="flex justify-between py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
+                    <p className="text-[11px] font-semibold text-[#1F2937] dark:text-white truncate pr-2">{v.vaccine_name}</p>
+                    <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] shrink-0">{fmtShort(v.date_given)}</span>
                   </div>
                 ))}
                 {r.vaccinations.length > 5 && (
-                  <p className="text-[10px] text-[#3B82F6] pt-1">+{r.vaccinations.length - 5} more</p>
+                  <p className="text-[10px] text-[#3B82F6] dark:text-[#60A5FA] pt-1">+{r.vaccinations.length - 5} more</p>
                 )}
               </div>
             )}
@@ -405,7 +405,7 @@ export default function RegistryDetail({
       <div className="mt-4 flex items-center justify-end">
         <button
           onClick={() => router.push(`/residents/${r.id}`)}
-          className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[12px] font-bold transition shadow-sm"
+          className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] text-white text-[12px] font-bold transition shadow-sm"
         >
           <User size={13} /> View Full RBI Profile
         </button>

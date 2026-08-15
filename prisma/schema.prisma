@@ -219,6 +219,13 @@ enum CivilStatus {
 model Certificate {
   id               Int             @id @default(autoincrement())
   certificate_no   String          @unique
+  // Separate from certificate_no on purpose: certificate_no is sequential
+  // (CERT-2026-000001) and guessable, so it's fine to print but wrong to
+  // use as a public lookup key — anyone could enumerate every issued
+  // certificate's status/holder by incrementing it. verification_code is
+  // an opaque, unguessable token used only by the public /verify/[code]
+  // page (see src/app/verify/[code]/page.tsx).
+  verification_code String         @unique @default(uuid())
   resident_id      Int?
   issued_by        Int
   certificate_type CertificateType

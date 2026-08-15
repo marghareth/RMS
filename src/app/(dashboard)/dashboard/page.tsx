@@ -94,7 +94,7 @@ function initials(name: string): string {
 
 function Monogram({ name }: { name: string }) {
   return (
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#E4E1D8] bg-white text-[10px] font-bold text-[#1B2430]">
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#E4E1D8] dark:border-[#3A3A3A] bg-white dark:bg-[#1F1F1F] text-[10px] font-bold text-[#1B2430] dark:text-white">
       {initials(name)}
     </span>
   );
@@ -103,11 +103,11 @@ function Monogram({ name }: { name: string }) {
 function Trend({ value }: { value: number | null | undefined }) {
   if (value === undefined) return null;
   if (value === null) {
-    return <span className="text-[11px] font-semibold text-[#3E5C76]">New</span>;
+    return <span className="text-[11px] font-semibold text-[#3E5C76] dark:text-[#8FB0CC]">New</span>;
   }
   const up = value >= 0;
   return (
-    <span className={`inline-flex items-center gap-0.5 text-[11px] font-semibold ${up ? "text-[#0B6E4F]" : "text-[#B3261E]"}`}>
+    <span className={`inline-flex items-center gap-0.5 text-[11px] font-semibold ${up ? "text-[#0B6E4F] dark:text-[#34A37A]" : "text-[#B3261E] dark:text-[#F87171]"}`}>
       {up ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
       {up ? "+" : ""}{value}%
     </span>
@@ -133,20 +133,17 @@ function LedgerStatStrip({ stats }: { stats: StatCell[] }) {
         <Link
           key={s.key}
           href={s.href}
-          className="flex flex-col justify-between gap-4 rounded-xl border border-[#E9EAEC] bg-white px-5 py-4 transition hover:border-[#0B6E4F]/30 hover:bg-[#E8F3EE]/50"
+          className="flex flex-col justify-between gap-4 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-5 py-4 transition hover:border-[#0B6E4F]/30 dark:hover:border-[#34A37A]/40 hover:bg-[#E8F3EE]/50 dark:hover:bg-[#11321F]/60"
         >
           <div className="flex items-start justify-between gap-2">
-            <p className="text-[10.5px] font-bold uppercase tracking-widest text-[#9CA3AF]">{s.label}</p>
+            <p className="text-[10.5px] font-bold uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3]">{s.label}</p>
             <Trend value={s.trend} />
           </div>
           <div>
-            <p
-              className="text-[28px] font-bold leading-none text-[#1B2430] tabular-nums"
-              style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" }}
-            >
+            <p className="text-[28px] font-bold leading-none text-[#1B2430] dark:text-white tabular-nums">
               {s.value}
             </p>
-            <p className="mt-1.5 text-[11px] text-[#9CA3AF]">{s.caption}</p>
+            <p className="mt-1.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{s.caption}</p>
           </div>
         </Link>
       ))}
@@ -164,9 +161,9 @@ const QUICK_ACTIONS = [
 
 function QuickActionsPanel() {
   return (
-    <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5">
-      <h2 className="text-[13px] font-bold text-[#1B2430]">Quick Actions</h2>
-      <p className="mt-0.5 text-[11px] text-[#9CA3AF]">Jump straight to a new entry</p>
+    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-6 py-5">
+      <h2 className="text-[13px] font-bold text-[#1B2430] dark:text-white">Quick Actions</h2>
+      <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Jump straight to a new entry</p>
       <div className="mt-4 flex flex-col gap-2">
         {QUICK_ACTIONS.map((a) => {
           const Icon = a.icon;
@@ -174,11 +171,11 @@ function QuickActionsPanel() {
             <Link
               key={a.label}
               href={a.href}
-              className="group flex items-center gap-3 rounded-lg border border-[#E9EAEC] px-3.5 py-2.5 transition hover:border-[#0B6E4F]/30 hover:bg-[#E8F3EE]/50"
+              className="group flex items-center gap-3 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3.5 py-2.5 transition hover:border-[#0B6E4F]/30 dark:hover:border-[#34A37A]/40 hover:bg-[#E8F3EE]/50 dark:hover:bg-[#11321F]/60"
             >
-              <Icon size={15} className="shrink-0 text-[#6B7280] transition group-hover:text-[#0B6E4F]" />
-              <p className="flex-1 text-[13px] font-medium text-[#374151] transition group-hover:text-[#0B6E4F]">{a.label}</p>
-              <ArrowUpRight size={13} className="shrink-0 text-[#D1D5DB] transition group-hover:text-[#0B6E4F]" />
+              <Icon size={15} className="shrink-0 text-[#6B7280] dark:text-[#A3A3A3] transition group-hover:text-[#0B6E4F] dark:group-hover:text-[#34A37A]" />
+              <p className="flex-1 text-[13px] font-medium text-[#374151] dark:text-[#D4D4D4] transition group-hover:text-[#0B6E4F] dark:group-hover:text-[#34A37A]">{a.label}</p>
+              <ArrowUpRight size={13} className="shrink-0 text-[#D1D5DB] dark:text-[#525252] transition group-hover:text-[#0B6E4F] dark:group-hover:text-[#34A37A]" />
             </Link>
           );
         })}
@@ -200,38 +197,38 @@ function PriorityTasksPanel({ data }: { data: DashboardData }) {
       label: `${data.activeCases} blotter case${data.activeCases === 1 ? "" : "s"} awaiting resolution`,
       show: data.activeCases > 0,
       href: "/blotter",
-      dot: "bg-[#B3261E]",
+      dot: "bg-[#B3261E] dark:bg-[#F87171]",
     },
     {
       label: `${data.visitorsActive} visitor${data.visitorsActive === 1 ? "" : "s"} still checked in`,
       show: data.visitorsActive > 0,
       href: "/visitors",
-      dot: "bg-[#3E5C76]",
+      dot: "bg-[#3E5C76] dark:bg-[#8FB0CC]",
     },
     {
       label: `${data.meetingsToday} meeting${data.meetingsToday === 1 ? "" : "s"} scheduled today`,
       show: data.meetingsToday > 0,
       href: "/meetings",
-      dot: "bg-[#0B6E4F]",
+      dot: "bg-[#0B6E4F] dark:bg-[#34A37A]",
     },
   ].filter((t) => t.show);
 
   return (
-    <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5">
-      <h2 className="text-[13px] font-bold text-[#1B2430]">Priority Tasks</h2>
-      <p className="mt-0.5 text-[11px] text-[#9CA3AF]">Things that may need your attention</p>
+    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-6 py-5">
+      <h2 className="text-[13px] font-bold text-[#1B2430] dark:text-white">Priority Tasks</h2>
+      <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Things that may need your attention</p>
 
       {tasks.length === 0 ? (
-        <p className="py-6 text-center text-xs text-[#9CA3AF]">Nothing pending — you&apos;re all caught up.</p>
+        <p className="py-6 text-center text-xs text-[#9CA3AF] dark:text-[#A3A3A3]">Nothing pending — you&apos;re all caught up.</p>
       ) : (
-        <div className="mt-4 flex flex-col divide-y divide-[#F4F5F7]">
+        <div className="mt-4 flex flex-col divide-y divide-[#F4F5F7] dark:divide-[#262626]">
           {tasks.map((t) => (
             <Link key={t.label} href={t.href} className="group flex items-center gap-3 py-3">
               <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${t.dot}`} />
-              <p className="flex-1 text-[13px] font-medium text-[#1B2430] transition group-hover:text-[#0B6E4F]">
+              <p className="flex-1 text-[13px] font-medium text-[#1B2430] dark:text-white transition group-hover:text-[#0B6E4F] dark:group-hover:text-[#34A37A]">
                 {t.label}
               </p>
-              <ArrowUpRight size={14} className="shrink-0 text-[#D1D5DB] transition group-hover:text-[#0B6E4F]" />
+              <ArrowUpRight size={14} className="shrink-0 text-[#D1D5DB] dark:text-[#525252] transition group-hover:text-[#0B6E4F] dark:group-hover:text-[#34A37A]" />
             </Link>
           ))}
         </div>
@@ -243,27 +240,27 @@ function PriorityTasksPanel({ data }: { data: DashboardData }) {
 // ─── DOCUMENT STATUS ────────────────────────────────────────────────────────────
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-amber-400",
-  PROCESSING: "bg-[#3E5C76]",
-  RELEASED: "bg-[#0B6E4F]",
-  CANCELLED: "bg-gray-300",
+  PROCESSING: "bg-[#3E5C76] dark:bg-[#8FB0CC]",
+  RELEASED: "bg-[#0B6E4F] dark:bg-[#34A37A]",
+  CANCELLED: "bg-gray-300 dark:bg-gray-500",
 };
 
 function DocumentStatusChart({ data }: { data: DashboardData }) {
   const total = data.documentsByStatus.reduce((sum, d) => sum + d.count, 0);
   return (
-    <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5">
-      <h2 className="text-[13px] font-bold text-[#1B2430]">Document Status</h2>
-      <p className="mt-0.5 text-[11px] text-[#9CA3AF]">Breakdown of all document requests</p>
+    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-6 py-5">
+      <h2 className="text-[13px] font-bold text-[#1B2430] dark:text-white">Document Status</h2>
+      <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Breakdown of all document requests</p>
 
       {total === 0 ? (
-        <p className="py-6 text-center text-xs text-[#9CA3AF]">No document requests on file yet.</p>
+        <p className="py-6 text-center text-xs text-[#9CA3AF] dark:text-[#A3A3A3]">No document requests on file yet.</p>
       ) : (
         <>
-          <div className="mb-4 mt-4 flex h-2.5 w-full overflow-hidden rounded-full bg-[#F4F5F7]">
+          <div className="mb-4 mt-4 flex h-2.5 w-full overflow-hidden rounded-full bg-[#F4F5F7] dark:bg-[#262626]">
             {data.documentsByStatus.map((d) => (
               <div
                 key={d.status}
-                className={STATUS_COLORS[d.status] ?? "bg-gray-300"}
+                className={STATUS_COLORS[d.status] ?? "bg-gray-300 dark:bg-gray-500"}
                 style={{ width: `${(d.count / total) * 100}%` }}
                 title={`${d.status}: ${d.count}`}
               />
@@ -272,10 +269,10 @@ function DocumentStatusChart({ data }: { data: DashboardData }) {
           <div className="grid grid-cols-2 gap-2.5">
             {data.documentsByStatus.map((d) => (
               <div key={d.status} className="flex items-center gap-2">
-                <span className={`h-2 w-2 shrink-0 rounded-full ${STATUS_COLORS[d.status] ?? "bg-gray-300"}`} />
-                <p className="text-xs text-[#374151]">
+                <span className={`h-2 w-2 shrink-0 rounded-full ${STATUS_COLORS[d.status] ?? "bg-gray-300 dark:bg-gray-500"}`} />
+                <p className="text-xs text-[#374151] dark:text-[#D4D4D4]">
                   {d.status.charAt(0) + d.status.slice(1).toLowerCase()}{" "}
-                  <span className="text-[#9CA3AF] tabular-nums">({d.count})</span>
+                  <span className="text-[#9CA3AF] dark:text-[#A3A3A3] tabular-nums">({d.count})</span>
                 </p>
               </div>
             ))}
@@ -289,39 +286,39 @@ function DocumentStatusChart({ data }: { data: DashboardData }) {
 // ─── RECENT ACTIVITY (ledger table) ─────────────────────────────────────────────
 function RecentActivityTable({ data }: { data: DashboardData }) {
   return (
-    <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5">
-      <h2 className="text-[13px] font-bold text-[#1B2430]">Recent Activity</h2>
-      <p className="mt-0.5 text-[11px] text-[#9CA3AF]">Latest actions across all modules</p>
+    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-6 py-5">
+      <h2 className="text-[13px] font-bold text-[#1B2430] dark:text-white">Recent Activity</h2>
+      <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Latest actions across all modules</p>
 
       {data.recentActivity.length === 0 ? (
-        <p className="py-6 text-center text-xs text-[#9CA3AF]">No activity recorded yet.</p>
+        <p className="py-6 text-center text-xs text-[#9CA3AF] dark:text-[#A3A3A3]">No activity recorded yet.</p>
       ) : (
         <table className="mt-4 w-full table-fixed border-collapse">
           <thead>
-            <tr className="border-b border-[#E9EAEC]">
-              <th className="pb-2 text-left text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">Entry</th>
-              <th className="hidden w-28 pb-2 text-left text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] sm:table-cell">Module</th>
-              <th className="w-20 pb-2 text-right text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">Time</th>
+            <tr className="border-b border-[#E9EAEC] dark:border-[#262626]">
+              <th className="pb-2 text-left text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3]">Entry</th>
+              <th className="hidden w-28 pb-2 text-left text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3] sm:table-cell">Module</th>
+              <th className="w-20 pb-2 text-right text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3]">Time</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#F4F5F7]">
+          <tbody className="divide-y divide-[#F4F5F7] dark:divide-[#262626]">
             {data.recentActivity.map((a) => (
               <tr key={a.id}>
                 <td className="py-3 pr-3">
                   <div className="flex items-center gap-2.5">
                     <Monogram name={a.user.username} />
                     <div className="min-w-0">
-                      <p className="truncate text-[13px] font-medium text-[#1B2430]">{activityLabel(a)}</p>
-                      <p className="text-[11px] text-[#9CA3AF]">{a.user.username}</p>
+                      <p className="truncate text-[13px] font-medium text-[#1B2430] dark:text-white">{activityLabel(a)}</p>
+                      <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{a.user.username}</p>
                     </div>
                   </div>
                 </td>
                 <td className="hidden py-3 pr-3 sm:table-cell">
-                  <span className="block w-fit max-w-full truncate rounded border border-[#E9EAEC] px-2 py-0.5 text-[10px] font-semibold text-[#6B7280]">
+                  <span className="block w-fit max-w-full truncate rounded border border-[#E9EAEC] dark:border-[#262626] px-2 py-0.5 text-[10px] font-semibold text-[#6B7280] dark:text-[#A3A3A3]">
                     {a.table_affected}
                   </span>
                 </td>
-                <td className="whitespace-nowrap py-3 text-right text-[11px] tabular-nums text-[#9CA3AF]" title={formatClock(a.performed_at)}>
+                <td className="whitespace-nowrap py-3 text-right text-[11px] tabular-nums text-[#9CA3AF] dark:text-[#A3A3A3]" title={formatClock(a.performed_at)}>
                   {formatRelativeTime(a.performed_at)}
                 </td>
               </tr>
@@ -365,11 +362,11 @@ export default function DashboardPage() {
   }
 
   if (loading) {
-    return <div className="py-16 text-center text-[13px] text-[#9CA3AF]">Loading dashboard…</div>;
+    return <div className="py-16 text-center text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">Loading dashboard…</div>;
   }
   if (error || !data) {
     return (
-      <div className="py-16 text-center text-[13px] text-red-500">
+      <div className="py-16 text-center text-[13px] text-red-500 dark:text-red-400">
         {error || "Unable to load dashboard data."}
       </div>
     );
@@ -423,20 +420,20 @@ export default function DashboardPage() {
       <div>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-[#9CA3AF]">Overview</p>
-            <h1 className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-[#1B2430]">Dashboard</h1>
-            <p className="mt-1 text-[13px] text-[#9CA3AF]">{today}</p>
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-[#9CA3AF] dark:text-[#A3A3A3]">Overview</p>
+            <h1 className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-[#1B2430] dark:text-white">Dashboard</h1>
+            <p className="mt-1 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">{today}</p>
           </div>
           <button
             onClick={() => setCustomizeOpen(true)}
-            className="flex shrink-0 items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-4 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7]"
+            className="flex shrink-0 items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-2.5 text-[13px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
           >
             <SlidersHorizontal size={14} />
             Customize
           </button>
         </div>
-        <div className="mt-4 h-px bg-[#1B2430]" />
-        <div className="mt-0.75 h-px bg-[#E9EAEC]" />
+        <div className="mt-4 h-px bg-[#1B2430] dark:bg-[#E5E7EB]" />
+        <div className="mt-0.75 h-px bg-[#E9EAEC] dark:bg-[#262626]" />
       </div>
 
       {/* KPI ledger strip */}
@@ -459,42 +456,39 @@ export default function DashboardPage() {
       )}
 
       {/* Recent Blotter Cases — always shown; not user-togglable per spec */}
-      <div className="rounded-xl border border-[#E9EAEC] bg-white px-6 py-5">
+      <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-6 py-5">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-[13px] font-bold text-[#1B2430]">Recent Blotter Cases</h2>
-            <p className="mt-0.5 text-[11px] text-[#9CA3AF]">Latest filed and ongoing cases</p>
+            <h2 className="text-[13px] font-bold text-[#1B2430] dark:text-white">Recent Blotter Cases</h2>
+            <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Latest filed and ongoing cases</p>
           </div>
           <Link
             href="/blotter"
-            className="mt-0.5 flex shrink-0 items-center gap-1 text-xs font-semibold text-[#0B6E4F] transition hover:text-[#095c41]"
+            className="mt-0.5 flex shrink-0 items-center gap-1 text-xs font-semibold text-[#0B6E4F] dark:text-[#34A37A] transition hover:text-[#095c41] dark:hover:text-[#3FBB8C]"
           >
             View all <ArrowUpRight size={12} />
           </Link>
         </div>
 
         {data.recentBlotterCases.length === 0 ? (
-          <p className="py-6 text-center text-xs text-[#9CA3AF]">No blotter cases filed yet.</p>
+          <p className="py-6 text-center text-xs text-[#9CA3AF] dark:text-[#A3A3A3]">No blotter cases filed yet.</p>
         ) : (
           <table className="mt-4 w-full table-fixed border-collapse">
             <thead>
-              <tr className="border-b border-[#E9EAEC]">
-                <th className="w-28 pb-2 text-left text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] sm:w-36">Case No.</th>
-                <th className="pb-2 text-left text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">Parties</th>
-                <th className="w-24 pb-2 text-right text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] sm:w-28">Status</th>
+              <tr className="border-b border-[#E9EAEC] dark:border-[#262626]">
+                <th className="w-28 pb-2 text-left text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3] sm:w-36">Case No.</th>
+                <th className="pb-2 text-left text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3]">Parties</th>
+                <th className="w-24 pb-2 text-right text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3] sm:w-28">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F4F5F7]">
+            <tbody className="divide-y divide-[#F4F5F7] dark:divide-[#262626]">
               {data.recentBlotterCases.map((b) => (
                 <tr key={b.id}>
-                  <td
-                    className="truncate py-3 pr-3 text-[13px] font-bold text-[#1B2430] tabular-nums"
-                    style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" }}
-                  >
+                  <td className="truncate py-3 pr-3 text-[13px] font-bold text-[#1B2430] dark:text-white tabular-nums">
                     {b.case_number}
                   </td>
-                  <td className="truncate py-3 pr-3 text-[13px] text-[#374151]">
-                    {b.complainant_name} <span className="text-[#9CA3AF]">vs</span> {b.respondent_name}
+                  <td className="truncate py-3 pr-3 text-[13px] text-[#374151] dark:text-[#D4D4D4]">
+                    {b.complainant_name} <span className="text-[#9CA3AF] dark:text-[#A3A3A3]">vs</span> {b.respondent_name}
                   </td>
                   <td className="py-3 text-right">
                     <StatusBadge status={b.status} />

@@ -33,10 +33,7 @@ export default function StatCard({ label, value, sub, icon: Icon, color = "blue"
         <p className="mb-1 text-[10px] font-bold uppercase tracking-widest leading-none text-[#9CA3AF]">
           {label}
         </p>
-        <p
-          className="text-[22px] font-bold leading-none text-[#1B2430] tabular-nums"
-          style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" }}
-        >
+        <p className="text-[22px] font-bold leading-none text-[#1B2430] tabular-nums">
           {value}
         </p>
         {sub && <p className="mt-1 text-[11px] text-[#9CA3AF]">{sub}</p>}

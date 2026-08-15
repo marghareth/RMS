@@ -1,3 +1,4 @@
+// src/components/layout/NavItem.tsx
 "use client";
 
 import Link from "next/link";
@@ -42,9 +43,9 @@ export default function NavItem({
         } ${
           active
             ? indent
-              ? "bg-[#F4F5F7] font-semibold text-[#1F2937]"
+              ? "bg-[#F4F5F7] font-semibold text-[#1F2937] dark:bg-[#1F1F1F] dark:text-white"
               : "bg-[#3B82F6] text-white shadow-sm"
-            : "text-[#6B7280] hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+            : "text-[#6B7280] hover:bg-[#F4F5F7] hover:text-[#1F2937] dark:hover:bg-[#1F1F1F] dark:hover:text-white"
         }`}
       >
         {Icon && (
@@ -66,7 +67,7 @@ export default function NavItem({
           className={`mr-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md opacity-0 transition-opacity group-hover/item:opacity-100 ${
             active && !indent
               ? "text-white hover:bg-white/20"
-              : "text-[#9CA3AF] hover:bg-[#E9EAEC] hover:text-[#374151]"
+              : "text-[#9CA3AF] hover:bg-[#E9EAEC] hover:text-[#374151] dark:hover:bg-[#262626] dark:hover:text-white"
           }`}
         >
           <Plus size={13} strokeWidth={2.5} />
