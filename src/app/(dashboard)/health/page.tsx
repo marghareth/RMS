@@ -83,12 +83,12 @@ function fullName(r: Resident) { return `${r.lname}, ${r.fname}`; }
 
 // ─── RECORD TYPE BADGE ────────────────────────────────────────────────────────
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  "Hypertension":       { bg: "bg-red-100",    text: "text-red-700"    },
-  "Diabetes":           { bg: "bg-amber-100",  text: "text-amber-700"  },
+  "Hypertension":       { bg: "bg-red-100 dark:bg-red-500/15",    text: "text-red-700 dark:text-red-400"    },
+  "Diabetes":           { bg: "bg-amber-100 dark:bg-amber-500/15",  text: "text-amber-700 dark:text-amber-400"  },
   "Tuberculosis":       { bg: "bg-orange-100", text: "text-orange-700" },
   "Prenatal Checkup":   { bg: "bg-pink-100",   text: "text-pink-700"   },
-  "Well-child Checkup": { bg: "bg-green-100",  text: "text-green-700"  },
-  "Asthma":             { bg: "bg-blue-100",   text: "text-blue-700"   },
+  "Well-child Checkup": { bg: "bg-green-100 dark:bg-green-500/15",  text: "text-green-700 dark:text-green-400"  },
+  "Asthma":             { bg: "bg-blue-100 dark:bg-blue-500/15",   text: "text-blue-700 dark:text-blue-400"   },
   "Family Planning":    { bg: "bg-purple-100", text: "text-purple-700" },
 };
 
@@ -109,12 +109,12 @@ function TabBtn({ label, count, active, onClick, icon: Icon }: {
     <button
       onClick={onClick}
       className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-bold transition
-        ${active ? "bg-[#3B82F6] text-white shadow-sm" : "text-[#6B7280] hover:bg-[#F4F5F7]"}`}
+        ${active ? "bg-[#3B82F6] text-white shadow-sm" : "text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"}`}
     >
       <Icon size={14} />
       {label}
       <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold
-        ${active ? "bg-blue-400 text-white" : "bg-[#E9EAEC] text-[#6B7280]"}`}>
+        ${active ? "bg-blue-400 dark:bg-blue-500 text-white" : "bg-[#E9EAEC] text-[#6B7280] dark:text-[#A3A3A3]"}`}>
         {count}
       </span>
     </button>
@@ -182,20 +182,20 @@ export default function HealthPage() {
       {/* ── Page header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[18px] font-black text-[#1F2937] uppercase tracking-wide">Health Records</h1>
-          <p className="text-[12px] text-[#9CA3AF] mt-0.5">Community health monitoring and vaccination tracking</p>
+          <h1 className="text-[18px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Health Records</h1>
+          <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Community health monitoring and vaccination tracking</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => router.push("/health/vaccinations/new")}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] text-[#6B7280] text-[13px] font-bold hover:bg-[#F4F5F7] transition"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[#6B7280] dark:text-[#A3A3A3] text-[13px] font-bold hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
           >
             <Syringe size={14} />
             Add Vaccination
           </button>
           <button
             onClick={() => router.push("/health/new")}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[13px] font-bold transition shadow-sm"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] text-white text-[13px] font-bold transition shadow-sm"
           >
             <Plus size={14} />
             Add Health Record
@@ -212,21 +212,21 @@ export default function HealthPage() {
       </div>
 
       {/* ── Main content ── */}
-      <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
+      <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
           <div className="flex items-center gap-2">
             <TabBtn label="Health Records" count={healthTotal}       icon={Heart}   active={tab === "health"}      onClick={() => setTab("health")}      />
             <TabBtn label="Vaccinations"   count={vaccinationTotal}  icon={Syringe} active={tab === "vaccination"} onClick={() => setTab("vaccination")} />
           </div>
           <div className="relative w-56">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search resident or type..."
-              className="w-full pl-9 pr-3 py-2 text-[12px] bg-white border border-[#E9EAEC] rounded-xl focus:outline-none focus:border-[#3B82F6] placeholder:text-[#9CA3AF] text-[#1F2937]"
+              className="w-full pl-9 pr-3 py-2 text-[12px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] text-[#1F2937] dark:text-white"
             />
           </div>
         </div>
@@ -235,31 +235,31 @@ export default function HealthPage() {
         {tab === "health" && (
           <div>
             {/* Table header */}
-            <div className="grid grid-cols-[2fr_1.5fr_2.5fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] border-b border-[#E9EAEC]">
+            <div className="grid grid-cols-[2fr_1.5fr_2.5fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
               {["Resident", "Record Type", "Notes", "Date", "Action"].map(h => (
-                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wide">{h}</span>
+                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>
               ))}
             </div>
 
             {healthRecords.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-2">
-                <Heart size={28} className="text-[#D1D5DB]" />
-                <p className="text-[13px] text-[#9CA3AF]">No health records found</p>
+                <Heart size={28} className="text-[#D1D5DB] dark:text-[#525252]" />
+                <p className="text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">No health records found</p>
               </div>
             ) : (
               healthRecords.map((r, i) => (
                 <div
                   key={r.id}
-                  className={`grid grid-cols-[2fr_1.5fr_2.5fr_1fr_1fr] gap-4 px-5 py-3.5 border-b border-[#F4F5F7] hover:bg-[#F9FAFB] transition items-center ${i % 2 === 0 ? "" : "bg-[#FAFAFA]"}`}
+                  className={`grid grid-cols-[2fr_1.5fr_2.5fr_1fr_1fr] gap-4 px-5 py-3.5 border-b border-[#F4F5F7] dark:border-[#262626] hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F] transition items-center ${i % 2 === 0 ? "" : "bg-[#FAFAFA] dark:bg-[#171717]"}`}
                 >
                   {/* Resident */}
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0">
-                      <User size={12} className="text-[#3B82F6]" />
+                    <div className="w-7 h-7 rounded-full bg-[#EFF6FF] dark:bg-blue-500/15 flex items-center justify-center shrink-0">
+                      <User size={12} className="text-[#3B82F6] dark:text-[#60A5FA]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[12px] font-bold text-[#1F2937] truncate">{fullName(r.resident)}</p>
-                      <p className="text-[10px] text-[#9CA3AF]">{r.resident.purok?.name ?? "—"}</p>
+                      <p className="text-[12px] font-bold text-[#1F2937] dark:text-white truncate">{fullName(r.resident)}</p>
+                      <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{r.resident.purok?.name ?? "—"}</p>
                     </div>
                   </div>
 
@@ -267,19 +267,19 @@ export default function HealthPage() {
                   <div><TypeBadge type={r.record_type} /></div>
 
                   {/* Notes */}
-                  <p className="text-[11px] text-[#6B7280] line-clamp-2">{r.notes ?? "—"}</p>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3] line-clamp-2">{r.notes ?? "—"}</p>
 
                   {/* Date */}
                   <div className="flex items-center gap-1">
-                    <CalendarDays size={11} className="text-[#9CA3AF] shrink-0" />
-                    <span className="text-[11px] text-[#6B7280]">{fmtDate(r.recorded_at)}</span>
+                    <CalendarDays size={11} className="text-[#9CA3AF] dark:text-[#A3A3A3] shrink-0" />
+                    <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">{fmtDate(r.recorded_at)}</span>
                   </div>
 
                   {/* Action */}
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedHealthRecordId(r.id)}
-                      className="flex items-center gap-1 text-[11px] font-bold text-[#3B82F6] hover:text-[#1D4ED8] transition"
+                      className="flex items-center gap-1 text-[11px] font-bold text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] transition"
                     >
                       View <ChevronRight size={12} />
                     </button>
@@ -294,55 +294,55 @@ export default function HealthPage() {
         {tab === "vaccination" && (
           <div>
             {/* Table header */}
-            <div className="grid grid-cols-[2fr_2fr_1.5fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] border-b border-[#E9EAEC]">
+            <div className="grid grid-cols-[2fr_2fr_1.5fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
               {["Resident", "Vaccine", "Date Given", "Recorded By", "Action"].map(h => (
-                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wide">{h}</span>
+                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>
               ))}
             </div>
 
             {vaccinations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-2">
-                <Syringe size={28} className="text-[#D1D5DB]" />
-                <p className="text-[13px] text-[#9CA3AF]">No vaccination records found</p>
+                <Syringe size={28} className="text-[#D1D5DB] dark:text-[#525252]" />
+                <p className="text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">No vaccination records found</p>
               </div>
             ) : (
               vaccinations.map((v, i) => (
                 <div
                   key={v.id}
-                  className={`grid grid-cols-[2fr_2fr_1.5fr_1fr_1fr] gap-4 px-5 py-3.5 border-b border-[#F4F5F7] hover:bg-[#F9FAFB] transition items-center ${i % 2 === 0 ? "" : "bg-[#FAFAFA]"}`}
+                  className={`grid grid-cols-[2fr_2fr_1.5fr_1fr_1fr] gap-4 px-5 py-3.5 border-b border-[#F4F5F7] dark:border-[#262626] hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F] transition items-center ${i % 2 === 0 ? "" : "bg-[#FAFAFA] dark:bg-[#171717]"}`}
                 >
                   {/* Resident */}
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0">
-                      <User size={12} className="text-[#3B82F6]" />
+                    <div className="w-7 h-7 rounded-full bg-[#EFF6FF] dark:bg-blue-500/15 flex items-center justify-center shrink-0">
+                      <User size={12} className="text-[#3B82F6] dark:text-[#60A5FA]" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[12px] font-bold text-[#1F2937] truncate">{fullName(v.resident)}</p>
-                      <p className="text-[10px] text-[#9CA3AF]">{v.resident.purok?.name ?? "—"}</p>
+                      <p className="text-[12px] font-bold text-[#1F2937] dark:text-white truncate">{fullName(v.resident)}</p>
+                      <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{v.resident.purok?.name ?? "—"}</p>
                     </div>
                   </div>
 
                   {/* Vaccine */}
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                      <Syringe size={11} className="text-[#3B82F6]" />
+                    <div className="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-500/15 flex items-center justify-center shrink-0">
+                      <Syringe size={11} className="text-[#3B82F6] dark:text-[#60A5FA]" />
                     </div>
-                    <p className="text-[12px] font-semibold text-[#1F2937] truncate">{v.vaccine_name}</p>
+                    <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white truncate">{v.vaccine_name}</p>
                   </div>
 
                   {/* Date */}
                   <div className="flex items-center gap-1">
-                    <CalendarDays size={11} className="text-[#9CA3AF] shrink-0" />
-                    <span className="text-[11px] text-[#6B7280]">{fmtDate(v.date_given)}</span>
+                    <CalendarDays size={11} className="text-[#9CA3AF] dark:text-[#A3A3A3] shrink-0" />
+                    <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">{fmtDate(v.date_given)}</span>
                   </div>
 
                   {/* Recorded by */}
-                  <p className="text-[11px] text-[#9CA3AF]">{v.recorder.username}</p>
+                  <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{v.recorder.username}</p>
 
                   {/* Action */}
                   <button
                     onClick={() => setSelectedVaccinationId(v.id)}
-                    className="flex items-center gap-1 text-[11px] font-bold text-[#3B82F6] hover:text-[#1D4ED8] transition"
+                    className="flex items-center gap-1 text-[11px] font-bold text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] transition"
                   >
                     View <ChevronRight size={12} />
                   </button>

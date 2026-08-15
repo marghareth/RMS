@@ -31,11 +31,11 @@ const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const EVENT_TYPE_PRESETS = ["Meeting", "Holiday", "Deadline", "Assembly", "Announcement"];
 
 const EVENT_TYPE_STYLES: Record<string, string> = {
-  Meeting: "bg-blue-50 text-blue-600",
-  Holiday: "bg-green-50 text-green-600",
-  Deadline: "bg-red-50 text-red-600",
+  Meeting: "bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400",
+  Holiday: "bg-green-50 dark:bg-green-500/15 text-green-600 dark:text-green-400",
+  Deadline: "bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400",
   Assembly: "bg-purple-50 text-purple-600",
-  Announcement: "bg-amber-50 text-amber-600",
+  Announcement: "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400",
 };
 
 function EventTypeBadge({ type }: { type: string | null }) {
@@ -283,7 +283,7 @@ export default function CalendarPage() {
         actions={
           <button
             onClick={() => openAddSheet()}
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
+            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
           >
             <Plus size={15} />
             Add Event
@@ -293,25 +293,25 @@ export default function CalendarPage() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_340px]">
         {/* ── Month grid ── */}
-        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-[15px] font-bold text-[#1F2937]">{formatMonthLabel(viewDate)}</p>
+            <p className="text-[15px] font-bold text-[#1F2937] dark:text-white">{formatMonthLabel(viewDate)}</p>
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => { const t = today(); setViewDate(utcDate(t.getUTCFullYear(), t.getUTCMonth(), 1)); setSelectedDate(t); }}
-                className="rounded-lg px-3 py-1.5 text-[11px] font-bold text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                className="rounded-lg px-3 py-1.5 text-[11px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
               >
                 Today
               </button>
               <button
                 onClick={() => setViewDate((d) => addMonths(d, -1))}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
               >
                 <ChevronLeft size={16} />
               </button>
               <button
                 onClick={() => setViewDate((d) => addMonths(d, 1))}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
               >
                 <ChevronRight size={16} />
               </button>
@@ -319,7 +319,7 @@ export default function CalendarPage() {
           </div>
 
           {loadError && (
-            <div className="mb-4 rounded-lg bg-red-50 px-4 py-2.5 text-[12px] font-medium text-red-600">
+            <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-500/15 px-4 py-2.5 text-[12px] font-medium text-red-600 dark:text-red-400">
               {loadError}
             </div>
           )}
@@ -327,7 +327,7 @@ export default function CalendarPage() {
           {/* Weekday header */}
           <div className="grid grid-cols-7 gap-1.5 mb-1.5">
             {WEEKDAY_LABELS.map((w) => (
-              <div key={w} className="py-1.5 text-center text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF]">
+              <div key={w} className="py-1.5 text-center text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">
                 {w}
               </div>
             ))}
@@ -348,8 +348,8 @@ export default function CalendarPage() {
                   onClick={() => setSelectedDate(day)}
                   className={`flex aspect-square flex-col items-center justify-start gap-1 rounded-lg border pt-1.5 transition ${
                     isSelected
-                      ? "border-[#3B82F6] bg-[#EFF6FF]"
-                      : "border-transparent hover:bg-[#F4F5F7]"
+                      ? "border-[#3B82F6] dark:border-[#60A5FA] bg-[#EFF6FF] dark:bg-blue-500/15"
+                      : "border-transparent hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                   }`}
                 >
                   <span
@@ -357,8 +357,8 @@ export default function CalendarPage() {
                       isToday
                         ? "bg-[#3B82F6] font-bold text-white"
                         : inMonth
-                        ? isSelected ? "font-bold text-[#1F2937]" : "text-[#1F2937]"
-                        : "text-[#D1D5DB]"
+                        ? isSelected ? "font-bold text-[#1F2937] dark:text-white" : "text-[#1F2937] dark:text-white"
+                        : "text-[#D1D5DB] dark:text-[#525252]"
                     }`}
                   >
                     {day.getUTCDate()}
@@ -375,14 +375,14 @@ export default function CalendarPage() {
           </div>
 
           {loading && (
-            <p className="mt-3 text-center text-[11px] text-[#9CA3AF]">Loading events…</p>
+            <p className="mt-3 text-center text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Loading events…</p>
           )}
         </div>
 
         {/* ── Selected day panel ── */}
-        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF]">Selected Date</p>
-          <p className="mb-4 text-[14px] font-bold text-[#1F2937]">{formatFullLabel(selectedDate)}</p>
+        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">Selected Date</p>
+          <p className="mb-4 text-[14px] font-bold text-[#1F2937] dark:text-white">{formatFullLabel(selectedDate)}</p>
 
           {selectedDayEvents.length === 0 ? (
             <EmptyState
@@ -391,7 +391,7 @@ export default function CalendarPage() {
               action={
                 <button
                   onClick={() => openAddSheet(selectedDate)}
-                  className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
+                  className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
                 >
                   <Plus size={14} />
                   Add Event
@@ -401,20 +401,20 @@ export default function CalendarPage() {
           ) : (
             <div className="space-y-2.5">
               {selectedDayEvents.map((ev) => (
-                <div key={ev.id} className="rounded-lg border border-[#F4F5F7] p-3">
+                <div key={ev.id} className="rounded-lg border border-[#F4F5F7] dark:border-[#262626] p-3">
                   <div className="mb-1.5 flex items-start justify-between gap-2">
-                    <p className="text-[13px] font-semibold text-[#1F2937]">{ev.title}</p>
+                    <p className="text-[13px] font-semibold text-[#1F2937] dark:text-white">{ev.title}</p>
                     <div className="flex shrink-0 items-center gap-0.5">
                       <button
                         onClick={() => openEditSheet(ev)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                         title="Edit"
                       >
                         <Pencil size={13} />
                       </button>
                       <button
                         onClick={() => { setDeleteTarget(ev); setDeleteError(""); }}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-red-500 transition hover:bg-red-50"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-red-500 dark:text-red-400 transition hover:bg-red-50"
                         title="Delete"
                       >
                         <Trash2 size={13} />
@@ -423,10 +423,10 @@ export default function CalendarPage() {
                   </div>
                   {ev.event_type && <div className="mb-1.5"><EventTypeBadge type={ev.event_type} /></div>}
                   {ev.description && (
-                    <p className="mb-1.5 text-[12px] leading-relaxed text-[#6B7280]">{ev.description}</p>
+                    <p className="mb-1.5 text-[12px] leading-relaxed text-[#6B7280] dark:text-[#A3A3A3]">{ev.description}</p>
                   )}
                   {ev.meeting && (
-                    <p className="flex items-center gap-1.5 text-[11px] text-[#9CA3AF]">
+                    <p className="flex items-center gap-1.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                       <Link2 size={11} />
                       Linked to meeting: {ev.meeting.title || ev.meeting.meeting_type}
                     </p>
@@ -447,26 +447,26 @@ export default function CalendarPage() {
           </SheetHeader>
           <SheetBody>
             {formError && (
-              <div className="mb-4 rounded-lg bg-red-50 px-4 py-2.5 text-[12px] font-medium text-red-600">
+              <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-500/15 px-4 py-2.5 text-[12px] font-medium text-red-600 dark:text-red-400">
                 {formError}
               </div>
             )}
 
             <div className="space-y-4">
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                   Title *
                 </label>
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Barangay Assembly"
-                  className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                   Description
                 </label>
                 <textarea
@@ -474,30 +474,30 @@ export default function CalendarPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   placeholder="Optional details…"
-                  className="w-full resize-none rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6]"
+                  className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                   Date *
                 </label>
                 <input
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition focus:border-[#3B82F6]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                   Event Type
                 </label>
                 <select
                   value={eventTypeSelect}
                   onChange={(e) => setEventTypeSelect(e.target.value)}
-                  className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition focus:border-[#3B82F6]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                 >
                   <option value="">None</option>
                   {EVENT_TYPE_PRESETS.map((t) => (
@@ -510,7 +510,7 @@ export default function CalendarPage() {
                     value={eventTypeOther}
                     onChange={(e) => setEventTypeOther(e.target.value)}
                     placeholder="Specify event type"
-                    className="mt-2 w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6]"
+                    className="mt-2 w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                   />
                 )}
               </div>
@@ -519,14 +519,14 @@ export default function CalendarPage() {
           <SheetFooter>
             <button
               onClick={() => setSheetOpen(false)}
-              className="rounded-lg px-4 py-2.5 text-[13px] font-bold text-[#6B7280] transition hover:bg-[#F4F5F7]"
+              className="rounded-lg px-4 py-2.5 text-[13px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-50"
+              className="rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
             >
               {submitting ? "Saving…" : editingEvent ? "Save Changes" : "Add Event"}
             </button>

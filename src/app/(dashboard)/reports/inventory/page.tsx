@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Package, Download, CheckCircle2, AlertTriangle, XCircle, Clock } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
+import StatCard from "@/components/shared/StatCard";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface InventoryItem {
@@ -53,7 +54,7 @@ function fmtDate(iso: string | null) {
 function ChartCard({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     <div className={`bg-white rounded-xl border border-[#E9EAEC] p-5 ${className}`}>
-      <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] mb-4">{title}</p>
+      <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] mb-4">{title}</p>
       {children}
     </div>
   );
@@ -63,8 +64,8 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-[#E9EAEC] rounded-xl px-3 py-2 shadow-lg text-[11px]">
-      <p className="font-bold text-[#1F2937]">{label ?? payload[0]?.name}</p>
-      <p className="text-[#3B82F6]">{payload[0]?.value}</p>
+      <p className="font-bold text-[#1B2430]">{label ?? payload[0]?.name}</p>
+      <p className="text-[#0B6E4F]">{payload[0]?.value}</p>
     </div>
   );
 }
@@ -111,36 +112,40 @@ export default function InventoryReportPage() {
   return (
     <div>
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.push("/reports")} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] transition">
-            <ArrowLeft size={18} className="text-[#6B7280]" />
-          </button>
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
-              <Package size={18} className="text-red-500" />
-            </div>
-            <div>
-              <h1 className="text-[17px] font-black text-[#1F2937] uppercase tracking-wide">Inventory Report</h1>
-              <p className="text-[11px] text-[#9CA3AF]">Equipment status and year-end inventory</p>
+            <button onClick={() => router.push("/reports")} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] transition">
+              <ArrowLeft size={18} className="text-[#6B7280]" />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#F4F5F7] flex items-center justify-center">
+                <Package size={18} className="text-[#B3261E]" />
+              </div>
+              <div>
+                <h1 className="text-[17px] font-bold text-[#1B2430] uppercase tracking-wide">Inventory Report</h1>
+                <p className="text-[11px] text-[#9CA3AF]">Equipment status and year-end inventory</p>
+              </div>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <select value={year} onChange={e => setYear(e.target.value)}
+              className="text-[12px] border border-[#E9EAEC] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] bg-white text-[#1F2937]">
+              {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            {/* Real PDF generation (disabled until API/DB is wired up):
+                window.open(`/api/pdf/report/${reportType}?${params}`, "_blank")
+                — hits the not-yet-implemented /api/pdf/report/[type] route. */}
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] transition print:hidden"
+            >
+              <Download size={13} /> Export PDF
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <select value={year} onChange={e => setYear(e.target.value)}
-            className="text-[12px] border border-[#E9EAEC] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] bg-white text-[#1F2937]">
-            {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-          {/* Real PDF generation (disabled until API/DB is wired up):
-              window.open(`/api/pdf/report/${reportType}?${params}`, "_blank")
-              — hits the not-yet-implemented /api/pdf/report/[type] route. */}
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] transition print:hidden"
-          >
-            <Download size={13} /> Export PDF
-          </button>
-        </div>
+        <div className="mt-4 h-px bg-[#1B2430]" />
+        <div className="mt-0.75 h-px bg-[#E9EAEC]" />
       </div>
 
       {loading || !data ? (
@@ -151,24 +156,11 @@ export default function InventoryReportPage() {
         <>
           {/* ── Summary cards ── */}
           <div className="grid grid-cols-5 gap-3 mb-5">
-            {[
-              { label: "Total Items",    value: data.total,         icon: Package,       color: "text-[#1F2937]", bg: "bg-[#F4F5F7]" },
-              { label: "Serviceable",    value: data.serviceable,   icon: CheckCircle2,  color: "text-green-600", bg: "bg-green-50"  },
-              { label: "Unserviceable",  value: data.unserviceable, icon: AlertTriangle, color: "text-amber-600", bg: "bg-amber-50"  },
-              { label: "Missing",        value: data.missing,       icon: XCircle,       color: "text-red-500",   bg: "bg-red-50"    },
-              { label: "Currently Out",  value: data.currentlyOut,  icon: Clock,         color: "text-[#3B82F6]", bg: "bg-blue-50"   },
-            ].map(c => {
-              const Icon = c.icon;
-              return (
-                <div key={c.label} className={`rounded-xl border border-[#E9EAEC] px-4 py-4 ${c.bg}`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Icon size={13} className={c.color} />
-                    <p className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-widest">{c.label}</p>
-                  </div>
-                  <p className={`text-[26px] font-black leading-none ${c.color}`}>{c.value}</p>
-                </div>
-              );
-            })}
+            <StatCard label="Total Items"   value={data.total}         icon={Package}       color="blue" />
+            <StatCard label="Serviceable"   value={data.serviceable}   icon={CheckCircle2}  color="green" />
+            <StatCard label="Unserviceable" value={data.unserviceable} icon={AlertTriangle} color="amber" />
+            <StatCard label="Missing"       value={data.missing}       icon={XCircle}       color="red" />
+            <StatCard label="Currently Out" value={data.currentlyOut}  icon={Clock}         color="blue" />
           </div>
 
           <div className="grid grid-cols-3 gap-5 mb-5">
@@ -189,7 +181,7 @@ export default function InventoryReportPage() {
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ background: s.color }} />
                       <span className="text-[11px] text-[#6B7280]">{s.name}</span>
                     </div>
-                    <span className="text-[12px] font-bold text-[#1F2937]">{s.value}</span>
+                    <span className="text-[12px] font-bold tabular-nums text-[#1B2430]">{s.value}</span>
                   </div>
                 ))}
               </div>
@@ -202,7 +194,7 @@ export default function InventoryReportPage() {
                   <XAxis dataKey="name" tick={{ fontSize: 9, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="qty" fill="#3B82F6" radius={[5, 5, 0, 0]} />
+                  <Bar dataKey="qty" fill="#0B6E4F" radius={[5, 5, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
@@ -211,7 +203,7 @@ export default function InventoryReportPage() {
           {/* Equipment inventory table */}
           <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden mb-5">
             <div className="px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
-              <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Equipment Inventory List</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430]">Equipment Inventory List</p>
             </div>
             <div className="grid grid-cols-[2fr_0.8fr_1.2fr_1fr_1fr_0.8fr_0.6fr] gap-3 px-5 py-2.5 bg-[#F4F5F7] border-b border-[#E9EAEC]">
               {["Item Name", "Qty", "Status", "Condition", "Date Acquired", "Currently Out", "Overdue"].map(h => (
@@ -222,13 +214,13 @@ export default function InventoryReportPage() {
               <div key={item.id} className={`grid grid-cols-[2fr_0.8fr_1.2fr_1fr_1fr_0.8fr_0.6fr] gap-3 px-5 py-3 border-b border-[#F4F5F7] items-center ${i % 2 !== 0 ? "bg-[#FAFAFA]" : ""}`}>
                 <div className="flex items-center gap-2">
                   <Package size={13} className="text-[#9CA3AF] shrink-0" />
-                  <span className="text-[12px] font-semibold text-[#1F2937]">{item.name}</span>
+                  <span className="text-[12px] font-semibold text-[#1B2430]">{item.name}</span>
                 </div>
-                <span className="text-[12px] text-[#374151]">{item.qty}</span>
+                <span className="text-[12px] tabular-nums text-[#374151]">{item.qty}</span>
                 <StatusBadge status={item.status} />
                 <span className="text-[11px] text-[#6B7280]">{item.condition}</span>
                 <span className="text-[11px] text-[#9CA3AF]">{fmtDate(item.acquired)}</span>
-                <span className={`text-[12px] font-bold ${item.out > 0 ? "text-[#3B82F6]" : "text-[#9CA3AF]"}`}>{item.out}</span>
+                <span className={`text-[12px] font-bold tabular-nums ${item.out > 0 ? "text-[#1B2430]" : "text-[#9CA3AF]"}`}>{item.out}</span>
                 <span>{item.overdue ? <AlertTriangle size={14} className="text-red-500" /> : <span className="text-[11px] text-[#9CA3AF]">—</span>}</span>
               </div>
             ))}
@@ -237,7 +229,7 @@ export default function InventoryReportPage() {
           {/* Recent borrowings */}
           <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
-              <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Recent Borrow Transactions</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430]">Recent Borrow Transactions</p>
             </div>
             <div className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr_0.8fr] gap-3 px-5 py-2.5 bg-[#F4F5F7] border-b border-[#E9EAEC]">
               {["Equipment", "Borrower", "Date Borrowed", "Due Date", "Returned", "Status"].map(h => (
@@ -246,7 +238,7 @@ export default function InventoryReportPage() {
             </div>
             {data.recentBorrowings.map((b, i) => (
               <div key={b.id} className={`grid grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr_0.8fr] gap-3 px-5 py-3 border-b border-[#F4F5F7] items-center ${i % 2 !== 0 ? "bg-[#FAFAFA]" : ""}`}>
-                <span className="text-[12px] font-semibold text-[#1F2937]">{b.equipment}</span>
+                <span className="text-[12px] font-semibold text-[#1B2430]">{b.equipment}</span>
                 <span className="text-[12px] text-[#6B7280]">{b.borrower}</span>
                 <span className="text-[11px] text-[#9CA3AF]">{fmtDate(b.borrowed)}</span>
                 <span className={`text-[11px] ${b.overdue ? "text-red-500 font-bold" : "text-[#9CA3AF]"}`}>{fmtDate(b.due)}</span>
@@ -256,7 +248,7 @@ export default function InventoryReportPage() {
                     ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Returned</span>
                     : b.overdue
                       ? <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">Overdue</span>
-                      : <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Out</span>}
+                      : <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">Out</span>}
                 </span>
               </div>
             ))}

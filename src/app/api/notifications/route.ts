@@ -111,6 +111,32 @@ export const GET = withErrorHandling(async () => {
     }
   }
 
+  // ── Certificates: pending too long ──
+  // Anything still PENDING more than 48 hours after being requested — a
+  // request nobody has started processing yet. (PROCESSING requests aren't
+  // included here; those are already being worked, just not finished.)
+  if (role && hasPermission(role, "certificates:read")) {
+    const stalePendingCutoff = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+    const stalePending = await prisma.certificate.findMany({
+      where: { status: "PENDING", requested_at: { lt: stalePendingCutoff } },
+      orderBy: { requested_at: "asc" },
+      take: 10,
+    });
+
+    for (const c of stalePending) {
+      const hoursWaiting = Math.max(1, Math.floor((now.getTime() - c.requested_at.getTime()) / 3600000));
+      const label = hoursWaiting >= 48 ? `${Math.floor(hoursWaiting / 24)} day(s)` : `${hoursWaiting} hour(s)`;
+      notifications.push({
+        id: `certificate-pending-${c.id}`,
+        severity: "warning",
+        title: "Certificate request pending",
+        message: `${c.queue_number} (${c.certificate_no}) has been waiting ${label} with no action taken.`,
+        link: "/document-queue",
+        date: c.requested_at.toISOString(),
+      });
+    }
+  }
+
   notifications.sort((a, b) => {
     const sevDiff = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
     if (sevDiff !== 0) return sevDiff;

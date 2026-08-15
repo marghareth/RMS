@@ -1,3 +1,4 @@
+// src/components/layout/NavGroup.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -54,15 +55,15 @@ export default function NavGroup({
         aria-expanded={open}
         className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-colors ${
           hasActiveChild
-            ? "bg-[#EBF3FF] text-[#1D4ED8]"
-            : "text-[#6B7280] hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+            ? "bg-[#EBF3FF] text-[#1D4ED8] dark:bg-blue-500/15 dark:text-[#7CB0F5]"
+            : "text-[#6B7280] hover:bg-[#F4F5F7] hover:text-[#1F2937] dark:hover:bg-[#1F1F1F] dark:hover:text-white"
         }`}
       >
         <Icon
           size={18}
           strokeWidth={hasActiveChild ? 2.25 : 2}
           className={`shrink-0 ${
-            hasActiveChild ? "text-[#1D4ED8]" : "text-[#9CA3AF] group-hover:text-[#374151]"
+            hasActiveChild ? "text-[#1D4ED8] dark:text-[#7CB0F5]" : "text-[#9CA3AF] group-hover:text-[#374151] dark:group-hover:text-[#D1D5DB]"
           }`}
         />
         <span className="flex-1 truncate text-left">{label}</span>
@@ -70,7 +71,7 @@ export default function NavGroup({
           size={15}
           strokeWidth={2.25}
           className={`shrink-0 transition-transform duration-200 ${
-            hasActiveChild ? "text-[#1D4ED8]" : "text-[#9CA3AF]"
+            hasActiveChild ? "text-[#1D4ED8] dark:text-[#7CB0F5]" : "text-[#9CA3AF]"
           } ${open ? "rotate-180" : ""}`}
         />
       </button>
@@ -81,7 +82,7 @@ export default function NavGroup({
         }`}
       >
         <div className="overflow-hidden">
-          <div className="ml-6.25 mt-0.5 flex flex-col gap-0.5 border-l border-[#E9EAEC] py-0.5 pl-3">
+          <div className="ml-6.25 mt-0.5 flex flex-col gap-0.5 border-l border-[#E9EAEC] py-0.5 pl-3 dark:border-[#262626]">
             {items.map((child) => (
               <NavItem
                 key={child.href}

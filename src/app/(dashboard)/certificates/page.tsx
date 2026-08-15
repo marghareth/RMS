@@ -1,7 +1,7 @@
 // FILE: src/app/(dashboard)/certificates/page.tsx
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   FileText,
@@ -14,6 +14,9 @@ import {
   ChevronRight,
   Plus,
   X,
+  Printer,
+  CheckCheck,
+  Loader2,
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
@@ -52,30 +55,95 @@ export default function CertificatesListPage() {
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
+  // ── Bulk selection ──────────────────────────────────────────────────────
+  // Row checkboxes + a "Print Selected" / "Release Selected" action bar.
+  // Kept as a plain Set of ids rather than storing full row objects — the
+  // list re-fetches/filters constantly, and ids are stable across that.
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkPrinting, setBulkPrinting] = useState(false);
+  const [bulkReleasing, setBulkReleasing] = useState(false);
+  const [bulkError, setBulkError] = useState("");
+
+  function toggleSelected(id: number) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
+  async function handleBulkPrint() {
+    if (selectedIds.size === 0) return;
+    setBulkPrinting(true);
+    setBulkError("");
+    try {
+      const ids = [...selectedIds].join(",");
+      window.open(`/api/pdf/certificate/bulk?ids=${ids}`, "_blank");
+    } finally {
+      setBulkPrinting(false);
+    }
+  }
+
+  async function handleBulkRelease() {
+    if (selectedIds.size === 0) return;
+    setBulkReleasing(true);
+    setBulkError("");
+    try {
+      const res = await fetch("/api/certificates/bulk-release", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [...selectedIds] }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setBulkError(data.message || "Bulk release failed.");
+        return;
+      }
+      if (data.skipped?.length) {
+        setBulkError(
+          `Released ${data.released.length}, skipped ${data.skipped.length} (already released/cancelled).`
+        );
+      }
+      clearSelection();
+      await loadCertificates();
+    } catch (e) {
+      console.error(e);
+      setBulkError("Bulk release failed.");
+    } finally {
+      setBulkReleasing(false);
+    }
+  }
+
   // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
   const [certificates, setCertificates] = useState<CertificateMock[]>([]);
   const [loading, setLoading] = useState(true);
-  //
-   useEffect(() => {
-     async function loadCertificates() {
-       setLoading(true);
-       try {
-         const params = new URLSearchParams({ limit: "50" });
-         if (filters.certificate_type) params.set("certificate_type", filters.certificate_type);
-         if (filters.date_from) params.set("date_from", filters.date_from);
-         if (filters.date_to) params.set("date_to", filters.date_to);
-  
-         const res = await fetch(`/api/certificates?${params}`);
-         const data = await res.json();
-         setCertificates(data.certificates ?? []);
-       } catch (e) {
-         console.error(e);
-       } finally {
-         setLoading(false);
-       }
-     }
-     loadCertificates();
-   }, [filters]);
+
+  const loadCertificates = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: "50" });
+      if (filters.certificate_type) params.set("certificate_type", filters.certificate_type);
+      if (filters.date_from) params.set("date_from", filters.date_from);
+      if (filters.date_to) params.set("date_to", filters.date_to);
+
+      const res = await fetch(`/api/certificates?${params}`);
+      const data = await res.json();
+      setCertificates(data.certificates ?? []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    loadCertificates();
+  }, [loadCertificates]);
 
   const filtered = useMemo(() => {
     return certificates.filter((c) => {
@@ -246,6 +314,39 @@ export default function CertificatesListPage() {
       </div>
 
       {/* Certificates table */}
+      {selectedIds.size > 0 && (
+        <div className="mb-3 flex items-center justify-between rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-2.5">
+          <div className="flex items-center gap-2">
+            <CheckCheck size={14} className="text-[#2563EB]" />
+            <span className="text-[12px] font-semibold text-[#1D4ED8]">
+              {selectedIds.size} selected
+            </span>
+            <button onClick={clearSelection} className="text-[11px] font-semibold text-[#6B7280] hover:text-[#374151]">
+              Clear
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            {bulkError && <span className="text-[11px] text-[#B91C1C]">{bulkError}</span>}
+            <button
+              onClick={handleBulkPrint}
+              disabled={bulkPrinting}
+              className="flex items-center gap-1.5 rounded-lg border border-[#BFDBFE] bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#1D4ED8] transition hover:bg-[#EFF6FF] disabled:opacity-60"
+            >
+              {bulkPrinting ? <Loader2 size={12} className="animate-spin" /> : <Printer size={12} />}
+              Print Selected
+            </button>
+            <button
+              onClick={handleBulkRelease}
+              disabled={bulkReleasing}
+              className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-[#2563EB] disabled:opacity-60"
+            >
+              {bulkReleasing ? <Loader2 size={12} className="animate-spin" /> : <CheckCheck size={12} />}
+              Release Selected
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
         {loading ? (
           <div className="flex items-center justify-center py-16">
@@ -261,6 +362,17 @@ export default function CertificatesListPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-[#E9EAEC] bg-[#F9FAFB]">
+                <th className="w-10 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={filtered.length > 0 && filtered.every((c) => selectedIds.has(c.id))}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedIds(new Set(filtered.map((c) => c.id)));
+                      else clearSelection();
+                    }}
+                    className="h-3.5 w-3.5 rounded border-[#D1D5DB]"
+                  />
+                </th>
                 <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Cert No.</th>
                 <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Type</th>
                 <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Resident</th>
@@ -277,6 +389,14 @@ export default function CertificatesListPage() {
                   onClick={() => setSelectedId(c.id)}
                   className="cursor-pointer border-b border-[#F4F5F7] transition last:border-b-0 hover:bg-[#F9FAFB]"
                 >
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(c.id)}
+                      onChange={() => toggleSelected(c.id)}
+                      className="h-3.5 w-3.5 rounded border-[#D1D5DB]"
+                    />
+                  </td>
                   <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937]">{c.certificate_no}</td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center rounded-full bg-[#EBF3FF] px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8]">

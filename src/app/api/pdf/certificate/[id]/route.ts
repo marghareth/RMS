@@ -4,9 +4,8 @@ import { createElement } from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
-import { renderTemplate } from "@/lib/mock/certificateTemplates";
-import { MOCK_ACTIVE_CAPTAIN, MOCK_BARANGAY_INFO } from "@/lib/mock/certificates";
 import CertificatePDF from "@/lib/pdf/CertificatePDF";
+import { buildCertificatePdfProps } from "@/lib/pdf/buildCertificatePdfProps";
 import { withErrorHandling } from "@/lib/api-handler";
 
 // @react-pdf/renderer renders with a real Node canvas/font pipeline, which
@@ -36,54 +35,8 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
   });
   if (!template) return NextResponse.json({ error: "Template not found for this certificate type" }, { status: 404 });
 
-  const fullName = certificate.resident
-    ? [
-        certificate.resident.lname,
-        ", ",
-        certificate.resident.fname,
-        certificate.resident.name_extension ? ` ${certificate.resident.name_extension}` : "",
-        certificate.resident.mname ? ` ${certificate.resident.mname[0]}.` : "",
-      ].join("").toUpperCase()
-    : (certificate.manual_name ?? "").toUpperCase();
-
-  const address =
-    certificate.resident?.household?.address ??
-    certificate.manual_address ??
-    "this barangay";
-
-  const values: Record<string, string> = {
-    full_name: fullName,
-    address,
-    purpose: certificate.purpose,
-    captain_name: MOCK_ACTIVE_CAPTAIN.name,
-    captain_position: MOCK_ACTIVE_CAPTAIN.position,
-    barangay_name: MOCK_BARANGAY_INFO.name,
-    city: MOCK_BARANGAY_INFO.city,
-    province: MOCK_BARANGAY_INFO.province,
-    date_issued: new Date(certificate.issued_at).toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    }),
-  };
-
-  const buffer = await renderToBuffer(
-    createElement(CertificatePDF, {
-      title: renderTemplate(template.title, values),
-      body: renderTemplate(template.body, values),
-      closing: renderTemplate(template.closing_line ?? "", values),
-      purpose: certificate.purpose,
-      certificateNo: certificate.certificate_no,
-      applicantName: fullName,
-      flaggedManual: certificate.flagged_manual,
-      captainName: MOCK_ACTIVE_CAPTAIN.name,
-      captainPosition: MOCK_ACTIVE_CAPTAIN.position,
-      barangayName: MOCK_BARANGAY_INFO.name,
-      city: MOCK_BARANGAY_INFO.city,
-      province: MOCK_BARANGAY_INFO.province,
-      region: MOCK_BARANGAY_INFO.region,
-    })
-  );
+  const props = await buildCertificatePdfProps(certificate, template);
+  const buffer = await renderToBuffer(createElement(CertificatePDF, props));
 
   return new NextResponse(new Uint8Array(buffer), {
     status: 200,

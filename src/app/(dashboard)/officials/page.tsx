@@ -35,10 +35,10 @@ import {
 function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string | null }) {
   return (
     <div className="flex items-start gap-2.5 py-1.5">
-      <Icon size={14} className="mt-0.5 shrink-0 text-[#9CA3AF]" />
+      <Icon size={14} className="mt-0.5 shrink-0 text-[#9CA3AF] dark:text-[#A3A3A3]" />
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">{label}</p>
-        <p className="truncate text-[13px] text-[#1F2937]">{value || "—"}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">{label}</p>
+        <p className="truncate text-[13px] text-[#1F2937] dark:text-white">{value || "—"}</p>
       </div>
     </div>
   );
@@ -140,7 +140,7 @@ export default function OfficialsListPage() {
         actions={
           <button
             onClick={() => router.push("/officials/new")}
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
+            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
           >
             <Plus size={15} />
             Add Official
@@ -163,23 +163,23 @@ export default function OfficialsListPage() {
 
       <div className="flex min-h-[calc(100vh-280px)] gap-5">
         {/* ── Left: list panel ── */}
-        <div className="flex w-85 shrink-0 flex-col overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
-          <div className="border-b border-[#E9EAEC] px-4 pt-4 pb-3">
+        <div className="flex w-85 shrink-0 flex-col overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+          <div className="border-b border-[#E9EAEC] dark:border-[#262626] px-4 pt-4 pb-3">
             <div className="relative mb-3">
-              <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+              <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search official"
-                className="w-full rounded-xl border border-transparent bg-[#F4F5F7] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6] focus:bg-white"
+                className="w-full rounded-xl border border-transparent bg-[#F4F5F7] dark:bg-[#262626] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:bg-white dark:focus:bg-[#171717]"
               />
             </div>
-            <label className="flex items-center gap-2 text-[11px] font-medium text-[#6B7280]">
+            <label className="flex items-center gap-2 text-[11px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
               <input
                 type="checkbox"
                 checked={activeOnly}
                 onChange={(e) => setActiveOnly(e.target.checked)}
-                className="h-3.5 w-3.5 rounded border-[#D1D5DB] text-[#3B82F6] focus:ring-[#3B82F6]"
+                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-[#3B82F6] dark:text-[#60A5FA] focus:ring-[#3B82F6] dark:focus:ring-[#60A5FA]"
               />
               Active officials only
             </label>
@@ -188,10 +188,10 @@ export default function OfficialsListPage() {
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
               </div>
             ) : filtered.length === 0 ? (
-              <p className="py-12 text-center text-[12px] text-[#9CA3AF]">No officials found</p>
+              <p className="py-12 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No officials found</p>
             ) : (
               filtered.map((o) => {
                 const active = selected?.id === o.id;
@@ -199,21 +199,21 @@ export default function OfficialsListPage() {
                   <button
                     key={o.id}
                     onClick={() => setSelectedId(o.id)}
-                    className={`flex w-full items-center gap-3 border-b border-[#F4F5F7] px-4 py-3 text-left transition ${
-                      active ? "bg-[#3B82F6]" : "hover:bg-[#F9FAFB]"
+                    className={`flex w-full items-center gap-3 border-b border-[#F4F5F7] dark:border-[#262626] px-4 py-3 text-left transition ${
+                      active ? "bg-[#3B82F6]" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
                     }`}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className={`truncate text-[13px] font-bold ${active ? "text-white" : "text-[#1F2937]"}`}>
+                      <p className={`truncate text-[13px] font-bold ${active ? "text-white" : "text-[#1F2937] dark:text-white"}`}>
                         {residentFullName(o.resident)}
                       </p>
-                      <p className={`mt-0.5 truncate text-[11px] ${active ? "text-blue-100" : "text-[#9CA3AF]"}`}>
+                      <p className={`mt-0.5 truncate text-[11px] ${active ? "text-blue-100" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
                         {o.position}
                         {o.purok_assignment && o.purok_assignment !== "At-Large" && ` · ${o.purok_assignment}`}
                         {!o.is_active && " · Inactive"}
                       </p>
                     </div>
-                    <ChevronRight size={14} className={active ? "text-white" : "text-[#D1D5DB]"} />
+                    <ChevronRight size={14} className={active ? "text-white" : "text-[#D1D5DB] dark:text-[#525252]"} />
                   </button>
                 );
               })
@@ -222,7 +222,7 @@ export default function OfficialsListPage() {
         </div>
 
         {/* ── Right: detail panel ── */}
-        <div className="flex-1 overflow-y-auto rounded-xl border border-[#E9EAEC] bg-white">
+        <div className="flex-1 overflow-y-auto rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
           {!selected ? (
             <div className="flex h-full items-center justify-center">
               <EmptyState
@@ -234,23 +234,23 @@ export default function OfficialsListPage() {
           ) : (
             <div className="p-6">
               {/* Header */}
-              <div className="mb-5 flex items-start justify-between border-b border-[#E9EAEC] pb-5">
+              <div className="mb-5 flex items-start justify-between border-b border-[#E9EAEC] dark:border-[#262626] pb-5">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#EBF3FF] text-xl font-black text-[#1D4ED8]">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 text-xl font-black text-[#1D4ED8] dark:text-[#93C5FD]">
                     {selected.resident.fname[0]}
                     {selected.resident.lname[0]}
                   </div>
                   <div>
-                    <h2 className="text-[16px] font-black uppercase tracking-wide text-[#1F2937]">
+                    <h2 className="text-[16px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
                       {residentFullName(selected.resident)}
                     </h2>
                     <div className="mt-1 flex items-center gap-2">
-                      <span className="inline-flex items-center rounded-full bg-[#EBF3FF] px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8]">
+                      <span className="inline-flex items-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
                         {selected.position}
                       </span>
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                          selected.is_active ? "bg-[#D1FAE5] text-[#059669]" : "bg-[#F4F5F7] text-[#9CA3AF]"
+                          selected.is_active ? "bg-[#D1FAE5] dark:bg-emerald-500/15 text-[#059669] dark:text-[#34D399]" : "bg-[#F4F5F7] dark:bg-[#262626] text-[#9CA3AF] dark:text-[#A3A3A3]"
                         }`}
                       >
                         {selected.is_active ? "Active" : "Inactive"}
@@ -261,7 +261,7 @@ export default function OfficialsListPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setEditId(selected.id)}
-                    className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-[#374151] transition hover:bg-[#F4F5F7]"
+                    className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                   >
                     <Pencil size={12} />
                     Edit
@@ -269,14 +269,14 @@ export default function OfficialsListPage() {
                   <button
                     onClick={() => handleToggleActive(selected)}
                     disabled={busy}
-                    className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-[#374151] transition hover:bg-[#F4F5F7] disabled:opacity-50"
+                    className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] disabled:opacity-50"
                   >
                     <Power size={12} />
                     {selected.is_active ? "Deactivate" : "Activate"}
                   </button>
                   <button
                     onClick={() => setDeleteTarget(selected)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#FEE2E2] hover:text-[#DC2626]"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#FEE2E2] dark:hover:bg-red-500/20 hover:text-[#DC2626] dark:hover:text-[#F87171]"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -284,7 +284,7 @@ export default function OfficialsListPage() {
               </div>
 
               {/* Resident info */}
-              <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Personal Information</p>
+              <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Personal Information</p>
               <div className="mb-5 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
                 <InfoRow icon={Cake} label="Date of Birth" value={formatISODate(selected.resident.birthdate)} />
                 <InfoRow icon={UserCheck} label="Age / Sex" value={`${calcAge(selected.resident.birthdate)} yrs · ${selected.resident.sex}`} />
@@ -295,7 +295,7 @@ export default function OfficialsListPage() {
               </div>
 
               {/* Official info */}
-              <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Official Information</p>
+              <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Official Information</p>
               <div className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
                 <InfoRow icon={Phone} label="Contact No." value={selected.contact_no} />
                 <InfoRow icon={MapPin} label="Purok Assignment" value={selected.purok_assignment} />

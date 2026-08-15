@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Shield, Download, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Shield, Download, AlertTriangle, FolderOpen, Clock, CheckCircle2 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid,
 } from "recharts";
+import StatCard from "@/components/shared/StatCard";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface BlotterCase {
@@ -45,7 +46,7 @@ function fmtDate(iso: string) {
 function ChartCard({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     <div className={`bg-white rounded-xl border border-[#E9EAEC] p-5 ${className}`}>
-      <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] mb-4">{title}</p>
+      <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] mb-4">{title}</p>
       {children}
     </div>
   );
@@ -100,9 +101,9 @@ export default function BlotterReportPage() {
 
   const pieData = data
     ? [
-        { name: "Filed",     value: data.filed,     color: "#3B82F6" },
-        { name: "Ongoing",   value: data.ongoing,   color: "#F59E0B" },
-        { name: "Resolved",  value: data.resolved,  color: "#10B981" },
+        { name: "Filed",     value: data.filed,     color: "#3E5C76" },
+        { name: "Ongoing",   value: data.ongoing,   color: "#B45309" },
+        { name: "Resolved",  value: data.resolved,  color: "#0B6E4F" },
         { name: "Dismissed", value: data.dismissed, color: "#9CA3AF" },
       ]
     : [];
@@ -110,43 +111,47 @@ export default function BlotterReportPage() {
   return (
     <div>
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.push("/reports")} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] transition">
-            <ArrowLeft size={18} className="text-[#6B7280]" />
-          </button>
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-              <Shield size={18} className="text-amber-600" />
-            </div>
-            <div>
-              <h1 className="text-[17px] font-black text-[#1F2937] uppercase tracking-wide">Blotter Report</h1>
-              <p className="text-[11px] text-[#9CA3AF]">Incident cases, status tracking and trends</p>
+            <button onClick={() => router.push("/reports")} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] transition">
+              <ArrowLeft size={18} className="text-[#6B7280]" />
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#F4F5F7] flex items-center justify-center">
+                <Shield size={18} className="text-[#B45309]" />
+              </div>
+              <div>
+                <h1 className="text-[17px] font-bold text-[#1B2430] uppercase tracking-wide">Blotter Report</h1>
+                <p className="text-[11px] text-[#9CA3AF]">Incident cases, status tracking and trends</p>
+              </div>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <select value={year} onChange={e => setYear(e.target.value)}
+              className="text-[12px] border border-[#E9EAEC] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] bg-white text-[#1F2937]">
+              {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <select value={month} onChange={e => setMonth(e.target.value)}
+              className="text-[12px] border border-[#E9EAEC] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] bg-white text-[#1F2937]">
+              <option value="">All Months</option>
+              {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m, i) => (
+                <option key={m} value={String(i + 1).padStart(2, "0")}>{m}</option>
+              ))}
+            </select>
+            {/* Real PDF generation (disabled until API/DB is wired up):
+                window.open(`/api/pdf/report/${reportType}?${params}`, "_blank")
+                — hits the not-yet-implemented /api/pdf/report/[type] route. */}
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] transition print:hidden"
+            >
+              <Download size={13} /> Export PDF
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <select value={year} onChange={e => setYear(e.target.value)}
-            className="text-[12px] border border-[#E9EAEC] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] bg-white text-[#1F2937]">
-            {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-          <select value={month} onChange={e => setMonth(e.target.value)}
-            className="text-[12px] border border-[#E9EAEC] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] bg-white text-[#1F2937]">
-            <option value="">All Months</option>
-            {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m, i) => (
-              <option key={m} value={String(i + 1).padStart(2, "0")}>{m}</option>
-            ))}
-          </select>
-          {/* Real PDF generation (disabled until API/DB is wired up):
-              window.open(`/api/pdf/report/${reportType}?${params}`, "_blank")
-              — hits the not-yet-implemented /api/pdf/report/[type] route. */}
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] transition print:hidden"
-          >
-            <Download size={13} /> Export PDF
-          </button>
-        </div>
+        <div className="mt-4 h-px bg-[#1B2430]" />
+        <div className="mt-0.75 h-px bg-[#E9EAEC]" />
       </div>
 
       {loading || !data ? (
@@ -157,18 +162,11 @@ export default function BlotterReportPage() {
         <>
           {/* ── Status summary cards ── */}
           <div className="grid grid-cols-5 gap-3 mb-5">
-            {[
-              { label: "Total Cases",  value: data.total,     color: "text-[#1F2937]", bg: "bg-[#F4F5F7]" },
-              { label: "Filed",        value: data.filed,     color: "text-[#3B82F6]", bg: "bg-blue-50"   },
-              { label: "Ongoing",      value: data.ongoing,   color: "text-amber-600", bg: "bg-amber-50"  },
-              { label: "Resolved",     value: data.resolved,  color: "text-green-600", bg: "bg-green-50"  },
-              { label: "Escalated",    value: data.escalated, color: "text-red-500",   bg: "bg-red-50"    },
-            ].map(c => (
-              <div key={c.label} className={`rounded-xl border border-[#E9EAEC] px-4 py-4 text-center ${c.bg}`}>
-                <p className={`text-[28px] font-black leading-none ${c.color}`}>{c.value}</p>
-                <p className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-widest mt-1">{c.label}</p>
-              </div>
-            ))}
+            <StatCard label="Total Cases" value={data.total}     icon={Shield}       color="blue" />
+            <StatCard label="Filed"       value={data.filed}     icon={FolderOpen}   color="blue" />
+            <StatCard label="Ongoing"     value={data.ongoing}   icon={Clock}        color="amber" />
+            <StatCard label="Resolved"    value={data.resolved}  icon={CheckCircle2} color="green" />
+            <StatCard label="Escalated"   value={data.escalated} icon={AlertTriangle} color="red" />
           </div>
 
           <div className="grid grid-cols-2 gap-5 mb-5">
@@ -191,7 +189,7 @@ export default function BlotterReportPage() {
                         <span className="text-[11px] text-[#6B7280]">{s.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-bold text-[#1F2937]">{s.value}</span>
+                        <span className="text-[13px] font-bold tabular-nums text-[#1B2430]">{s.value}</span>
                         <span className="text-[10px] text-[#9CA3AF]">
                           {data.total ? ((s.value / data.total) * 100).toFixed(0) : 0}%
                         </span>
@@ -210,13 +208,13 @@ export default function BlotterReportPage() {
                   <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="filed"    name="Filed"    fill="#3B82F6" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="resolved" name="Resolved" fill="#10B981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="filed"    name="Filed"    fill="#3E5C76" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="resolved" name="Resolved" fill="#0B6E4F" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
               <div className="flex gap-4 mt-2">
-                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" /><span className="text-[10px] text-[#9CA3AF]">Filed</span></div>
-                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" /><span className="text-[10px] text-[#9CA3AF]">Resolved</span></div>
+                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#3E5C76]" /><span className="text-[10px] text-[#9CA3AF]">Filed</span></div>
+                <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#0B6E4F]" /><span className="text-[10px] text-[#9CA3AF]">Resolved</span></div>
               </div>
             </ChartCard>
           </div>
@@ -225,12 +223,12 @@ export default function BlotterReportPage() {
           <ChartCard title="Incident Types" className="mb-5">
             <div className="grid grid-cols-2 gap-x-8 gap-y-3">
               {data.byType.map((t, i) => {
-                const colors = ["#3B82F6","#F59E0B","#10B981","#EF4444","#8B5CF6"];
+                const colors = ["#3E5C76","#B45309","#0B6E4F","#B3261E","#6D4AFF"];
                 return (
                   <div key={t.type}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[11px] font-semibold text-[#374151]">{t.type}</span>
-                      <span className="text-[12px] font-bold text-[#1F2937]">{t.count}</span>
+                      <span className="text-[12px] font-bold tabular-nums text-[#1B2430]">{t.count}</span>
                     </div>
                     <div className="h-2 bg-[#F4F5F7] rounded-full overflow-hidden">
                       <div
@@ -247,7 +245,7 @@ export default function BlotterReportPage() {
           {/* Recent cases table */}
           <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
-              <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Recent Cases</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430]">Recent Cases</p>
             </div>
             <div className="grid grid-cols-[1.2fr_1.5fr_1.5fr_1fr_1fr_0.5fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] border-b border-[#E9EAEC]">
               {["Case No.", "Complainant", "Respondent", "Status", "Date Filed", "Flag"].map(h => (
@@ -256,8 +254,8 @@ export default function BlotterReportPage() {
             </div>
             {data.recent.map((r, i) => (
               <div key={r.id} className={`grid grid-cols-[1.2fr_1.5fr_1.5fr_1fr_1fr_0.5fr] gap-4 px-5 py-3 border-b border-[#F4F5F7] items-center ${i % 2 !== 0 ? "bg-[#FAFAFA]" : ""}`}>
-                <span className="text-[11px] font-mono font-bold text-[#3B82F6]">{r.case_no}</span>
-                <span className="text-[12px] font-semibold text-[#1F2937]">{r.complainant}</span>
+                <span className="text-[11px] font-mono font-bold text-[#1B2430]">{r.case_no}</span>
+                <span className="text-[12px] font-semibold text-[#1B2430]">{r.complainant}</span>
                 <span className="text-[12px] text-[#6B7280]">{r.respondent}</span>
                 <StatusBadge status={r.status} />
                 <span className="text-[11px] text-[#9CA3AF]">{fmtDate(r.date)}</span>

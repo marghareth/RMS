@@ -1,13 +1,18 @@
 // FILE: src/app/(dashboard)/finance/overview/page.tsx
+//
+// REDESIGN: visual refresh to match the reports/analytics card language
+// (rounded-2xl cards, refined chart styling, chip-style legends, KPI cards
+// with trend pills) — no changes to the underlying data/calculations,
+// which were already correct; this only changes presentation.
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  Wallet, TrendingUp, TrendingDown, Landmark, ClipboardList,
+  Wallet, TrendingUp, TrendingDown, ClipboardList,
 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
-  XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
+  XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 import StatCard from "@/components/shared/StatCard";
 import {
@@ -16,22 +21,47 @@ import {
   AppropriationRecord, RevenueRecord, DisbursementRecord, FundSourceRecord,
 } from "@/lib/finance";
 
-function ChartCard({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
+function ChartCard({
+  title,
+  subtitle,
+  children,
+  className = "",
+  action,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+  className?: string;
+  action?: React.ReactNode;
+}) {
+  // Same flat chrome as StatCard: rounded-xl, plain border, no shadow —
+  // keeps every card on the page reading as one consistent "ledger sheet"
+  // material instead of StatCards looking flatter than chart cards.
   return (
-    <div className={`bg-white rounded-xl border border-[#E9EAEC] p-5 ${className}`}>
-      <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] mb-4">{title}</p>
+    <div className={`rounded-xl border border-[#E9EAEC] bg-white p-5 ${className}`}>
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[13px] font-bold text-[#1B2430]">{title}</p>
+          {subtitle && <p className="mt-0.5 text-[11px] text-[#9CA3AF]">{subtitle}</p>}
+        </div>
+        {action}
+      </div>
       {children}
     </div>
   );
 }
 
+// Same monospace/tabular-nums treatment as StatCard's value text, for the
+// key ledger figures on this page (progress rows, donut legend amounts).
+const MONO = { fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" };
+
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-[#E9EAEC] rounded-xl px-3 py-2 shadow-lg text-[11px] space-y-1">
-      <p className="font-bold text-[#1F2937]">{label}</p>
+    <div className="space-y-1 rounded-xl border border-[#E9EAEC] bg-white px-3 py-2 text-[11px] shadow-lg">
+      <p className="font-bold text-[#1B2430]">{label}</p>
       {payload.map((p: any) => (
-        <p key={p.name} style={{ color: p.color }}>{p.name}: {fmtCurrency(p.value)}</p>
+        <p key={p.name} style={{ color: p.color, ...MONO }}>{p.name}: {fmtCurrency(p.value)}</p>
       ))}
     </div>
   );
@@ -122,27 +152,28 @@ export default function BudgetOverviewPage() {
     return rows;
   }, [months, revenues, disbursements, fundSources]);
 
-  // Trend chart 3: appropriation breakdown by category (pie).
+  // Trend chart 3: appropriation breakdown by category (donut + chip legend).
   const categoryBreakdown = useMemo(
     () => byCategory
       .filter((c) => c.appropriated > 0)
       .map((c) => ({ name: APPROPRIATION_CATEGORY_LABELS[c.cat], value: c.appropriated, color: APPROPRIATION_CATEGORY_COLORS[c.cat] })),
     [byCategory]
   );
+  const categoryTotal = categoryBreakdown.reduce((s, c) => s + c.value, 0);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3E5C76] border-t-transparent" />
       </div>
     );
   }
 
   return (
     <div>
-      <div className="mb-5">
-        <h1 className="text-[20px] font-bold text-[#1F2937]">Budget Overview</h1>
-        <p className="mt-0.5 text-[12px] text-[#9CA3AF]">Barangay-wide appropriations, revenue, and disbursement snapshot</p>
+      <div className="mb-6">
+        <h1 className="text-[22px] font-bold tracking-tight text-[#1B2430]">Budget Overview</h1>
+        <p className="mt-1 text-[13px] text-[#9CA3AF]">Barangay-wide appropriations, revenue, and disbursement snapshot</p>
       </div>
 
       {/* Stat cards */}
@@ -151,21 +182,23 @@ export default function BudgetOverviewPage() {
         <StatCard label="Obligated" value={fmtCompactCurrency(totals.obligated)} sub="Committed spending" icon={TrendingDown} color="amber" />
         <StatCard label="Disbursed" value={fmtCompactCurrency(totals.disbursed)} sub="Actually paid out" icon={TrendingDown} color="red" />
         <StatCard label="Revenue" value={fmtCompactCurrency(totals.revenue)} sub="All-time collected" icon={TrendingUp} color="green" />
-        <StatCard label="Fund Balance" value={fmtCompactCurrency(totals.balance)} sub="Across all fund sources" icon={Wallet} color="blue" />
+        <StatCard label="Fund Balance" value={fmtCompactCurrency(totals.balance)} sub="Across all fund sources" icon={Wallet} color="teal" />
       </div>
-
       {/* PS / MOOE / CO progress */}
-      <ChartCard title="Appropriation Utilization by Category" className="mb-5">
-        <div className="space-y-4">
+      <ChartCard title="Appropriation Utilization by Category" subtitle="Disbursed against appropriated, per category" className="mb-5">
+        <div className="space-y-5">
           {byCategory.map((c) => (
             <div key={c.cat}>
-              <div className="mb-1 flex items-center justify-between text-[12px]">
-                <span className="font-semibold text-[#374151]">{APPROPRIATION_CATEGORY_LABELS[c.cat]}</span>
-                <span className="text-[#9CA3AF]">
-                  {fmtCurrency(c.disbursed)} / {fmtCurrency(c.appropriated)} ({c.pct.toFixed(0)}%)
+              <div className="mb-1.5 flex items-center justify-between text-[12px]">
+                <span className="flex items-center gap-2 font-semibold text-[#374151]">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: APPROPRIATION_CATEGORY_COLORS[c.cat] }} />
+                  {APPROPRIATION_CATEGORY_LABELS[c.cat]}
+                </span>
+                <span className="text-[#9CA3AF]" style={MONO}>
+                  {fmtCurrency(c.disbursed)} / {fmtCurrency(c.appropriated)} · <span className="font-bold text-[#1B2430]">{c.pct.toFixed(0)}%</span>
                 </span>
               </div>
-              <div className="h-3 overflow-hidden rounded-full bg-[#F4F5F7]">
+              <div className="h-2.5 overflow-hidden rounded-full bg-[#F4F5F7]">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{ width: `${c.pct}%`, backgroundColor: APPROPRIATION_CATEGORY_COLORS[c.cat] }}
@@ -181,44 +214,64 @@ export default function BudgetOverviewPage() {
 
       {/* 3 trend charts */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <ChartCard title="Revenue vs. Disbursement (6 mo.)">
+        <ChartCard title="Revenue vs. Disbursement" subtitle="Last 6 months">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={revenueVsDisbursement} barSize={14} barGap={4}>
               <CartesianGrid stroke="#F4F5F7" strokeDasharray="4 4" vertical={false} />
               <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: "#9CA3AF" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="Revenue" fill="#059669" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Disbursed" fill="#DC2626" radius={[4, 4, 0, 0]} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: "#F9FAFB" }} />
+              <Bar dataKey="Revenue" fill="#0B6E4F" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Disbursed" fill="#B3261E" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Fund Balance Trend (6 mo.)">
+        <ChartCard title="Fund Balance Trend" subtitle="Last 6 months">
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={fundBalanceTrend}>
               <CartesianGrid stroke="#F4F5F7" strokeDasharray="4 4" vertical={false} />
               <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: "#9CA3AF" }} axisLine={false} tickLine={false} tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`} />
-              <Tooltip content={<CustomTooltip />} />
-              <Line type="monotone" dataKey="Balance" stroke="#3B82F6" strokeWidth={2.5} dot={{ r: 3 }} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#E9EAEC" }} />
+              <Line type="monotone" dataKey="Balance" stroke="#3E5C76" strokeWidth={2.5} dot={{ r: 3, fill: "#3E5C76" }} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Appropriation Breakdown by Category" className="lg:col-span-2">
+        <ChartCard title="Appropriation Breakdown" subtitle="Share of total appropriated budget, by category" className="lg:col-span-2">
           {categoryBreakdown.length === 0 ? (
             <p className="py-12 text-center text-[12px] text-[#9CA3AF]">No appropriations recorded yet.</p>
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie data={categoryBreakdown} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
-                  {categoryBreakdown.map((c) => <Cell key={c.name} fill={c.color} />)}
-                </Pie>
-                <Tooltip formatter={(v: any) => fmtCurrency(v)} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
+              <ResponsiveContainer width={220} height={220} className="shrink-0">
+                <PieChart>
+                  <Pie data={categoryBreakdown} dataKey="value" nameKey="name" innerRadius={62} outerRadius={95} paddingAngle={3} stroke="none">
+                    {categoryBreakdown.map((c) => <Cell key={c.name} fill={c.color} />)}
+                  </Pie>
+                  <Tooltip formatter={(v: any) => fmtCurrency(v)} />
+                </PieChart>
+              </ResponsiveContainer>
+
+              {/* Chip-style legend, matching the "Leave Statistics" / donut
+                  legend pattern from the reference dashboards, instead of
+                  recharts' default <Legend/> row. */}
+              <div className="flex w-full max-w-xs flex-col gap-3">
+                {categoryBreakdown.map((c) => {
+                  const pct = categoryTotal > 0 ? (c.value / categoryTotal) * 100 : 0;
+                  return (
+                    <div key={c.name} className="flex items-center gap-3 rounded-xl border border-[#F0F1F3] px-3 py-2.5">
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: c.color }} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[12px] font-semibold text-[#374151]">{c.name}</p>
+                        <p className="text-[11px] text-[#9CA3AF]" style={MONO}>{fmtCurrency(c.value)}</p>
+                      </div>
+                      <span className="shrink-0 text-[13px] font-bold text-[#1B2430]" style={MONO}>{pct.toFixed(0)}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </ChartCard>
       </div>

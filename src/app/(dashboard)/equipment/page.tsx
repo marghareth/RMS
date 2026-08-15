@@ -8,6 +8,8 @@ import {
   CheckCircle2, AlertTriangle, XCircle, Clock,
 } from "lucide-react";
 import EquipmentDetailSheet from "@/components/equipment/EquipmentDetailSheet";
+import PageHeader from "@/components/shared/PageHeader";
+import StatCard from "@/components/shared/StatCard";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type EquipmentStatus = "SERVICEABLE" | "UNSERVICEABLE" | "MISSING";
@@ -75,19 +77,6 @@ function activeBorrowings(eq: Equipment) {
 }
 function hasOverdue(eq: Equipment) {
   return eq.borrowings.some(b => !b.actual_return && b.is_overdue);
-}
-
-// ─── STAT CARD ────────────────────────────────────────────────────────────────
-function StatCard({
-  label, value, sub, accent,
-}: { label: string; value: number | string; sub?: string; accent?: string }) {
-  return (
-    <div className="bg-white rounded-xl border border-[#E9EAEC] px-5 py-4">
-      <p className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-widest mb-1">{label}</p>
-      <p className={`text-[26px] font-black leading-none ${accent ?? "text-[#1F2937]"}`}>{value}</p>
-      {sub && <p className="text-[11px] text-[#9CA3AF] mt-1">{sub}</p>}
-    </div>
-  );
 }
 
 // ─── STATUS BADGE ─────────────────────────────────────────────────────────────
@@ -174,26 +163,26 @@ export default function EquipmentPage() {
     <div className="flex flex-col gap-5">
 
       {/* ── Page header ── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-[18px] font-black text-[#1F2937] uppercase tracking-wide">Inventory</h1>
-          <p className="text-[12px] text-[#9CA3AF] mt-0.5">Equipment management and borrow tracking</p>
-        </div>
-        <button
-          onClick={() => router.push("/equipment/new")}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[13px] font-bold transition shadow-sm"
-        >
-          <Plus size={15} />
-          Add Equipment
-        </button>
-      </div>
+      <PageHeader
+        title="Inventory"
+        subtitle="Equipment management and borrow tracking"
+        actions={
+          <button
+            onClick={() => router.push("/equipment/new")}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[13px] font-bold transition shadow-sm"
+          >
+            <Plus size={15} />
+            Add Equipment
+          </button>
+        }
+      />
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-4 gap-4">
-        <StatCard label="Total Equipment"   value={totalItems}   sub="item types"                />
-        <StatCard label="Serviceable"       value={serviceable}  sub="ready for use"  accent="text-green-600" />
-        <StatCard label="Currently Borrowed" value={currentlyOut} sub="active borrows" accent="text-[#3B82F6]" />
-        <StatCard label="Overdue"           value={overdueCount} sub="past return date" accent="text-red-500" />
+        <StatCard label="Total Equipment"    value={totalItems}   sub="item types"       icon={Package}       color="blue" />
+        <StatCard label="Serviceable"        value={serviceable}  sub="ready for use"    icon={CheckCircle2}  color="green" />
+        <StatCard label="Currently Borrowed" value={currentlyOut} sub="active borrows"   icon={Clock}         color="blue" />
+        <StatCard label="Overdue"            value={overdueCount} sub="past return date" icon={AlertTriangle} color="red" />
       </div>
 
       {/* ── Main panel ── */}

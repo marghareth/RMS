@@ -125,14 +125,14 @@ export default function HouseholdsListPage() {
             <button
               onClick={handleExportCsv}
               disabled={exporting}
-              className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-4 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7] disabled:opacity-60"
+              className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-2.5 text-[13px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] disabled:opacity-60"
             >
               <Download size={14} />
               {exporting ? "Exporting..." : "Export CSV (BIMS)"}
             </button>
             <button
               onClick={() => router.push("/households/new")}
-              className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
+              className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
             >
               <Plus size={15} />
               Add Household
@@ -152,18 +152,18 @@ export default function HouseholdsListPage() {
       {/* Search + purok filter */}
       <div className="mb-4 flex items-center gap-2">
         <div className="relative flex-1">
-          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search household no., address, or head name"
-            className="w-full rounded-xl border border-[#E9EAEC] bg-white py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6]"
+            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
           />
         </div>
         <select
           value={purokFilter}
           onChange={(e) => setPurokFilter(e.target.value)}
-          className="rounded-xl border border-[#E9EAEC] bg-white px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition focus:border-[#3B82F6]"
+          className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
         >
           <option value="">All Puroks</option>
           {puroks.map((p: { id: number; name: string }) => (
@@ -175,10 +175,10 @@ export default function HouseholdsListPage() {
       </div>
 
       {/* Households table */}
-      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
+      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
@@ -189,13 +189,13 @@ export default function HouseholdsListPage() {
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E9EAEC] bg-[#F9FAFB]">
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Household No.</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Address</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Purok</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Household Head</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Members</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Housing Type</th>
+              <tr className="border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Household No.</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Address</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Purok</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Household Head</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Members</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Housing Type</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -204,22 +204,22 @@ export default function HouseholdsListPage() {
                 <tr
                   key={h.id}
                   onClick={() => setSelectedId(h.id)}
-                  className="cursor-pointer border-b border-[#F4F5F7] transition last:border-b-0 hover:bg-[#F9FAFB]"
+                  className="cursor-pointer border-b border-[#F4F5F7] dark:border-[#262626] transition last:border-b-0 hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
                 >
-                  <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937]">{h.household_no}</td>
-                  <td className="px-4 py-3 text-[12px] text-[#374151]">{h.address}</td>
+                  <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937] dark:text-white">{h.household_no}</td>
+                  <td className="px-4 py-3 text-[12px] text-[#374151] dark:text-[#D4D4D4]">{h.address}</td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-[#EBF3FF] px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8]">
+                    <span className="inline-flex items-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
                       {h.purok.name}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-[#374151]">
-                    {h.household_head ? memberFullName(h.household_head) : <span className="text-[#D1D5DB]">Not assigned</span>}
+                  <td className="px-4 py-3 text-[12px] text-[#374151] dark:text-[#D4D4D4]">
+                    {h.household_head ? memberFullName(h.household_head) : <span className="text-[#D1D5DB] dark:text-[#525252]">Not assigned</span>}
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-[#374151]">{h.members.length}</td>
-                  <td className="px-4 py-3 text-[12px] text-[#6B7280]">{HOUSING_LABEL[h.housing_type ?? ""] ?? "—"}</td>
+                  <td className="px-4 py-3 text-[12px] text-[#374151] dark:text-[#D4D4D4]">{h.members.length}</td>
+                  <td className="px-4 py-3 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{HOUSING_LABEL[h.housing_type ?? ""] ?? "—"}</td>
                   <td className="px-4 py-3 text-right">
-                    <ChevronRight size={15} className="ml-auto text-[#D1D5DB]" />
+                    <ChevronRight size={15} className="ml-auto text-[#D1D5DB] dark:text-[#525252]" />
                   </td>
                 </tr>
               ))}

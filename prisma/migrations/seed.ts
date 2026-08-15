@@ -85,39 +85,50 @@ async function main() {
     return prisma.resident.create({ data });
   }
 
-  const residents = await Promise.all([
+  // Sequential, not Promise.all — 21 residents x up to 2 queries each
+  // (findFirst + create) was firing ~40 concurrent queries against
+  // Supabase's pooled connection limit (15 in session mode) and failing
+  // partway through, non-deterministically, depending on how fast each
+  // query resolved. Seeding only runs once, so speed doesn't matter here;
+  // correctness does.
+  const residentInputs: Prisma.ResidentUncheckedCreateInput[] = [
     // HH1 — Dela Cruz family, Purok I
-    upsertResident({ household_id: hh1.id, purok_id: p1.id, fname: "Maria",      lname: "Dela Cruz",   mname: "Santos",      sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(36), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "COLLEGE GRAD.", occupation: "Teacher",    income_bracket: "10K_20K",  sector: "N/A"    }),
-    upsertResident({ household_id: hh1.id, purok_id: p1.id, fname: "Ricardo",    lname: "Dela Cruz",   mname: "Manalo",      sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(40), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "COLLEGE GRAD.", occupation: "Engineer",   income_bracket: "20K_40K",  sector: "N/A"    }),
-    upsertResident({ household_id: hh1.id, purok_id: p1.id, fname: "Kristine",   lname: "Dela Cruz",   mname: "Santos",      sex: "FEMALE", civil_status: "SINGLE",    birthdate: dob(16), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "STUDENT",    educational_attainment: "HIGH SCHOOL",   occupation: "Student",    income_bracket: "BELOW_5K", sector: "YOUTH"  }),
+    { household_id: hh1.id, purok_id: p1.id, fname: "Maria",      lname: "Dela Cruz",   mname: "Santos",      sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(36), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "COLLEGE GRAD.", occupation: "Teacher",    income_bracket: "10K_20K",  sector: "N/A"    },
+    { household_id: hh1.id, purok_id: p1.id, fname: "Ricardo",    lname: "Dela Cruz",   mname: "Manalo",      sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(40), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "COLLEGE GRAD.", occupation: "Engineer",   income_bracket: "20K_40K",  sector: "N/A"    },
+    { household_id: hh1.id, purok_id: p1.id, fname: "Kristine",   lname: "Dela Cruz",   mname: "Santos",      sex: "FEMALE", civil_status: "SINGLE",    birthdate: dob(16), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "STUDENT",    educational_attainment: "HIGH SCHOOL",   occupation: "Student",    income_bracket: "BELOW_5K", sector: "YOUTH"  },
     // HH2 — Santos family, Purok I
-    upsertResident({ household_id: hh2.id, purok_id: p1.id, fname: "Juan",       lname: "Santos",      mname: "Reyes",       sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(45), place_of_birth: "Cebu City, Cebu",      citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "COLLEGE GRAD.", occupation: "Police",     income_bracket: "20K_40K",  sector: "N/A"    }),
-    upsertResident({ household_id: hh2.id, purok_id: p1.id, fname: "Lourdes",    lname: "Santos",      mname: "Flores",      sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(42), place_of_birth: "Mandaue City, Cebu",   citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "UNEMPLOYED", educational_attainment: "HIGH SCHOOL",   occupation: "Housewife",  income_bracket: "BELOW_5K", sector: "N/A"    }),
-    upsertResident({ household_id: hh2.id, purok_id: p1.id, fname: "Jericho",    lname: "Santos",      mname: "Reyes",       sex: "MALE",   civil_status: "SINGLE",    birthdate: dob(8),  place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "STUDENT",    educational_attainment: "ELEM.",         occupation: "Student",    income_bracket: "BELOW_5K", sector: "YOUTH"  }),
+    { household_id: hh2.id, purok_id: p1.id, fname: "Juan",       lname: "Santos",      mname: "Reyes",       sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(45), place_of_birth: "Cebu City, Cebu",      citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "COLLEGE GRAD.", occupation: "Police",     income_bracket: "20K_40K",  sector: "N/A"    },
+    { household_id: hh2.id, purok_id: p1.id, fname: "Lourdes",    lname: "Santos",      mname: "Flores",      sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(42), place_of_birth: "Mandaue City, Cebu",   citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "UNEMPLOYED", educational_attainment: "HIGH SCHOOL",   occupation: "Housewife",  income_bracket: "BELOW_5K", sector: "N/A"    },
+    { household_id: hh2.id, purok_id: p1.id, fname: "Jericho",    lname: "Santos",      mname: "Reyes",       sex: "MALE",   civil_status: "SINGLE",    birthdate: dob(8),  place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "STUDENT",    educational_attainment: "ELEM.",         occupation: "Student",    income_bracket: "BELOW_5K", sector: "YOUTH"  },
     // HH3 — Lopez family, Purok II
-    upsertResident({ household_id: hh3.id, purok_id: p2.id, fname: "Ana",        lname: "Lopez",       mname: "Tan",         name_extension: "Jr.", sex: "FEMALE", civil_status: "SINGLE",  birthdate: dob(28), place_of_birth: "Danao City, Cebu",   citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "COLLEGE GRAD.", occupation: "Nurse",      income_bracket: "10K_20K",  sector: "N/A"    }),
+    { household_id: hh3.id, purok_id: p2.id, fname: "Ana",        lname: "Lopez",       mname: "Tan",         name_extension: "Jr.", sex: "FEMALE", civil_status: "SINGLE",  birthdate: dob(28), place_of_birth: "Danao City, Cebu",   citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "COLLEGE GRAD.", occupation: "Nurse",      income_bracket: "10K_20K",  sector: "N/A"    },
     // HH4 — Garcia family, Purok II (senior citizen)
-    upsertResident({ household_id: hh4.id, purok_id: p2.id, fname: "Domingo",    lname: "Garcia",      mname: "Cruz",        sex: "MALE",   civil_status: "WIDOWED",   birthdate: dob(68), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "RETIRED",    educational_attainment: "ELEM.",         occupation: "Retired",    income_bracket: "BELOW_5K", sector: "SENIOR" }),
-    upsertResident({ household_id: hh4.id, purok_id: p2.id, fname: "Carmen",     lname: "Garcia",      mname: "Villanueva",  sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(38), place_of_birth: "Cebu City, Cebu",      citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "HIGH SCHOOL",   occupation: "Vendor",     income_bracket: "5K_10K",   sector: "N/A"    }),
+    { household_id: hh4.id, purok_id: p2.id, fname: "Domingo",    lname: "Garcia",      mname: "Cruz",        sex: "MALE",   civil_status: "WIDOWED",   birthdate: dob(68), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "RETIRED",    educational_attainment: "ELEM.",         occupation: "Retired",    income_bracket: "BELOW_5K", sector: "SENIOR" },
+    { household_id: hh4.id, purok_id: p2.id, fname: "Carmen",     lname: "Garcia",      mname: "Villanueva",  sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(38), place_of_birth: "Cebu City, Cebu",      citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "HIGH SCHOOL",   occupation: "Vendor",     income_bracket: "5K_10K",   sector: "N/A"    },
     // HH5 — Reyes family, Purok III (prenatal)
-    upsertResident({ household_id: hh5.id, purok_id: p3.id, fname: "Rosa",       lname: "Reyes",       mname: "Buenaventura",sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(26), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "UNEMPLOYED", educational_attainment: "HIGH SCHOOL",   occupation: "Housewife",  income_bracket: "BELOW_5K", sector: "N/A"    }),
-    upsertResident({ household_id: hh5.id, purok_id: p3.id, fname: "Ronaldo",    lname: "Reyes",       mname: "Magbanua",    sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(30), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "HIGH SCHOOL",   occupation: "Farmer",     income_bracket: "5K_10K",   sector: "N/A"    }),
+    { household_id: hh5.id, purok_id: p3.id, fname: "Rosa",       lname: "Reyes",       mname: "Buenaventura",sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(26), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "UNEMPLOYED", educational_attainment: "HIGH SCHOOL",   occupation: "Housewife",  income_bracket: "BELOW_5K", sector: "N/A"    },
+    { household_id: hh5.id, purok_id: p3.id, fname: "Ronaldo",    lname: "Reyes",       mname: "Magbanua",    sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(30), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "HIGH SCHOOL",   occupation: "Farmer",     income_bracket: "5K_10K",   sector: "N/A"    },
     // HH6 — Cruz family, Purok III (PWD)
-    upsertResident({ household_id: hh6.id, purok_id: p3.id, fname: "Fernando",   lname: "Cruz",        mname: "Aguirre",     sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(35), place_of_birth: "Cebu City, Cebu",      citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "UNEMPLOYED", educational_attainment: "HIGH SCHOOL",   occupation: "Unemployed", income_bracket: "BELOW_5K", sector: "PWD"    }),
-    upsertResident({ household_id: hh6.id, purok_id: p3.id, fname: "Myrna",      lname: "Cruz",        mname: "Abellanosa",  sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(32), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "VOCATIONAL",    occupation: "Dressmaker", income_bracket: "5K_10K",   sector: "N/A"    }),
+    { household_id: hh6.id, purok_id: p3.id, fname: "Fernando",   lname: "Cruz",        mname: "Aguirre",     sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(35), place_of_birth: "Cebu City, Cebu",      citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "UNEMPLOYED", educational_attainment: "HIGH SCHOOL",   occupation: "Unemployed", income_bracket: "BELOW_5K", sector: "PWD"    },
+    { household_id: hh6.id, purok_id: p3.id, fname: "Myrna",      lname: "Cruz",        mname: "Abellanosa",  sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(32), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "VOCATIONAL",    occupation: "Dressmaker", income_bracket: "5K_10K",   sector: "N/A"    },
     // HH7 — Mendoza family, Purok IV (4Ps)
-    upsertResident({ household_id: hh7.id, purok_id: p4.id, fname: "Lito",       lname: "Mendoza",     mname: "Sabio",       sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(44), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "ELEM.",         occupation: "Farmer",     income_bracket: "BELOW_5K", sector: "4PS"    }),
-    upsertResident({ household_id: hh7.id, purok_id: p4.id, fname: "Melinda",    lname: "Mendoza",     mname: "Estabillo",   sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(41), place_of_birth: "Compostela, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "UNEMPLOYED", educational_attainment: "ELEM.",         occupation: "Housewife",  income_bracket: "BELOW_5K", sector: "4PS"    }),
-    upsertResident({ household_id: hh7.id, purok_id: p4.id, fname: "Nino",       lname: "Mendoza",     mname: "Sabio",       sex: "MALE",   civil_status: "SINGLE",    birthdate: dob(5),  place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "STUDENT",    educational_attainment: "ELEM.",         occupation: "Student",    income_bracket: "BELOW_5K", sector: "YOUTH"  }),
+    { household_id: hh7.id, purok_id: p4.id, fname: "Lito",       lname: "Mendoza",     mname: "Sabio",       sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(44), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "ELEM.",         occupation: "Farmer",     income_bracket: "BELOW_5K", sector: "4PS"    },
+    { household_id: hh7.id, purok_id: p4.id, fname: "Melinda",    lname: "Mendoza",     mname: "Estabillo",   sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(41), place_of_birth: "Compostela, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "UNEMPLOYED", educational_attainment: "ELEM.",         occupation: "Housewife",  income_bracket: "BELOW_5K", sector: "4PS"    },
+    { household_id: hh7.id, purok_id: p4.id, fname: "Nino",       lname: "Mendoza",     mname: "Sabio",       sex: "MALE",   civil_status: "SINGLE",    birthdate: dob(5),  place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "STUDENT",    educational_attainment: "ELEM.",         occupation: "Student",    income_bracket: "BELOW_5K", sector: "YOUTH"  },
     // HH8 — Aquino family, Purok IV
-    upsertResident({ household_id: hh8.id, purok_id: p4.id, fname: "Roberto",    lname: "Aquino",      mname: "Camay",       sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(50), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "HIGH SCHOOL",   occupation: "Tricycle Driver", income_bracket: "5K_10K", sector: "N/A" }),
+    { household_id: hh8.id, purok_id: p4.id, fname: "Roberto",    lname: "Aquino",      mname: "Camay",       sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(50), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "HIGH SCHOOL",   occupation: "Tricycle Driver", income_bracket: "5K_10K", sector: "N/A" },
     // HH9 — Ramos family, Purok V (senior + PWD)
-    upsertResident({ household_id: hh9.id, purok_id: p5.id, fname: "Teresa",     lname: "Ramos",       mname: "Dela Pena",   sex: "FEMALE", civil_status: "WIDOWED",   birthdate: dob(72), place_of_birth: "Liloan, Cebu",         citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "RETIRED",    educational_attainment: "ELEM.",         occupation: "Retired",    income_bracket: "BELOW_5K", sector: "SENIOR" }),
-    upsertResident({ household_id: hh9.id, purok_id: p5.id, fname: "Efren",      lname: "Ramos",       mname: "Dela Pena",   sex: "MALE",   civil_status: "SINGLE",    birthdate: dob(48), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "UNEMPLOYED", educational_attainment: "HIGH SCHOOL",   occupation: "Unemployed", income_bracket: "BELOW_5K", sector: "PWD"    }),
+    { household_id: hh9.id, purok_id: p5.id, fname: "Teresa",     lname: "Ramos",       mname: "Dela Pena",   sex: "FEMALE", civil_status: "WIDOWED",   birthdate: dob(72), place_of_birth: "Liloan, Cebu",         citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "RETIRED",    educational_attainment: "ELEM.",         occupation: "Retired",    income_bracket: "BELOW_5K", sector: "SENIOR" },
+    { household_id: hh9.id, purok_id: p5.id, fname: "Efren",      lname: "Ramos",       mname: "Dela Pena",   sex: "MALE",   civil_status: "SINGLE",    birthdate: dob(48), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "UNEMPLOYED", educational_attainment: "HIGH SCHOOL",   occupation: "Unemployed", income_bracket: "BELOW_5K", sector: "PWD"    },
     // HH10 — Villanueva family, Purok V
-    upsertResident({ household_id: hh10.id, purok_id: p5.id, fname: "Eduardo",   lname: "Villanueva",  mname: "Ponce",       sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(55), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "HIGH SCHOOL",   occupation: "Carpenter",  income_bracket: "5K_10K",   sector: "N/A"    }),
-    upsertResident({ household_id: hh10.id, purok_id: p5.id, fname: "Natividad", lname: "Villanueva",  mname: "Torres",      sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(62), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "RETIRED",    educational_attainment: "ELEM.",         occupation: "Retired",    income_bracket: "BELOW_5K", sector: "SENIOR" }),
-  ]);
+    { household_id: hh10.id, purok_id: p5.id, fname: "Eduardo",   lname: "Villanueva",  mname: "Ponce",       sex: "MALE",   civil_status: "MARRIED",   birthdate: dob(55), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "EMPLOYED",   educational_attainment: "HIGH SCHOOL",   occupation: "Carpenter",  income_bracket: "5K_10K",   sector: "N/A"    },
+    { household_id: hh10.id, purok_id: p5.id, fname: "Natividad", lname: "Villanueva",  mname: "Torres",      sex: "FEMALE", civil_status: "MARRIED",   birthdate: dob(62), place_of_birth: "Danao City, Cebu",     citizenship: "Filipino", religion: "Roman Catholic", nationality: "Filipino", employment_status: "RETIRED",    educational_attainment: "ELEM.",         occupation: "Retired",    income_bracket: "BELOW_5K", sector: "SENIOR" },
+  ];
+
+  const residents: Awaited<ReturnType<typeof upsertResident>>[] = [];
+  for (const input of residentInputs) {
+    residents.push(await upsertResident(input));
+  }
 
   const [
     mariaDC, ricardoDC, kristineDC,
@@ -185,24 +196,34 @@ async function main() {
     { resident_id: mariaDC.id,  issued_by: secretary.id, certificate_type: "RESIDENCY"            , purpose: "SSS loan requirement",          issued_at: monthsAgo(3) },
   ] as const;
 
-  // certificate_no became required by the 20260722140000_add_certificate_no
-  // migration — generate the same deterministic "CERT-YYYY-NNNNNN" format
-  // the real API uses, numbered sequentially per seed run.
+  // certificate_no AND queue_number both became required by the
+  // 20260806045219_add_12_new_features migration (document request
+  // workflow) — generate both in the same deterministic per-seed-run
+  // formats the real API uses ("CERT-YYYY-NNNNNN" and "Q-YYYY-NNNN").
   for (const [i, c] of certData.entries()) {
     const year = c.issued_at.getFullYear();
     const certificate_no = `CERT-${year}-${String(i + 1).padStart(6, "0")}`;
-    await prisma.certificate.create({ data: { ...c, certificate_no } });
+    const queue_number = `Q-${year}-${String(i + 1).padStart(4, "0")}`;
+    await prisma.certificate.create({
+      data: { ...c, certificate_no, queue_number, status: "RELEASED", payment_status: "PAID" },
+    });
   }
   console.log(`  ✅ ${certData.length} certificates created`);
 
   // ── 7. BLOTTER CASES ────────────────────────────────────────────────────────
   console.log("\n🚔 Creating blotter cases...");
 
+  const incidentTypeNames = ["Physical Injury", "Theft", "Noise Complaint", "Property Dispute"];
+  for (const name of incidentTypeNames) {
+    await prisma.incidentType.upsert({ where: { name }, update: {}, create: { name } });
+  }
+
   const blotter1 = await prisma.blotterCase.upsert({
     where: { case_number: "BLT-2026-0001" },
     update: {},
     create: {
       case_number:         "BLT-2026-0001",
+      incident_type:       "Physical Injury",
       complainant_id:      juanS.id,
       complainant_name:    "Juan Santos",
       complainant_contact: "09191234567",
@@ -227,6 +248,7 @@ async function main() {
     update: {},
     create: {
       case_number:         "BLT-2026-0002",
+      incident_type:       "Theft",
       complainant_id:      mariaDC.id,
       complainant_name:    "Maria Dela Cruz",
       complainant_contact: "09171234567",
@@ -252,6 +274,7 @@ async function main() {
     update: {},
     create: {
       case_number:         "BLT-2026-0003",
+      incident_type:       "Noise Complaint",
       complainant_id:      carmenG.id,
       complainant_name:    "Carmen Garcia",
       complainant_contact: "09201234567",
@@ -271,6 +294,7 @@ async function main() {
     update: {},
     create: {
       case_number:         "BLT-2026-0004",
+      incident_type:       "Property Dispute",
       complainant_id:      ronaldoR.id,
       complainant_name:    "Ronaldo Reyes",
       complainant_contact: "09211234567",
@@ -358,14 +382,14 @@ async function main() {
   console.log("\n📦 Creating equipment...");
 
   const equipmentList = [
-    { name: "Megaphone",         quantity: 3, condition: "Good",         status: "SERVICEABLE"  , date_acquired: yearsAgo(4)  },
-    { name: "Plastic Chairs",    quantity: 50,condition: "Fair",         status: "SERVICEABLE"  , date_acquired: yearsAgo(5)  },
-    { name: "Folding Tables",    quantity: 10,condition: "Good",         status: "SERVICEABLE"  , date_acquired: yearsAgo(5)  },
-    { name: "Generator",         quantity: 1, condition: "Needs repair", status: "UNSERVICEABLE", date_acquired: yearsAgo(7)  },
-    { name: "Tarpaulin Stand",   quantity: 4, condition: "Good",         status: "SERVICEABLE"  , date_acquired: yearsAgo(3)  },
-    { name: "Sound System",      quantity: 1, condition: "Good",         status: "SERVICEABLE"  , date_acquired: yearsAgo(4)  },
-    { name: "First Aid Kit",     quantity: 5, condition: "Complete",     status: "SERVICEABLE"  , date_acquired: yearsAgo(2)  },
-    { name: "Basketball Ring",   quantity: 2, condition: "Damaged",      status: "MISSING"      , date_acquired: yearsAgo(6)  },
+    { name: "Megaphone",         quantity: 3, condition: "GOOD",         status: "SERVICEABLE"  , date_acquired: yearsAgo(4)  },
+    { name: "Plastic Chairs",    quantity: 50,condition: "FAIR",         status: "SERVICEABLE"  , date_acquired: yearsAgo(5)  },
+    { name: "Folding Tables",    quantity: 10,condition: "GOOD",         status: "SERVICEABLE"  , date_acquired: yearsAgo(5)  },
+    { name: "Generator",         quantity: 1, condition: "NEEDS_REPAIR", status: "UNSERVICEABLE", date_acquired: yearsAgo(7)  },
+    { name: "Tarpaulin Stand",   quantity: 4, condition: "GOOD",         status: "SERVICEABLE"  , date_acquired: yearsAgo(3)  },
+    { name: "Sound System",      quantity: 1, condition: "GOOD",         status: "SERVICEABLE"  , date_acquired: yearsAgo(4)  },
+    { name: "First Aid Kit",     quantity: 5, condition: "GOOD",         status: "SERVICEABLE"  , date_acquired: yearsAgo(2)  },
+    { name: "Basketball Ring",   quantity: 2, condition: "POOR",         status: "MISSING"      , date_acquired: yearsAgo(6)  },
   ] as const;
 
   const createdEquipment: Array<{ id: number; name: string; [key: string]: any }> = [];

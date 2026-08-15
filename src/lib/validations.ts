@@ -445,10 +445,38 @@ export const disbursementCreateSchema = z.object({
 export const disbursementUpdateSchema = disbursementCreateSchema.partial();
 
 // ─── DASHBOARD CUSTOMIZATION (2.12) ────────────────────────────────────────
+// ─── AI FEATURES ────────────────────────────────────────────────────────────
+export const aiCertificatePurposeSchema = z.object({
+  certificate_type: z.enum([
+    "RESIDENCY", "INDIGENCY", "CLEARANCE", "GOOD_MORAL", "BUSINESS_PERMIT",
+    "COHABITATION", "SOLO_PARENT", "FIRST_TIME_JOB_SEEKER", "LATE_REGISTRATION",
+  ]),
+  note: z.string().trim().min(1, "Describe what this certificate is for").max(300),
+});
+
+export const aiMeetingMinutesSchema = z.object({
+  notes: z.string().trim().min(1, "Add some raw notes to draft from").max(4000),
+});
+
+export const bulkReleaseCertificatesSchema = z.object({
+  ids: z.array(z.number().int().positive()).min(1, "Select at least one certificate").max(100),
+});
+
+export const meetingDuplicateSchema = z.object({
+  meeting_date: dateString,
+});
+
+export const residentImportCommitSchema = z.object({
+  rows: z
+    .array(z.record(z.string(), z.string()))
+    .min(1, "No rows to import")
+    .max(500, "At most 500 rows per import"),
+});
+
 export const dashboardWidgetKeyEnum = z.enum([
   "kpi_residents", "kpi_document_requests", "kpi_blotter_cases", "kpi_visitors",
   "kpi_meetings_today", "kpi_assets", "kpi_settled_cases",
-  "quick_actions", "priority_tasks", "activity_feed", "document_status_chart",
+  "quick_actions", "priority_tasks", "activity_feed", "document_status_chart", "ai_briefing",
 ]);
 
 export const dashboardPreferenceUpdateSchema = z.object({

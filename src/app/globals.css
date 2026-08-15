@@ -1,4 +1,13 @@
+/* src/app/globals.css */
 @import "tailwindcss";
+
+/* Makes Tailwind's `dark:` utilities respond to a `.dark` class on <html>
+   (toggled by ThemeProvider / the inline no-flash script in
+   src/app/layout.tsx) instead of only the OS-level
+   `prefers-color-scheme` media query, which is Tailwind v4's default.
+   This is what lets the sun/moon toggle actually override the system
+   setting. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -25,6 +34,36 @@
   --color-seal-hover: #095c41;
   --color-seal-tint: #e8f3ee;
   --color-hairline: #e4e1d8;
+
+  color-scheme: light;
+}
+
+/* Dark-mode values for every token above — same variable names, so any
+   component already using `var(--color-*)` (or a `bg-[var(--color-*)]`
+   arbitrary value) picks these up automatically once `.dark` is on
+   <html>, with no per-component changes needed. Components using raw
+   hex/Tailwind utility colors instead (most of the app today) won't be
+   affected by this block and need their own `dark:` classes added
+   separately. */
+.dark {
+  --color-primary: #3b82f6;
+  --color-primary-hover: #60a5fa;
+  --color-primary-tint: #1a1a1a;
+  --color-page-bg: #0A0A0A;
+  --color-sidebar: #111111;
+  --color-card: #171717;
+  --color-border: #262626;
+  --color-text-main: #f3f4f6;
+  --color-text-muted: #9ca3af;
+  --color-text-light: #6b7280;
+
+  --color-ink: #e5e7eb;
+  --color-seal: #34a37a;
+  --color-seal-hover: #3fbb8c;
+  --color-seal-tint: #11321f;
+  --color-hairline: #2a2f26;
+
+  color-scheme: dark;
 }
 
 *,
@@ -43,4 +82,5 @@ body {
   color: var(--color-text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }

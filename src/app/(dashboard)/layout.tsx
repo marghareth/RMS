@@ -26,7 +26,7 @@ export default function DashboardLayout({
   const [collapsed, setCollapsed] = useState(false);
   return (
     <div
-      className="flex h-screen bg-[#F4F5F7] overflow-hidden"
+      className="flex h-screen bg-[#F4F5F7] overflow-hidden dark:bg-[#0A0A0A]"
       style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}
     >
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />

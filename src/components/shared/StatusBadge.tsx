@@ -8,32 +8,32 @@ type Status =
   | string;
 
 const statusMap: Record<string, { label: string; classes: string }> = {
-  FILED:         { label: "Filed",         classes: "bg-blue-50 text-blue-600" },
-  ONGOING:       { label: "Ongoing",       classes: "bg-amber-50 text-amber-600" },
-  RESOLVED:      { label: "Resolved",      classes: "bg-green-50 text-green-600" },
-  DISMISSED:     { label: "Dismissed",     classes: "bg-gray-100 text-gray-500" },
-  ESCALATED:     { label: "Escalated",     classes: "bg-red-50 text-red-600" },
-  SERVICEABLE:   { label: "Serviceable",   classes: "bg-green-50 text-green-600" },
-  UNSERVICEABLE: { label: "Unserviceable", classes: "bg-amber-50 text-amber-600" },
-  MISSING:       { label: "Missing",       classes: "bg-red-50 text-red-600" },
-  ACTIVE:        { label: "Active",        classes: "bg-green-50 text-green-600" },
-  INACTIVE:      { label: "Inactive",      classes: "bg-gray-100 text-gray-500" },
-  ARCHIVED:      { label: "Archived",      classes: "bg-gray-100 text-gray-400" },
-  INCOME:        { label: "Income",        classes: "bg-green-50 text-green-600" },
-  EXPENSE:       { label: "Expense",       classes: "bg-red-50 text-red-600" },
-  SCHEDULED:     { label: "Scheduled",     classes: "bg-amber-50 text-amber-600" },
-  COMPLETED:     { label: "Completed",     classes: "bg-green-50 text-green-600" },
-  CANCELLED:     { label: "Cancelled",     classes: "bg-red-50 text-red-600" },
-  PENDING:       { label: "Pending",       classes: "bg-gray-100 text-gray-500" },
-  DISCUSSED:     { label: "Discussed",     classes: "bg-amber-50 text-amber-600" },
-  APPROVED:      { label: "Approved",      classes: "bg-green-50 text-green-600" },
-  CHECKED_OUT:   { label: "Checked Out",   classes: "bg-gray-100 text-gray-500" },
-  PROCESSING:    { label: "Processing",    classes: "bg-blue-50 text-blue-600" },
-  RELEASED:      { label: "Released",      classes: "bg-green-50 text-green-600" },
+  FILED:         { label: "Filed",         classes: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400" },
+  ONGOING:       { label: "Ongoing",       classes: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" },
+  RESOLVED:      { label: "Resolved",      classes: "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
+  DISMISSED:     { label: "Dismissed",     classes: "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-[#A3A3A3]" },
+  ESCALATED:     { label: "Escalated",     classes: "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" },
+  SERVICEABLE:   { label: "Serviceable",   classes: "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
+  UNSERVICEABLE: { label: "Unserviceable", classes: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" },
+  MISSING:       { label: "Missing",       classes: "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" },
+  ACTIVE:        { label: "Active",        classes: "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
+  INACTIVE:      { label: "Inactive",      classes: "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-[#A3A3A3]" },
+  ARCHIVED:      { label: "Archived",      classes: "bg-gray-100 text-gray-400 dark:bg-white/10 dark:text-[#737373]" },
+  INCOME:        { label: "Income",        classes: "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
+  EXPENSE:       { label: "Expense",       classes: "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" },
+  SCHEDULED:     { label: "Scheduled",     classes: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" },
+  COMPLETED:     { label: "Completed",     classes: "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
+  CANCELLED:     { label: "Cancelled",     classes: "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400" },
+  PENDING:       { label: "Pending",       classes: "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-[#A3A3A3]" },
+  DISCUSSED:     { label: "Discussed",     classes: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400" },
+  APPROVED:      { label: "Approved",      classes: "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
+  CHECKED_OUT:   { label: "Checked Out",   classes: "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-[#A3A3A3]" },
+  PROCESSING:    { label: "Processing",    classes: "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400" },
+  RELEASED:      { label: "Released",      classes: "bg-green-50 text-green-600 dark:bg-green-500/15 dark:text-green-400" },
 };
 
 export default function StatusBadge({ status }: { status: Status }) {
-  const s = statusMap[status] ?? { label: status, classes: "bg-gray-100 text-gray-500" };
+  const s = statusMap[status] ?? { label: status, classes: "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-[#A3A3A3]" };
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${s.classes}`}>
       <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
