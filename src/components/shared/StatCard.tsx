@@ -8,35 +8,28 @@ interface StatCardProps {
   color?: "blue" | "amber" | "green" | "red" | "purple" | "teal";
 }
 
-// Muted "civic ledger" hues — same family used on the Dashboard (seal
-// green / slate blue / brick red / amber). These color the icon only,
-// as a light semantic cue; the card chrome and the value itself stay a
-// consistent ink-on-white regardless of color, so every stat card across
-// every page in the app reads the same way.
-const colorMap: Record<NonNullable<StatCardProps["color"]>, string> = {
-  blue:   "text-[#3E5C76]",
-  amber:  "text-[#B45309]",
-  green:  "text-[#0B6E4F]",
-  red:    "text-[#B3261E]",
-  purple: "text-[#6D4AFF]",
-  teal:   "text-[#0E7490]",
+const colorMap = {
+  blue:   { bg: "bg-blue-50 dark:bg-blue-500/15",   icon: "text-blue-500 dark:text-blue-400",   value: "text-blue-600 dark:text-blue-400"   },
+  amber:  { bg: "bg-amber-50 dark:bg-amber-500/15",  icon: "text-amber-500 dark:text-amber-400",  value: "text-amber-600 dark:text-amber-400"  },
+  green:  { bg: "bg-green-50 dark:bg-green-500/15",  icon: "text-green-500 dark:text-green-400",  value: "text-green-600 dark:text-green-400"  },
+  red:    { bg: "bg-red-50 dark:bg-red-500/15",    icon: "text-red-500 dark:text-red-400",    value: "text-red-600 dark:text-red-400"    },
+  purple: { bg: "bg-purple-50 dark:bg-purple-500/15", icon: "text-purple-500 dark:text-purple-400", value: "text-purple-600 dark:text-purple-400" },
+  teal:   { bg: "bg-teal-50 dark:bg-teal-500/15",   icon: "text-teal-500 dark:text-teal-400",   value: "text-teal-600 dark:text-teal-400"   },
 };
 
 export default function StatCard({ label, value, sub, icon: Icon, color = "blue" }: StatCardProps) {
-  const iconColor = colorMap[color] ?? colorMap.blue;
+  const c = colorMap[color];
   return (
-    <div className="flex items-center gap-3.5 rounded-xl border border-[#E9EAEC] bg-white px-5 py-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F4F5F7]">
-        <Icon size={18} className={iconColor} />
+    <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 py-3.5 flex items-center gap-3.5">
+      <div className={`w-10 h-10 ${c.bg} rounded-xl flex items-center justify-center shrink-0`}>
+        <Icon size={18} className={c.icon} />
       </div>
       <div className="min-w-0">
-        <p className="mb-1 text-[10px] font-bold uppercase tracking-widest leading-none text-[#9CA3AF]">
+        <p className="text-[10px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-widest leading-none mb-1">
           {label}
         </p>
-        <p className="text-[22px] font-bold leading-none text-[#1B2430] tabular-nums">
-          {value}
-        </p>
-        {sub && <p className="mt-1 text-[11px] text-[#9CA3AF]">{sub}</p>}
+        <p className={`text-[22px] font-bold leading-none ${c.value}`}>{value}</p>
+        {sub && <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-1">{sub}</p>}
       </div>
     </div>
   );

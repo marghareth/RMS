@@ -118,30 +118,30 @@ export default function NewCertificatePage() {
     <div className="mx-auto max-w-2xl">
       <button
         onClick={() => router.push("/certificates")}
-        className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] transition hover:text-[#1F2937]"
+        className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
       >
         <ArrowLeft size={14} />
         Back to Certificates
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937]">Request Certificate</h1>
-        <p className="mt-0.5 text-[13px] text-[#9CA3AF]">
+        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Request Certificate</h1>
+        <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">
           Auto-fills from the residents profile. A certificate number will be generated automatically.
         </p>
       </div>
 
       <div className="space-y-5">
         {/* Applicant */}
-        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF]">
-                <User size={14} className="text-[#1D4ED8]" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
+                <User size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
               </div>
-              <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Applicant</p>
+              <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Applicant</p>
             </div>
-            <label className="flex items-center gap-2 text-[11px] font-medium text-[#6B7280]">
+            <label className="flex items-center gap-2 text-[11px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
               <input
                 type="checkbox"
                 checked={walkIn}
@@ -149,7 +149,7 @@ export default function NewCertificatePage() {
                   setWalkIn(e.target.checked);
                   setResident(null);
                 }}
-                className="h-3.5 w-3.5 rounded border-[#D1D5DB] text-[#3B82F6] focus:ring-[#3B82F6]"
+                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-[#3B82F6] dark:text-[#60A5FA] focus:ring-[#3B82F6] dark:focus:ring-[#60A5FA]"
               />
               Walk-in (not yet in RBI)
             </label>
@@ -158,30 +158,30 @@ export default function NewCertificatePage() {
           {walkIn ? (
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                   Full Name
                 </label>
                 <input
                   value={manualName}
                   onChange={(e) => setManualName(e.target.value)}
                   placeholder="Juan Dela Cruz"
-                  className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                   Address
                 </label>
                 <input
                   value={manualAddress}
                   onChange={(e) => setManualAddress(e.target.value)}
                   placeholder="Purok, Street"
-                  className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                 />
               </div>
-              <div className="flex items-start gap-2 rounded-lg bg-[#FEF3C7] px-3 py-2.5">
-                <AlertTriangle size={14} className="mt-0.5 shrink-0 text-[#D97706]" />
-                <p className="text-[11px] leading-relaxed text-[#92400E]">
+              <div className="flex items-start gap-2 rounded-lg bg-[#FEF3C7] dark:bg-amber-500/15 px-3 py-2.5">
+                <AlertTriangle size={14} className="mt-0.5 shrink-0 text-[#D97706] dark:text-[#FBBF24]" />
+                <p className="text-[11px] leading-relaxed text-[#92400E] dark:text-[#FBBF24]">
                   This certificate will be flagged as manually issued (walk-in). Consider registering this person in
                   the RBI for future issuances.
                 </p>
@@ -191,9 +191,9 @@ export default function NewCertificatePage() {
             <div className="space-y-2">
               <ResidentPicker value={resident} onChange={setResident} placeholder="Search resident by name..." />
               {resident && residencyEligible && (
-                <div className="flex items-center gap-2 rounded-lg bg-[#D1FAE5] px-3 py-2">
-                  <CheckCircle2 size={14} className="shrink-0 text-[#059669]" />
-                  <p className="text-[11px] text-[#059669]">
+                <div className="flex items-center gap-2 rounded-lg bg-[#D1FAE5] dark:bg-emerald-500/15 px-3 py-2">
+                  <CheckCircle2 size={14} className="shrink-0 text-[#059669] dark:text-[#34D399]" />
+                  <p className="text-[11px] text-[#059669] dark:text-[#34D399]">
                     Meets the 6-month residency requirement for certificate issuance.
                   </p>
                 </div>
@@ -203,23 +203,23 @@ export default function NewCertificatePage() {
         </div>
 
         {/* Certificate details */}
-        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           <div className="mb-4 flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F4F5F7]">
-              <FileText size={14} className="text-[#374151]" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F4F5F7] dark:bg-[#262626]">
+              <FileText size={14} className="text-[#374151] dark:text-[#D4D4D4]" />
             </div>
-            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Certificate Details</p>
+            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Certificate Details</p>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                 Certificate Type
               </label>
               <select
                 value={certType}
                 onChange={(e) => setCertType(e.target.value as CertificateType)}
-                className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
               >
                 <option value="">Select certificate type</option>
                 {CERTIFICATE_TYPES.map((t) => (
@@ -231,7 +231,7 @@ export default function NewCertificatePage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                 Purpose
               </label>
               <textarea
@@ -239,14 +239,14 @@ export default function NewCertificatePage() {
                 onChange={(e) => setPurpose(e.target.value)}
                 rows={3}
                 placeholder="e.g. Requirement for school enrollment"
-                className="w-full resize-none rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
               />
             </div>
 
             {duplicateWarning && (
-              <div className="flex items-start gap-2 rounded-lg bg-[#FEE2E2] px-3 py-2.5">
-                <AlertTriangle size={14} className="mt-0.5 shrink-0 text-[#DC2626]" />
-                <p className="text-[11px] leading-relaxed text-[#DC2626]">
+              <div className="flex items-start gap-2 rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-3 py-2.5">
+                <AlertTriangle size={14} className="mt-0.5 shrink-0 text-[#DC2626] dark:text-[#F87171]" />
+                <p className="text-[11px] leading-relaxed text-[#DC2626] dark:text-[#F87171]">
                   Same certificate type was already issued to this resident on{" "}
                   <span className="font-semibold">{formatISODate(certDisplayDate(duplicateWarning))}</span> (within the last
                   30 days). Filing will require override confirmation.
@@ -254,9 +254,9 @@ export default function NewCertificatePage() {
               </div>
             )}
 
-            <div className="flex items-start gap-2 rounded-lg bg-[#EBF3FF] px-3 py-2.5">
-              <Info size={14} className="mt-0.5 shrink-0 text-[#1D4ED8]" />
-              <p className="text-[11px] leading-relaxed text-[#1D4ED8]">
+            <div className="flex items-start gap-2 rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15 px-3 py-2.5">
+              <Info size={14} className="mt-0.5 shrink-0 text-[#1D4ED8] dark:text-[#93C5FD]" />
+              <p className="text-[11px] leading-relaxed text-[#1D4ED8] dark:text-[#93C5FD]">
                 This certificate will be signed by{" "}
                 <span className="font-semibold">{MOCK_ACTIVE_CAPTAIN.name}</span>, the active{" "}
                 {MOCK_ACTIVE_CAPTAIN.position} ({MOCK_ACTIVE_CAPTAIN.term}), auto-attached as signatory.
@@ -265,19 +265,19 @@ export default function NewCertificatePage() {
           </div>
         </div>
 
-        {error && <p className="rounded-lg bg-[#FEE2E2] px-4 py-3 text-[12px] text-[#DC2626]">{error}</p>}
+        {error && <p className="rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-4 py-3 text-[12px] text-[#DC2626] dark:text-[#F87171]">{error}</p>}
 
         <div className="flex items-center justify-end gap-3 pb-8">
           <button
             onClick={() => router.push("/certificates")}
-            className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:text-[#1F2937]"
+            className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-60"
+            className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
           >
             {submitting ? "Submitting..." : "Submit Request"}
           </button>

@@ -94,13 +94,13 @@ export default function BlotterHearingNoticePage() {
       <div className="mb-4 flex items-center justify-between print:hidden">
         <button
           onClick={() => router.push(`/blotter/${caseId}`)}
-          className="flex items-center gap-1.5 text-[13px] font-semibold text-[#6B7280] transition hover:text-[#1F2937]"
+          className="flex items-center gap-1.5 text-[13px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
         >
           <ArrowLeft size={15} /> Back to case
         </button>
         <button
           onClick={() => window.print()}
-          className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
+          className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
         >
           <Printer size={14} /> Print Notice
         </button>

@@ -70,15 +70,15 @@ function SelectField({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+      <label className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
         {label}
-        {required && <span className="ml-0.5 text-red-500">*</span>}
+        {required && <span className="ml-0.5 text-red-500 dark:text-red-400">*</span>}
       </label>
       <div className="relative">
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none rounded-xl border border-[#E9EAEC] bg-white px-4 py-3 pr-8 text-[13px] text-[#1F2937] outline-none focus:border-[#3B82F6]"
+          className="w-full appearance-none rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-3 pr-8 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
         >
           <option value="">SELECT</option>
           {options.map((o) => (
@@ -87,7 +87,7 @@ function SelectField({
             </option>
           ))}
         </select>
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#9CA3AF]">▼</span>
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">▼</span>
       </div>
     </div>
   );
@@ -143,17 +143,17 @@ function HeadPicker({
 
   if (value) {
     return (
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-[#E9EAEC] bg-[#F9FAFB] px-4 py-3">
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] px-4 py-3">
         <div className="min-w-0">
-          <p className="truncate text-[13px] font-semibold text-[#1F2937]">{memberFullName(value)}</p>
-          <p className="truncate text-[11px] text-[#9CA3AF]">
+          <p className="truncate text-[13px] font-semibold text-[#1F2937] dark:text-white">{memberFullName(value)}</p>
+          <p className="truncate text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
             {value.sex} &middot; {calcAge(value.birthdate)} yrs old
           </p>
         </div>
         <button
           type="button"
           onClick={() => onChange(null)}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[#9CA3AF] transition hover:bg-[#E9EAEC] hover:text-[#374151]"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#E9EAEC] dark:hover:bg-[#262626] hover:text-[#374151] dark:hover:text-[#D4D4D4]"
         >
           <X size={14} />
         </button>
@@ -164,7 +164,7 @@ function HeadPicker({
   return (
     <div className="relative">
       <div className="relative">
-        <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+        <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
         <input
           value={query}
           onChange={(e) => {
@@ -173,15 +173,15 @@ function HeadPicker({
           }}
           onFocus={() => setOpen(true)}
           placeholder="Search resident (unassigned to a household)..."
-          className="w-full rounded-xl border border-[#E9EAEC] bg-white py-3 pl-9 pr-3 text-[13px] text-[#1F2937] outline-none focus:border-[#3B82F6]"
+          className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-3 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
         />
       </div>
       {open && query.trim() && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-[#E9EAEC] bg-white shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] shadow-lg">
           {loading ? (
-            <p className="px-3 py-4 text-center text-[12px] text-[#9CA3AF]">Searching…</p>
+            <p className="px-3 py-4 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">Searching…</p>
           ) : results.length === 0 ? (
-            <p className="px-3 py-4 text-center text-[12px] text-[#9CA3AF]">No unassigned residents found</p>
+            <p className="px-3 py-4 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No unassigned residents found</p>
           ) : (
             results.map((r) => (
               <button
@@ -192,11 +192,11 @@ function HeadPicker({
                   setQuery("");
                   setOpen(false);
                 }}
-                className="flex w-full items-center justify-between gap-2 border-b border-[#F4F5F7] px-3 py-2.5 text-left transition last:border-b-0 hover:bg-[#F9FAFB]"
+                className="flex w-full items-center justify-between gap-2 border-b border-[#F4F5F7] dark:border-[#262626] px-3 py-2.5 text-left transition last:border-b-0 hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
               >
                 <div>
-                  <p className="text-[13px] font-semibold text-[#1F2937]">{memberFullName(r)}</p>
-                  <p className="text-[11px] text-[#9CA3AF]">
+                  <p className="text-[13px] font-semibold text-[#1F2937] dark:text-white">{memberFullName(r)}</p>
+                  <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                     {r.sex} &middot; {calcAge(r.birthdate)} yrs old
                   </p>
                 </div>
@@ -308,25 +308,25 @@ export default function NewHouseholdPage() {
     <div className="mx-auto max-w-2xl">
       <button
         onClick={() => router.push("/households")}
-        className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] transition hover:text-[#1F2937]"
+        className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
       >
         <ArrowLeft size={14} />
         Back to Households
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937]">Add Household</h1>
-        <p className="mt-0.5 text-[13px] text-[#9CA3AF]">
+        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Add Household</h1>
+        <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">
           A household number will be generated automatically once saved.
         </p>
       </div>
 
-      <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+      <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
         <div className="mb-4 flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF]">
-            <Home size={14} className="text-[#1D4ED8]" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
+            <Home size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
           </div>
-          <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">General Information</p>
+          <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">General Information</p>
         </div>
 
         <div className="space-y-4">
@@ -339,14 +339,14 @@ export default function NewHouseholdPage() {
               required
             />
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
-                House Address <span className="text-red-500">*</span>
+              <label className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                House Address <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="House No./Street"
-                className="rounded-xl border border-[#E9EAEC] bg-white px-4 py-3 text-[13px] text-[#1F2937] outline-none placeholder:text-[#D1D5DB] focus:border-[#3B82F6]"
+                className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-3 text-[13px] text-[#1F2937] dark:text-white outline-none placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
               />
             </div>
           </div>
@@ -357,35 +357,35 @@ export default function NewHouseholdPage() {
             <SelectField label="Comfort Room" value={comfortRoom} onChange={setComfortRoom} options={CR_OPTIONS} />
           </div>
 
-          <div className="border-t border-[#F4F5F7] pt-4">
+          <div className="border-t border-[#F4F5F7] dark:border-[#262626] pt-4">
             <div className="mb-3 flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F4F5F7]">
-                <User size={14} className="text-[#374151]" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F4F5F7] dark:bg-[#262626]">
+                <User size={14} className="text-[#374151] dark:text-[#D4D4D4]" />
               </div>
-              <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">
-                Household Head <span className="font-normal normal-case text-[#9CA3AF]">(optional)</span>
+              <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
+                Household Head <span className="font-normal normal-case text-[#9CA3AF] dark:text-[#A3A3A3]">(optional)</span>
               </p>
             </div>
             <HeadPicker value={head} onChange={setHead} />
-            <p className="mt-1.5 text-[11px] text-[#9CA3AF]">
+            <p className="mt-1.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
               Only residents not currently attached to another household are shown. You can also assign a head later
               from the household detail page.
             </p>
           </div>
 
-          {error && <p className="rounded-lg bg-[#FEE2E2] px-4 py-3 text-[12px] text-[#DC2626]">{error}</p>}
+          {error && <p className="rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-4 py-3 text-[12px] text-[#DC2626] dark:text-[#F87171]">{error}</p>}
 
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               onClick={() => router.push("/households")}
-              className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:text-[#1F2937]"
+              className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-60"
+              className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
             >
               {submitting ? "Saving..." : "Save Household"}
             </button>

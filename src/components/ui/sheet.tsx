@@ -54,7 +54,6 @@ function SheetContent({
   side = "right",
   widthClassName = "w-full sm:w-1/2",
   children,
-  style,
   ...props
 }: SheetContentProps) {
   const edge = side === "right" ? "right-0" : "left-0";
@@ -66,7 +65,7 @@ function SheetContent({
       <Dialog.Popup
         data-slot="sheet-content"
         className={cn(
-          "fixed inset-y-0 z-50 flex w-full flex-col bg-white shadow-2xl",
+          "fixed inset-y-0 z-50 flex w-full flex-col bg-white dark:bg-[#171717] shadow-2xl",
           edge,
           widthClassName,
           "transition-transform duration-300 ease-out",
@@ -74,12 +73,6 @@ function SheetContent({
           closedTransform,
           className
         )}
-        // Matches the font stack used in (dashboard)/layout.tsx. Declared
-        // explicitly (not just inherited) because this content is portaled
-        // to document.body, outside that layout's wrapper div, so it
-        // wouldn't otherwise pick up the same font declaration. Spread
-        // after so a caller-supplied `style` can still override it.
-        style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif", ...style }}
         {...props}
       >
         {children}
@@ -92,7 +85,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-header"
-      className={cn("flex items-start justify-between gap-4 border-b border-[#E9EAEC] px-6 py-4", className)}
+      className={cn("flex items-start justify-between gap-4 border-b border-[#E9EAEC] dark:border-[#262626] px-6 py-4", className)}
       {...props}
     />
   );
@@ -102,7 +95,7 @@ function SheetTitle({ className, ...props }: React.ComponentProps<typeof Dialog.
   return (
     <Dialog.Title
       data-slot="sheet-title"
-      className={cn("text-[15px] font-bold text-[#1F2937]", className)}
+      className={cn("text-[15px] font-bold text-[#1F2937] dark:text-white", className)}
       {...props}
     />
   );
@@ -112,7 +105,7 @@ function SheetDescription({ className, ...props }: React.ComponentProps<typeof D
   return (
     <Dialog.Description
       data-slot="sheet-description"
-      className={cn("text-[12px] text-[#9CA3AF]", className)}
+      className={cn("text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]", className)}
       {...props}
     />
   );
@@ -123,7 +116,7 @@ function SheetClose({ className, ...props }: React.ComponentProps<typeof Dialog.
     <Dialog.Close
       data-slot="sheet-close"
       className={cn(
-        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F4F5F7] hover:text-[#1F2937]",
+        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white",
         className
       )}
       {...props}
@@ -141,7 +134,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sheet-footer"
-      className={cn("flex items-center justify-end gap-2 border-t border-[#E9EAEC] px-6 py-4", className)}
+      className={cn("flex items-center justify-end gap-2 border-t border-[#E9EAEC] dark:border-[#262626] px-6 py-4", className)}
       {...props}
     />
   );

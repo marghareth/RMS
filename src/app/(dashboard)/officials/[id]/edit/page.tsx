@@ -58,7 +58,7 @@ export default function EditOfficialPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
       </div>
     );
   }
@@ -72,7 +72,7 @@ export default function EditOfficialPage() {
         action={
           <button
             onClick={() => router.push("/officials")}
-            className="rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#2563EB]"
+            className="rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
           >
             Back to Officials
           </button>
@@ -125,49 +125,49 @@ export default function EditOfficialPage() {
     <div className="mx-auto max-w-2xl">
       <button
         onClick={() => router.push("/officials")}
-        className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] transition hover:text-[#1F2937]"
+        className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
       >
         <ArrowLeft size={14} />
         Back to Officials
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937]">Edit Official</h1>
-        <p className="mt-0.5 text-[13px] text-[#9CA3AF]">{residentFullName(original.resident)}</p>
+        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Edit Official</h1>
+        <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">{residentFullName(original.resident)}</p>
       </div>
 
-      <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+      <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
         {/* Resident (read-only) */}
-        <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#E9EAEC] bg-[#F9FAFB] px-4 py-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EBF3FF] text-[13px] font-black text-[#1D4ED8]">
+        <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] px-4 py-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 text-[13px] font-black text-[#1D4ED8] dark:text-[#93C5FD]">
             {original.resident.fname[0]}
             {original.resident.lname[0]}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-semibold text-[#1F2937]">{residentFullName(original.resident)}</p>
-            <p className="text-[11px] text-[#9CA3AF]">
+            <p className="truncate text-[13px] font-semibold text-[#1F2937] dark:text-white">{residentFullName(original.resident)}</p>
+            <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
               Linked resident cannot be changed — remove and re-add to reassign.
             </p>
           </div>
         </div>
 
         <div className="mb-4 flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F4F5F7]">
-            <Phone size={14} className="text-[#374151]" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F4F5F7] dark:bg-[#262626]">
+            <Phone size={14} className="text-[#374151] dark:text-[#D4D4D4]" />
           </div>
-          <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Official Details</p>
+          <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Official Details</p>
         </div>
 
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                 Position
               </label>
               <select
                 value={position}
                 onChange={(e) => setPosition(e.target.value)}
-                className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
               >
                 <option value="">Select position</option>
                 {POSITIONS.map((p) => (
@@ -178,13 +178,13 @@ export default function EditOfficialPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                 Purok Assignment
               </label>
               <select
                 value={purokAssignment}
                 onChange={(e) => setPurokAssignment(e.target.value)}
-                className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
               >
                 <option value="">None</option>
                 {PUROK_ASSIGNMENTS.map((p) => (
@@ -197,65 +197,65 @@ export default function EditOfficialPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
               Contact No.
             </label>
             <input
               value={contactNo}
               onChange={(e) => setContactNo(e.target.value)}
               placeholder="09XX-XXX-XXXX"
-              className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+              className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
             />
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                 Term Start
               </label>
               <input
                 type="date"
                 value={termStart}
                 onChange={(e) => setTermStart(e.target.value)}
-                className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
-                Term End <span className="font-normal normal-case text-[#9CA3AF]">(optional)</span>
+              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                Term End <span className="font-normal normal-case text-[#9CA3AF] dark:text-[#A3A3A3]">(optional)</span>
               </label>
               <input
                 type="date"
                 value={termEnd}
                 onChange={(e) => setTermEnd(e.target.value)}
-                className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
               />
             </div>
           </div>
 
-          <label className="flex items-center gap-2 text-[12px] font-medium text-[#374151]">
+          <label className="flex items-center gap-2 text-[12px] font-medium text-[#374151] dark:text-[#D4D4D4]">
             <input
               type="checkbox"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              className="h-3.5 w-3.5 rounded border-[#D1D5DB] text-[#3B82F6] focus:ring-[#3B82F6]"
+              className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-[#3B82F6] dark:text-[#60A5FA] focus:ring-[#3B82F6] dark:focus:ring-[#60A5FA]"
             />
             Active
           </label>
 
-          {error && <p className="rounded-lg bg-[#FEE2E2] px-4 py-3 text-[12px] text-[#DC2626]">{error}</p>}
+          {error && <p className="rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-4 py-3 text-[12px] text-[#DC2626] dark:text-[#F87171]">{error}</p>}
 
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               onClick={() => router.push("/officials")}
-              className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:text-[#1F2937]"
+              className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-60"
+              className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
             >
               {submitting ? "Saving..." : "Save Changes"}
             </button>

@@ -36,8 +36,8 @@ const CONDITION_OPTIONS = [
 // ─── FIELD COMPONENTS ─────────────────────────────────────────────────────────
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wide block mb-1.5">
-      {children}{required && <span className="text-red-500 ml-0.5">*</span>}
+    <label className="text-[10px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] uppercase tracking-wide block mb-1.5">
+      {children}{required && <span className="text-red-500 dark:text-red-400 ml-0.5">*</span>}
     </label>
   );
 }
@@ -56,7 +56,7 @@ function TextInput({
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
-        className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] placeholder:text-[#D1D5DB] transition bg-white"
+        className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717]"
       />
     </div>
   );
@@ -75,12 +75,12 @@ function SelectInput({
         <select
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full appearance-none text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] pr-8 bg-white transition"
+          className="w-full appearance-none text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white pr-8 bg-white dark:bg-[#171717] transition"
         >
           <option value="">— Select —</option>
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] text-[10px]">▼</span>
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3] text-[10px]">▼</span>
       </div>
     </div>
   );
@@ -99,16 +99,16 @@ function StatusOption({
       onClick={onClick}
       className={`flex-1 text-left px-4 py-3 rounded-xl border-2 transition
         ${selected
-          ? `border-[#3B82F6] bg-blue-50`
-          : "border-[#E9EAEC] bg-white hover:border-[#D1D5DB]"}`}
+          ? `border-[#3B82F6] dark:border-[#60A5FA] bg-blue-50 dark:bg-blue-500/15`
+          : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] hover:border-[#D1D5DB] dark:hover:border-[#404040]"}`}
     >
       <div className="flex items-center gap-2 mb-0.5">
         <span className={`w-2.5 h-2.5 rounded-full ${color}`} />
-        <span className={`text-[12px] font-bold uppercase tracking-wide ${selected ? "text-[#3B82F6]" : "text-[#1F2937]"}`}>
+        <span className={`text-[12px] font-bold uppercase tracking-wide ${selected ? "text-[#3B82F6] dark:text-[#60A5FA]" : "text-[#1F2937] dark:text-white"}`}>
           {label}
         </span>
       </div>
-      <p className="text-[10px] text-[#9CA3AF] pl-4">{description}</p>
+      <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] pl-4">{description}</p>
     </button>
   );
 }
@@ -175,27 +175,27 @@ export default function NewEquipmentPage() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => router.push("/equipment")}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] transition"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
         >
-          <ArrowLeft size={18} className="text-[#6B7280]" />
+          <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
         </button>
         <div>
-          <h1 className="text-[18px] font-black text-[#1F2937] uppercase tracking-wide">Add Equipment</h1>
-          <p className="text-[12px] text-[#9CA3AF] mt-0.5">Register a new item to the inventory</p>
+          <h1 className="text-[18px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Add Equipment</h1>
+          <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Register a new item to the inventory</p>
         </div>
       </div>
 
       {/* ── Form card ── */}
-      <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
+      <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
 
         {/* Card header */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
           <div className="w-9 h-9 rounded-xl bg-[#3B82F6] flex items-center justify-center">
             <Package size={16} className="text-white" />
           </div>
           <div>
-            <p className="text-[13px] font-bold text-[#1F2937]">Equipment Details</p>
-            <p className="text-[11px] text-[#9CA3AF]">Fill in the information below</p>
+            <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Equipment Details</p>
+            <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Fill in the information below</p>
           </div>
         </div>
 
@@ -219,7 +219,7 @@ export default function NewEquipmentPage() {
                 min="1"
                 value={form.quantity}
                 onChange={e => set("quantity", e.target.value)}
-                className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] transition bg-white"
+                className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white transition bg-white dark:bg-[#171717]"
               />
             </div>
             <SelectInput
@@ -310,7 +310,7 @@ export default function NewEquipmentPage() {
               onChange={e => set("description", e.target.value)}
               rows={3}
               placeholder="Additional notes about this item…"
-              className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] placeholder:text-[#D1D5DB] transition bg-white resize-none"
+              className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717] resize-none"
             />
           </div>
 
@@ -322,7 +322,7 @@ export default function NewEquipmentPage() {
                 value="SERVICEABLE"
                 label="Serviceable"
                 description="Ready for use"
-                color="bg-green-500"
+                color="bg-green-500 dark:bg-green-500"
                 selected={form.status === "SERVICEABLE"}
                 onClick={() => set("status", "SERVICEABLE")}
               />
@@ -330,7 +330,7 @@ export default function NewEquipmentPage() {
                 value="UNSERVICEABLE"
                 label="Unserviceable"
                 description="Needs repair"
-                color="bg-amber-500"
+                color="bg-amber-500 dark:bg-amber-500"
                 selected={form.status === "UNSERVICEABLE"}
                 onClick={() => set("status", "UNSERVICEABLE")}
               />
@@ -338,7 +338,7 @@ export default function NewEquipmentPage() {
                 value="MISSING"
                 label="Missing"
                 description="Cannot be located"
-                color="bg-red-500"
+                color="bg-red-500 dark:bg-red-500"
                 selected={form.status === "MISSING"}
                 onClick={() => set("status", "MISSING")}
               />
@@ -347,17 +347,17 @@ export default function NewEquipmentPage() {
 
           {/* Error */}
           {error && (
-            <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200">
-              <p className="text-[12px] text-red-600 font-medium">{error}</p>
+            <div className="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-500/15 border border-red-200">
+              <p className="text-[12px] text-red-600 dark:text-red-400 font-medium">{error}</p>
             </div>
           )}
 
           {/* Preview strip */}
           {form.name && (
-            <div className="px-4 py-3 rounded-xl bg-[#F4F5F7] border border-[#E9EAEC]">
-              <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wide mb-1">Preview</p>
-              <p className="text-[13px] font-bold text-[#1F2937]">{form.name}</p>
-              <p className="text-[11px] text-[#6B7280] mt-0.5">
+            <div className="px-4 py-3 rounded-xl bg-[#F4F5F7] dark:bg-[#262626] border border-[#E9EAEC] dark:border-[#262626]">
+              <p className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide mb-1">Preview</p>
+              <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">{form.name}</p>
+              <p className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3] mt-0.5">
                 Qty: {form.quantity} · {form.status} {form.condition ? `· ${form.condition}` : ""}
               </p>
             </div>
@@ -365,17 +365,17 @@ export default function NewEquipmentPage() {
         </div>
 
         {/* Footer actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-[#E9EAEC] bg-[#F9FAFB]">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
           <button
             onClick={() => router.push("/equipment")}
-            className="px-5 py-2.5 rounded-xl border border-[#E9EAEC] text-[13px] font-bold text-[#6B7280] hover:bg-white transition"
+            className="px-5 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[13px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-white transition"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !isValid}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
           >
             <Save size={14} />
             {saving ? "Saving…" : "Save Equipment"}

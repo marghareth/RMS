@@ -72,9 +72,9 @@ const CONDITION_LABELS: Record<string, string> = {
 };
 
 const STATUS_CONFIG: Record<EquipmentStatus, { label: string; bg: string; text: string; dot: string; Icon: LucideIcon }> = {
-  SERVICEABLE: { label: "Serviceable", bg: "bg-green-100", text: "text-green-700", dot: "bg-green-500", Icon: CheckCircle2 },
-  UNSERVICEABLE: { label: "Unserviceable", bg: "bg-amber-100", text: "text-amber-700", dot: "bg-amber-500", Icon: AlertTriangle },
-  MISSING: { label: "Missing", bg: "bg-red-100", text: "text-red-700", dot: "bg-red-500", Icon: XCircle },
+  SERVICEABLE: { label: "Serviceable", bg: "bg-green-100 dark:bg-green-500/15", text: "text-green-700 dark:text-green-400", dot: "bg-green-500 dark:bg-green-500", Icon: CheckCircle2 },
+  UNSERVICEABLE: { label: "Unserviceable", bg: "bg-amber-100 dark:bg-amber-500/15", text: "text-amber-700 dark:text-amber-400", dot: "bg-amber-500 dark:bg-amber-500", Icon: AlertTriangle },
+  MISSING: { label: "Missing", bg: "bg-red-100 dark:bg-red-500/15", text: "text-red-700 dark:text-red-400", dot: "bg-red-500 dark:bg-red-500", Icon: XCircle },
 };
 
 function fmtCurrency(value: number | string | null | undefined) {
@@ -92,13 +92,13 @@ function returnedBorrowings(eq: Equipment) { return eq.borrowings.filter((b) => 
 // ─── SUBCOMPONENTS ────────────────────────────────────────────────────────────
 function InfoRow({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3 border-b border-[#F4F5F7] py-2.5 last:border-0">
-      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#F4F5F7]">
-        <Icon size={13} className="text-[#6B7280]" />
+    <div className="flex items-start gap-3 border-b border-[#F4F5F7] dark:border-[#262626] py-2.5 last:border-0">
+      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#F4F5F7] dark:bg-[#262626]">
+        <Icon size={13} className="text-[#6B7280] dark:text-[#A3A3A3]" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">{label}</p>
-        <div className="mt-0.5 text-[13px] font-medium text-[#1F2937]">{children}</div>
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">{label}</p>
+        <div className="mt-0.5 text-[13px] font-medium text-[#1F2937] dark:text-white">{children}</div>
       </div>
     </div>
   );
@@ -109,32 +109,32 @@ function BorrowRow({ b, onReturn }: { b: Borrowing; onReturn: (id: number) => vo
   return (
     <div
       className={`rounded-xl border px-4 py-3 ${
-        b.is_overdue && !returned ? "border-red-200 bg-red-50" : returned ? "border-[#E9EAEC] bg-[#F9FAFB]" : "border-[#E9EAEC] bg-white"
+        b.is_overdue && !returned ? "border-red-200 bg-red-50 dark:bg-red-500/15" : returned ? "border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]" : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="text-[13px] font-bold text-[#1F2937]">{b.borrower_name}</p>
+            <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">{b.borrower_name}</p>
             {b.is_overdue && !returned && (
-              <span className="rounded-full bg-red-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-red-600">Overdue</span>
+              <span className="rounded-full bg-red-100 dark:bg-red-500/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-red-600 dark:text-red-400">Overdue</span>
             )}
             {returned && (
-              <span className="rounded-full bg-green-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-green-600">Returned</span>
+              <span className="rounded-full bg-green-100 dark:bg-green-500/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-green-600 dark:text-green-400">Returned</span>
             )}
           </div>
           <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5">
-            <span className="text-[11px] text-[#9CA3AF]">Borrowed: {fmtDate(b.date_borrowed)}</span>
-            <span className="text-[11px] text-[#9CA3AF]">Due: {fmtDate(b.expected_return)}</span>
-            {b.actual_return && <span className="text-[11px] text-green-600">Returned: {fmtDate(b.actual_return)}</span>}
+            <span className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Borrowed: {fmtDate(b.date_borrowed)}</span>
+            <span className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Due: {fmtDate(b.expected_return)}</span>
+            {b.actual_return && <span className="text-[11px] text-green-600 dark:text-green-400">Returned: {fmtDate(b.actual_return)}</span>}
           </div>
-          {b.return_condition && <p className="mt-0.5 text-[11px] text-[#6B7280]">Condition on return: {b.return_condition}</p>}
-          {b.recorder && <p className="mt-0.5 text-[10px] text-[#C4C9D4]">Recorded by: {b.recorder.username}</p>}
+          {b.return_condition && <p className="mt-0.5 text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">Condition on return: {b.return_condition}</p>}
+          {b.recorder && <p className="mt-0.5 text-[10px] text-[#C4C9D4] dark:text-[#404040]">Recorded by: {b.recorder.username}</p>}
         </div>
         {!returned && (
           <button
             onClick={() => onReturn(b.id)}
-            className="shrink-0 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-[#2563EB]"
+            className="shrink-0 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
           >
             Return
           </button>
@@ -149,10 +149,10 @@ function Tab({ label, count, active, onClick }: { label: string; count: number; 
     <button
       onClick={onClick}
       className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-[12px] font-bold transition
-        ${active ? "bg-[#3B82F6] text-white" : "text-[#6B7280] hover:bg-[#F4F5F7]"}`}
+        ${active ? "bg-[#3B82F6] text-white" : "text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"}`}
     >
       {label}
-      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-blue-400 text-white" : "bg-[#E9EAEC] text-[#6B7280]"}`}>
+      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-blue-400 dark:bg-blue-500 text-white" : "bg-[#E9EAEC] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3]"}`}>
         {count}
       </span>
     </button>
@@ -207,7 +207,7 @@ export default function EquipmentDetailSheet({ equipmentId, onClose, onUpdated }
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -229,37 +229,37 @@ export default function EquipmentDetailSheet({ equipmentId, onClose, onUpdated }
               <div className="flex h-full flex-col">
                 <SheetHeader>
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#F4F5F7]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#F4F5F7] dark:bg-[#262626]">
                       {equipment.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element -- inventory photos are user-supplied external URLs
                         <img src={equipment.image_url} alt="" className="h-full w-full object-cover" />
                       ) : (
-                        <Package size={16} className="text-[#6B7280]" />
+                        <Package size={16} className="text-[#6B7280] dark:text-[#A3A3A3]" />
                       )}
                     </div>
                     <div className="min-w-0">
                       <SheetTitle>{equipment.name}</SheetTitle>
-                      <p className="mt-0.5 text-[12px] text-[#9CA3AF]">Equipment ID: #{String(equipment.id).padStart(5, "0")}</p>
+                      <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">Equipment ID: #{String(equipment.id).padStart(5, "0")}</p>
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     <button
                       onClick={() => router.push(`/equipment/borrow?equipment_id=${equipment.id}`)}
-                      className="rounded-lg bg-[#F59E0B] px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-[#D97706]"
+                      className="rounded-lg bg-[#F59E0B] px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-[#D97706] dark:hover:bg-[#F59E0B]"
                     >
                       Lend Out
                     </button>
                     <button
                       onClick={() => router.push(`/equipment/${equipment.id}/edit`)}
                       title="Edit"
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                     >
                       <Pencil size={15} />
                     </button>
                     <button
                       onClick={() => router.push(`/equipment/${equipment.id}`)}
                       title="Open full page"
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                     >
                       <ExternalLink size={15} />
                     </button>
@@ -271,8 +271,8 @@ export default function EquipmentDetailSheet({ equipmentId, onClose, onUpdated }
                   <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     {/* ── Left: Info ── */}
                     <div className="space-y-4">
-                      <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                        <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Equipment Info</p>
+                      <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                        <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Equipment Info</p>
                         <InfoRow icon={Hash} label="Equipment ID">#{String(equipment.id).padStart(5, "0")}</InfoRow>
                         <InfoRow icon={Layers} label="Type">{equipment.asset_type ?? "—"}</InfoRow>
                         <InfoRow icon={Layers} label="Quantity">{equipment.quantity} piece{equipment.quantity !== 1 ? "s" : ""}</InfoRow>
@@ -291,55 +291,55 @@ export default function EquipmentDetailSheet({ equipmentId, onClose, onUpdated }
                         </InfoRow>
                       </div>
 
-                      <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                        <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Valuation</p>
+                      <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                        <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Valuation</p>
                         <div className="grid grid-cols-2 gap-3">
-                          <div className="rounded-xl border border-[#F4F5F7] bg-[#F9FAFB] px-4 py-3">
-                            <p className="text-[10px] font-semibold uppercase text-[#9CA3AF]">Purchase Cost</p>
-                            <p className="mt-0.5 text-[15px] font-black text-[#1F2937]">{fmtCurrency(equipment.purchase_cost)}</p>
+                          <div className="rounded-xl border border-[#F4F5F7] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] px-4 py-3">
+                            <p className="text-[10px] font-semibold uppercase text-[#9CA3AF] dark:text-[#A3A3A3]">Purchase Cost</p>
+                            <p className="mt-0.5 text-[15px] font-black text-[#1F2937] dark:text-white">{fmtCurrency(equipment.purchase_cost)}</p>
                           </div>
-                          <div className="rounded-xl border border-[#F4F5F7] bg-[#F9FAFB] px-4 py-3">
-                            <p className="text-[10px] font-semibold uppercase text-[#9CA3AF]">Current Value</p>
-                            <p className="mt-0.5 text-[15px] font-black text-[#1F2937]">{fmtCurrency(equipment.current_value)}</p>
+                          <div className="rounded-xl border border-[#F4F5F7] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] px-4 py-3">
+                            <p className="text-[10px] font-semibold uppercase text-[#9CA3AF] dark:text-[#A3A3A3]">Current Value</p>
+                            <p className="mt-0.5 text-[15px] font-black text-[#1F2937] dark:text-white">{fmtCurrency(equipment.current_value)}</p>
                           </div>
                         </div>
                         {equipment.purchase_date && (
-                          <p className="mt-3 text-[11px] text-[#9CA3AF]">Purchased {fmtDate(equipment.purchase_date)}</p>
+                          <p className="mt-3 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Purchased {fmtDate(equipment.purchase_date)}</p>
                         )}
                       </div>
 
                       {(equipment.assigned_to || equipment.location) && (
-                        <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                          <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Assignment</p>
+                        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                          <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Assignment</p>
                           <InfoRow icon={Hash} label="Assigned To">{equipment.assigned_to ?? "—"}</InfoRow>
                           <InfoRow icon={Hash} label="Location">{equipment.location ?? "—"}</InfoRow>
                         </div>
                       )}
 
                       {equipment.description && (
-                        <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                          <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Description</p>
-                          <p className="text-[13px] leading-relaxed text-[#374151]">{equipment.description}</p>
+                        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                          <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Description</p>
+                          <p className="text-[13px] leading-relaxed text-[#374151] dark:text-[#D4D4D4]">{equipment.description}</p>
                         </div>
                       )}
 
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-xl border border-[#E9EAEC] bg-white px-4 py-3 text-center">
-                          <p className={`text-[22px] font-black ${active.length > 0 ? "text-[#3B82F6]" : "text-[#9CA3AF]"}`}>{active.length}</p>
-                          <p className="mt-0.5 text-[10px] font-semibold uppercase text-[#9CA3AF]">Out</p>
+                        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-3 text-center">
+                          <p className={`text-[22px] font-black ${active.length > 0 ? "text-[#3B82F6] dark:text-[#60A5FA]" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>{active.length}</p>
+                          <p className="mt-0.5 text-[10px] font-semibold uppercase text-[#9CA3AF] dark:text-[#A3A3A3]">Out</p>
                         </div>
-                        <div className="rounded-xl border border-[#E9EAEC] bg-white px-4 py-3 text-center">
-                          <p className={`text-[22px] font-black ${active.some((b) => b.is_overdue) ? "text-red-500" : "text-[#9CA3AF]"}`}>
+                        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-3 text-center">
+                          <p className={`text-[22px] font-black ${active.some((b) => b.is_overdue) ? "text-red-500 dark:text-red-400" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
                             {active.filter((b) => b.is_overdue).length}
                           </p>
-                          <p className="mt-0.5 text-[10px] font-semibold uppercase text-[#9CA3AF]">Overdue</p>
+                          <p className="mt-0.5 text-[10px] font-semibold uppercase text-[#9CA3AF] dark:text-[#A3A3A3]">Overdue</p>
                         </div>
                       </div>
                     </div>
 
                     {/* ── Right: Borrowings ── */}
-                    <div className="overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
-                      <div className="flex items-center gap-2 border-b border-[#E9EAEC] bg-[#F9FAFB] px-4 py-3">
+                    <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+                      <div className="flex items-center gap-2 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] px-4 py-3">
                         <Tab label="Borrowed" count={active.length} active={tab === "active"} onClick={() => setTab("active")} />
                         <Tab label="History" count={returned.length} active={tab === "history"} onClick={() => setTab("history")} />
                       </div>
@@ -347,11 +347,11 @@ export default function EquipmentDetailSheet({ equipmentId, onClose, onUpdated }
                         {tab === "active" ? (
                           active.length === 0 ? (
                             <div className="flex flex-col items-center justify-center gap-2 py-10">
-                              <Clock size={26} className="text-[#D1D5DB]" />
-                              <p className="text-[12px] text-[#9CA3AF]">No items currently borrowed</p>
+                              <Clock size={26} className="text-[#D1D5DB] dark:text-[#525252]" />
+                              <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No items currently borrowed</p>
                               <button
                                 onClick={() => router.push(`/equipment/borrow?equipment_id=${equipment.id}`)}
-                                className="mt-1 flex items-center gap-1 rounded-xl bg-[#F59E0B] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#D97706]"
+                                className="mt-1 flex items-center gap-1 rounded-xl bg-[#F59E0B] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#D97706] dark:hover:bg-[#F59E0B]"
                               >
                                 <Plus size={12} /> Lend Out Now
                               </button>
@@ -361,8 +361,8 @@ export default function EquipmentDetailSheet({ equipmentId, onClose, onUpdated }
                           )
                         ) : returned.length === 0 ? (
                           <div className="flex flex-col items-center justify-center gap-2 py-10">
-                            <Package size={26} className="text-[#D1D5DB]" />
-                            <p className="text-[12px] text-[#9CA3AF]">No return history yet</p>
+                            <Package size={26} className="text-[#D1D5DB] dark:text-[#525252]" />
+                            <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No return history yet</p>
                           </div>
                         ) : (
                           returned.map((b) => <BorrowRow key={b.id} b={b} onReturn={handleReturn} />)

@@ -52,10 +52,10 @@ function formatDateTime(iso?: string | null): string {
 function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string | null }) {
   return (
     <div className="flex items-start gap-2.5 py-1.5">
-      <Icon size={14} className="mt-0.5 shrink-0 text-[#9CA3AF]" />
+      <Icon size={14} className="mt-0.5 shrink-0 text-[#9CA3AF] dark:text-[#A3A3A3]" />
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">{label}</p>
-        <p className="text-[13px] text-[#1F2937]">{value || "—"}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">{label}</p>
+        <p className="text-[13px] text-[#1F2937] dark:text-white">{value || "—"}</p>
       </div>
     </div>
   );
@@ -73,8 +73,8 @@ function FormField({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
-        {label}{required && <span className="text-[#DC2626]"> *</span>}
+      <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+        {label}{required && <span className="text-[#DC2626] dark:text-[#F87171]"> *</span>}
       </label>
       {textarea ? (
         <textarea
@@ -82,14 +82,14 @@ function FormField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={2}
-          className="w-full resize-none rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6]"
+          className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
         />
       ) : (
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6]"
+          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
         />
       )}
     </div>
@@ -248,7 +248,7 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
               <SheetBody>
                 {loading ? (
                   <div className="flex items-center justify-center py-24">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
                   </div>
                 ) : (
                   <EmptyState icon={User} title="Visitor not found" description="This entry may have been deleted." />
@@ -263,7 +263,7 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                     {isNew ? "New Visitor" : editing ? "Edit Visitor" : visitor!.visitor_name}
                   </SheetTitle>
                   {!isNew && !editing && (
-                    <p className="mt-0.5 text-[12px] text-[#9CA3AF]">
+                    <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                       {isActive ? "Currently checked in" : `Checked out ${formatDateTime(visitor!.time_out)}`}
                     </p>
                   )}
@@ -273,7 +273,7 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                     <button
                       onClick={() => setEditing(true)}
                       title="Edit"
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                     >
                       <Pencil size={15} />
                     </button>
@@ -316,8 +316,8 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                 ) : (
                   <>
                     {/* Visitor Info */}
-                    <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                      <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937]">
+                    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                      <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
                         Visitor Info
                       </p>
                       <InfoRow icon={User} label="Name" value={visitor!.visitor_name} />
@@ -327,9 +327,9 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                     </div>
 
                     {/* Timeline */}
-                    <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
+                    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                       <div className="mb-2 flex items-center justify-between">
-                        <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937]">Timeline</p>
+                        <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Timeline</p>
                         {isActive && <StatusBadge status="ACTIVE" />}
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -339,8 +339,8 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                     </div>
 
                     {/* Metadata */}
-                    <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                      <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937]">Metadata</p>
+                    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                      <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Metadata</p>
                       <div className="grid grid-cols-2 gap-2">
                         <InfoRow icon={Clock} label="Created" value={formatDateTime(visitor!.created_at)} />
                         <InfoRow icon={Clock} label="Updated" value={formatDateTime(visitor!.updated_at)} />
@@ -356,7 +356,7 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                     {!isNew ? (
                       <button
                         onClick={() => setConfirmDeleteOpen(true)}
-                        className="flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-[12px] font-bold text-[#DC2626] transition hover:bg-red-50"
+                        className="flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-[12px] font-bold text-[#DC2626] dark:text-[#F87171] transition hover:bg-red-50"
                       >
                         <Trash2 size={14} />
                         Delete
@@ -365,7 +365,7 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                     <div className="flex gap-2">
                       <button
                         onClick={() => (isNew ? onClose() : setEditing(false))}
-                        className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                        className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                       >
                         <X size={14} />
                         Cancel
@@ -373,7 +373,7 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                       <button
                         onClick={handleSave}
                         disabled={submitting || !canSave}
-                        className="rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-50"
+                        className="rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
                       >
                         {submitting ? "Saving…" : isNew ? "Check In Visitor" : "Save Changes"}
                       </button>
@@ -383,7 +383,7 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                   <button
                     onClick={handleCheckOut}
                     disabled={checkingOut}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#F59E0B] py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#D97706] disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#F59E0B] py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#D97706] dark:hover:bg-[#F59E0B] disabled:opacity-50"
                   >
                     <LogOut size={14} />
                     {checkingOut ? "Checking out…" : "Check Out"}

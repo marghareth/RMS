@@ -104,22 +104,22 @@ export default function CertificateTemplatesPage() {
     <div>
       <button
         onClick={() => router.push("/certificates")}
-        className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] transition hover:text-[#1F2937]"
+        className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
       >
         <ArrowLeft size={14} />
         Back to Certificates
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937]">Manage Certificate Templates</h1>
-        <p className="mt-0.5 text-[13px] text-[#9CA3AF]">
+        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Manage Certificate Templates</h1>
+        <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">
           Edit the wording used when a certificate of each type is previewed or printed.
         </p>
       </div>
 
       <div className="flex gap-5">
         {/* ── Left: type list ── */}
-        <div className="w-70 shrink-0 overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
+        <div className="w-70 shrink-0 overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
           {CERTIFICATE_TYPES.map((t) => {
             const tpl = templates.find((x) => x.certificate_type === t.value);
             const active = selectedType === t.value;
@@ -128,19 +128,19 @@ export default function CertificateTemplatesPage() {
                 key={t.value}
                 onClick={() => selectType(t.value)}
                 disabled={!tpl}
-                className={`flex w-full items-center gap-3 border-b border-[#F4F5F7] px-4 py-3 text-left transition last:border-b-0 disabled:opacity-50 ${
-                  active ? "bg-[#3B82F6]" : "hover:bg-[#F9FAFB]"
+                className={`flex w-full items-center gap-3 border-b border-[#F4F5F7] dark:border-[#262626] px-4 py-3 text-left transition last:border-b-0 disabled:opacity-50 ${
+                  active ? "bg-[#3B82F6]" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
                 }`}
               >
                 <div className="min-w-0 flex-1">
-                  <p className={`truncate text-[13px] font-bold ${active ? "text-white" : "text-[#1F2937]"}`}>
+                  <p className={`truncate text-[13px] font-bold ${active ? "text-white" : "text-[#1F2937] dark:text-white"}`}>
                     {t.label}
                   </p>
-                  <p className={`mt-0.5 truncate text-[11px] ${active ? "text-blue-100" : "text-[#9CA3AF]"}`}>
+                  <p className={`mt-0.5 truncate text-[11px] ${active ? "text-blue-100 dark:text-blue-200" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
                     {loading ? "Loading…" : tpl?.updated_by ? `Edited by ${tpl.updated_by}` : "Default wording"}
                   </p>
                 </div>
-                <ChevronRight size={14} className={active ? "text-white" : "text-[#D1D5DB]"} />
+                <ChevronRight size={14} className={active ? "text-white" : "text-[#D1D5DB] dark:text-[#525252]"} />
               </button>
             );
           })}
@@ -149,7 +149,7 @@ export default function CertificateTemplatesPage() {
         {/* ── Right: editor + live preview ── */}
         <div className="flex-1 space-y-5">
           {loading || !selected ? (
-            <div className="flex items-center justify-center rounded-xl border border-[#E9EAEC] bg-white p-16 text-[12px] font-semibold text-[#9CA3AF]">
+            <div className="flex items-center justify-center rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-16 text-[12px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3]">
               {loading ? "Loading templates…" : "Template not found."}
             </div>
           ) : (
@@ -207,20 +207,20 @@ function TemplateEditor({
 
   return (
     <>
-      <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+      <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF]">
-              <FileEdit size={14} className="text-[#1D4ED8]" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
+              <FileEdit size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
             </div>
-            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">
+            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
               Editing: {CERTIFICATE_TYPES.find((t) => t.value === type)?.label}
             </p>
           </div>
           <button
             onClick={onReset}
             disabled={saving}
-            className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:bg-[#F4F5F7] disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] disabled:opacity-50"
           >
             <RotateCcw size={12} />
             Reset to Default
@@ -229,44 +229,44 @@ function TemplateEditor({
 
         <div className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
               Title / Heading
             </label>
             <input
               value={draftTitle}
               onChange={(e) => setDraftTitle(e.target.value)}
-              className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] font-semibold uppercase tracking-wide text-[#1F2937] outline-none focus:border-[#3B82F6]"
+              className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] font-semibold uppercase tracking-wide text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
               Body
             </label>
             <textarea
               value={draftBody}
               onChange={(e) => setDraftBody(e.target.value)}
               rows={6}
-              className="w-full resize-none rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] outline-none focus:border-[#3B82F6]"
+              className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
             />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
               Closing / Signatory Line
             </label>
             <textarea
               value={draftClosing}
               onChange={(e) => setDraftClosing(e.target.value)}
               rows={2}
-              className="w-full resize-none rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] outline-none focus:border-[#3B82F6]"
+              className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
             />
           </div>
 
-          <div className="rounded-lg bg-[#F9FAFB] px-3 py-2.5">
+          <div className="rounded-lg bg-[#F9FAFB] dark:bg-[#171717] px-3 py-2.5">
             <div className="mb-1.5 flex items-center gap-1.5">
-              <Info size={12} className="text-[#6B7280]" />
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+              <Info size={12} className="text-[#6B7280] dark:text-[#A3A3A3]" />
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                 Available Placeholders
               </p>
             </div>
@@ -275,7 +275,7 @@ function TemplateEditor({
                 <span
                   key={p.token}
                   title={p.description}
-                  className="rounded-md bg-white px-2 py-1 font-mono text-[10px] text-[#3B82F6] shadow-sm"
+                  className="rounded-md bg-white dark:bg-[#171717] px-2 py-1 font-mono text-[10px] text-[#3B82F6] dark:text-[#60A5FA] shadow-sm"
                 >
                   {p.token}
                 </span>
@@ -285,7 +285,7 @@ function TemplateEditor({
 
           <div className="flex items-center justify-end gap-3 pt-2">
             {saved && (
-              <span className="flex items-center gap-1.5 text-[12px] font-semibold text-[#059669]">
+              <span className="flex items-center gap-1.5 text-[12px] font-semibold text-[#059669] dark:text-[#34D399]">
                 <CheckCircle2 size={14} />
                 Template saved
               </span>
@@ -293,7 +293,7 @@ function TemplateEditor({
             <button
               onClick={() => onSave({ title: draftTitle, body: draftBody, closing_line: draftClosing })}
               disabled={saving || !isDirty}
-              className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
             >
               <Save size={14} />
               {saving ? "Saving..." : "Save Template"}
@@ -303,23 +303,23 @@ function TemplateEditor({
       </div>
 
       {/* Live preview */}
-      <div className="rounded-xl border border-[#E9EAEC] bg-white p-6">
-        <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-[#9CA3AF]">
+      <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-6">
+        <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3]">
           Live Preview <span className="font-normal normal-case">(using sample data)</span>
         </p>
-        <div className="rounded-lg border border-dashed border-[#E9EAEC] bg-[#F9FAFB] p-6">
-          <h2 className="mb-4 text-center text-[15px] font-black uppercase tracking-widest text-[#1F2937]">
+        <div className="rounded-lg border border-dashed border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] p-6">
+          <h2 className="mb-4 text-center text-[15px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">
             {previewTitle}
           </h2>
-          <p className="text-[13px] leading-loose text-[#374151]">TO WHOM IT MAY CONCERN:</p>
-          <p className="indent-8 text-justify text-[13px] leading-loose text-[#374151]">{previewBody}</p>
-          <p className="indent-8 text-justify text-[13px] leading-loose text-[#374151]">
+          <p className="text-[13px] leading-loose text-[#374151] dark:text-[#D4D4D4]">TO WHOM IT MAY CONCERN:</p>
+          <p className="indent-8 text-justify text-[13px] leading-loose text-[#374151] dark:text-[#D4D4D4]">{previewBody}</p>
+          <p className="indent-8 text-justify text-[13px] leading-loose text-[#374151] dark:text-[#D4D4D4]">
             This certification is being issued upon the request of the above-named person for the purpose of:
           </p>
-          <p className="rounded-lg bg-white px-4 py-3 text-center text-[13px] font-semibold uppercase text-[#1F2937]">
+          <p className="rounded-lg bg-white dark:bg-[#171717] px-4 py-3 text-center text-[13px] font-semibold uppercase text-[#1F2937] dark:text-white">
             {SAMPLE_VALUES.purpose}
           </p>
-          <p className="indent-8 text-justify text-[13px] leading-loose text-[#374151]">{previewClosing}</p>
+          <p className="indent-8 text-justify text-[13px] leading-loose text-[#374151] dark:text-[#D4D4D4]">{previewClosing}</p>
         </div>
       </div>
     </>

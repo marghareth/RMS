@@ -102,10 +102,10 @@ export default function ResidentPicker({
   if (value) {
     const age = calcAge(value.birthdate);
     return (
-      <div className="flex items-center justify-between gap-3 rounded-lg border border-[#E9EAEC] bg-[#F9FAFB] px-3 py-2.5">
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] px-3 py-2.5">
         <div className="min-w-0">
-          <p className="truncate text-[13px] font-semibold text-[#1F2937]">{fullName(value)}</p>
-          <p className="truncate text-[11px] text-[#9CA3AF]">
+          <p className="truncate text-[13px] font-semibold text-[#1F2937] dark:text-white">{fullName(value)}</p>
+          <p className="truncate text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
             {value.sex} &middot; {age} yrs old &middot; {value.purok?.name ?? "No purok"}
           </p>
         </div>
@@ -114,7 +114,7 @@ export default function ResidentPicker({
             type="button"
             onClick={() => onChange(null)}
             aria-label="Clear selected resident"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[#9CA3AF] transition hover:bg-[#E9EAEC] hover:text-[#374151]"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#E9EAEC] dark:hover:bg-[#262626] hover:text-[#374151] dark:hover:text-[#D4D4D4]"
           >
             <X size={14} />
           </button>
@@ -128,7 +128,7 @@ export default function ResidentPicker({
       <div className="relative">
         <Search
           size={15}
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]"
         />
         <input
           value={query}
@@ -139,18 +139,18 @@ export default function ResidentPicker({
           }}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
-          className="w-full rounded-lg border border-[#E9EAEC] bg-white py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6] disabled:bg-[#F4F5F7]"
+          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA] disabled:bg-[#F4F5F7] dark:disabled:bg-[#1A1A1A]"
         />
       </div>
 
       {open && query.trim() && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-lg border border-[#E9EAEC] bg-white shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] shadow-lg">
           {loading ? (
             <div className="flex items-center justify-center py-6">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
             </div>
           ) : results.length === 0 ? (
-            <p className="px-3 py-4 text-center text-[12px] text-[#9CA3AF]">No residents found</p>
+            <p className="px-3 py-4 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No residents found</p>
           ) : (
             results.map((r) => {
               const age = calcAge(r.birthdate);
@@ -165,16 +165,16 @@ export default function ResidentPicker({
                     setResults([]);
                     setOpen(false);
                   }}
-                  className="flex w-full items-center justify-between gap-2 border-b border-[#F4F5F7] px-3 py-2.5 text-left transition last:border-b-0 hover:bg-[#F9FAFB]"
+                  className="flex w-full items-center justify-between gap-2 border-b border-[#F4F5F7] dark:border-[#262626] px-3 py-2.5 text-left transition last:border-b-0 hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-[13px] font-semibold text-[#1F2937]">{fullName(r)}</p>
-                    <p className="truncate text-[11px] text-[#9CA3AF]">
+                    <p className="truncate text-[13px] font-semibold text-[#1F2937] dark:text-white">{fullName(r)}</p>
+                    <p className="truncate text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                       {r.sex} &middot; {age} yrs old &middot; {r.purok?.name ?? "No purok"}
                     </p>
                   </div>
                   {belowMinAge && (
-                    <span className="shrink-0 rounded-full bg-[#FEF3C7] px-2 py-0.5 text-[10px] font-semibold text-[#D97706]">
+                    <span className="shrink-0 rounded-full bg-[#FEF3C7] dark:bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-[#D97706] dark:text-[#FBBF24]">
                       Under {minAge}
                     </span>
                   )}

@@ -70,10 +70,10 @@ function formatDateTime(iso?: string | null): string {
 function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string | null }) {
   return (
     <div className="flex items-start gap-2.5 py-1.5">
-      <Icon size={14} className="mt-0.5 shrink-0 text-[#9CA3AF]" />
+      <Icon size={14} className="mt-0.5 shrink-0 text-[#9CA3AF] dark:text-[#A3A3A3]" />
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">{label}</p>
-        <p className="text-[13px] text-[#1F2937]">{value || "—"}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">{label}</p>
+        <p className="text-[13px] text-[#1F2937] dark:text-white">{value || "—"}</p>
       </div>
     </div>
   );
@@ -227,7 +227,7 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
               <SheetBody>
                 {loading ? (
                   <div className="flex items-center justify-center py-24">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
                   </div>
                 ) : (
                   <EmptyState icon={HeartCrack} title="Record not found" description="This entry may have been deleted." />
@@ -242,7 +242,7 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                     {isNew ? "New Deceased Record" : editing ? "Edit Deceased Record" : fullName(record!.resident)}
                   </SheetTitle>
                   {!isNew && !editing && (
-                    <p className="mt-0.5 text-[12px] text-[#9CA3AF]">
+                    <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                       Deceased {formatDate(record!.date_of_death)}
                     </p>
                   )}
@@ -252,7 +252,7 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                     <button
                       onClick={() => setEditing(true)}
                       title="Edit"
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                     >
                       <Pencil size={15} />
                     </button>
@@ -266,8 +266,8 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                   <div className="space-y-4">
                     {isNew && (
                       <div>
-                        <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
-                          Resident<span className="text-[#DC2626]"> *</span>
+                        <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                          Resident<span className="text-[#DC2626] dark:text-[#F87171]"> *</span>
                         </label>
                         <ResidentPicker
                           value={pickedResident}
@@ -278,43 +278,43 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                     )}
 
                     <div>
-                      <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
-                        Date of Death<span className="text-[#DC2626]"> *</span>
+                      <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                        Date of Death<span className="text-[#DC2626] dark:text-[#F87171]"> *</span>
                       </label>
                       <input
                         type="date"
                         value={form.date_of_death}
                         onChange={(e) => setForm((f) => ({ ...f, date_of_death: e.target.value }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition focus:border-[#3B82F6]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                       />
                     </div>
 
                     <div>
-                      <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
-                        Immediate Cause<span className="text-[#DC2626]"> *</span>
+                      <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                        Immediate Cause<span className="text-[#DC2626] dark:text-[#F87171]"> *</span>
                       </label>
                       <input
                         value={form.immediate_cause}
                         onChange={(e) => setForm((f) => ({ ...f, immediate_cause: e.target.value }))}
                         placeholder="e.g. Cardiac arrest"
-                        className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                       />
                     </div>
 
                     <div>
-                      <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                      <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                         Underlying Cause
                       </label>
                       <input
                         value={form.underlying_cause}
                         onChange={(e) => setForm((f) => ({ ...f, underlying_cause: e.target.value }))}
                         placeholder="e.g. Diabetes mellitus"
-                        className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                       />
                     </div>
 
                     {formError && (
-                      <p className="rounded-lg bg-red-50 px-3 py-2 text-[12px] font-medium text-[#DC2626]">
+                      <p className="rounded-lg bg-red-50 dark:bg-red-500/15 px-3 py-2 text-[12px] font-medium text-[#DC2626] dark:text-[#F87171]">
                         {formError}
                       </p>
                     )}
@@ -322,8 +322,8 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                 ) : (
                   <>
                     {/* Inhabitant Info */}
-                    <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                      <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937]">
+                    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                      <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
                         Inhabitant Info
                       </p>
                       <InfoRow icon={User} label="Name" value={fullName(record!.resident)} />
@@ -331,8 +331,8 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                     </div>
 
                     {/* Death Info */}
-                    <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                      <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937]">
+                    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                      <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
                         Death Info
                       </p>
                       <InfoRow icon={Calendar} label="Date of Death" value={formatDate(record!.date_of_death)} />
@@ -341,8 +341,8 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                     </div>
 
                     {/* Metadata */}
-                    <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                      <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937]">Metadata</p>
+                    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                      <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Metadata</p>
                       <div className="grid grid-cols-2 gap-2">
                         <InfoRow icon={Calendar} label="Created" value={formatDateTime(record!.created_at)} />
                         <InfoRow icon={Calendar} label="Updated" value={formatDateTime(record!.updated_at)} />
@@ -358,7 +358,7 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                     {!isNew ? (
                       <button
                         onClick={() => setConfirmDeleteOpen(true)}
-                        className="flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-[12px] font-bold text-[#DC2626] transition hover:bg-red-50"
+                        className="flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-[12px] font-bold text-[#DC2626] dark:text-[#F87171] transition hover:bg-red-50"
                       >
                         <Trash2 size={14} />
                         Delete
@@ -367,7 +367,7 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                     <div className="flex gap-2">
                       <button
                         onClick={() => (isNew ? onClose() : setEditing(false))}
-                        className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                        className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                       >
                         <X size={14} />
                         Cancel
@@ -375,7 +375,7 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                       <button
                         onClick={handleSave}
                         disabled={submitting || !canSave}
-                        className="rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-50"
+                        className="rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
                       >
                         {submitting ? "Saving…" : isNew ? "Save Record" : "Save Changes"}
                       </button>

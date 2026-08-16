@@ -42,8 +42,8 @@ const CONDITION_OPTIONS = [
 // ─── FIELD COMPONENTS ─────────────────────────────────────────────────────────
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wide block mb-1.5">
-      {children}{required && <span className="text-red-500 ml-0.5">*</span>}
+    <label className="text-[10px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] uppercase tracking-wide block mb-1.5">
+      {children}{required && <span className="text-red-500 dark:text-red-400 ml-0.5">*</span>}
     </label>
   );
 }
@@ -62,7 +62,7 @@ function TextInput({
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
-        className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] placeholder:text-[#D1D5DB] transition bg-white"
+        className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717]"
       />
     </div>
   );
@@ -81,12 +81,12 @@ function SelectInput({
         <select
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full appearance-none text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] pr-8 bg-white transition"
+          className="w-full appearance-none text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white pr-8 bg-white dark:bg-[#171717] transition"
         >
           <option value="">— Select —</option>
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] text-[10px]">▼</span>
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3] text-[10px]">▼</span>
       </div>
     </div>
   );
@@ -103,15 +103,15 @@ function StatusCard({
       type="button"
       onClick={onClick}
       className={`flex-1 text-left px-4 py-3 rounded-xl border-2 transition
-        ${selected ? "border-[#3B82F6] bg-blue-50" : "border-[#E9EAEC] bg-white hover:border-[#D1D5DB]"}`}
+        ${selected ? "border-[#3B82F6] dark:border-[#60A5FA] bg-blue-50 dark:bg-blue-500/15" : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] hover:border-[#D1D5DB] dark:hover:border-[#404040]"}`}
     >
       <div className="flex items-center gap-2 mb-0.5">
         <span className={`w-2.5 h-2.5 rounded-full ${dot}`} />
-        <span className={`text-[12px] font-bold uppercase tracking-wide ${selected ? "text-[#3B82F6]" : "text-[#1F2937]"}`}>
+        <span className={`text-[12px] font-bold uppercase tracking-wide ${selected ? "text-[#3B82F6] dark:text-[#60A5FA]" : "text-[#1F2937] dark:text-white"}`}>
           {label}
         </span>
       </div>
-      <p className="text-[10px] text-[#9CA3AF] pl-4">{description}</p>
+      <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] pl-4">{description}</p>
     </button>
   );
 }
@@ -195,27 +195,27 @@ export default function EditEquipmentPage() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => router.push(`/equipment/${params.id}`)}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] transition"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
         >
-          <ArrowLeft size={18} className="text-[#6B7280]" />
+          <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
         </button>
         <div>
-          <h1 className="text-[18px] font-black text-[#1F2937] uppercase tracking-wide">Edit Equipment</h1>
-          <p className="text-[12px] text-[#9CA3AF] mt-0.5">Update equipment details</p>
+          <h1 className="text-[18px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Edit Equipment</h1>
+          <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Update equipment details</p>
         </div>
       </div>
 
       {/* ── Form card ── */}
-      <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
+      <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
 
         {/* Card header */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
           <div className="w-9 h-9 rounded-xl bg-[#F59E0B] flex items-center justify-center">
             <Package size={16} className="text-white" />
           </div>
           <div>
-            <p className="text-[13px] font-bold text-[#1F2937]">{form.name || "—"}</p>
-            <p className="text-[11px] text-[#9CA3AF]">Equipment ID: #{String(params.id).padStart(5, "0")}</p>
+            <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">{form.name || "—"}</p>
+            <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Equipment ID: #{String(params.id).padStart(5, "0")}</p>
           </div>
         </div>
 
@@ -238,7 +238,7 @@ export default function EditEquipmentPage() {
                 min="1"
                 value={form.quantity}
                 onChange={e => set("quantity", e.target.value)}
-                className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] transition bg-white"
+                className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white transition bg-white dark:bg-[#171717]"
               />
             </div>
             <SelectInput
@@ -329,7 +329,7 @@ export default function EditEquipmentPage() {
               onChange={e => set("description", e.target.value)}
               rows={3}
               placeholder="Additional notes about this item…"
-              className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] placeholder:text-[#D1D5DB] transition bg-white resize-none"
+              className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717] resize-none"
             />
           </div>
 
@@ -337,32 +337,32 @@ export default function EditEquipmentPage() {
           <div>
             <FieldLabel required>Status</FieldLabel>
             <div className="flex gap-3">
-              <StatusCard value="SERVICEABLE"   label="Serviceable"   description="Ready for use"      dot="bg-green-500" selected={form.status === "SERVICEABLE"}   onClick={() => set("status", "SERVICEABLE")}   />
-              <StatusCard value="UNSERVICEABLE" label="Unserviceable" description="Needs repair"       dot="bg-amber-500" selected={form.status === "UNSERVICEABLE"} onClick={() => set("status", "UNSERVICEABLE")} />
-              <StatusCard value="MISSING"       label="Missing"       description="Cannot be located"  dot="bg-red-500"   selected={form.status === "MISSING"}       onClick={() => set("status", "MISSING")}       />
+              <StatusCard value="SERVICEABLE"   label="Serviceable"   description="Ready for use"      dot="bg-green-500 dark:bg-green-500" selected={form.status === "SERVICEABLE"}   onClick={() => set("status", "SERVICEABLE")}   />
+              <StatusCard value="UNSERVICEABLE" label="Unserviceable" description="Needs repair"       dot="bg-amber-500 dark:bg-amber-500" selected={form.status === "UNSERVICEABLE"} onClick={() => set("status", "UNSERVICEABLE")} />
+              <StatusCard value="MISSING"       label="Missing"       description="Cannot be located"  dot="bg-red-500 dark:bg-red-500"   selected={form.status === "MISSING"}       onClick={() => set("status", "MISSING")}       />
             </div>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200">
-              <p className="text-[12px] text-red-600 font-medium">{error}</p>
+            <div className="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-500/15 border border-red-200">
+              <p className="text-[12px] text-red-600 dark:text-red-400 font-medium">{error}</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-[#E9EAEC] bg-[#F9FAFB]">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
           <button
             onClick={() => router.push(`/equipment/${params.id}`)}
-            className="px-5 py-2.5 rounded-xl border border-[#E9EAEC] text-[13px] font-bold text-[#6B7280] hover:bg-white transition"
+            className="px-5 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[13px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-white transition"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !isValid}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
           >
             <Save size={14} />
             {saving ? "Saving…" : "Save Changes"}

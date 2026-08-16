@@ -85,8 +85,8 @@ const EMPTY: ResidentForm = {
 // ─── FIELD COMPONENTS ─────────────────────────────────────────────────────────
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wide block mb-1">
-      {children}{required && <span className="text-red-500 ml-0.5">*</span>}
+    <label className="text-[10px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] uppercase tracking-wide block mb-1">
+      {children}{required && <span className="text-red-500 dark:text-red-400 ml-0.5">*</span>}
     </label>
   );
 }
@@ -105,7 +105,7 @@ function TextInput({
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
-        className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] placeholder:text-[#D1D5DB] transition bg-white"
+        className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717]"
       />
     </div>
   );
@@ -124,12 +124,12 @@ function SelectInput({
         <select
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full appearance-none text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] pr-8 bg-white transition"
+          className="w-full appearance-none text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white pr-8 bg-white dark:bg-[#171717] transition"
         >
           <option value="">— Select —</option>
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] text-[10px]">▼</span>
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3] text-[10px]">▼</span>
       </div>
     </div>
   );
@@ -137,8 +137,8 @@ function SelectInput({
 
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-[#E9EAEC] p-5">
-      <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] mb-4">{title}</p>
+    <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-5">
+      <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white mb-4">{title}</p>
       <div className="space-y-4">{children}</div>
     </div>
   );
@@ -249,31 +249,31 @@ export default function EditResidentPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push(`/residents/${id}`)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] transition"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
           >
-            <ArrowLeft size={18} className="text-[#6B7280]" />
+            <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
           </button>
           <div>
-            <h1 className="text-[16px] font-black text-[#1F2937] uppercase tracking-wide">
+            <h1 className="text-[16px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">
               Edit Resident
             </h1>
-            <p className="text-[11px] text-[#9CA3AF] mt-0.5">
+            <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">
               {resident.lname}, {resident.fname} · BM{String(resident.id).padStart(7, "0")}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {error && <p className="text-[12px] text-red-500 font-medium">{error}</p>}
+          {error && <p className="text-[12px] text-red-500 dark:text-red-400 font-medium">{error}</p>}
           <button
             onClick={() => router.push(`/residents/${id}`)}
-            className="px-4 py-2 rounded-xl border border-[#E9EAEC] text-[12px] font-bold text-[#6B7280] hover:bg-[#F4F5F7] transition"
+            className="px-4 py-2 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] disabled:opacity-50 transition shadow-sm"
+            className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50 transition shadow-sm"
           >
             <Save size={13} />
             {saving ? "Saving…" : "Save Changes"}

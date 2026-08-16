@@ -70,15 +70,15 @@ function SelectField({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+      <label className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
         {label}
-        {required && <span className="ml-0.5 text-red-500">*</span>}
+        {required && <span className="ml-0.5 text-red-500 dark:text-red-400">*</span>}
       </label>
       <div className="relative">
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none rounded-xl border border-[#E9EAEC] bg-white px-4 py-3 pr-8 text-[13px] text-[#1F2937] outline-none focus:border-[#3B82F6]"
+          className="w-full appearance-none rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-3 pr-8 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
         >
           <option value="">SELECT</option>
           {options.map((o) => (
@@ -87,7 +87,7 @@ function SelectField({
             </option>
           ))}
         </select>
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#9CA3AF]">▼</span>
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">▼</span>
       </div>
     </div>
   );
@@ -108,13 +108,13 @@ function TextField({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">{label}</label>
+      <label className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">{label}</label>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="rounded-xl border border-[#E9EAEC] bg-white px-4 py-3 text-[13px] text-[#1F2937] outline-none placeholder:text-[#D1D5DB] focus:border-[#3B82F6]"
+        className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-3 text-[13px] text-[#1F2937] dark:text-white outline-none placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
       />
     </div>
   );
@@ -204,7 +204,7 @@ export default function EditHouseholdPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
       </div>
     );
   }
@@ -218,7 +218,7 @@ export default function EditHouseholdPage() {
         action={
           <button
             onClick={() => router.push("/households")}
-            className="rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#2563EB]"
+            className="rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
           >
             Back to Households
           </button>
@@ -276,25 +276,25 @@ export default function EditHouseholdPage() {
     <div className="mx-auto max-w-2xl">
       <button
         onClick={() => router.push(`/households/${householdId}`)}
-        className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] transition hover:text-[#1F2937]"
+        className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
       >
         <ArrowLeft size={14} />
         Back to Household
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937]">Edit Household</h1>
-        <p className="mt-0.5 text-[13px] text-[#9CA3AF]">{original.household_no}</p>
+        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Edit Household</h1>
+        <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">{original.household_no}</p>
       </div>
 
       <div className="space-y-5">
         {/* General Information */}
-        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           <div className="mb-4 flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF]">
-              <Home size={14} className="text-[#1D4ED8]" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
+              <Home size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
             </div>
-            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">General Information</p>
+            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">General Information</p>
           </div>
 
           <div className="space-y-4">
@@ -312,8 +312,8 @@ export default function EditHouseholdPage() {
         </div>
 
         {/* Classification */}
-        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
-          <p className="mb-4 text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Classification</p>
+        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+          <p className="mb-4 text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Classification</p>
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <SelectField label="Housing Type" value={housingType} onChange={setHousingType} options={HOUSING_OPTIONS} />
@@ -337,8 +337,8 @@ export default function EditHouseholdPage() {
         </div>
 
         {/* National Indicators (DILG/BIMS) */}
-        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
-          <p className="mb-4 text-[13px] font-black uppercase tracking-wide text-[#1F2937]">
+        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+          <p className="mb-4 text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
             National Indicators (DILG/BIMS)
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -350,34 +350,34 @@ export default function EditHouseholdPage() {
         </div>
 
         {/* Demographics */}
-        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
-          <p className="mb-4 text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Demographics</p>
+        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+          <p className="mb-4 text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Demographics</p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField label="No. of Families" value={noOfFamilies} onChange={setNoOfFamilies} type="number" placeholder="1" />
             <TextField label="Monthly Income (₱)" value={monthlyIncome} onChange={setMonthlyIncome} type="number" placeholder="0.00" />
           </div>
         </div>
 
-        <div className="rounded-lg bg-[#F9FAFB] px-4 py-3">
-          <p className="text-[11px] text-[#6B7280]">
+        <div className="rounded-lg bg-[#F9FAFB] dark:bg-[#171717] px-4 py-3">
+          <p className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">
             To change the household head or members, use the Add Member / Set as Head actions on the household
             detail page instead.
           </p>
         </div>
 
-        {error && <p className="rounded-lg bg-[#FEE2E2] px-4 py-3 text-[12px] text-[#DC2626]">{error}</p>}
+        {error && <p className="rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-4 py-3 text-[12px] text-[#DC2626] dark:text-[#F87171]">{error}</p>}
 
         <div className="flex items-center justify-end gap-3 pt-2">
           <button
             onClick={() => router.push(`/households/${householdId}`)}
-            className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:text-[#1F2937]"
+            className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-60"
+            className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
           >
             {submitting ? "Saving..." : "Save Changes"}
           </button>

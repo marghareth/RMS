@@ -40,10 +40,10 @@ interface CertificateDetailSheetProps {
 function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string | null }) {
   return (
     <div className="flex items-start gap-2.5 py-1.5">
-      <Icon size={14} className="mt-0.5 shrink-0 text-[#9CA3AF]" />
+      <Icon size={14} className="mt-0.5 shrink-0 text-[#9CA3AF] dark:text-[#A3A3A3]" />
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">{label}</p>
-        <p className="text-[13px] text-[#1F2937]">{value || "—"}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">{label}</p>
+        <p className="text-[13px] text-[#1F2937] dark:text-white">{value || "—"}</p>
       </div>
     </div>
   );
@@ -120,7 +120,7 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -137,17 +137,17 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <SheetTitle>{certificate.certificate_no}</SheetTitle>
-                  <span className="inline-flex items-center rounded-full bg-[#EBF3FF] px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8]">
+                  <span className="inline-flex items-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
                     {certTypeLabel(certificate.certificate_type)}
                   </span>
                   <StatusBadge status={certificate.status} />
                   {certificate.flagged_manual && (
-                    <span className="inline-flex items-center rounded-full bg-[#FEF3C7] px-2.5 py-1 text-[11px] font-semibold text-[#D97706]">
+                    <span className="inline-flex items-center rounded-full bg-[#FEF3C7] dark:bg-amber-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#D97706] dark:text-[#FBBF24]">
                       Walk-in
                     </span>
                   )}
                 </div>
-                <p className="mt-0.5 text-[12px] text-[#9CA3AF]">
+                <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                   {certificate.issued_at
                     ? `Released ${formatISODateTime(certificate.issued_at)}`
                     : `Requested ${formatISODateTime(certificate.requested_at)} · Queue #${certificate.queue_number}`}
@@ -156,7 +156,7 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
               <div className="flex shrink-0 items-center gap-1">
                 <button
                   onClick={() => router.push(`/certificates/${activeId}/preview`)}
-                  className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-[#2563EB]"
+                  className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
                 >
                   <Printer size={13} />
                   Preview / Print
@@ -164,7 +164,7 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
                 <button
                   onClick={() => router.push(`/certificates/${activeId}`)}
                   title="Open full page"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                 >
                   <ExternalLink size={15} />
                 </button>
@@ -176,12 +176,12 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
               <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
                 {/* ── Left: certificate details ── */}
                 <div className="space-y-4 lg:col-span-2">
-                  <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
+                  <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                     <div className="mb-3 flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF]">
-                        <User size={14} className="text-[#1D4ED8]" />
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
+                        <User size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
                       </div>
-                      <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937]">Applicant</p>
+                      <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Applicant</p>
                     </div>
                     {certificate.resident ? (
                       <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
@@ -199,38 +199,38 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
                     )}
                   </div>
 
-                  <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                    <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937]">Purpose</p>
-                    <p className="text-[13px] leading-relaxed text-[#374151]">{certificate.purpose}</p>
+                  <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                    <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Purpose</p>
+                    <p className="text-[13px] leading-relaxed text-[#374151] dark:text-[#D4D4D4]">{certificate.purpose}</p>
                   </div>
 
                   {/* Issuance history for this resident */}
-                  <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
+                  <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                     <div className="mb-3 flex items-center gap-2">
-                      <History size={14} className="text-[#6B7280]" />
-                      <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937]">
+                      <History size={14} className="text-[#6B7280] dark:text-[#A3A3A3]" />
+                      <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
                         Other Certificates for This Resident ({residentHistory.length})
                       </p>
                     </div>
                     {!certificate.resident ? (
-                      <p className="py-3 text-center text-[12px] text-[#9CA3AF]">
+                      <p className="py-3 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                         Walk-in entries aren&apos;t linked to a resident record, so no issuance history is available.
                       </p>
                     ) : residentHistory.length === 0 ? (
-                      <p className="py-3 text-center text-[12px] text-[#9CA3AF]">No other certificates issued yet.</p>
+                      <p className="py-3 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No other certificates issued yet.</p>
                     ) : (
                       <div className="space-y-2">
                         {residentHistory.map((c) => (
                           <button
                             key={c.id}
                             onClick={() => setActiveId(c.id)}
-                            className="flex w-full items-center justify-between rounded-lg border border-[#F4F5F7] px-3 py-2.5 text-left transition hover:bg-[#F9FAFB]"
+                            className="flex w-full items-center justify-between rounded-lg border border-[#F4F5F7] dark:border-[#262626] px-3 py-2.5 text-left transition hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
                           >
                             <div>
-                              <p className="text-[12px] font-bold text-[#1F2937]">{certTypeLabel(c.certificate_type)}</p>
-                              <p className="text-[11px] text-[#9CA3AF]">{c.purpose}</p>
+                              <p className="text-[12px] font-bold text-[#1F2937] dark:text-white">{certTypeLabel(c.certificate_type)}</p>
+                              <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{c.purpose}</p>
                             </div>
-                            <span className="shrink-0 text-[11px] text-[#6B7280]">{formatISODate(certDisplayDate(c))}</span>
+                            <span className="shrink-0 text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">{formatISODate(certDisplayDate(c))}</span>
                           </button>
                         ))}
                       </div>
@@ -240,8 +240,8 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
 
                 {/* ── Right: issuance info ── */}
                 <div className="lg:col-span-1">
-                  <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                    <p className="mb-3 text-[12px] font-black uppercase tracking-wide text-[#1F2937]">Issuance Info</p>
+                  <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                    <p className="mb-3 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Issuance Info</p>
                     <InfoRow icon={ShieldCheck} label="Issued By" value={certificate.issuer.username} />
                     <InfoRow
                       icon={Calendar}
