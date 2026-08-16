@@ -42,7 +42,7 @@ function VaccinePicker({ value, onChange }: { value: string; onChange: (v: strin
     <div className="space-y-4">
       {VACCINE_GROUPS.map(g => (
         <div key={g.group}>
-          <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest mb-2">{g.group}</p>
+          <p className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-widest mb-2">{g.group}</p>
           <div className="flex flex-wrap gap-2">
             {g.vaccines.map(v => {
               const selected = value === v;
@@ -53,8 +53,8 @@ function VaccinePicker({ value, onChange }: { value: string; onChange: (v: strin
                   onClick={() => onChange(v)}
                   className={`px-3 py-2 rounded-xl border-2 text-[11px] font-bold transition
                     ${selected
-                      ? "border-[#3B82F6] bg-[#3B82F6] text-white shadow-sm"
-                      : "border-[#E9EAEC] bg-white text-[#6B7280] hover:border-[#3B82F6] hover:text-[#3B82F6]"}`}
+                      ? "border-[#3B82F6] dark:border-[#60A5FA] bg-[#3B82F6] text-white shadow-sm"
+                      : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#6B7280] dark:text-[#A3A3A3] hover:border-[#3B82F6] dark:hover:border-[#60A5FA] hover:text-[#3B82F6] dark:hover:text-[#93C5FD]"}`}
                 >
                   {v}
                 </button>
@@ -136,29 +136,29 @@ export default function NewVaccinationPage() {
 
       {/* ── Page header ── */}
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => router.push("/health")} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] transition">
-          <ArrowLeft size={18} className="text-[#6B7280]" />
+        <button onClick={() => router.push("/health")} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition">
+          <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
         </button>
         <div>
-          <h1 className="text-[18px] font-black text-[#1F2937] uppercase tracking-wide">Add Vaccination</h1>
-          <p className="text-[12px] text-[#9CA3AF] mt-0.5">Record a vaccination administered to a resident</p>
+          <h1 className="text-[18px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Add Vaccination</h1>
+          <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Record a vaccination administered to a resident</p>
         </div>
       </div>
 
       <div className="space-y-4">
 
         {/* ── Resident card ── */}
-        <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
+        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
             <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
               <User size={14} className="text-white" />
             </div>
-            <p className="text-[13px] font-bold text-[#1F2937]">Resident</p>
-            <span className="text-red-500 text-[11px] font-bold ml-1">*</span>
+            <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Resident</p>
+            <span className="text-red-500 dark:text-red-400 text-[11px] font-bold ml-1">*</span>
           </div>
           <div className="p-5">
-            <label className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wide block mb-1.5">
-              Resident <span className="text-red-500">*</span>
+            <label className="text-[10px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] uppercase tracking-wide block mb-1.5">
+              Resident <span className="text-red-500 dark:text-red-400">*</span>
             </label>
             <ResidentPicker
               value={selectedResident}
@@ -169,13 +169,13 @@ export default function NewVaccinationPage() {
         </div>
 
         {/* ── Vaccine picker card ── */}
-        <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
+        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
             <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
               <Syringe size={14} className="text-white" />
             </div>
-            <p className="text-[13px] font-bold text-[#1F2937]">Vaccine</p>
-            <span className="text-red-500 text-[11px] font-bold ml-1">*</span>
+            <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Vaccine</p>
+            <span className="text-red-500 dark:text-red-400 text-[11px] font-bold ml-1">*</span>
           </div>
           <div className="p-5">
             <VaccinePicker value={form.vaccine_name} onChange={v => set("vaccine_name", v)} />
@@ -183,14 +183,14 @@ export default function NewVaccinationPage() {
             {/* Custom vaccine input */}
             {form.vaccine_name === "Other (specify)" && (
               <div className="mt-4">
-                <label className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wide block mb-1.5">
-                  Specify Vaccine Name <span className="text-red-500">*</span>
+                <label className="text-[10px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] uppercase tracking-wide block mb-1.5">
+                  Specify Vaccine Name <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
                 <input
                   value={form.custom_vaccine}
                   onChange={e => set("custom_vaccine", e.target.value)}
                   placeholder="Enter vaccine name..."
-                  className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] placeholder:text-[#D1D5DB] bg-white"
+                  className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] bg-white dark:bg-[#171717]"
                 />
               </div>
             )}
@@ -198,13 +198,13 @@ export default function NewVaccinationPage() {
         </div>
 
         {/* ── Date card ── */}
-        <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
-            <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center">
+        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
+            <div className="w-8 h-8 rounded-lg bg-green-500 dark:bg-green-500 flex items-center justify-center">
               <CalendarDays size={14} className="text-white" />
             </div>
-            <p className="text-[13px] font-bold text-[#1F2937]">Date Given</p>
-            <span className="text-red-500 text-[11px] font-bold ml-1">*</span>
+            <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Date Given</p>
+            <span className="text-red-500 dark:text-red-400 text-[11px] font-bold ml-1">*</span>
           </div>
           <div className="p-5">
             <input
@@ -212,24 +212,24 @@ export default function NewVaccinationPage() {
               value={form.date_given}
               max={new Date().toISOString().split("T")[0]}
               onChange={e => set("date_given", e.target.value)}
-              className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] bg-white"
+              className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white bg-white dark:bg-[#171717]"
             />
           </div>
         </div>
 
         {/* Summary preview */}
         {isValid && (
-          <div className="px-5 py-4 rounded-xl bg-[#EFF6FF] border border-blue-100">
-            <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wide mb-2">Summary</p>
+          <div className="px-5 py-4 rounded-xl bg-[#EFF6FF] dark:bg-blue-500/15 border border-blue-100">
+            <p className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide mb-2">Summary</p>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-[#3B82F6] flex items-center justify-center shrink-0">
                 <Syringe size={15} className="text-white" />
               </div>
               <div>
-                <p className="text-[13px] font-bold text-[#1F2937]">
+                <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">
                   {finalVaccineName} — {selectedResident ? `${selectedResident.lname}, ${selectedResident.fname}` : ""}
                 </p>
-                <p className="text-[11px] text-[#6B7280]">
+                <p className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">
                   {selectedResident?.purok?.name ?? ""} · {form.date_given ? new Date(form.date_given + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : ""}
                 </p>
               </div>
@@ -239,20 +239,20 @@ export default function NewVaccinationPage() {
 
         {/* Error */}
         {error && (
-          <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200">
-            <p className="text-[12px] text-red-600 font-medium">{error}</p>
+          <div className="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-500/15 border border-red-200">
+            <p className="text-[12px] text-red-600 dark:text-red-400 font-medium">{error}</p>
           </div>
         )}
 
         {/* ── Actions ── */}
         <div className="flex gap-3 pb-6">
-          <button onClick={() => router.push("/health")} className="flex-1 py-3 rounded-xl border border-[#E9EAEC] text-[13px] font-bold text-[#6B7280] hover:bg-white transition">
+          <button onClick={() => router.push("/health")} className="flex-1 py-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[13px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-white transition">
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !isValid}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
           >
             <Save size={14} />
             {saving ? "Saving…" : "Save Vaccination"}

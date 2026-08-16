@@ -97,19 +97,19 @@ function rbiId(id: number) {
 }
 
 const REGISTRY_CFG: Record<RegistryType, { label: string; bg: string; border: string; text: string }> = {
-  SENIOR_CITIZEN: { label: "Senior Citizen", bg: "bg-amber-50", border: "border-amber-100", text: "text-amber-700" },
-  PWD: { label: "PWD", bg: "bg-blue-50", border: "border-blue-100", text: "text-blue-700" },
-  FOUR_PS: { label: "4Ps Beneficiary", bg: "bg-green-50", border: "border-green-100", text: "text-green-700" },
+  SENIOR_CITIZEN: { label: "Senior Citizen", bg: "bg-amber-50 dark:bg-amber-500/15", border: "border-amber-100", text: "text-amber-700 dark:text-amber-400" },
+  PWD: { label: "PWD", bg: "bg-blue-50 dark:bg-blue-500/15", border: "border-blue-100", text: "text-blue-700 dark:text-blue-400" },
+  FOUR_PS: { label: "4Ps Beneficiary", bg: "bg-green-50 dark:bg-green-500/15", border: "border-green-100", text: "text-green-700 dark:text-green-400" },
 };
 
 // ─── SUBCOMPONENTS ────────────────────────────────────────────────────────────
 function InfoRow({ label, value }: { label: string; value?: string | number | null }) {
   return (
     <div className="flex gap-2 py-1.25">
-      <span className="min-w-30 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+      <span className="min-w-30 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">
         {label}
       </span>
-      <span className="text-[11px] font-medium text-[#374151]">: {value ?? "—"}</span>
+      <span className="text-[11px] font-medium text-[#374151] dark:text-[#D4D4D4]">: {value ?? "—"}</span>
     </div>
   );
 }
@@ -118,12 +118,12 @@ function SectionCard({
   title, icon: Icon, iconBg, children,
 }: { title: string; icon: LucideIcon; iconBg: string; children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
-      <div className="flex items-center gap-2.5 border-b border-[#E9EAEC] px-4 py-2.5">
+    <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+      <div className="flex items-center gap-2.5 border-b border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5">
         <div className={`flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
           <Icon size={12} className="text-white" />
         </div>
-        <p className="text-[10.5px] font-black uppercase tracking-widest text-[#1F2937]">{title}</p>
+        <p className="text-[10.5px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">{title}</p>
       </div>
       <div className="px-4 py-2.5">{children}</div>
     </div>
@@ -196,7 +196,7 @@ export default function RegistryDetailSheet({
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -221,7 +221,7 @@ export default function RegistryDetailSheet({
                       {cfg.label}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-[12px] text-[#9CA3AF]">
+                  <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                     {rbiId(r.id)} · {title} Registry
                   </p>
                 </div>
@@ -230,7 +230,7 @@ export default function RegistryDetailSheet({
                 <button
                   onClick={() => router.push(`${listBase}/${entry.id}`)}
                   title="Open full page"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                 >
                   <ExternalLink size={15} />
                 </button>
@@ -309,7 +309,7 @@ export default function RegistryDetailSheet({
                     )}
                   </SectionCard>
 
-                  <SectionCard title="Address & Household" icon={Home} iconBg="bg-amber-500">
+                  <SectionCard title="Address & Household" icon={Home} iconBg="bg-amber-500 dark:bg-amber-500">
                     <InfoRow label="Purok" value={r.purok?.name} />
                     <InfoRow label="Household No." value={r.household?.household_no} />
                     <InfoRow label="Address" value={r.household?.address} />
@@ -320,28 +320,28 @@ export default function RegistryDetailSheet({
                     {r.household && (
                       <button
                         onClick={() => router.push(`/households/${r.household!.id}`)}
-                        className="mt-1 text-[11px] font-bold text-[#3B82F6] transition hover:text-[#1D4ED8]"
+                        className="mt-1 text-[11px] font-bold text-[#3B82F6] dark:text-[#60A5FA] transition hover:text-[#1D4ED8] dark:hover:text-[#93C5FD]"
                       >
                         View Household Members →
                       </button>
                     )}
                   </SectionCard>
 
-                  <SectionCard title={`Certificates (${r.certificates.length})`} icon={FileText} iconBg="bg-green-500">
+                  <SectionCard title={`Certificates (${r.certificates.length})`} icon={FileText} iconBg="bg-green-500 dark:bg-green-500">
                     {r.certificates.length === 0 ? (
-                      <p className="py-1 text-[11px] text-[#9CA3AF]">No certificates issued yet</p>
+                      <p className="py-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">No certificates issued yet</p>
                     ) : (
                       <div className="space-y-1.5">
                         {r.certificates.slice(0, 4).map((c) => (
-                          <div key={c.id} className="flex items-center justify-between border-b border-[#F4F5F7] py-1 last:border-0">
-                            <p className="truncate pr-2 text-[11px] font-semibold text-[#1F2937]">
+                          <div key={c.id} className="flex items-center justify-between border-b border-[#F4F5F7] dark:border-[#262626] py-1 last:border-0">
+                            <p className="truncate pr-2 text-[11px] font-semibold text-[#1F2937] dark:text-white">
                               {c.certificate_type.replace(/_/g, " ")}
                             </p>
-                            <span className="shrink-0 text-[10px] text-[#9CA3AF]">{fmtShort(c.issued_at)}</span>
+                            <span className="shrink-0 text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{fmtShort(c.issued_at)}</span>
                           </div>
                         ))}
                         {r.certificates.length > 4 && (
-                          <p className="pt-1 text-[10px] text-[#3B82F6]">+{r.certificates.length - 4} more</p>
+                          <p className="pt-1 text-[10px] text-[#3B82F6] dark:text-[#60A5FA]">+{r.certificates.length - 4} more</p>
                         )}
                       </div>
                     )}
@@ -349,33 +349,33 @@ export default function RegistryDetailSheet({
 
                   <SectionCard title={`Barangay IDs (${r.barangay_ids.length})`} icon={CreditCard} iconBg="bg-[#1F2937]">
                     {r.barangay_ids.length === 0 ? (
-                      <p className="py-1 text-[11px] text-[#9CA3AF]">No barangay ID issued</p>
+                      <p className="py-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">No barangay ID issued</p>
                     ) : (
                       r.barangay_ids.map((bid) => (
-                        <div key={bid.id} className="flex justify-between border-b border-[#F4F5F7] py-1.5 last:border-0">
-                          <p className="text-[12px] font-bold text-[#1F2937]">{bid.id_number}</p>
-                          <span className="text-[10px] text-[#9CA3AF]">{fmtShort(bid.issued_date)}</span>
+                        <div key={bid.id} className="flex justify-between border-b border-[#F4F5F7] dark:border-[#262626] py-1.5 last:border-0">
+                          <p className="text-[12px] font-bold text-[#1F2937] dark:text-white">{bid.id_number}</p>
+                          <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{fmtShort(bid.issued_date)}</span>
                         </div>
                       ))
                     )}
                   </SectionCard>
 
-                  <SectionCard title={`Health Records (${r.health_records.length})`} icon={Heart} iconBg="bg-red-500">
+                  <SectionCard title={`Health Records (${r.health_records.length})`} icon={Heart} iconBg="bg-red-500 dark:bg-red-500">
                     {r.health_records.length === 0 ? (
-                      <p className="py-1 text-[11px] text-[#9CA3AF]">No health records</p>
+                      <p className="py-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">No health records</p>
                     ) : (
                       <div className="space-y-1.5">
                         {r.health_records.slice(0, 5).map((hr) => (
-                          <div key={hr.id} className="border-b border-[#F4F5F7] py-1 last:border-0">
+                          <div key={hr.id} className="border-b border-[#F4F5F7] dark:border-[#262626] py-1 last:border-0">
                             <div className="flex justify-between">
-                              <p className="text-[11px] font-semibold text-[#1F2937]">{hr.record_type}</p>
-                              <span className="text-[10px] text-[#9CA3AF]">{fmtShort(hr.recorded_at)}</span>
+                              <p className="text-[11px] font-semibold text-[#1F2937] dark:text-white">{hr.record_type}</p>
+                              <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{fmtShort(hr.recorded_at)}</span>
                             </div>
-                            {hr.notes && <p className="mt-0.5 truncate text-[10px] text-[#9CA3AF]">{hr.notes}</p>}
+                            {hr.notes && <p className="mt-0.5 truncate text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{hr.notes}</p>}
                           </div>
                         ))}
                         {r.health_records.length > 5 && (
-                          <p className="pt-1 text-[10px] text-[#3B82F6]">+{r.health_records.length - 5} more</p>
+                          <p className="pt-1 text-[10px] text-[#3B82F6] dark:text-[#60A5FA]">+{r.health_records.length - 5} more</p>
                         )}
                       </div>
                     )}
@@ -383,17 +383,17 @@ export default function RegistryDetailSheet({
 
                   <SectionCard title={`Vaccinations (${r.vaccinations.length})`} icon={Syringe} iconBg="bg-[#3B82F6]">
                     {r.vaccinations.length === 0 ? (
-                      <p className="py-1 text-[11px] text-[#9CA3AF]">No vaccination records</p>
+                      <p className="py-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">No vaccination records</p>
                     ) : (
                       <div className="space-y-1.5">
                         {r.vaccinations.slice(0, 5).map((v) => (
-                          <div key={v.id} className="flex justify-between border-b border-[#F4F5F7] py-1 last:border-0">
-                            <p className="truncate pr-2 text-[11px] font-semibold text-[#1F2937]">{v.vaccine_name}</p>
-                            <span className="shrink-0 text-[10px] text-[#9CA3AF]">{fmtShort(v.date_given)}</span>
+                          <div key={v.id} className="flex justify-between border-b border-[#F4F5F7] dark:border-[#262626] py-1 last:border-0">
+                            <p className="truncate pr-2 text-[11px] font-semibold text-[#1F2937] dark:text-white">{v.vaccine_name}</p>
+                            <span className="shrink-0 text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{fmtShort(v.date_given)}</span>
                           </div>
                         ))}
                         {r.vaccinations.length > 5 && (
-                          <p className="pt-1 text-[10px] text-[#3B82F6]">+{r.vaccinations.length - 5} more</p>
+                          <p className="pt-1 text-[10px] text-[#3B82F6] dark:text-[#60A5FA]">+{r.vaccinations.length - 5} more</p>
                         )}
                       </div>
                     )}
@@ -405,13 +405,13 @@ export default function RegistryDetailSheet({
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2 text-[12px] font-bold text-red-500 transition hover:bg-red-50 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2 text-[12px] font-bold text-red-500 dark:text-red-400 transition hover:bg-red-50 disabled:opacity-50"
               >
                 <Trash2 size={13} /> Remove
               </button>
               <button
                 onClick={() => router.push(`/residents/${r.id}`)}
-                className="flex items-center gap-1.5 rounded-xl bg-[#3B82F6] px-5 py-2 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
+                className="flex items-center gap-1.5 rounded-xl bg-[#3B82F6] px-5 py-2 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
               >
                 <User size={13} /> View Full RBI Profile
               </button>

@@ -21,10 +21,10 @@ interface BorrowForm {
 function FieldLabel({ children, required, hint }: { children: React.ReactNode; required?: boolean; hint?: string }) {
   return (
     <div className="flex items-center justify-between mb-1.5">
-      <label className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wide">
-        {children}{required && <span className="text-red-500 ml-0.5">*</span>}
+      <label className="text-[10px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] uppercase tracking-wide">
+        {children}{required && <span className="text-red-500 dark:text-red-400 ml-0.5">*</span>}
       </label>
-      {hint && <span className="text-[10px] text-[#9CA3AF]">{hint}</span>}
+      {hint && <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{hint}</span>}
     </div>
   );
 }
@@ -43,12 +43,12 @@ function SelectInput({
           value={value}
           onChange={e => onChange(e.target.value)}
           disabled={disabled}
-          className="w-full appearance-none text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] pr-8 bg-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full appearance-none text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white pr-8 bg-white dark:bg-[#171717] transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value="">— Select —</option>
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] text-[10px]">▼</span>
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3] text-[10px]">▼</span>
       </div>
     </div>
   );
@@ -69,7 +69,7 @@ function TextInput({
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
         min={min}
-        className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] placeholder:text-[#D1D5DB] transition bg-white"
+        className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717]"
       />
     </div>
   );
@@ -181,25 +181,25 @@ export default function BorrowEquipmentPage() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => router.push("/equipment")}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] transition"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
         >
-          <ArrowLeft size={18} className="text-[#6B7280]" />
+          <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
         </button>
         <div>
-          <h1 className="text-[18px] font-black text-[#1F2937] uppercase tracking-wide">Lend Out Equipment</h1>
-          <p className="text-[12px] text-[#9CA3AF] mt-0.5">Record a new equipment borrowing</p>
+          <h1 className="text-[18px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Lend Out Equipment</h1>
+          <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Record a new equipment borrowing</p>
         </div>
       </div>
 
       <div className="space-y-4">
 
         {/* ── Equipment selection card ── */}
-        <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
+        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
             <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
               <Package size={14} className="text-white" />
             </div>
-            <p className="text-[13px] font-bold text-[#1F2937]">Equipment</p>
+            <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Equipment</p>
           </div>
           <div className="p-5">
             <SelectInput
@@ -212,13 +212,13 @@ export default function BorrowEquipmentPage() {
 
             {/* Equipment preview */}
             {selectedEquipment && (
-              <div className="mt-3 px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-white border border-blue-200 flex items-center justify-center shrink-0">
-                  <Package size={16} className="text-[#3B82F6]" />
+              <div className="mt-3 px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-500/15 border border-blue-100 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-white dark:bg-[#171717] border border-blue-200 flex items-center justify-center shrink-0">
+                  <Package size={16} className="text-[#3B82F6] dark:text-[#60A5FA]" />
                 </div>
                 <div>
-                  <p className="text-[13px] font-bold text-[#1F2937]">{selectedEquipment.name}</p>
-                  <p className="text-[11px] text-[#6B7280]">
+                  <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">{selectedEquipment.name}</p>
+                  <p className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">
                     Qty: {selectedEquipment.quantity} · Status: {selectedEquipment.status}
                   </p>
                 </div>
@@ -228,12 +228,12 @@ export default function BorrowEquipmentPage() {
         </div>
 
         {/* ── Borrower card ── */}
-        <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
+        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
             <div className="w-8 h-8 rounded-lg bg-[#F59E0B] flex items-center justify-center">
               <User size={14} className="text-white" />
             </div>
-            <p className="text-[13px] font-bold text-[#1F2937]">Borrower Information</p>
+            <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Borrower Information</p>
           </div>
           <div className="p-5 space-y-4">
 
@@ -258,12 +258,12 @@ export default function BorrowEquipmentPage() {
         </div>
 
         {/* ── Schedule card ── */}
-        <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
-            <div className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center">
+        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
+            <div className="w-8 h-8 rounded-lg bg-green-500 dark:bg-green-500 flex items-center justify-center">
               <CalendarDays size={14} className="text-white" />
             </div>
-            <p className="text-[13px] font-bold text-[#1F2937]">Schedule</p>
+            <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Schedule</p>
           </div>
           <div className="p-5 space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -287,8 +287,8 @@ export default function BorrowEquipmentPage() {
 
             {/* Duration preview */}
             {form.date_borrowed && form.expected_return && form.expected_return >= form.date_borrowed && (
-              <div className="px-4 py-2.5 rounded-xl bg-green-50 border border-green-100">
-                <p className="text-[12px] text-green-700 font-medium">
+              <div className="px-4 py-2.5 rounded-xl bg-green-50 dark:bg-green-500/15 border border-green-100">
+                <p className="text-[12px] text-green-700 dark:text-green-400 font-medium">
                   Duration:{" "}
                   {Math.round(
                     (new Date(form.expected_return).getTime() - new Date(form.date_borrowed).getTime()) / 86400000
@@ -298,8 +298,8 @@ export default function BorrowEquipmentPage() {
               </div>
             )}
             {form.date_borrowed && form.expected_return && form.expected_return < form.date_borrowed && (
-              <div className="px-4 py-2.5 rounded-xl bg-red-50 border border-red-200">
-                <p className="text-[12px] text-red-600 font-medium">
+              <div className="px-4 py-2.5 rounded-xl bg-red-50 dark:bg-red-500/15 border border-red-200">
+                <p className="text-[12px] text-red-600 dark:text-red-400 font-medium">
                   Return date must be after the borrow date.
                 </p>
               </div>
@@ -309,8 +309,8 @@ export default function BorrowEquipmentPage() {
 
         {/* Error */}
         {error && (
-          <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200">
-            <p className="text-[12px] text-red-600 font-medium">{error}</p>
+          <div className="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-500/15 border border-red-200">
+            <p className="text-[12px] text-red-600 dark:text-red-400 font-medium">{error}</p>
           </div>
         )}
 
@@ -318,14 +318,14 @@ export default function BorrowEquipmentPage() {
         <div className="flex gap-3 pb-6">
           <button
             onClick={() => router.push("/equipment")}
-            className="flex-1 py-3 rounded-xl border border-[#E9EAEC] text-[13px] font-bold text-[#6B7280] hover:bg-white transition"
+            className="flex-1 py-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[13px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-white transition"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !isValid}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] dark:hover:bg-[#F59E0B] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
           >
             <Save size={14} />
             {saving ? "Recording…" : "Record Borrowing"}

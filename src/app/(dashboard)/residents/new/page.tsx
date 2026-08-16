@@ -50,21 +50,21 @@ function SelectField({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wide">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+      <label className="text-[10px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] uppercase tracking-wide">
+        {label}{required && <span className="text-red-500 dark:text-red-400 ml-0.5">*</span>}
       </label>
       <div className="relative">
         <select
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full appearance-none text-[13px] bg-white border border-[#E9EAEC] rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6] text-[#1F2937] pr-8"
+          className="w-full appearance-none text-[13px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] text-[#1F2937] dark:text-white pr-8"
         >
           <option value="">SELECT</option>
           {options.map(o => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] text-[10px]">▼</span>
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3] text-[10px]">▼</span>
       </div>
     </div>
   );
@@ -83,15 +83,15 @@ function TextField({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wide">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+      <label className="text-[10px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] uppercase tracking-wide">
+        {label}{required && <span className="text-red-500 dark:text-red-400 ml-0.5">*</span>}
       </label>
       <input
         type={type}
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
-        className="text-[13px] bg-white border border-[#E9EAEC] rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6] placeholder:text-[#D1D5DB] text-[#1F2937]"
+        className="text-[13px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] text-[#1F2937] dark:text-white"
       />
     </div>
   );
@@ -118,28 +118,28 @@ function ConfirmMemberModal({
 
   return (
     <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-        <h3 className="text-[15px] font-black text-[#1F2937] uppercase tracking-wide mb-6">
+      <div className="bg-white dark:bg-[#171717] rounded-2xl shadow-2xl w-full max-w-md p-8">
+        <h3 className="text-[15px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide mb-6">
           Member Information
         </h3>
         <div className="space-y-3">
           {rows.map(([label, value]) => (
             <div key={label}>
-              <p className="text-[10px] font-bold text-[#1F2937] uppercase tracking-wide">{label}</p>
-              <p className="text-[13px] text-[#374151]">{value}</p>
+              <p className="text-[10px] font-bold text-[#1F2937] dark:text-white uppercase tracking-wide">{label}</p>
+              <p className="text-[13px] text-[#374151] dark:text-[#D4D4D4]">{value}</p>
             </div>
           ))}
         </div>
         <div className="flex justify-end gap-6 mt-8">
           <button
             onClick={onCancel}
-            className="text-[13px] font-bold text-[#3B82F6] hover:text-[#1D4ED8] uppercase tracking-wide"
+            className="text-[13px] font-bold text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] uppercase tracking-wide"
           >
             CANCEL
           </button>
           <button
             onClick={onSave}
-            className="text-[13px] font-bold text-[#3B82F6] hover:text-[#1D4ED8] uppercase tracking-wide"
+            className="text-[13px] font-bold text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] uppercase tracking-wide"
           >
             SAVE
           </button>
@@ -155,7 +155,7 @@ function AmberBtn({ children, onClick, type = "button" }: { children: React.Reac
     <button
       type={type}
       onClick={onClick}
-      className="flex-1 py-3.5 rounded-full bg-[#F59E0B] hover:bg-[#D97706] text-white font-bold text-[14px] uppercase tracking-wide transition"
+      className="flex-1 py-3.5 rounded-full bg-[#F59E0B] hover:bg-[#D97706] dark:hover:bg-[#F59E0B] text-white font-bold text-[14px] uppercase tracking-wide transition"
     >
       {children}
     </button>
@@ -168,7 +168,7 @@ function BlueBtn({ children, onClick, disabled }: { children: React.ReactNode; o
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex-1 py-3.5 rounded-full bg-[#3B82F6] hover:bg-[#2563EB] disabled:opacity-50 text-white font-bold text-[14px] uppercase tracking-wide transition"
+      className="flex-1 py-3.5 rounded-full bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50 text-white font-bold text-[14px] uppercase tracking-wide transition"
     >
       {children}
     </button>
@@ -188,13 +188,13 @@ function StepBar({ step }: { step: number }) {
           <div key={label} className="flex items-center gap-2">
             <div className={`flex items-center gap-2 ${active ? "opacity-100" : "opacity-40"}`}>
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold
-                ${done || active ? "bg-[#3B82F6] text-white" : "bg-[#E9EAEC] text-[#6B7280]"}`}>
+                ${done || active ? "bg-[#3B82F6] text-white" : "bg-[#E9EAEC] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3]"}`}>
                 {idx}
               </div>
-              <span className="text-[12px] font-semibold text-[#1F2937] hidden sm:block">{label}</span>
+              <span className="text-[12px] font-semibold text-[#1F2937] dark:text-white hidden sm:block">{label}</span>
             </div>
             {i < steps.length - 1 && (
-              <div className={`w-8 h-0.5 ${step > idx ? "bg-[#3B82F6]" : "bg-[#E9EAEC]"}`} />
+              <div className={`w-8 h-0.5 ${step > idx ? "bg-[#3B82F6]" : "bg-[#E9EAEC] dark:bg-[#262626]"}`} />
             )}
           </div>
         );
@@ -357,7 +357,7 @@ export default function NewRBIPage() {
 
   // ── RENDER ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#F4F5F7]">
+    <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0A0A0A]">
 
       {/* Top bar */}
       <div className="bg-[#3B82F6] px-6 py-4 flex items-center gap-3">
@@ -373,20 +373,20 @@ export default function NewRBIPage() {
         {/* ── STEP 1: General Information ── */}
         {step === 1 && (
           <div>
-            <h2 className="text-[15px] font-black text-[#1F2937] uppercase tracking-widest text-center mb-6">
+            <h2 className="text-[15px] font-black text-[#1F2937] dark:text-white uppercase tracking-widest text-center mb-6">
               General Information
             </h2>
-            <div className="bg-white rounded-2xl border border-[#E9EAEC] p-6 space-y-4">
+            <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#E9EAEC] dark:border-[#262626] p-6 space-y-4">
 
               {/* Household No. (read-only preview) */}
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wide">
+                <label className="text-[10px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] uppercase tracking-wide">
                   Household No.
                 </label>
                 <input
                   readOnly
                   value={hhNoPreview}
-                  className="text-[13px] bg-[#F4F5F7] border border-[#E9EAEC] rounded-xl px-4 py-3 text-[#9CA3AF] cursor-not-allowed"
+                  className="text-[13px] bg-[#F4F5F7] dark:bg-[#262626] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 text-[#9CA3AF] dark:text-[#A3A3A3] cursor-not-allowed"
                 />
               </div>
 
@@ -406,7 +406,7 @@ export default function NewRBIPage() {
                 required
               />
               {puroksError && (
-                <p className="text-[11px] text-red-500 -mt-2">{puroksError}</p>
+                <p className="text-[11px] text-red-500 dark:text-red-400 -mt-2">{puroksError}</p>
               )}
 
               <SelectField
@@ -453,7 +453,7 @@ export default function NewRBIPage() {
                 Continue
               </AmberBtn>
             </div>
-            {error && <p className="text-red-500 text-[12px] mt-3 text-center">{error}</p>}
+            {error && <p className="text-red-500 dark:text-red-400 text-[12px] mt-3 text-center">{error}</p>}
           </div>
         )}
 
@@ -462,19 +462,19 @@ export default function NewRBIPage() {
           <div>
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[11px] text-[#6B7280] font-semibold uppercase">
+              <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3] font-semibold uppercase">
                 Household No.: {hhNoPreview}
               </span>
-              <h2 className="text-[15px] font-black text-[#1F2937] uppercase tracking-widest">
+              <h2 className="text-[15px] font-black text-[#1F2937] dark:text-white uppercase tracking-widest">
                 House Member Information
               </h2>
-              <span className="text-[12px] font-bold text-[#3B82F6] uppercase">
+              <span className="text-[12px] font-bold text-[#3B82F6] dark:text-[#60A5FA] uppercase">
                 No. of Household Member: {members.length}
               </span>
             </div>
 
             {/* Member Form */}
-            <div className="bg-white rounded-2xl border border-[#E9EAEC] p-6 space-y-4">
+            <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#E9EAEC] dark:border-[#262626] p-6 space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <TextField label="Last Name"   value={form.lname}  onChange={v => setField("lname",  v)} required />
                 <TextField label="First Name"  value={form.fname}  onChange={v => setField("fname",  v)} required />
@@ -576,18 +576,18 @@ export default function NewRBIPage() {
                 />
               </div>
 
-              {error && <p className="text-red-500 text-[12px]">{error}</p>}
+              {error && <p className="text-red-500 dark:text-red-400 text-[12px]">{error}</p>}
 
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   onClick={handleClearForm}
-                  className="px-8 py-2.5 rounded-xl border border-[#E9EAEC] text-[13px] font-bold text-[#6B7280] hover:bg-[#F4F5F7] transition"
+                  className="px-8 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[13px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
                 >
                   CLEAR
                 </button>
                 <button
                   onClick={handleAddClick}
-                  className="px-8 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[13px] font-bold transition"
+                  className="px-8 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] text-white text-[13px] font-bold transition"
                 >
                   {editIdx !== null ? "UPDATE" : "ADD"}
                 </button>
@@ -598,31 +598,31 @@ export default function NewRBIPage() {
             {members.length > 0 && (
               <div className="mt-4 space-y-2">
                 {members.map((m, i) => (
-                  <div key={m._key} className="bg-white rounded-xl border border-[#E9EAEC] px-4 py-3 flex items-center gap-4">
+                  <div key={m._key} className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 py-3 flex items-center gap-4">
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-bold text-[#1F2937]">
+                      <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">
                         {m.lname}, {m.fname}{m.name_extension ? " " + m.name_extension : ""}{m.mname ? " " + m.mname[0] + "." : ""}
                       </p>
-                      <p className="text-[11px] text-[#9CA3AF] mt-0.5">
+                      <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">
                         {m.sex} · {m.civil_status}
                       </p>
                     </div>
-                    <span className="text-[11px] text-[#6B7280] shrink-0">
+                    <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3] shrink-0">
                       {m.birthdate ? new Date(m.birthdate).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }) : "—"}
                     </span>
-                    <span className="text-[11px] text-[#6B7280] shrink-0 w-24 text-right truncate">
+                    <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3] shrink-0 w-24 text-right truncate">
                       {m.educational_attainment || "—"}
                     </span>
                     <div className="flex gap-2 shrink-0">
                       <button
                         onClick={() => handleEditMember(i)}
-                        className="w-7 h-7 rounded-full bg-[#3B82F6] text-white flex items-center justify-center hover:bg-[#2563EB] transition"
+                        className="w-7 h-7 rounded-full bg-[#3B82F6] text-white flex items-center justify-center hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] transition"
                       >
                         <Pencil size={12} />
                       </button>
                       <button
                         onClick={() => handleDeleteMember(i)}
-                        className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition"
+                        className="w-7 h-7 rounded-full bg-red-500 dark:bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition"
                       >
                         <Trash2 size={12} />
                       </button>
@@ -647,8 +647,8 @@ export default function NewRBIPage() {
             <div className="grid grid-cols-2 gap-6">
 
               {/* Left: Household Info */}
-              <div className="bg-white rounded-2xl border border-[#E9EAEC] p-6">
-                <h3 className="text-[13px] font-black text-[#1F2937] uppercase tracking-wide mb-4">
+              <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#E9EAEC] dark:border-[#262626] p-6">
+                <h3 className="text-[13px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide mb-4">
                   Household Information
                 </h3>
                 <div className="space-y-3">
@@ -661,44 +661,44 @@ export default function NewRBIPage() {
                     ["No. of Household Member", String(members.length)],
                   ].map(([label, value]) => (
                     <div key={label}>
-                      <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wide">{label}</p>
-                      <p className="text-[13px] text-[#1F2937] font-medium">{value}</p>
+                      <p className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{label}</p>
+                      <p className="text-[13px] text-[#1F2937] dark:text-white font-medium">{value}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Right: Members */}
-              <div className="bg-white rounded-2xl border border-[#E9EAEC] p-6">
-                <h3 className="text-[13px] font-black text-[#1F2937] uppercase tracking-wide mb-4">
+              <div className="bg-white dark:bg-[#171717] rounded-2xl border border-[#E9EAEC] dark:border-[#262626] p-6">
+                <h3 className="text-[13px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide mb-4">
                   Member Information
                 </h3>
                 <div className="space-y-3">
                   {members.map((m, i) => (
-                    <div key={m._key} className="flex items-center justify-between border-b border-[#F4F5F7] pb-3 last:border-0 last:pb-0">
+                    <div key={m._key} className="flex items-center justify-between border-b border-[#F4F5F7] dark:border-[#262626] pb-3 last:border-0 last:pb-0">
                       <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-bold text-[#1F2937]">
+                        <p className="text-[12px] font-bold text-[#1F2937] dark:text-white">
                           {m.fname} {m.mname ? m.mname[0] + ". " : ""}{m.lname}{m.name_extension ? " " + m.name_extension : ""}
                         </p>
-                        <p className="text-[10px] text-[#9CA3AF]">{m.sex} · {m.civil_status}</p>
+                        <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{m.sex} · {m.civil_status}</p>
                       </div>
                       <div className="text-right shrink-0 ml-2">
-                        <p className="text-[11px] text-[#6B7280]">
+                        <p className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">
                           {m.birthdate ? new Date(m.birthdate).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }) : "—"}
                         </p>
-                        <p className="text-[10px] text-[#9CA3AF]">{m.educational_attainment || "—"}</p>
-                        <p className="text-[10px] text-[#9CA3AF]">{m.occupation || "—"}</p>
+                        <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{m.educational_attainment || "—"}</p>
+                        <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{m.occupation || "—"}</p>
                       </div>
                       <div className="flex gap-2 ml-3 shrink-0">
                         <button
                           onClick={() => { setStep(2); handleEditMember(i); }}
-                          className="w-7 h-7 rounded-full bg-[#3B82F6] text-white flex items-center justify-center hover:bg-[#2563EB] transition"
+                          className="w-7 h-7 rounded-full bg-[#3B82F6] text-white flex items-center justify-center hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] transition"
                         >
                           <Pencil size={12} />
                         </button>
                         <button
                           onClick={() => handleDeleteMember(i)}
-                          className="w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition"
+                          className="w-7 h-7 rounded-full bg-red-500 dark:bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition"
                         >
                           <Trash2 size={12} />
                         </button>
@@ -709,7 +709,7 @@ export default function NewRBIPage() {
               </div>
             </div>
 
-            {error && <p className="text-red-500 text-[12px] mt-4 text-center">{error}</p>}
+            {error && <p className="text-red-500 dark:text-red-400 text-[12px] mt-4 text-center">{error}</p>}
 
             <div className="flex gap-3 mt-6">
               <AmberBtn onClick={() => setStep(2)}>← Back</AmberBtn>

@@ -58,20 +58,20 @@ function calcAge(birthdate: string) {
 }
 
 const TYPE_COLORS: Record<string, { bg: string; text: string; icon_bg: string }> = {
-  Hypertension: { bg: "bg-red-50", text: "text-red-700", icon_bg: "bg-red-500" },
-  Diabetes: { bg: "bg-amber-50", text: "text-amber-700", icon_bg: "bg-amber-500" },
-  Tuberculosis: { bg: "bg-orange-50", text: "text-orange-700", icon_bg: "bg-orange-500" },
-  "Prenatal Checkup": { bg: "bg-pink-50", text: "text-pink-700", icon_bg: "bg-pink-500" },
-  "Well-child Checkup": { bg: "bg-green-50", text: "text-green-700", icon_bg: "bg-green-500" },
-  Asthma: { bg: "bg-blue-50", text: "text-blue-700", icon_bg: "bg-blue-500" },
-  "Family Planning": { bg: "bg-purple-50", text: "text-purple-700", icon_bg: "bg-purple-500" },
+  Hypertension: { bg: "bg-red-50 dark:bg-red-500/15", text: "text-red-700 dark:text-red-400", icon_bg: "bg-red-500 dark:bg-red-500" },
+  Diabetes: { bg: "bg-amber-50 dark:bg-amber-500/15", text: "text-amber-700 dark:text-amber-400", icon_bg: "bg-amber-500 dark:bg-amber-500" },
+  Tuberculosis: { bg: "bg-orange-50", text: "text-orange-700 dark:text-orange-400", icon_bg: "bg-orange-500" },
+  "Prenatal Checkup": { bg: "bg-pink-50", text: "text-pink-700 dark:text-pink-400", icon_bg: "bg-pink-500" },
+  "Well-child Checkup": { bg: "bg-green-50 dark:bg-green-500/15", text: "text-green-700 dark:text-green-400", icon_bg: "bg-green-500 dark:bg-green-500" },
+  Asthma: { bg: "bg-blue-50 dark:bg-blue-500/15", text: "text-blue-700 dark:text-blue-400", icon_bg: "bg-blue-500 dark:bg-blue-500" },
+  "Family Planning": { bg: "bg-purple-50 dark:bg-purple-500/15", text: "text-purple-700 dark:text-purple-400", icon_bg: "bg-purple-500" },
 };
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex gap-3 border-b border-[#F4F5F7] py-2.5 last:border-0">
-      <span className="mt-0.5 min-w-30 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">{label}</span>
-      <span className="text-[13px] font-medium text-[#1F2937]">{value ?? "—"}</span>
+    <div className="flex gap-3 border-b border-[#F4F5F7] dark:border-[#262626] py-2.5 last:border-0">
+      <span className="mt-0.5 min-w-30 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">{label}</span>
+      <span className="text-[13px] font-medium text-[#1F2937] dark:text-white">{value ?? "—"}</span>
     </div>
   );
 }
@@ -127,7 +127,7 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
     }
   }
 
-  const cfg = record ? (TYPE_COLORS[record.record_type] ?? { bg: "bg-gray-50", text: "text-gray-700", icon_bg: "bg-gray-500" }) : null;
+  const cfg = record ? (TYPE_COLORS[record.record_type] ?? { bg: "bg-gray-50 dark:bg-white/5", text: "text-gray-700 dark:text-[#D4D4D4]", icon_bg: "bg-gray-500 dark:bg-gray-500" }) : null;
 
   return (
     <>
@@ -142,7 +142,7 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -162,21 +162,21 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
                 </div>
                 <div className="min-w-0">
                   <SheetTitle>{record.record_type}</SheetTitle>
-                  <p className="mt-0.5 text-[12px] text-[#9CA3AF]">Health Record #{String(record.id).padStart(5, "0")}</p>
+                  <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">Health Record #{String(record.id).padStart(5, "0")}</p>
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 <button
                   onClick={() => router.push(`/health/${record.id}/edit`)}
                   title="Edit"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                 >
                   <Pencil size={15} />
                 </button>
                 <button
                   onClick={() => router.push(`/health/${record.id}`)}
                   title="Open full page"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                 >
                   <ExternalLink size={15} />
                 </button>
@@ -186,8 +186,8 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
 
             <SheetBody className="space-y-4">
               {deleteError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-                  <p className="text-[12px] font-medium text-red-600">{deleteError}</p>
+                <div className="rounded-xl border border-red-200 bg-red-50 dark:bg-red-500/15 px-4 py-3">
+                  <p className="text-[12px] font-medium text-red-600 dark:text-red-400">{deleteError}</p>
                 </div>
               )}
 
@@ -207,27 +207,27 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {/* Left: Notes + Meta */}
                 <div className="space-y-4">
-                  <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
+                  <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                     <div className="mb-2 flex items-center gap-2">
-                      <FileText size={14} className="text-[#6B7280]" />
-                      <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Notes / Findings</p>
+                      <FileText size={14} className="text-[#6B7280] dark:text-[#A3A3A3]" />
+                      <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Notes / Findings</p>
                     </div>
                     {record.notes ? (
-                      <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#374151]">{record.notes}</p>
+                      <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#374151] dark:text-[#D4D4D4]">{record.notes}</p>
                     ) : (
-                      <p className="text-[13px] italic text-[#9CA3AF]">No notes recorded.</p>
+                      <p className="text-[13px] italic text-[#9CA3AF] dark:text-[#A3A3A3]">No notes recorded.</p>
                     )}
                   </div>
 
-                  <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                    <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Record Details</p>
+                  <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                    <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Record Details</p>
                     <InfoRow label="Record ID" value={`#${String(record.id).padStart(5, "0")}`} />
                     <InfoRow label="Recorded By" value={record.recorder.username} />
                     <InfoRow
                       label="Date & Time"
                       value={
                         <span className="flex items-center gap-1.5">
-                          <Clock size={12} className="text-[#9CA3AF]" />
+                          <Clock size={12} className="text-[#9CA3AF] dark:text-[#A3A3A3]" />
                           {fmtDateTime(record.recorded_at)}
                         </span>
                       }
@@ -237,22 +237,22 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
 
                 {/* Right: Resident + Quick actions */}
                 <div className="space-y-4">
-                  <div className="overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
-                    <div className="flex items-center gap-3 border-b border-[#E9EAEC] bg-[#F9FAFB] px-4 py-3">
+                  <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+                    <div className="flex items-center gap-3 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] px-4 py-3">
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#3B82F6]">
                         <User size={13} className="text-white" />
                       </div>
-                      <p className="text-[12px] font-bold text-[#1F2937]">Resident</p>
+                      <p className="text-[12px] font-bold text-[#1F2937] dark:text-white">Resident</p>
                     </div>
                     <div className="p-4">
                       <div className="mb-3 flex flex-col items-center pt-1 text-center">
-                        <div className="mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#EFF6FF]">
-                          <User size={24} className="text-[#3B82F6]" />
+                        <div className="mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#EFF6FF] dark:bg-blue-500/15">
+                          <User size={24} className="text-[#3B82F6] dark:text-[#60A5FA]" />
                         </div>
-                        <p className="text-[14px] font-black text-[#1F2937]">
+                        <p className="text-[14px] font-black text-[#1F2937] dark:text-white">
                           {record.resident.lname}, {record.resident.fname}
                         </p>
-                        <p className="mt-0.5 text-[11px] text-[#9CA3AF]">{record.resident.purok?.name ?? "—"}</p>
+                        <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{record.resident.purok?.name ?? "—"}</p>
                       </div>
                       <InfoRow label="Age" value={`${calcAge(record.resident.birthdate)} years old`} />
                       <InfoRow label="Sex" value={record.resident.sex} />
@@ -260,28 +260,28 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
                       <InfoRow label="Birthdate" value={fmtDate(record.resident.birthdate)} />
                       <button
                         onClick={() => router.push(`/residents/${record.resident_id}`)}
-                        className="mt-3 w-full rounded-xl bg-[#EFF6FF] py-2 text-[12px] font-bold text-[#3B82F6] transition hover:bg-blue-100"
+                        className="mt-3 w-full rounded-xl bg-[#EFF6FF] dark:bg-blue-500/15 py-2 text-[12px] font-bold text-[#3B82F6] dark:text-[#60A5FA] transition hover:bg-blue-100"
                       >
                         View Full Profile
                       </button>
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                    <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Quick Actions</p>
+                  <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                    <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Quick Actions</p>
                     <div className="space-y-2">
                       <button
                         onClick={() => router.push(`/health/new?resident_id=${record.resident_id}`)}
-                        className="flex w-full items-center gap-2 rounded-xl border border-[#E9EAEC] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                        className="flex w-full items-center gap-2 rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                       >
-                        <Heart size={13} className="text-red-500" />
+                        <Heart size={13} className="text-red-500 dark:text-red-400" />
                         Add Another Record
                       </button>
                       <button
                         onClick={() => router.push(`/health/vaccinations/new?resident_id=${record.resident_id}`)}
-                        className="flex w-full items-center gap-2 rounded-xl border border-[#E9EAEC] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                        className="flex w-full items-center gap-2 rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                       >
-                        <CalendarDays size={13} className="text-[#3B82F6]" />
+                        <CalendarDays size={13} className="text-[#3B82F6] dark:text-[#60A5FA]" />
                         Add Vaccination
                       </button>
                     </div>
@@ -294,7 +294,7 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
               <button
                 onClick={() => setConfirmOpen(true)}
                 disabled={deleting}
-                className="flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2 text-[12px] font-bold text-red-500 transition hover:bg-red-50 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2 text-[12px] font-bold text-red-500 dark:text-red-400 transition hover:bg-red-50 disabled:opacity-50"
               >
                 <Trash2 size={13} /> Delete
               </button>

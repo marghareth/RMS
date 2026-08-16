@@ -10,7 +10,6 @@ import {
 import { useReportData } from "@/lib/hooks/useReportData";
 import StatCard from "@/components/shared/StatCard";
 
-// ─── TYPES ────────────────────────────────────────────────────────────────────
 interface PurokCount {
   purok: string;
   count: number;
@@ -30,13 +29,12 @@ const SEX_COLORS   = ["#3E5C76", "#6D4AFF"];
 const AGE_COLORS   = ["#3E5C76", "#0B6E4F", "#0E7490", "#B45309", "#6D4AFF", "#B3261E"];
 const CIVIL_COLORS = ["#3E5C76", "#0B6E4F", "#9CA3AF", "#B45309", "#6D4AFF"];
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
 function pct(n: number, total: number) { return total ? ((n / total) * 100).toFixed(1) + "%" : "0.0%"; }
 
 function ChartCard({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-white rounded-xl border border-[#E9EAEC] p-5 ${className}`}>
-      <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] mb-4">{title}</p>
+    <div className={`bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-5 ${className}`}>
+      <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white mb-4">{title}</p>
       {children}
     </div>
   );
@@ -45,14 +43,13 @@ function ChartCard({ title, children, className = "" }: { title: string; childre
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-[#E9EAEC] rounded-xl px-3 py-2 shadow-lg text-[11px]">
-      <p className="font-bold text-[#1B2430]">{label ?? payload[0]?.name}</p>
-      <p className="text-[#0B6E4F]">{payload[0]?.value?.toLocaleString()}</p>
+    <div className="bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 shadow-lg text-[11px]">
+      <p className="font-bold text-[#1B2430] dark:text-white">{label ?? payload[0]?.name}</p>
+      <p className="text-[#0B6E4F] dark:text-[#34A37A]">{payload[0]?.value?.toLocaleString()}</p>
     </div>
   );
 }
 
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function PopulationReportPage() {
   const router = useRouter();
   const [year, setYear] = useState(new Date().getFullYear().toString());
@@ -62,7 +59,7 @@ export default function PopulationReportPage() {
   const [exporting, setExporting] = useState(false);
 
   async function handleExportPdf() {
-    if (!data) return; // guard: PopulationReportPDF requires non-null data
+    if (!data) return;
     setExporting(true);
     try {
       const { default: PopulationReportPDF } = await import("@/lib/pdf/PopulationReportPDF");
@@ -81,48 +78,46 @@ export default function PopulationReportPage() {
 
   return (
     <div>
-      {/* ── Header ── */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => router.push("/reports")} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] transition">
-              <ArrowLeft size={18} className="text-[#6B7280]" />
+            <button onClick={() => router.push("/reports")} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition">
+              <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#F4F5F7] flex items-center justify-center">
-                <Users size={18} className="text-[#3E5C76]" />
+              <div className="w-10 h-10 rounded-xl bg-[#F4F5F7] dark:bg-[#262626] flex items-center justify-center">
+                <Users size={18} className="text-[#3E5C76] dark:text-[#8FB0CC]" />
               </div>
               <div>
-                <h1 className="text-[17px] font-bold text-[#1B2430] uppercase tracking-wide">Population Report</h1>
-                <p className="text-[11px] text-[#9CA3AF]">Resident demographics and distribution</p>
+                <h1 className="text-[17px] font-bold text-[#1B2430] dark:text-white uppercase tracking-wide">Population Report</h1>
+                <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Resident demographics and distribution</p>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <select value={year} onChange={e => setYear(e.target.value)}
-              className="text-[12px] border border-[#E9EAEC] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] bg-white text-[#1F2937]">
+              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
             <button
               onClick={handleExportPdf}
               disabled={exporting || loading || !data}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] transition disabled:opacity-60 print:hidden"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] transition disabled:opacity-60 print:hidden"
             >
               <Download size={13} /> {exporting ? "Generating..." : "Export PDF"}
             </button>
           </div>
         </div>
-        <div className="mt-4 h-px bg-[#1B2430]" />
-        <div className="mt-0.75 h-px bg-[#E9EAEC]" />
+        <div className="mt-4 h-px bg-[#1B2430] dark:bg-[#E5E7EB]" />
+        <div className="mt-0.75 h-px bg-[#E9EAEC] dark:bg-[#262626]" />
       </div>
 
       {loading || !data ? (
         <div className="flex items-center justify-center py-24">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
         </div>
       ) : (
         <>
-          {/* ── Total banner ── */}
           <div
             className="grid gap-4 mb-5"
             style={{ gridTemplateColumns: `2fr repeat(${data.bySex.length}, 1fr)` }}
@@ -141,7 +136,6 @@ export default function PopulationReportPage() {
 
           <div className="grid grid-cols-2 gap-5 mb-5">
 
-            {/* Population by Purok */}
             <ChartCard title="Population by Purok">
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={data.byPurok} barSize={30}>
@@ -154,18 +148,17 @@ export default function PopulationReportPage() {
               <div className="mt-3 space-y-1.5">
                 {data.byPurok.map(p => (
                   <div key={p.purok} className="flex items-center gap-3">
-                    <span className="text-[11px] text-[#6B7280] min-w-20">{p.purok}</span>
-                    <div className="flex-1 h-1.5 bg-[#F4F5F7] rounded-full overflow-hidden">
-                      <div className="h-full bg-[#3E5C76] rounded-full" style={{ width: pct(p.count, data.total) }} />
+                    <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3] min-w-20">{p.purok}</span>
+                    <div className="flex-1 h-1.5 bg-[#F4F5F7] dark:bg-[#262626] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#3E5C76] dark:bg-[#8FB0CC] rounded-full" style={{ width: pct(p.count, data.total) }} />
                     </div>
-                    <span className="text-[11px] font-bold tabular-nums text-[#1B2430] min-w-9 text-right">{p.count}</span>
-                    <span className="text-[10px] text-[#9CA3AF] min-w-9">{pct(p.count, data.total)}</span>
+                    <span className="text-[11px] font-bold tabular-nums text-[#1B2430] dark:text-white min-w-9 text-right">{p.count}</span>
+                    <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] min-w-9">{pct(p.count, data.total)}</span>
                   </div>
                 ))}
               </div>
             </ChartCard>
 
-            {/* Age Distribution */}
             <ChartCard title="Age Group Distribution">
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={data.byAgeGroup} barSize={26}>
@@ -181,13 +174,12 @@ export default function PopulationReportPage() {
                 {data.byAgeGroup.map((g, i) => (
                   <div key={g.group} className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ background: AGE_COLORS[i] }} />
-                    <span className="text-[10px] text-[#6B7280]">{g.group}: <strong className="tabular-nums text-[#1B2430]">{g.count}</strong></span>
+                    <span className="text-[10px] text-[#6B7280] dark:text-[#A3A3A3]">{g.group}: <strong className="tabular-nums text-[#1B2430] dark:text-white">{g.count}</strong></span>
                   </div>
                 ))}
               </div>
             </ChartCard>
 
-            {/* Civil Status */}
             <ChartCard title="Civil Status Breakdown">
               <div className="flex items-center gap-4">
                 <ResponsiveContainer width="45%" height={160}>
@@ -202,11 +194,11 @@ export default function PopulationReportPage() {
                     <div key={c.status} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: CIVIL_COLORS[i] }} />
-                        <span className="text-[11px] text-[#6B7280]">{c.status}</span>
+                        <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">{c.status}</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[12px] font-bold tabular-nums text-[#1B2430]">{c.count}</span>
-                        <span className="text-[10px] text-[#9CA3AF] ml-1">{pct(c.count, data.total)}</span>
+                        <span className="text-[12px] font-bold tabular-nums text-[#1B2430] dark:text-white">{c.count}</span>
+                        <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] ml-1">{pct(c.count, data.total)}</span>
                       </div>
                     </div>
                   ))}
@@ -214,34 +206,32 @@ export default function PopulationReportPage() {
               </div>
             </ChartCard>
 
-            {/* Employment */}
             <ChartCard title="Employment Status">
               <div className="space-y-3">
                 {data.byEmployment.map((e, i) => (
                   <div key={e.status} className="flex items-center gap-3">
-                    <span className="text-[11px] text-[#6B7280] min-w-25">{e.status}</span>
-                    <div className="flex-1 h-2 bg-[#F4F5F7] rounded-full overflow-hidden">
+                    <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3] min-w-25">{e.status}</span>
+                    <div className="flex-1 h-2 bg-[#F4F5F7] dark:bg-[#262626] rounded-full overflow-hidden">
                       <div className="h-full rounded-full" style={{ width: pct(e.count, data.total), background: AGE_COLORS[i % AGE_COLORS.length] }} />
                     </div>
-                    <span className="text-[12px] font-bold tabular-nums text-[#1B2430] min-w-9 text-right">{e.count}</span>
+                    <span className="text-[12px] font-bold tabular-nums text-[#1B2430] dark:text-white min-w-9 text-right">{e.count}</span>
                   </div>
                 ))}
               </div>
             </ChartCard>
           </div>
 
-          {/* Purok detail table */}
           <ChartCard title="Household Count by Purok">
             <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-0">
               {["Purok", "Residents", "Households", "Avg / HH"].map(h => (
-                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wide py-2 border-b border-[#F4F5F7]">{h}</span>
+                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide py-2 border-b border-[#F4F5F7] dark:border-[#262626]">{h}</span>
               ))}
               {data.byPurok.map((p) => (
                 <Fragment key={p.purok}>
-                  <span className="text-[12px] font-semibold text-[#1B2430] py-3 border-b border-[#F9FAFB]">{p.purok}</span>
-                  <span className="text-[12px] tabular-nums text-[#374151] py-3 border-b border-[#F9FAFB]">{p.count}</span>
-                  <span className="text-[12px] tabular-nums text-[#374151] py-3 border-b border-[#F9FAFB]">{p.households}</span>
-                  <span className="text-[12px] tabular-nums text-[#374151] py-3 border-b border-[#F9FAFB]">{p.households ? (p.count / p.households).toFixed(1) : "—"}</span>
+                  <span className="text-[12px] font-semibold text-[#1B2430] dark:text-white py-3 border-b border-[#F9FAFB] dark:border-[#262626]">{p.purok}</span>
+                  <span className="text-[12px] tabular-nums text-[#374151] dark:text-[#D4D4D4] py-3 border-b border-[#F9FAFB] dark:border-[#262626]">{p.count}</span>
+                  <span className="text-[12px] tabular-nums text-[#374151] dark:text-[#D4D4D4] py-3 border-b border-[#F9FAFB] dark:border-[#262626]">{p.households}</span>
+                  <span className="text-[12px] tabular-nums text-[#374151] dark:text-[#D4D4D4] py-3 border-b border-[#F9FAFB] dark:border-[#262626]">{p.households ? (p.count / p.households).toFixed(1) : "—"}</span>
                 </Fragment>
               ))}
             </div>

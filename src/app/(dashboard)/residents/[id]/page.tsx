@@ -148,9 +148,9 @@ function fullAddress(r: Resident): string {
 // ── SECTION ───────────────────────────────────────────────────────────────────
 function Section({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-[#E9EAEC] p-5">
+    <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-5">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937]">{title}</p>
+        <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">{title}</p>
         {action}
       </div>
       {children}
@@ -161,18 +161,18 @@ function Section({ title, children, action }: { title: string; children: React.R
 function Row({ label, value }: { label: string; value?: string | number | null }) {
   return (
     <div className="flex gap-2 py-1">
-      <span className="text-[11px] font-semibold text-[#374151] uppercase tracking-wide min-w-45 shrink-0">{label}</span>
-      <span className="text-[11px] text-[#374151]">: {value ?? "—"}</span>
+      <span className="text-[11px] font-semibold text-[#374151] dark:text-[#D4D4D4] uppercase tracking-wide min-w-45 shrink-0">{label}</span>
+      <span className="text-[11px] text-[#374151] dark:text-[#D4D4D4]">: {value ?? "—"}</span>
     </div>
   );
 }
 
 function Badge({ label, color = "blue" }: { label: string; color?: "blue" | "green" | "amber" | "red" }) {
   const cls = {
-    blue:  "bg-blue-100 text-blue-700",
-    green: "bg-green-100 text-green-700",
-    amber: "bg-amber-100 text-amber-700",
-    red:   "bg-red-100 text-red-700",
+    blue:  "bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400",
+    green: "bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-400",
+    amber: "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400",
+    red:   "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400",
   }[color];
   return <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${cls}`}>{label}</span>;
 }
@@ -352,7 +352,7 @@ export default function ResidentDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="w-7 h-7 border-2 border-[#3B82F6] border-t-transparent rounded-full animate-spin" />
+        <div className="w-7 h-7 border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -373,13 +373,13 @@ export default function ResidentDetailPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/residents")}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] transition"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
           >
-            <ArrowLeft size={18} className="text-[#6B7280]" />
+            <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
           </button>
           <div>
-            <h1 className="text-[16px] font-black text-[#1F2937] uppercase tracking-wide">{displayName}</h1>
-            <p className="text-[11px] text-[#9CA3AF]">{rbiId(resident.id)} · {resident.sex}</p>
+            <h1 className="text-[16px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">{displayName}</h1>
+            <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{rbiId(resident.id)} · {resident.sex}</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -387,7 +387,7 @@ export default function ResidentDetailPage() {
           {resident.is_deceased && <Badge label="Deceased" color="red" />}
           <button
             onClick={() => router.push(`/residents/${id}/edit`)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] transition"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] transition"
           >
             <Pencil size={13} /> Edit
           </button>
@@ -395,7 +395,7 @@ export default function ResidentDetailPage() {
             <button
               onClick={() => setConfirmOpen(true)}
               disabled={archiving}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-red-200 text-red-500 text-[12px] font-bold hover:bg-red-50 transition"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-red-200 text-red-500 dark:text-red-400 text-[12px] font-bold hover:bg-red-50 transition"
             >
               <Archive size={13} /> Archive
             </button>
@@ -477,7 +477,7 @@ export default function ResidentDetailPage() {
             assistanceFormOpen === null && (
               <button
                 onClick={openAddAssistance}
-                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[#3B82F6] hover:text-[#2563EB]"
+                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#2563EB] dark:hover:text-[#60A5FA]"
               >
                 <Plus size={12} /> Add Program
               </button>
@@ -485,35 +485,35 @@ export default function ResidentDetailPage() {
           }
         >
           {assistanceFormOpen !== null && (
-            <div className="mb-3 rounded-lg border border-[#E9EAEC] bg-[#F9FAFB] p-3 space-y-2">
+            <div className="mb-3 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] p-3 space-y-2">
               <input
                 value={assistanceForm.program_name}
                 onChange={(e) => setAssistanceForm((f) => ({ ...f, program_name: e.target.value }))}
                 placeholder="Program name (e.g. 4Ps)"
-                className="w-full rounded-md border border-[#E9EAEC] bg-white px-2.5 py-1.5 text-[12px] outline-none focus:border-[#3B82F6]"
+                className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
               />
               <div className="grid grid-cols-2 gap-2">
                 <input
                   type="date"
                   value={assistanceForm.date_enrolled}
                   onChange={(e) => setAssistanceForm((f) => ({ ...f, date_enrolled: e.target.value }))}
-                  className="w-full rounded-md border border-[#E9EAEC] bg-white px-2.5 py-1.5 text-[12px] outline-none focus:border-[#3B82F6]"
+                  className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                 />
                 <input
                   value={assistanceForm.notes}
                   onChange={(e) => setAssistanceForm((f) => ({ ...f, notes: e.target.value }))}
                   placeholder="Notes (optional)"
-                  className="w-full rounded-md border border-[#E9EAEC] bg-white px-2.5 py-1.5 text-[12px] outline-none focus:border-[#3B82F6]"
+                  className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <button onClick={() => setAssistanceFormOpen(null)} className="text-[11px] font-bold text-[#6B7280] hover:text-[#1F2937]">
+                <button onClick={() => setAssistanceFormOpen(null)} className="text-[11px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:text-[#1F2937] dark:hover:text-white">
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveAssistance}
                   disabled={assistanceBusy || !assistanceForm.program_name.trim()}
-                  className="rounded-md bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#2563EB] disabled:opacity-50"
+                  className="rounded-md bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
                 >
                   {assistanceBusy ? "Saving…" : "Save"}
                 </button>
@@ -522,22 +522,22 @@ export default function ResidentDetailPage() {
           )}
 
           {resident.government_assistance.length === 0 ? (
-            <p className="text-[12px] text-[#9CA3AF]">No assistance programs on file</p>
+            <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No assistance programs on file</p>
           ) : (
             <div className="space-y-2">
               {resident.government_assistance.map((a) => (
-                <div key={a.id} className="flex items-start justify-between gap-2 py-1 border-b border-[#F4F5F7] last:border-0">
+                <div key={a.id} className="flex items-start justify-between gap-2 py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
                   <div className="min-w-0">
-                    <p className="text-[12px] font-semibold text-[#1F2937]">{a.program_name}</p>
-                    <p className="text-[10px] text-[#9CA3AF]">
+                    <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">{a.program_name}</p>
+                    <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                       Enrolled {formatDate(a.date_enrolled)}{a.notes ? ` · ${a.notes}` : ""}
                     </p>
                   </div>
                   <div className="flex shrink-0 gap-1">
-                    <button onClick={() => openEditAssistance(a)} className="flex h-6 w-6 items-center justify-center rounded text-[#9CA3AF] hover:bg-[#F4F5F7] hover:text-[#1F2937]">
+                    <button onClick={() => openEditAssistance(a)} className="flex h-6 w-6 items-center justify-center rounded text-[#9CA3AF] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white">
                       <Pencil size={11} />
                     </button>
-                    <button onClick={() => setAssistanceDeleteTarget(a)} className="flex h-6 w-6 items-center justify-center rounded text-[#9CA3AF] hover:bg-red-50 hover:text-red-600">
+                    <button onClick={() => setAssistanceDeleteTarget(a)} className="flex h-6 w-6 items-center justify-center rounded text-[#9CA3AF] dark:text-[#A3A3A3] hover:bg-red-50 hover:text-red-600">
                       <Trash2 size={11} />
                     </button>
                   </div>
@@ -554,7 +554,7 @@ export default function ResidentDetailPage() {
             !addingSector && availableSectorTypes.length > 0 && (
               <button
                 onClick={() => setAddingSector(true)}
-                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[#3B82F6] hover:text-[#2563EB]"
+                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#2563EB] dark:hover:text-[#60A5FA]"
               >
                 <Plus size={12} /> Add Tag
               </button>
@@ -566,7 +566,7 @@ export default function ResidentDetailPage() {
               <select
                 value={newSector}
                 onChange={(e) => setNewSector(e.target.value)}
-                className="flex-1 rounded-md border border-[#E9EAEC] bg-white px-2.5 py-1.5 text-[12px] outline-none focus:border-[#3B82F6]"
+                className="flex-1 rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
               >
                 <option value="">Select sector...</option>
                 {availableSectorTypes.map((t) => (
@@ -576,26 +576,26 @@ export default function ResidentDetailPage() {
               <button
                 onClick={handleAddSector}
                 disabled={!newSector || sectorBusy}
-                className="rounded-md bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#2563EB] disabled:opacity-50"
+                className="rounded-md bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
               >
                 Add
               </button>
-              <button onClick={() => { setAddingSector(false); setNewSector(""); }} className="text-[#9CA3AF] hover:text-[#374151]">
+              <button onClick={() => { setAddingSector(false); setNewSector(""); }} className="text-[#9CA3AF] dark:text-[#A3A3A3] hover:text-[#374151] dark:hover:text-[#D4D4D4]">
                 <X size={14} />
               </button>
             </div>
           )}
           {resident.sectors.length === 0 ? (
-            <p className="text-[12px] text-[#9CA3AF]">No sectoral affiliations tagged</p>
+            <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No sectoral affiliations tagged</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {resident.sectors.map((s) => (
                 <span
                   key={s.id}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-blue-700 dark:text-blue-400"
                 >
                   {SECTOR_TYPE_LABEL[s.sector_type] ?? s.sector_type}
-                  <button onClick={() => handleRemoveSector(s.id)} disabled={sectorBusy} className="hover:text-blue-900">
+                  <button onClick={() => handleRemoveSector(s.id)} disabled={sectorBusy} className="hover:text-blue-900 dark:hover:text-blue-200">
                     <X size={11} />
                   </button>
                 </span>
@@ -607,7 +607,7 @@ export default function ResidentDetailPage() {
         {/* Special Registries (existing) */}
         <Section title="Special Registries">
           {resident.special_registries.length === 0 ? (
-            <p className="text-[12px] text-[#9CA3AF]">Not in any special registry</p>
+            <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">Not in any special registry</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {resident.special_registries.map(sr => (
@@ -617,7 +617,7 @@ export default function ResidentDetailPage() {
                     color={sr.registry_type === "SENIOR_CITIZEN" ? "amber" : sr.registry_type === "PWD" ? "blue" : "green"}
                   />
                   {sr.disability_type && (
-                    <span className="text-[10px] text-[#6B7280] ml-1">({sr.disability_type})</span>
+                    <span className="text-[10px] text-[#6B7280] dark:text-[#A3A3A3] ml-1">({sr.disability_type})</span>
                   )}
                 </div>
               ))}
@@ -637,7 +637,7 @@ export default function ResidentDetailPage() {
             <div className="mt-2">
               <button
                 onClick={() => router.push(`/households/${resident.household!.id}`)}
-                className="text-[11px] font-bold text-[#3B82F6] hover:text-[#1D4ED8] uppercase tracking-wide"
+                className="text-[11px] font-bold text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] uppercase tracking-wide"
               >
                 View All Household Members ({resident.household.members?.length ?? 0})
               </button>
@@ -648,18 +648,18 @@ export default function ResidentDetailPage() {
         {/* 9. Document Requests (existing certificates) */}
         <Section title={`Document Requests (${resident.certificates.length})`}>
           {resident.certificates.length === 0 ? (
-            <p className="text-[12px] text-[#9CA3AF]">No certificates issued yet</p>
+            <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No certificates issued yet</p>
           ) : (
             <div className="space-y-2">
               {resident.certificates.slice(0, 5).map(c => (
-                <div key={c.id} className="flex items-center justify-between py-1 border-b border-[#F4F5F7] last:border-0">
+                <div key={c.id} className="flex items-center justify-between py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
                   <div>
-                    <p className="text-[12px] font-semibold text-[#1F2937]">
+                    <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">
                       {c.certificate_type.replace(/_/g, " ")}
                     </p>
-                    <p className="text-[10px] text-[#9CA3AF]">{c.purpose}</p>
+                    <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{c.purpose}</p>
                   </div>
-                  <span className="text-[10px] text-[#6B7280] shrink-0 ml-2">
+                  <span className="text-[10px] text-[#6B7280] dark:text-[#A3A3A3] shrink-0 ml-2">
                     {c.issued_at ? new Date(c.issued_at).toLocaleDateString() : (c.status ?? "Pending")}
                   </span>
                 </div>
@@ -671,16 +671,16 @@ export default function ResidentDetailPage() {
         {/* 10. Blotter Records */}
         <Section title={`Blotter Records (${blotterRecords.length})`}>
           {blotterRecords.length === 0 ? (
-            <p className="text-[12px] text-[#9CA3AF]">No blotter records</p>
+            <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No blotter records</p>
           ) : (
             <div className="space-y-2">
               {blotterRecords.slice(0, 5).map((b) => (
-                <div key={`${b.role}-${b.id}`} className="py-1 border-b border-[#F4F5F7] last:border-0">
+                <div key={`${b.role}-${b.id}`} className="py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
                   <div className="flex items-center justify-between">
-                    <p className="text-[12px] font-semibold text-[#1F2937]">{b.case_number}</p>
+                    <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">{b.case_number}</p>
                     <Badge label={b.role} color={b.role === "Complainant" ? "blue" : "amber"} />
                   </div>
-                  <p className="text-[10px] text-[#9CA3AF] mt-0.5">
+                  <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">
                     {b.incident_type} · {new Date(b.incident_date).toLocaleDateString()} · {b.status}
                   </p>
                 </div>
@@ -692,13 +692,13 @@ export default function ResidentDetailPage() {
         {/* Vaccinations (existing) */}
         <Section title={`Vaccinations (${resident.vaccinations.length})`}>
           {resident.vaccinations.length === 0 ? (
-            <p className="text-[12px] text-[#9CA3AF]">No vaccination records</p>
+            <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No vaccination records</p>
           ) : (
             <div className="space-y-2">
               {resident.vaccinations.map(v => (
-                <div key={v.id} className="flex items-center justify-between py-1 border-b border-[#F4F5F7] last:border-0">
-                  <p className="text-[12px] font-semibold text-[#1F2937]">{v.vaccine_name}</p>
-                  <span className="text-[10px] text-[#6B7280]">
+                <div key={v.id} className="flex items-center justify-between py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
+                  <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">{v.vaccine_name}</p>
+                  <span className="text-[10px] text-[#6B7280] dark:text-[#A3A3A3]">
                     {new Date(v.date_given).toLocaleDateString()}
                   </span>
                 </div>
@@ -710,18 +710,18 @@ export default function ResidentDetailPage() {
         {/* Health Records (existing) */}
         <Section title={`Health Records (${resident.health_records.length})`}>
           {resident.health_records.length === 0 ? (
-            <p className="text-[12px] text-[#9CA3AF]">No health records</p>
+            <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No health records</p>
           ) : (
             <div className="space-y-2">
               {resident.health_records.slice(0, 5).map(hr => (
-                <div key={hr.id} className="py-1 border-b border-[#F4F5F7] last:border-0">
+                <div key={hr.id} className="py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
                   <div className="flex justify-between">
-                    <p className="text-[12px] font-semibold text-[#1F2937]">{hr.record_type}</p>
-                    <span className="text-[10px] text-[#6B7280]">
+                    <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">{hr.record_type}</p>
+                    <span className="text-[10px] text-[#6B7280] dark:text-[#A3A3A3]">
                       {new Date(hr.recorded_at).toLocaleDateString()}
                     </span>
                   </div>
-                  {hr.notes && <p className="text-[11px] text-[#6B7280] mt-0.5">{hr.notes}</p>}
+                  {hr.notes && <p className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3] mt-0.5">{hr.notes}</p>}
                 </div>
               ))}
             </div>
@@ -731,13 +731,13 @@ export default function ResidentDetailPage() {
         {/* Barangay IDs (existing) */}
         <Section title={`Barangay IDs (${resident.barangay_ids.length})`}>
           {resident.barangay_ids.length === 0 ? (
-            <p className="text-[12px] text-[#9CA3AF]">No barangay ID issued</p>
+            <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No barangay ID issued</p>
           ) : (
             <div className="space-y-2">
               {resident.barangay_ids.map(bid => (
-                <div key={bid.id} className="flex justify-between py-1 border-b border-[#F4F5F7] last:border-0">
-                  <p className="text-[12px] font-semibold text-[#1F2937]">{bid.id_number}</p>
-                  <span className="text-[10px] text-[#6B7280]">
+                <div key={bid.id} className="flex justify-between py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
+                  <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">{bid.id_number}</p>
+                  <span className="text-[10px] text-[#6B7280] dark:text-[#A3A3A3]">
                     {new Date(bid.issued_date).toLocaleDateString()}
                   </span>
                 </div>
@@ -749,15 +749,15 @@ export default function ResidentDetailPage() {
         {/* 11. Activity History */}
         <Section title="Activity History">
           {resident.activity_history.length === 0 ? (
-            <p className="text-[12px] text-[#9CA3AF]">No recorded activity yet</p>
+            <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No recorded activity yet</p>
           ) : (
             <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
               {resident.activity_history.map((a) => (
-                <div key={a.id} className="flex items-start gap-2 py-1 border-b border-[#F4F5F7] last:border-0">
+                <div key={a.id} className="flex items-start gap-2 py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
                   <Badge label={a.action} color={ACTION_COLOR[a.action] ?? "blue"} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[11px] text-[#374151]">{a.details ?? `${a.action} on ${a.table_affected}`}</p>
-                    <p className="text-[10px] text-[#9CA3AF]">
+                    <p className="text-[11px] text-[#374151] dark:text-[#D4D4D4]">{a.details ?? `${a.action} on ${a.table_affected}`}</p>
+                    <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                       {formatDateTime(a.performed_at)}{a.user ? ` · ${a.user.username}` : ""}
                     </p>
                   </div>
@@ -771,10 +771,10 @@ export default function ResidentDetailPage() {
 
       {/* Footer meta */}
       <div className="mt-5 flex justify-end gap-4">
-        <span className="text-[10px] text-[#9CA3AF]">
+        <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">
           Registered: {new Date(resident.created_at).toLocaleDateString()}
         </span>
-        <span className="text-[10px] text-[#9CA3AF]">
+        <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">
           Last updated: {new Date(resident.updated_at).toLocaleDateString()}
         </span>
       </div>

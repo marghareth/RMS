@@ -50,9 +50,9 @@ function calcAge(birthdate: string) {
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex gap-3 border-b border-[#F4F5F7] py-2.5 last:border-0">
-      <span className="mt-0.5 min-w-27.5 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">{label}</span>
-      <span className="text-[13px] font-medium text-[#1F2937]">{value ?? "—"}</span>
+    <div className="flex gap-3 border-b border-[#F4F5F7] dark:border-[#262626] py-2.5 last:border-0">
+      <span className="mt-0.5 min-w-27.5 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">{label}</span>
+      <span className="text-[13px] font-medium text-[#1F2937] dark:text-white">{value ?? "—"}</span>
     </div>
   );
 }
@@ -121,7 +121,7 @@ export default function VaccinationDetailSheet({ vaccinationId, onClose, onDelet
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -141,7 +141,7 @@ export default function VaccinationDetailSheet({ vaccinationId, onClose, onDelet
                 </div>
                 <div className="min-w-0">
                   <SheetTitle>{vaccination.vaccine_name}</SheetTitle>
-                  <p className="mt-0.5 text-[12px] text-[#9CA3AF]">
+                  <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                     Vaccination Record #{String(vaccination.id).padStart(5, "0")}
                   </p>
                 </div>
@@ -150,7 +150,7 @@ export default function VaccinationDetailSheet({ vaccinationId, onClose, onDelet
                 <button
                   onClick={() => router.push(`/health/vaccinations/${vaccination.id}`)}
                   title="Open full page"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                 >
                   <ExternalLink size={15} />
                 </button>
@@ -160,35 +160,35 @@ export default function VaccinationDetailSheet({ vaccinationId, onClose, onDelet
 
             <SheetBody className="space-y-4">
               {deleteError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-                  <p className="text-[12px] font-medium text-red-600">{deleteError}</p>
+                <div className="rounded-xl border border-red-200 bg-red-50 dark:bg-red-500/15 px-4 py-3">
+                  <p className="text-[12px] font-medium text-red-600 dark:text-red-400">{deleteError}</p>
                 </div>
               )}
 
               {/* Vaccine banner */}
-              <div className="flex items-center gap-4 rounded-xl border border-blue-100 bg-[#EFF6FF] px-5 py-5">
+              <div className="flex items-center gap-4 rounded-xl border border-blue-100 bg-[#EFF6FF] dark:bg-blue-500/15 px-5 py-5">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#3B82F6]">
                   <Syringe size={26} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-[18px] font-black uppercase tracking-wide text-[#1E3A5F]">{vaccination.vaccine_name}</p>
+                  <p className="text-[18px] font-black uppercase tracking-wide text-[#1E3A5F] dark:text-[#93C5FD]">{vaccination.vaccine_name}</p>
                   <div className="mt-1 flex items-center gap-1.5">
-                    <CalendarDays size={12} className="text-[#3B82F6]" />
-                    <p className="text-[12px] font-semibold text-[#3B82F6]">Administered on {fmtDate(vaccination.date_given)}</p>
+                    <CalendarDays size={12} className="text-[#3B82F6] dark:text-[#60A5FA]" />
+                    <p className="text-[12px] font-semibold text-[#3B82F6] dark:text-[#60A5FA]">Administered on {fmtDate(vaccination.date_given)}</p>
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {/* Details */}
-                <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                  <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Vaccination Details</p>
+                <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                  <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Vaccination Details</p>
                   <InfoRow label="Vaccine" value={vaccination.vaccine_name} />
                   <InfoRow
                     label="Date Given"
                     value={
                       <span className="flex items-center gap-1.5">
-                        <CalendarDays size={12} className="text-[#9CA3AF]" />
+                        <CalendarDays size={12} className="text-[#9CA3AF] dark:text-[#A3A3A3]" />
                         {fmtDate(vaccination.date_given)}
                       </span>
                     }
@@ -198,29 +198,29 @@ export default function VaccinationDetailSheet({ vaccinationId, onClose, onDelet
                 </div>
 
                 {/* Resident */}
-                <div className="overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
-                  <div className="flex items-center gap-3 border-b border-[#E9EAEC] bg-[#F9FAFB] px-4 py-3">
+                <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+                  <div className="flex items-center gap-3 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] px-4 py-3">
                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#3B82F6]">
                       <User size={13} className="text-white" />
                     </div>
-                    <p className="text-[12px] font-bold text-[#1F2937]">Resident</p>
+                    <p className="text-[12px] font-bold text-[#1F2937] dark:text-white">Resident</p>
                   </div>
                   <div className="p-4">
                     <div className="mb-3 flex flex-col items-center pt-1 text-center">
-                      <div className="mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#EFF6FF]">
-                        <User size={24} className="text-[#3B82F6]" />
+                      <div className="mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#EFF6FF] dark:bg-blue-500/15">
+                        <User size={24} className="text-[#3B82F6] dark:text-[#60A5FA]" />
                       </div>
-                      <p className="text-[14px] font-black text-[#1F2937]">
+                      <p className="text-[14px] font-black text-[#1F2937] dark:text-white">
                         {vaccination.resident.lname}, {vaccination.resident.fname}
                       </p>
-                      <p className="mt-0.5 text-[11px] text-[#9CA3AF]">{vaccination.resident.purok?.name ?? "—"}</p>
+                      <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{vaccination.resident.purok?.name ?? "—"}</p>
                     </div>
                     <InfoRow label="Age" value={`${calcAge(vaccination.resident.birthdate)} yrs`} />
                     <InfoRow label="Sex" value={vaccination.resident.sex} />
                     <InfoRow label="Birthdate" value={fmtDate(vaccination.resident.birthdate)} />
                     <button
                       onClick={() => router.push(`/residents/${vaccination.resident.id}`)}
-                      className="mt-3 w-full rounded-xl bg-[#EFF6FF] py-2 text-[12px] font-bold text-[#3B82F6] transition hover:bg-blue-100"
+                      className="mt-3 w-full rounded-xl bg-[#EFF6FF] dark:bg-blue-500/15 py-2 text-[12px] font-bold text-[#3B82F6] dark:text-[#60A5FA] transition hover:bg-blue-100"
                     >
                       View Full Profile
                     </button>
@@ -229,21 +229,21 @@ export default function VaccinationDetailSheet({ vaccinationId, onClose, onDelet
               </div>
 
               {/* Quick actions */}
-              <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-[#1F2937]">Quick Actions</p>
+              <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Quick Actions</p>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <button
                     onClick={() => router.push(`/health/vaccinations/new?resident_id=${vaccination.resident.id}`)}
-                    className="flex w-full items-center gap-2 rounded-xl border border-[#E9EAEC] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                    className="flex w-full items-center gap-2 rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                   >
-                    <Syringe size={13} className="text-[#3B82F6]" />
+                    <Syringe size={13} className="text-[#3B82F6] dark:text-[#60A5FA]" />
                     Add Another Vaccination
                   </button>
                   <button
                     onClick={() => router.push(`/health/new?resident_id=${vaccination.resident.id}`)}
-                    className="flex w-full items-center gap-2 rounded-xl border border-[#E9EAEC] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                    className="flex w-full items-center gap-2 rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                   >
-                    <Heart size={13} className="text-red-500" />
+                    <Heart size={13} className="text-red-500 dark:text-red-400" />
                     Add Health Record
                   </button>
                 </div>
@@ -254,7 +254,7 @@ export default function VaccinationDetailSheet({ vaccinationId, onClose, onDelet
               <button
                 onClick={() => setConfirmOpen(true)}
                 disabled={deleting}
-                className="flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2 text-[12px] font-bold text-red-500 transition hover:bg-red-50 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2 text-[12px] font-bold text-red-500 dark:text-red-400 transition hover:bg-red-50 disabled:opacity-50"
               >
                 <Trash2 size={13} /> Delete
               </button>

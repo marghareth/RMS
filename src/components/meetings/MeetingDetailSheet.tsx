@@ -246,7 +246,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -263,14 +263,14 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
               <div className="min-w-0">
                 {!editingMeeting ? (
                   <>
-                    <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-[#9CA3AF]">
+                    <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3]">
                       <span className="flex items-center gap-1">
                         <Calendar size={12} />
                         {formatISODate(meeting.meeting_date)}
                       </span>
                       <span
                         className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                          meeting.meeting_type === "SB_MEETING" ? "bg-[#EBF3FF] text-[#1D4ED8]" : "bg-[#D1FAE5] text-[#059669]"
+                          meeting.meeting_type === "SB_MEETING" ? "bg-[#EBF3FF] dark:bg-blue-500/15 text-[#1D4ED8] dark:text-[#93C5FD]" : "bg-[#D1FAE5] dark:bg-emerald-500/15 text-[#059669] dark:text-[#34D399]"
                         }`}
                       >
                         {meeting.meeting_type === "SB_MEETING" ? <Gavel size={10} /> : <Megaphone size={10} />}
@@ -278,7 +278,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                       </span>
                       <StatusBadge status={meeting.status} />
                       {upcoming && meeting.status === "SCHEDULED" && (
-                        <span className="rounded-full bg-[#FEF3C7] px-2 py-0.5 text-[10px] font-bold uppercase text-[#D97706]">
+                        <span className="rounded-full bg-[#FEF3C7] dark:bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-[#D97706] dark:text-[#FBBF24]">
                           Upcoming
                         </span>
                       )}
@@ -286,7 +286,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                     <SheetTitle className="mt-1 truncate">
                       {meeting.title || meetingTypeLabel(meeting.meeting_type)}
                     </SheetTitle>
-                    <p className="mt-0.5 text-[12px] text-[#9CA3AF]">
+                    <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                       Recorded {formatISODateTime(meeting.created_at)} by {meeting.recorder.username}
                     </p>
                   </>
@@ -300,14 +300,14 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                   <>
                     <button
                       onClick={startEditMeeting}
-                      className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] bg-white px-3 py-1.5 text-[12px] font-bold text-[#374151] transition hover:bg-[#F4F5F7]"
+                      className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-1.5 text-[12px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                     >
                       <Pencil size={13} />
                       Edit
                     </button>
                     <button
                       onClick={openAddAgendaItem}
-                      className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-[#2563EB]"
+                      className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
                     >
                       <Plus size={13} />
                       Add Item
@@ -317,7 +317,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                 <button
                   onClick={() => router.push(`/meetings/${meeting.id}`)}
                   title="Open full page (also where to print minutes)"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                 >
                   <ExternalLink size={15} />
                 </button>
@@ -328,39 +328,39 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
             <SheetBody className="space-y-4">
               {/* Edit Meeting inline form */}
               {editingMeeting && (
-                <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
+                <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="sm:col-span-2">
-                      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                         Title
                       </label>
                       <input
                         value={draft.title}
                         onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                         Meeting Type
                       </label>
                       <select
                         value={draft.meeting_type}
                         onChange={(e) => setDraft((d) => ({ ...d, meeting_type: e.target.value as MeetingType }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                       >
                         <option value="SB_MEETING">SB Meeting</option>
                         <option value="BARANGAY_ASSEMBLY">Barangay Assembly</option>
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                         Status
                       </label>
                       <select
                         value={draft.status}
                         onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value as MeetingStatus }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                       >
                         {MEETING_STATUSES.map((s) => (
                           <option key={s.value} value={s.value}>{s.label}</option>
@@ -368,47 +368,47 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                         Meeting Date
                       </label>
                       <input
                         type="date"
                         value={draft.meeting_date}
                         onChange={(e) => setDraft((d) => ({ ...d, meeting_date: e.target.value }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                       />
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                         Meeting Time
                       </label>
                       <input
                         type="time"
                         value={draft.meeting_time}
                         onChange={(e) => setDraft((d) => ({ ...d, meeting_time: e.target.value }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                       />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                         Location
                       </label>
                       <input
                         value={draft.location}
                         onChange={(e) => setDraft((d) => ({ ...d, location: e.target.value }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                       />
                     </div>
                   </div>
 
                   {meetingError && (
-                    <p className="mt-3 rounded-lg bg-[#FEE2E2] px-4 py-3 text-[12px] text-[#DC2626]">{meetingError}</p>
+                    <p className="mt-3 rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-4 py-3 text-[12px] text-[#DC2626] dark:text-[#F87171]">{meetingError}</p>
                   )}
 
                   <div className="mt-4 flex items-center justify-end gap-2">
                     <button
                       onClick={() => setEditingMeeting(false)}
-                      className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                      className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                     >
                       <X size={12} />
                       Cancel
@@ -416,7 +416,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                     <button
                       onClick={handleSaveMeeting}
                       disabled={savingMeeting}
-                      className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-white transition hover:bg-[#2563EB] disabled:opacity-60"
+                      className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
                     >
                       <Save size={12} />
                       {savingMeeting ? "Saving..." : "Save"}
@@ -426,23 +426,23 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
               )}
 
               {/* Agenda Items */}
-              <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
+              <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <ListChecks size={15} className="text-[#6B7280]" />
-                    <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937]">Agenda Items</p>
+                    <ListChecks size={15} className="text-[#6B7280] dark:text-[#A3A3A3]" />
+                    <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Agenda Items</p>
                   </div>
-                  <span className="rounded-full bg-[#F4F5F7] px-2.5 py-1 text-[11px] font-bold text-[#6B7280]">
+                  <span className="rounded-full bg-[#F4F5F7] dark:bg-[#262626] px-2.5 py-1 text-[11px] font-bold text-[#6B7280] dark:text-[#A3A3A3]">
                     {filledCount}/{agendaItems.length} filled
                   </span>
                 </div>
 
                 {agendaItems.length === 0 ? (
                   <div className="py-8 text-center">
-                    <p className="mb-3 text-[12px] text-[#9CA3AF]">No agenda items yet.</p>
+                    <p className="mb-3 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No agenda items yet.</p>
                     <button
                       onClick={openAddAgendaItem}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#2563EB]"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
                     >
                       <Plus size={12} />
                       Add First Item
@@ -452,7 +452,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead>
-                        <tr className="border-b border-[#F4F5F7] text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                        <tr className="border-b border-[#F4F5F7] dark:border-[#262626] text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">
                           <th className="w-10 py-2">#</th>
                           <th className="py-2">Title</th>
                           <th className="w-32 py-2">Status</th>
@@ -461,12 +461,12 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                       </thead>
                       <tbody>
                         {agendaItems.map((item, idx) => (
-                          <tr key={item.id} className="border-b border-[#F4F5F7] last:border-b-0">
-                            <td className="py-3 text-[12px] text-[#9CA3AF]">{idx + 1}</td>
+                          <tr key={item.id} className="border-b border-[#F4F5F7] dark:border-[#262626] last:border-b-0">
+                            <td className="py-3 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">{idx + 1}</td>
                             <td className="py-3">
-                              <p className="text-[13px] font-semibold text-[#1F2937]">{item.title}</p>
+                              <p className="text-[13px] font-semibold text-[#1F2937] dark:text-white">{item.title}</p>
                               {item.description && (
-                                <p className="mt-0.5 line-clamp-1 text-[11px] text-[#9CA3AF]">{item.description}</p>
+                                <p className="mt-0.5 line-clamp-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{item.description}</p>
                               )}
                             </td>
                             <td className="py-3">
@@ -477,14 +477,14 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                                 <button
                                   onClick={() => openEditAgendaItem(item)}
                                   title="Edit"
-                                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F4F5F7] hover:text-[#1F2937]"
+                                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                                 >
                                   <Pencil size={13} />
                                 </button>
                                 <button
                                   onClick={() => setDeleteTarget(item)}
                                   title="Delete"
-                                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#FEE2E2] hover:text-[#DC2626]"
+                                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#FEE2E2] dark:hover:bg-red-500/20 hover:text-[#DC2626] dark:hover:text-[#F87171]"
                                 >
                                   <Trash2 size={13} />
                                 </button>
@@ -501,13 +501,13 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 {/* ── Minutes ── */}
                 <div className="lg:col-span-2">
-                  <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
+                  <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                     <div className="mb-3 flex items-center justify-between">
-                      <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937]">Minutes</p>
+                      <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Minutes</p>
                       {!editingMinutes ? (
                         <button
                           onClick={startEditMinutes}
-                          className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                          className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                         >
                           <Pencil size={12} />
                           {meeting.minutes ? "Edit" : "Add Minutes"}
@@ -516,7 +516,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setEditingMinutes(false)}
-                            className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                            className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                           >
                             <X size={12} />
                             Cancel
@@ -524,7 +524,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                           <button
                             onClick={handleSaveMinutes}
                             disabled={savingMinutes}
-                            className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-[#2563EB] disabled:opacity-60"
+                            className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
                           >
                             <Save size={12} />
                             {savingMinutes ? "Saving..." : "Save"}
@@ -540,14 +540,14 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                         rows={14}
                         autoFocus
                         placeholder="Attendance, agenda, resolutions, and other notes from the meeting..."
-                        className="w-full resize-none rounded-lg border border-[#E9EAEC] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-[#3B82F6]"
+                        className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                       />
                     ) : meeting.minutes ? (
-                      <p className="whitespace-pre-line font-mono text-[12px] leading-relaxed text-[#374151]">
+                      <p className="whitespace-pre-line font-mono text-[12px] leading-relaxed text-[#374151] dark:text-[#D4D4D4]">
                         {meeting.minutes}
                       </p>
                     ) : (
-                      <p className="py-8 text-center text-[12px] text-[#9CA3AF]">
+                      <p className="py-8 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                         No minutes encoded yet. Click &quot;Add Minutes&quot; once the meeting has taken place.
                       </p>
                     )}
@@ -556,35 +556,35 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
 
                 {/* ── Meeting info ── */}
                 <div className="lg:col-span-1">
-                  <div className="rounded-xl border border-[#E9EAEC] bg-white p-4">
-                    <p className="mb-3 text-[12px] font-black uppercase tracking-wide text-[#1F2937]">Meeting Info</p>
+                  <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+                    <p className="mb-3 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Meeting Info</p>
                     <div className="space-y-3">
                       <div className="flex items-start gap-2.5">
-                        <Calendar size={14} className="mt-0.5 shrink-0 text-[#9CA3AF]" />
+                        <Calendar size={14} className="mt-0.5 shrink-0 text-[#9CA3AF] dark:text-[#A3A3A3]" />
                         <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Date</p>
-                          <p className="text-[13px] text-[#1F2937]">{formatISODate(meeting.meeting_date)}</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">Date</p>
+                          <p className="text-[13px] text-[#1F2937] dark:text-white">{formatISODate(meeting.meeting_date)}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <Clock size={14} className="mt-0.5 shrink-0 text-[#9CA3AF]" />
+                        <Clock size={14} className="mt-0.5 shrink-0 text-[#9CA3AF] dark:text-[#A3A3A3]" />
                         <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Time</p>
-                          <p className="text-[13px] text-[#1F2937]">{formatISOTime(meeting.meeting_date)}</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">Time</p>
+                          <p className="text-[13px] text-[#1F2937] dark:text-white">{formatISOTime(meeting.meeting_date)}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <MapPin size={14} className="mt-0.5 shrink-0 text-[#9CA3AF]" />
+                        <MapPin size={14} className="mt-0.5 shrink-0 text-[#9CA3AF] dark:text-[#A3A3A3]" />
                         <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Location</p>
-                          <p className="text-[13px] text-[#1F2937]">{meeting.location || "—"}</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">Location</p>
+                          <p className="text-[13px] text-[#1F2937] dark:text-white">{meeting.location || "—"}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <User size={14} className="mt-0.5 shrink-0 text-[#9CA3AF]" />
+                        <User size={14} className="mt-0.5 shrink-0 text-[#9CA3AF] dark:text-[#A3A3A3]" />
                         <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Recorded By</p>
-                          <p className="text-[13px] text-[#1F2937]">{meeting.recorder.username}</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">Recorded By</p>
+                          <p className="text-[13px] text-[#1F2937] dark:text-white">{meeting.recorder.username}</p>
                         </div>
                       </div>
                     </div>

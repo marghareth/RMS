@@ -49,7 +49,7 @@ export default function EditUserPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
       </div>
     );
   }
@@ -63,7 +63,7 @@ export default function EditUserPage() {
         action={
           <button
             onClick={() => router.push("/admin/users")}
-            className="rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#2563EB]"
+            className="rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
           >
             Back to Users
           </button>
@@ -116,40 +116,40 @@ export default function EditUserPage() {
     <div className="mx-auto max-w-lg">
       <button
         onClick={() => router.push("/admin/users")}
-        className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] transition hover:text-[#1F2937]"
+        className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
       >
         <ArrowLeft size={14} />
         Back to Users
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937]">Edit User</h1>
-        <p className="mt-0.5 text-[13px] text-[#9CA3AF]">{original.username}</p>
+        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Edit User</h1>
+        <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">{original.username}</p>
       </div>
 
-      <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+      <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
         <div className="mb-4 flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF]">
-            <UserCog size={14} className="text-[#1D4ED8]" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
+            <UserCog size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
           </div>
-          <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Account Details</p>
+          <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Account Details</p>
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-lg bg-[#F9FAFB] px-3 py-2.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Username</p>
-            <p className="text-[13px] text-[#1F2937]">{original.username}</p>
-            <p className="mt-1 text-[11px] text-[#9CA3AF]">Usernames cannot be changed.</p>
+          <div className="rounded-lg bg-[#F9FAFB] dark:bg-[#171717] px-3 py-2.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">Username</p>
+            <p className="text-[13px] text-[#1F2937] dark:text-white">{original.username}</p>
+            <p className="mt-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Usernames cannot be changed.</p>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
               Role
             </label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as Role)}
-              className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+              className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
             >
               {ROLES.map((r) => (
                 <option key={r.value} value={r.value}>
@@ -159,19 +159,19 @@ export default function EditUserPage() {
             </select>
           </div>
 
-          <label className="flex items-center gap-2 text-[12px] font-medium text-[#374151]">
+          <label className="flex items-center gap-2 text-[12px] font-medium text-[#374151] dark:text-[#D4D4D4]">
             <input
               type="checkbox"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              className="h-3.5 w-3.5 rounded border-[#D1D5DB] text-[#3B82F6] focus:ring-[#3B82F6]"
+              className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-[#3B82F6] dark:text-[#60A5FA] focus:ring-[#3B82F6] dark:focus:ring-[#60A5FA]"
             />
             Account active (can log in)
           </label>
 
-          <div className="border-t border-[#F4F5F7] pt-4">
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
-              Reset Password <span className="font-normal normal-case text-[#9CA3AF]">(leave blank to keep current)</span>
+          <div className="border-t border-[#F4F5F7] dark:border-[#262626] pt-4">
+            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+              Reset Password <span className="font-normal normal-case text-[#9CA3AF] dark:text-[#A3A3A3]">(leave blank to keep current)</span>
             </label>
             <div className="relative">
               <input
@@ -179,31 +179,31 @@ export default function EditUserPage() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="New password (min. 8 characters)"
-                className="w-full rounded-lg border border-[#E9EAEC] py-2.5 pl-3 pr-10 text-[13px] outline-none focus:border-[#3B82F6]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] py-2.5 pl-3 pr-10 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] transition hover:text-[#374151]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:text-[#374151] dark:hover:text-[#D4D4D4]"
               >
                 {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
           </div>
 
-          {error && <p className="rounded-lg bg-[#FEE2E2] px-4 py-3 text-[12px] text-[#DC2626]">{error}</p>}
+          {error && <p className="rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-4 py-3 text-[12px] text-[#DC2626] dark:text-[#F87171]">{error}</p>}
 
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               onClick={() => router.push("/admin/users")}
-              className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:text-[#1F2937]"
+              className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-60"
+              className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
             >
               {submitting ? "Saving..." : "Save Changes"}
             </button>

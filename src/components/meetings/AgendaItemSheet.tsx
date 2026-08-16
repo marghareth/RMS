@@ -88,20 +88,20 @@ export default function AgendaItemSheet({ open, meetingId, item, onClose, onSave
         <SheetBody>
           <div className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
-                Title <span className="text-red-500">*</span>
+              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                Title <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 autoFocus
                 placeholder="e.g. Review of Q3 budget utilization"
-                className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                 Description
               </label>
               <textarea
@@ -109,30 +109,30 @@ export default function AgendaItemSheet({ open, meetingId, item, onClose, onSave
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 placeholder="Brief context for this agenda item"
-                className="w-full resize-none rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[12px] leading-relaxed outline-none focus:border-[#3B82F6]"
+                className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[12px] leading-relaxed outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                   Sort Order
                 </label>
                 <input
                   type="number"
                   value={sortOrder}
                   onChange={(e) => setSortOrder(parseInt(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                   Status
                 </label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as AgendaItemStatus)}
-                  className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
                 >
                   {AGENDA_ITEM_STATUSES.map((s) => (
                     <option key={s.value} value={s.value}>
@@ -144,33 +144,33 @@ export default function AgendaItemSheet({ open, meetingId, item, onClose, onSave
             </div>
 
             <div>
-              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
-                Minutes <span className="font-normal normal-case text-[#9CA3AF]">(notes for this item)</span>
+              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                Minutes <span className="font-normal normal-case text-[#9CA3AF] dark:text-[#A3A3A3]">(notes for this item)</span>
               </label>
               <textarea
                 value={minutes}
                 onChange={(e) => setMinutes(e.target.value)}
                 rows={5}
                 placeholder="What was discussed or resolved for this item..."
-                className="w-full resize-none rounded-lg border border-[#E9EAEC] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-[#3B82F6]"
+                className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
               />
             </div>
 
-            {error && <p className="rounded-lg bg-[#FEE2E2] px-4 py-3 text-[12px] text-[#DC2626]">{error}</p>}
+            {error && <p className="rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-4 py-3 text-[12px] text-[#DC2626] dark:text-[#F87171]">{error}</p>}
           </div>
         </SheetBody>
 
         <SheetFooter>
           <button
             onClick={onClose}
-            className="rounded-lg border border-[#E9EAEC] px-4 py-2.5 text-[12px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:bg-[#F4F5F7]"
+            className="rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="rounded-lg bg-[#3B82F6] px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-60"
+            className="rounded-lg bg-[#3B82F6] px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
           >
             {submitting ? "Saving..." : isEdit ? "Update Item" : "Add Item"}
           </button>

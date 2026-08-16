@@ -34,15 +34,12 @@ function ChartCard({
   className?: string;
   action?: React.ReactNode;
 }) {
-  // Same flat chrome as StatCard: rounded-xl, plain border, no shadow —
-  // keeps every card on the page reading as one consistent "ledger sheet"
-  // material instead of StatCards looking flatter than chart cards.
   return (
-    <div className={`rounded-xl border border-[#E9EAEC] bg-white p-5 ${className}`}>
+    <div className={`rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5 ${className}`}>
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
-          <p className="text-[13px] font-bold text-[#1B2430]">{title}</p>
-          {subtitle && <p className="mt-0.5 text-[11px] text-[#9CA3AF]">{subtitle}</p>}
+          <p className="text-[13px] font-bold text-[#1B2430] dark:text-white">{title}</p>
+          {subtitle && <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{subtitle}</p>}
         </div>
         {action}
       </div>
@@ -51,15 +48,13 @@ function ChartCard({
   );
 }
 
-// Same monospace/tabular-nums treatment as StatCard's value text, for the
-// key ledger figures on this page (progress rows, donut legend amounts).
 const MONO = { fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" };
 
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="space-y-1 rounded-xl border border-[#E9EAEC] bg-white px-3 py-2 text-[11px] shadow-lg">
-      <p className="font-bold text-[#1B2430]">{label}</p>
+    <div className="space-y-1 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[11px] shadow-lg">
+      <p className="font-bold text-[#1B2430] dark:text-white">{label}</p>
       {payload.map((p: any) => (
         <p key={p.name} style={{ color: p.color, ...MONO }}>{p.name}: {fmtCurrency(p.value)}</p>
       ))}
@@ -103,7 +98,6 @@ export default function BudgetOverviewPage() {
     return { appropriated, obligated, disbursed, revenue, balance };
   }, [appropriations, revenues, fundSources]);
 
-  // PS / MOOE / CO progress — appropriated vs. disbursed per category.
   const byCategory = useMemo(() => {
     return (["PS", "MOOE", "CO"] as const).map((cat) => {
       const items = appropriations.filter((a) => a.category === cat);
@@ -114,7 +108,6 @@ export default function BudgetOverviewPage() {
     });
   }, [appropriations]);
 
-  // Trend chart 1: Revenue vs Disbursement per month, last 6 months.
   const months = useMemo(() => lastNMonths(6), []);
   const revenueVsDisbursement = useMemo(() => {
     return months.map(({ key, label }) => {
@@ -128,14 +121,8 @@ export default function BudgetOverviewPage() {
     });
   }, [months, revenues, disbursements]);
 
-  // Trend chart 2: cumulative fund balance over the same window, starting
-  // from each fund source's original balance and rolling revenue minus
-  // disbursement forward month by month.
   const fundBalanceTrend = useMemo(() => {
     const startingBalance = fundSources.reduce((s, f) => s + Number(f.original_balance ?? 0), 0);
-    // Built with reduce (accumulator carries the running total) rather than
-    // a reassigned `let` across the loop — keeps each step a pure function
-    // of its inputs instead of mutating a variable shared across renders.
     const { rows } = months.reduce<{ running: number; rows: { month: string; Balance: number }[] }>(
       (acc, { key, label }) => {
         const monthRevenue = revenues
@@ -152,7 +139,6 @@ export default function BudgetOverviewPage() {
     return rows;
   }, [months, revenues, disbursements, fundSources]);
 
-  // Trend chart 3: appropriation breakdown by category (donut + chip legend).
   const categoryBreakdown = useMemo(
     () => byCategory
       .filter((c) => c.appropriated > 0)
@@ -164,7 +150,7 @@ export default function BudgetOverviewPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3E5C76] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3E5C76] dark:border-[#8FB0CC] border-t-transparent" />
       </div>
     );
   }
@@ -172,11 +158,10 @@ export default function BudgetOverviewPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-[22px] font-bold tracking-tight text-[#1B2430]">Budget Overview</h1>
-        <p className="mt-1 text-[13px] text-[#9CA3AF]">Barangay-wide appropriations, revenue, and disbursement snapshot</p>
+        <h1 className="text-[22px] font-bold tracking-tight text-[#1B2430] dark:text-white">Budget Overview</h1>
+        <p className="mt-1 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">Barangay-wide appropriations, revenue, and disbursement snapshot</p>
       </div>
 
-      {/* Stat cards */}
       <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="Appropriated" value={fmtCompactCurrency(totals.appropriated)} sub="Total budget set" icon={ClipboardList} color="blue" />
         <StatCard label="Obligated" value={fmtCompactCurrency(totals.obligated)} sub="Committed spending" icon={TrendingDown} color="amber" />
@@ -184,21 +169,20 @@ export default function BudgetOverviewPage() {
         <StatCard label="Revenue" value={fmtCompactCurrency(totals.revenue)} sub="All-time collected" icon={TrendingUp} color="green" />
         <StatCard label="Fund Balance" value={fmtCompactCurrency(totals.balance)} sub="Across all fund sources" icon={Wallet} color="teal" />
       </div>
-      {/* PS / MOOE / CO progress */}
       <ChartCard title="Appropriation Utilization by Category" subtitle="Disbursed against appropriated, per category" className="mb-5">
         <div className="space-y-5">
           {byCategory.map((c) => (
             <div key={c.cat}>
               <div className="mb-1.5 flex items-center justify-between text-[12px]">
-                <span className="flex items-center gap-2 font-semibold text-[#374151]">
+                <span className="flex items-center gap-2 font-semibold text-[#374151] dark:text-[#D4D4D4]">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: APPROPRIATION_CATEGORY_COLORS[c.cat] }} />
                   {APPROPRIATION_CATEGORY_LABELS[c.cat]}
                 </span>
-                <span className="text-[#9CA3AF]" style={MONO}>
-                  {fmtCurrency(c.disbursed)} / {fmtCurrency(c.appropriated)} · <span className="font-bold text-[#1B2430]">{c.pct.toFixed(0)}%</span>
+                <span className="text-[#9CA3AF] dark:text-[#A3A3A3]" style={MONO}>
+                  {fmtCurrency(c.disbursed)} / {fmtCurrency(c.appropriated)} · <span className="font-bold text-[#1B2430] dark:text-white">{c.pct.toFixed(0)}%</span>
                 </span>
               </div>
-              <div className="h-2.5 overflow-hidden rounded-full bg-[#F4F5F7]">
+              <div className="h-2.5 overflow-hidden rounded-full bg-[#F4F5F7] dark:bg-[#262626]">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{ width: `${c.pct}%`, backgroundColor: APPROPRIATION_CATEGORY_COLORS[c.cat] }}
@@ -207,12 +191,11 @@ export default function BudgetOverviewPage() {
             </div>
           ))}
           {appropriations.length === 0 && (
-            <p className="py-6 text-center text-[12px] text-[#9CA3AF]">No appropriations recorded yet.</p>
+            <p className="py-6 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No appropriations recorded yet.</p>
           )}
         </div>
       </ChartCard>
 
-      {/* 3 trend charts */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <ChartCard title="Revenue vs. Disbursement" subtitle="Last 6 months">
           <ResponsiveContainer width="100%" height={220}>
@@ -241,7 +224,7 @@ export default function BudgetOverviewPage() {
 
         <ChartCard title="Appropriation Breakdown" subtitle="Share of total appropriated budget, by category" className="lg:col-span-2">
           {categoryBreakdown.length === 0 ? (
-            <p className="py-12 text-center text-[12px] text-[#9CA3AF]">No appropriations recorded yet.</p>
+            <p className="py-12 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No appropriations recorded yet.</p>
           ) : (
             <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
               <ResponsiveContainer width={220} height={220} className="shrink-0">
@@ -253,20 +236,17 @@ export default function BudgetOverviewPage() {
                 </PieChart>
               </ResponsiveContainer>
 
-              {/* Chip-style legend, matching the "Leave Statistics" / donut
-                  legend pattern from the reference dashboards, instead of
-                  recharts' default <Legend/> row. */}
               <div className="flex w-full max-w-xs flex-col gap-3">
                 {categoryBreakdown.map((c) => {
                   const pct = categoryTotal > 0 ? (c.value / categoryTotal) * 100 : 0;
                   return (
-                    <div key={c.name} className="flex items-center gap-3 rounded-xl border border-[#F0F1F3] px-3 py-2.5">
+                    <div key={c.name} className="flex items-center gap-3 rounded-xl border border-[#F0F1F3] dark:border-[#262626] px-3 py-2.5">
                       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: c.color }} />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[12px] font-semibold text-[#374151]">{c.name}</p>
-                        <p className="text-[11px] text-[#9CA3AF]" style={MONO}>{fmtCurrency(c.value)}</p>
+                        <p className="truncate text-[12px] font-semibold text-[#374151] dark:text-[#D4D4D4]">{c.name}</p>
+                        <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]" style={MONO}>{fmtCurrency(c.value)}</p>
                       </div>
-                      <span className="shrink-0 text-[13px] font-bold text-[#1B2430]" style={MONO}>{pct.toFixed(0)}%</span>
+                      <span className="shrink-0 text-[13px] font-bold text-[#1B2430] dark:text-white" style={MONO}>{pct.toFixed(0)}%</span>
                     </div>
                   );
                 })}

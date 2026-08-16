@@ -23,10 +23,10 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className={`relative h-5 w-9 shrink-0 rounded-full transition ${checked ? "bg-[#3B82F6]" : "bg-[#E5E7EB]"}`}
+      className={`relative h-5 w-9 shrink-0 rounded-full transition ${checked ? "bg-[#3B82F6]" : "bg-[#E5E7EB] dark:bg-[#262626]"}`}
     >
       <span
-        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white dark:bg-[#171717] shadow transition-transform ${
           checked ? "translate-x-4.5" : "translate-x-0.5"
         }`}
       />
@@ -40,8 +40,8 @@ function ToggleRow({
   return (
     <div className="flex items-center justify-between gap-3 py-2.5">
       <div className="min-w-0">
-        <p className="text-[13px] font-semibold text-[#1F2937]">{label}</p>
-        {description && <p className="text-[11px] text-[#9CA3AF] mt-0.5">{description}</p>}
+        <p className="text-[13px] font-semibold text-[#1F2937] dark:text-white">{label}</p>
+        {description && <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">{description}</p>}
       </div>
       <Toggle checked={checked} onChange={onChange} />
     </div>
@@ -129,11 +129,11 @@ export default function DashboardCustomizeSheet({
             {/* KPI Metrics */}
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937]">KPI Metrics</p>
+                <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">KPI Metrics</p>
                 <Toggle checked={kpiMasterOn} onChange={toggleAllKpis} />
               </div>
-              <p className="mb-2 text-[11px] text-[#9CA3AF]">Stat cards shown at the top of your dashboard.</p>
-              <div className="rounded-xl border border-[#E9EAEC] px-4 divide-y divide-[#F4F5F7]">
+              <p className="mb-2 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Stat cards shown at the top of your dashboard.</p>
+              <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 divide-y divide-[#F4F5F7] dark:divide-[#262626]">
                 {KPI_WIDGET_KEYS.map((key) => (
                   <ToggleRow
                     key={key}
@@ -147,10 +147,10 @@ export default function DashboardCustomizeSheet({
 
             {/* Other sections */}
             <div>
-              <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937]">
+              <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">
                 Sections
               </p>
-              <div className="rounded-xl border border-[#E9EAEC] px-4 divide-y divide-[#F4F5F7]">
+              <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 divide-y divide-[#F4F5F7] dark:divide-[#262626]">
                 <ToggleRow
                   label="Quick Actions"
                   description="Frequently used action buttons"
@@ -180,7 +180,7 @@ export default function DashboardCustomizeSheet({
             <button
               onClick={handleReset}
               disabled={resetting}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E9EAEC] py-2.5 text-[12px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:bg-[#F4F5F7] disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] py-2.5 text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] disabled:opacity-60"
             >
               <RotateCcw size={12} />
               {resetting ? "Resetting..." : "Reset to Role Defaults"}
@@ -191,14 +191,14 @@ export default function DashboardCustomizeSheet({
         <SheetFooter>
           <button
             onClick={onClose}
-            className="rounded-lg border border-[#E9EAEC] px-4 py-2.5 text-[12px] font-bold uppercase tracking-wide text-[#6B7280] transition hover:bg-[#F4F5F7]"
+            className="rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-lg bg-[#3B82F6] px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-60"
+            className="rounded-lg bg-[#3B82F6] px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
           >
             {saving ? "Saving..." : "Save Preferences"}
           </button>

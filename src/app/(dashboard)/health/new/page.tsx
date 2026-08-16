@@ -46,22 +46,22 @@ const RECORD_TYPES = [
 // ─── FIELD COMPONENTS ─────────────────────────────────────────────────────────
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wide block mb-1.5">
-      {children}{required && <span className="text-red-500 ml-0.5">*</span>}
+    <label className="text-[10px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] uppercase tracking-wide block mb-1.5">
+      {children}{required && <span className="text-red-500 dark:text-red-400 ml-0.5">*</span>}
     </label>
   );
 }
 
 // ─── RECORD TYPE GRID ─────────────────────────────────────────────────────────
 const TYPE_COLORS: Record<string, string> = {
-  "Hypertension":       "border-red-200    bg-red-50    text-red-700    hover:border-red-400",
-  "Diabetes":           "border-amber-200  bg-amber-50  text-amber-700  hover:border-amber-400",
-  "Tuberculosis":       "border-orange-200 bg-orange-50 text-orange-700 hover:border-orange-400",
-  "Prenatal Checkup":   "border-pink-200   bg-pink-50   text-pink-700   hover:border-pink-400",
-  "Postnatal Checkup":  "border-pink-200   bg-pink-50   text-pink-700   hover:border-pink-400",
-  "Well-child Checkup": "border-green-200  bg-green-50  text-green-700  hover:border-green-400",
-  "Asthma":             "border-blue-200   bg-blue-50   text-blue-700   hover:border-blue-400",
-  "Family Planning":    "border-purple-200 bg-purple-50 text-purple-700 hover:border-purple-400",
+  "Hypertension":       "border-red-200    bg-red-50 dark:bg-red-500/15    text-red-700 dark:text-red-400    hover:border-red-400",
+  "Diabetes":           "border-amber-200  bg-amber-50 dark:bg-amber-500/15  text-amber-700 dark:text-amber-400  hover:border-amber-400",
+  "Tuberculosis":       "border-orange-200 bg-orange-50 text-orange-700 dark:text-orange-400 hover:border-orange-400",
+  "Prenatal Checkup":   "border-pink-200   bg-pink-50   text-pink-700 dark:text-pink-400   hover:border-pink-400",
+  "Postnatal Checkup":  "border-pink-200   bg-pink-50   text-pink-700 dark:text-pink-400   hover:border-pink-400",
+  "Well-child Checkup": "border-green-200  bg-green-50 dark:bg-green-500/15  text-green-700 dark:text-green-400  hover:border-green-400",
+  "Asthma":             "border-blue-200   bg-blue-50 dark:bg-blue-500/15   text-blue-700 dark:text-blue-400   hover:border-blue-400",
+  "Family Planning":    "border-purple-200 bg-purple-50 dark:bg-purple-500/15 text-purple-700 dark:text-purple-400 hover:border-purple-400",
 };
 
 function RecordTypeGrid({ value, onChange }: { value: string; onChange: (v: string) => void }) {
@@ -69,14 +69,14 @@ function RecordTypeGrid({ value, onChange }: { value: string; onChange: (v: stri
     <div className="grid grid-cols-4 gap-2">
       {RECORD_TYPES.map(type => {
         const selected = value === type;
-        const base = TYPE_COLORS[type] ?? "border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-400";
+        const base = TYPE_COLORS[type] ?? "border-gray-200 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-[#D4D4D4] hover:border-gray-400";
         return (
           <button
             key={type}
             type="button"
             onClick={() => onChange(type)}
             className={`px-3 py-2.5 rounded-xl border-2 text-[11px] font-bold uppercase tracking-wide text-center transition
-              ${selected ? "border-[#3B82F6] bg-[#3B82F6] text-white shadow-sm" : base}`}
+              ${selected ? "border-[#3B82F6] dark:border-[#60A5FA] bg-[#3B82F6] text-white shadow-sm" : base}`}
           >
             {type}
           </button>
@@ -135,12 +135,12 @@ export default function NewHealthRecordPage() {
 
       {/* ── Page header ── */}
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => router.push("/health")} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] transition">
-          <ArrowLeft size={18} className="text-[#6B7280]" />
+        <button onClick={() => router.push("/health")} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition">
+          <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
         </button>
         <div>
-          <h1 className="text-[18px] font-black text-[#1F2937] uppercase tracking-wide">Add Health Record</h1>
-          <p className="text-[12px] text-[#9CA3AF] mt-0.5">Record a residents health condition or checkup</p>
+          <h1 className="text-[18px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Add Health Record</h1>
+          <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Record a residents health condition or checkup</p>
         </div>
       </div>
 
@@ -151,13 +151,13 @@ export default function NewHealthRecordPage() {
              cards below) — ResidentPicker's search-results dropdown is
              absolutely positioned and needs to render outside this card's
              bounds. overflow-hidden would clip it off after ~1 row. */}
-        <div className="bg-white rounded-xl border border-[#E9EAEC]">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB] rounded-t-xl">
+        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626]">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] rounded-t-xl">
             <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
               <User size={14} className="text-white" />
             </div>
-            <p className="text-[13px] font-bold text-[#1F2937]">Resident</p>
-            <span className="text-red-500 text-[11px] font-bold ml-1">*</span>
+            <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Resident</p>
+            <span className="text-red-500 dark:text-red-400 text-[11px] font-bold ml-1">*</span>
           </div>
           <div className="p-5">
             <FieldLabel required>Resident</FieldLabel>
@@ -170,13 +170,13 @@ export default function NewHealthRecordPage() {
         </div>
 
         {/* ── Record type card ── */}
-        <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
-            <div className="w-8 h-8 rounded-lg bg-red-500 flex items-center justify-center">
+        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
+            <div className="w-8 h-8 rounded-lg bg-red-500 dark:bg-red-500 flex items-center justify-center">
               <Heart size={14} className="text-white" />
             </div>
-            <p className="text-[13px] font-bold text-[#1F2937]">Record Type</p>
-            <span className="text-red-500 text-[11px] font-bold ml-1">*</span>
+            <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Record Type</p>
+            <span className="text-red-500 dark:text-red-400 text-[11px] font-bold ml-1">*</span>
           </div>
           <div className="p-5">
             <RecordTypeGrid value={form.record_type} onChange={v => set("record_type", v)} />
@@ -189,7 +189,7 @@ export default function NewHealthRecordPage() {
                   value={form.record_type === "Other" ? "" : form.record_type}
                   onChange={e => set("record_type", e.target.value)}
                   placeholder="Enter specific condition or checkup type..."
-                  className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] placeholder:text-[#D1D5DB] bg-white"
+                  className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] bg-white dark:bg-[#171717]"
                 />
               </div>
             )}
@@ -197,15 +197,15 @@ export default function NewHealthRecordPage() {
         </div>
 
         {/* ── Notes card ── */}
-        <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
-            <div className="w-8 h-8 rounded-lg bg-[#6B7280] flex items-center justify-center">
+        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
+            <div className="w-8 h-8 rounded-lg bg-[#6B7280] dark:bg-[#525252] flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <p className="text-[13px] font-bold text-[#1F2937]">Notes / Remarks</p>
-            <span className="text-[11px] text-[#9CA3AF] font-medium ml-1">(optional)</span>
+            <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Notes / Remarks</p>
+            <span className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] font-medium ml-1">(optional)</span>
           </div>
           <div className="p-5">
             <textarea
@@ -213,25 +213,25 @@ export default function NewHealthRecordPage() {
               onChange={e => set("notes", e.target.value)}
               placeholder="Enter findings, recommendations, medications, referrals, or any relevant observations..."
               rows={4}
-              className="w-full text-[13px] border border-[#E9EAEC] rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6] focus:ring-2 focus:ring-blue-50 text-[#1F2937] placeholder:text-[#D1D5DB] transition resize-none bg-white"
+              className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition resize-none bg-white dark:bg-[#171717]"
             />
-            <p className="text-[10px] text-[#9CA3AF] mt-1.5 text-right">{form.notes.length} characters</p>
+            <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-1.5 text-right">{form.notes.length} characters</p>
           </div>
         </div>
 
         {/* Summary preview */}
         {isValid && (
-          <div className="px-5 py-4 rounded-xl bg-[#F4F5F7] border border-[#E9EAEC]">
-            <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wide mb-2">Summary</p>
+          <div className="px-5 py-4 rounded-xl bg-[#F4F5F7] dark:bg-[#262626] border border-[#E9EAEC] dark:border-[#262626]">
+            <p className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide mb-2">Summary</p>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                <Heart size={14} className="text-red-500" />
+              <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-500/15 flex items-center justify-center shrink-0">
+                <Heart size={14} className="text-red-500 dark:text-red-400" />
               </div>
               <div>
-                <p className="text-[13px] font-bold text-[#1F2937]">
+                <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">
                   {form.record_type} — {selectedResident ? `${selectedResident.lname}, ${selectedResident.fname}` : ""}
                 </p>
-                <p className="text-[11px] text-[#9CA3AF]">
+                <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                   {selectedResident?.purok?.name ?? ""} · {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                 </p>
               </div>
@@ -241,20 +241,20 @@ export default function NewHealthRecordPage() {
 
         {/* Error */}
         {error && (
-          <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200">
-            <p className="text-[12px] text-red-600 font-medium">{error}</p>
+          <div className="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-500/15 border border-red-200">
+            <p className="text-[12px] text-red-600 dark:text-red-400 font-medium">{error}</p>
           </div>
         )}
 
         {/* ── Actions ── */}
         <div className="flex gap-3 pb-6">
-          <button onClick={() => router.push("/health")} className="flex-1 py-3 rounded-xl border border-[#E9EAEC] text-[13px] font-bold text-[#6B7280] hover:bg-white transition">
+          <button onClick={() => router.push("/health")} className="flex-1 py-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[13px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-white transition">
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !isValid}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
           >
             <Save size={14} />
             {saving ? "Saving…" : "Save Health Record"}

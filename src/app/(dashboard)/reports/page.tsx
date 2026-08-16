@@ -15,9 +15,6 @@ import {
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 
-// Same muted "civic ledger" palette as the Dashboard's Document Status
-// chart (slate blue / muted amber / seal green / gray), so a blotter case
-// status reads the same color here as it does everywhere else in the app.
 const BLOTTER_STATUS_COLORS: Record<string, string> = {
   FILED: "#3E5C76",
   ONGOING: "#B45309",
@@ -57,11 +54,6 @@ const EMPTY_SUMMARY: Summary = {
   seniorCitizens: 0, pwdCount: 0, fourPsCount: 0, monthlyIncome: 0, monthlyExpense: 0,
 };
 
-// The five report types GET /api/pdf/report/[type] actually accepts —
-// mirrors REPORT_TYPES in src/app/api/pdf/report/[type]/route.ts. Kept
-// separate from the on-screen REPORT_MODULES list below since "population"
-// is a module on this page but isn't one of this PDF route's types (it has
-// its own dedicated PopulationReportPDF export instead).
 const EXPORTABLE_REPORT_TYPES = ["certificates", "financial", "blotter", "inventory", "registries"] as const;
 
 export default function ReportsPage() {
@@ -79,14 +71,6 @@ export default function ReportsPage() {
   useEffect(() => {
     let cancelled = false;
 
-    // BUG FIX: GET /api/reports only ever reads `year` / `month` query
-    // params (see parseYearMonth() in src/app/api/reports/route.ts) — it
-    // has never read `date_from`. Passing `date_from=${monthStart}` here
-    // was silently ignored, so the route fell back to its default of "the
-    // whole current year", meaning the "Certs This Month" stat and the
-    // income/expense figures were actually year-to-date totals mislabeled
-    // as monthly ones. Sending the params the route actually parses fixes
-    // that.
     const currentYear = String(now.getFullYear());
     const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
 
@@ -174,10 +158,6 @@ export default function ReportsPage() {
 
   const netBalance = summary.monthlyIncome - summary.monthlyExpense;
 
-  // ENHANCEMENT: "Export All" previously had no onClick handler at all —
-  // opens a PDF for every exportable report type for the current year,
-  // one tab per report, reusing the same /api/pdf/report/[type] route the
-  // individual report pages use.
   function handleExportAll() {
     setExporting(true);
     const year = String(now.getFullYear());
@@ -191,44 +171,43 @@ export default function ReportsPage() {
     {
       key: "population", label: "Population Report",
       description: "Residents by purok, sex, age group & civil status",
-      icon: Users, accent: "text-[#3E5C76]",
+      icon: Users, accent: "text-[#3E5C76] dark:text-[#8FB0CC]",
       stat: `${summary.totalResidents.toLocaleString()} residents`,
     },
     {
       key: "certificates", label: "Certificate Report",
       description: "Issuance history by type, month & year",
-      icon: FileText, accent: "text-[#0B6E4F]",
+      icon: FileText, accent: "text-[#0B6E4F] dark:text-[#34A37A]",
       stat: `${summary.certificatesMonth} issued this month`,
     },
     {
       key: "blotter", label: "Blotter Report",
       description: "Case status, escalations & incident trends",
-      icon: Shield, accent: "text-[#B45309]",
+      icon: Shield, accent: "text-[#B45309] dark:text-[#FBBF24]",
       stat: `${summary.activeBlotter} active cases`,
     },
     {
       key: "financial", label: "Financial Report",
       description: "Income vs. expense summary by period",
-      icon: Wallet, accent: "text-[#6D4AFF]",
+      icon: Wallet, accent: "text-[#6D4AFF] dark:text-[#A78BFA]",
       stat: `${formatCurrency(netBalance)} net`,
     },
     {
       key: "inventory", label: "Inventory Report",
       description: "Equipment status, borrowings & year-end count",
-      icon: Package, accent: "text-[#B3261E]",
+      icon: Package, accent: "text-[#B3261E] dark:text-[#F87171]",
       stat: `${summary.totalEquipment} total items`,
     },
     {
       key: "registries", label: "Special Registries",
       description: "Senior citizens, PWD, and 4Ps per purok",
-      icon: BookOpen, accent: "text-[#0E7490]",
+      icon: BookOpen, accent: "text-[#0E7490] dark:text-[#22D3EE]",
       stat: `${summary.seniorCitizens + summary.pwdCount + summary.fourPsCount} registered`,
     },
   ];
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Page header */}
       <PageHeader
         title="Reports"
         subtitle={`Overview as of ${today}`}
@@ -236,7 +215,7 @@ export default function ReportsPage() {
           <button
             onClick={handleExportAll}
             disabled={exporting}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] text-[#6B7280] text-[13px] font-bold hover:bg-[#F4F5F7] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[#6B7280] dark:text-[#A3A3A3] text-[13px] font-bold hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download size={14} />
             {exporting ? "Exporting…" : "Export All"}
@@ -244,7 +223,6 @@ export default function ReportsPage() {
         }
       />
 
-      {/* Quick stats */}
       <div className="grid grid-cols-4 gap-3">
         <StatCard label="Total Residents" value={summary.totalResidents.toLocaleString()} icon={Users} color="blue" />
         <StatCard label="Certs This Month" value={summary.certificatesMonth} icon={FileText} color="green" />
@@ -252,9 +230,8 @@ export default function ReportsPage() {
         <StatCard label="Net Balance" value={formatCurrency(netBalance)} icon={Wallet} color="purple" />
       </div>
 
-      {/* Report modules grid */}
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-widest text-[#9CA3AF] mb-3">Report Modules</p>
+        <p className="text-[11px] font-bold uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3] mb-3">Report Modules</p>
         <div className="grid grid-cols-3 gap-4">
           {REPORT_MODULES.map(mod => (
             <ModuleCard key={mod.key} mod={mod} onClick={() => router.push(`/reports/${mod.key}`)} />
@@ -262,13 +239,11 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Charts row */}
       <div className="grid grid-cols-2 gap-5">
-        {/* Population by Purok */}
-        <div className="bg-white rounded-xl border border-[#E9EAEC] p-5">
+        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-5">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[12px] font-bold uppercase tracking-widest text-[#1B2430]">Population by Purok</p>
-            <button onClick={() => router.push("/reports/population")} className="text-[11px] font-bold text-[#0B6E4F] hover:text-[#095c41] transition">
+            <p className="text-[12px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Population by Purok</p>
+            <button onClick={() => router.push("/reports/population")} className="text-[11px] font-bold text-[#0B6E4F] dark:text-[#34A37A] hover:text-[#095c41] dark:hover:text-[#3FBB8C] transition">
               Full Report →
             </button>
           </div>
@@ -286,11 +261,10 @@ export default function ReportsPage() {
           )}
         </div>
 
-        {/* Blotter by Status */}
-        <div className="bg-white rounded-xl border border-[#E9EAEC] p-5">
+        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-5">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-[12px] font-bold uppercase tracking-widest text-[#1B2430]">Blotter Case Status</p>
-            <button onClick={() => router.push("/reports/blotter")} className="text-[11px] font-bold text-[#0B6E4F] hover:text-[#095c41] transition">
+            <p className="text-[12px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Blotter Case Status</p>
+            <button onClick={() => router.push("/reports/blotter")} className="text-[11px] font-bold text-[#0B6E4F] dark:text-[#34A37A] hover:text-[#095c41] dark:hover:text-[#3FBB8C] transition">
               Full Report →
             </button>
           </div>
@@ -312,9 +286,9 @@ export default function ReportsPage() {
                   <div key={s.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: s.color }} />
-                      <span className="text-[11px] text-[#6B7280]">{s.name}</span>
+                      <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">{s.name}</span>
                     </div>
-                    <span className="text-[12px] font-bold tabular-nums text-[#1B2430]">{s.value}</span>
+                    <span className="text-[12px] font-bold tabular-nums text-[#1B2430] dark:text-white">{s.value}</span>
                   </div>
                 ))}
               </div>
@@ -323,22 +297,21 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Certificate breakdown mini table */}
-      <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9EAEC] bg-[#F9FAFB]">
-          <p className="text-[12px] font-bold uppercase tracking-widest text-[#1B2430]">Certificates Issued This Month</p>
-          <button onClick={() => router.push("/reports/certificates")} className="text-[11px] font-bold text-[#0B6E4F] hover:text-[#095c41] transition">
+      <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
+          <p className="text-[12px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Certificates Issued This Month</p>
+          <button onClick={() => router.push("/reports/certificates")} className="text-[11px] font-bold text-[#0B6E4F] dark:text-[#34A37A] hover:text-[#095c41] dark:hover:text-[#3FBB8C] transition">
             Full Report →
           </button>
         </div>
         {!loading && certByType.length === 0 ? (
           <div className="px-5 py-6"><EmptyChartState /></div>
         ) : (
-          <div className="grid grid-cols-5 divide-x divide-[#F4F5F7]">
+          <div className="grid grid-cols-5 divide-x divide-[#F4F5F7] dark:divide-[#262626]">
             {certByType.map(c => (
               <div key={c.name} className="px-4 py-4 text-center">
-                <p className="text-[22px] font-bold tabular-nums text-[#1B2430]">{c.value}</p>
-                <p className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide mt-0.5">{c.name}</p>
+                <p className="text-[22px] font-bold tabular-nums text-[#1B2430] dark:text-white">{c.value}</p>
+                <p className="text-[10px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide mt-0.5">{c.name}</p>
               </div>
             ))}
           </div>
@@ -353,19 +326,19 @@ function ModuleCard({ mod, onClick }: { mod: { key: string; label: string; descr
   return (
     <button
       onClick={onClick}
-      className="group flex flex-col gap-3 rounded-xl border border-[#E9EAEC] bg-white p-5 text-left transition hover:border-[#0B6E4F]/30 hover:bg-[#E8F3EE]/50"
+      className="group flex flex-col gap-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5 text-left transition hover:border-[#0B6E4F]/30 dark:hover:border-[#34A37A]/40 hover:bg-[#E8F3EE]/50 dark:hover:bg-[#11321F]/60"
     >
       <div className="flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F4F5F7]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F4F5F7] dark:bg-[#262626]">
           <Icon size={18} className={mod.accent} />
         </div>
-        <ChevronRight size={16} className="mt-1 text-[#D1D5DB] transition-colors group-hover:text-[#0B6E4F]" />
+        <ChevronRight size={16} className="mt-1 text-[#D1D5DB] dark:text-[#525252] transition-colors group-hover:text-[#0B6E4F] dark:group-hover:text-[#34A37A]" />
       </div>
       <div>
-        <p className="text-[13px] font-bold uppercase tracking-wide text-[#1B2430]">{mod.label}</p>
-        <p className="mt-1 text-[11px] leading-relaxed text-[#9CA3AF]">{mod.description}</p>
+        <p className="text-[13px] font-bold uppercase tracking-wide text-[#1B2430] dark:text-white">{mod.label}</p>
+        <p className="mt-1 text-[11px] leading-relaxed text-[#9CA3AF] dark:text-[#A3A3A3]">{mod.description}</p>
       </div>
-      <p className="text-[11px] font-semibold tabular-nums text-[#6B7280]">{mod.stat}</p>
+      <p className="text-[11px] font-semibold tabular-nums text-[#6B7280] dark:text-[#A3A3A3]">{mod.stat}</p>
     </button>
   );
 }
@@ -373,16 +346,16 @@ function ModuleCard({ mod, onClick }: { mod: { key: string; label: string; descr
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-[#E9EAEC] rounded-xl px-3 py-2 shadow-lg">
-      <p className="text-[11px] font-bold text-[#1F2937]">{label}</p>
-      <p className="text-[11px] text-[#0B6E4F]">{payload[0]?.value} residents</p>
+    <div className="bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 shadow-lg">
+      <p className="text-[11px] font-bold text-[#1F2937] dark:text-white">{label}</p>
+      <p className="text-[11px] text-[#0B6E4F] dark:text-[#34A37A]">{payload[0]?.value} residents</p>
     </div>
   );
 }
 
 function EmptyChartState() {
   return (
-    <div className="flex h-40 items-center justify-center text-[12px] text-[#9CA3AF]">
+    <div className="flex h-40 items-center justify-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
       No data for this period yet.
     </div>
   );
