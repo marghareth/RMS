@@ -35,16 +35,16 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+      <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
         {label}
       </label>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6]"
+        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#333333] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
       />
-      {hint && <p className="mt-1 text-[11px] text-[#9CA3AF]">{hint}</p>}
+      {hint && <p className="mt-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{hint}</p>}
     </div>
   );
 }
@@ -101,7 +101,7 @@ export default function GeneralSettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
       </div>
     );
   }
@@ -115,12 +115,12 @@ export default function GeneralSettingsPage() {
 
       <div className="space-y-5">
         {/* Barangay Info */}
-        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] p-5">
           <div className="mb-4 flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF]">
-              <Landmark size={14} className="text-[#1D4ED8]" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
+              <Landmark size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
             </div>
-            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Barangay Information</p>
+            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Barangay Information</p>
           </div>
 
           <div className="space-y-4">
@@ -141,12 +141,12 @@ export default function GeneralSettingsPage() {
         </div>
 
         {/* Contact Info */}
-        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] p-5">
           <div className="mb-4 flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F4F5F7]">
-              <Phone size={14} className="text-[#374151]" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F4F5F7] dark:bg-[#262626]">
+              <Phone size={14} className="text-[#374151] dark:text-[#D4D4D4]" />
             </div>
-            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Contact Information</p>
+            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Contact Information</p>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -156,16 +156,16 @@ export default function GeneralSettingsPage() {
         </div>
 
         {/* Certificate Signatory Override */}
-        <div className="rounded-xl border border-[#E9EAEC] bg-white p-5">
+        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] p-5">
           <div className="mb-4 flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FEF3C7]">
-              <UserCheck size={14} className="text-[#D97706]" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#FEF3C7] dark:bg-amber-500/15">
+              <UserCheck size={14} className="text-[#D97706] dark:text-[#FBBF24]" />
             </div>
-            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">
+            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
               Certificate Signatory Override
             </p>
           </div>
-          <p className="mb-4 text-[11px] leading-relaxed text-[#9CA3AF]">
+          <p className="mb-4 text-[11px] leading-relaxed text-[#9CA3AF] dark:text-[#A3A3A3]">
             By default, certificates auto-attach the active Barangay Captain from the Officials directory. Set an
             override here only if that record is temporarily unavailable (e.g. vacant seat, officer-in-charge).
           </p>
@@ -191,7 +191,7 @@ export default function GeneralSettingsPage() {
         {/* Save */}
         <div className="flex items-center justify-end gap-3 pb-8">
           {saved && (
-            <span className="flex items-center gap-1.5 text-[12px] font-semibold text-[#059669]">
+            <span className="flex items-center gap-1.5 text-[12px] font-semibold text-[#059669] dark:text-[#34D399]">
               <CheckCircle2 size={14} />
               Settings saved
             </span>
@@ -199,7 +199,7 @@ export default function GeneralSettingsPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] disabled:opacity-60"
+            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
           >
             <Save size={14} />
             {saving ? "Saving..." : "Save Settings"}

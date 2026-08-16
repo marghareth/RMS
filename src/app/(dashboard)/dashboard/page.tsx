@@ -133,7 +133,7 @@ function LedgerStatStrip({ stats }: { stats: StatCell[] }) {
         <Link
           key={s.key}
           href={s.href}
-          className="flex flex-col justify-between gap-4 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-5 py-4 transition hover:border-[#0B6E4F]/30 dark:hover:border-[#34A37A]/40 hover:bg-[#E8F3EE]/50 dark:hover:bg-[#11321F]/60"
+          className="flex flex-col justify-between gap-4 rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] px-5 py-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] transition hover:border-[#0B6E4F]/30 dark:hover:border-[#34A37A]/50 hover:bg-[#E8F3EE]/50 dark:hover:bg-[#11321F]/60"
         >
           <div className="flex items-start justify-between gap-2">
             <p className="text-[10.5px] font-bold uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3]">{s.label}</p>
@@ -161,7 +161,7 @@ const QUICK_ACTIONS = [
 
 function QuickActionsPanel() {
   return (
-    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-6 py-5">
+    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
       <h2 className="text-[13px] font-bold text-[#1B2430] dark:text-white">Quick Actions</h2>
       <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Jump straight to a new entry</p>
       <div className="mt-4 flex flex-col gap-2">
@@ -214,7 +214,7 @@ function PriorityTasksPanel({ data }: { data: DashboardData }) {
   ].filter((t) => t.show);
 
   return (
-    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-6 py-5">
+    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
       <h2 className="text-[13px] font-bold text-[#1B2430] dark:text-white">Priority Tasks</h2>
       <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Things that may need your attention</p>
 
@@ -248,7 +248,7 @@ const STATUS_COLORS: Record<string, string> = {
 function DocumentStatusChart({ data }: { data: DashboardData }) {
   const total = data.documentsByStatus.reduce((sum, d) => sum + d.count, 0);
   return (
-    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-6 py-5">
+    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
       <h2 className="text-[13px] font-bold text-[#1B2430] dark:text-white">Document Status</h2>
       <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Breakdown of all document requests</p>
 
@@ -286,7 +286,7 @@ function DocumentStatusChart({ data }: { data: DashboardData }) {
 // ─── RECENT ACTIVITY (ledger table) ─────────────────────────────────────────────
 function RecentActivityTable({ data }: { data: DashboardData }) {
   return (
-    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-6 py-5">
+    <div className="rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
       <h2 className="text-[13px] font-bold text-[#1B2430] dark:text-white">Recent Activity</h2>
       <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Latest actions across all modules</p>
 
@@ -456,7 +456,7 @@ export default function DashboardPage() {
       )}
 
       {/* Recent Blotter Cases — always shown; not user-togglable per spec */}
-      <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-6 py-5">
+      <div className="rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-[13px] font-bold text-[#1B2430] dark:text-white">Recent Blotter Cases</h2>
