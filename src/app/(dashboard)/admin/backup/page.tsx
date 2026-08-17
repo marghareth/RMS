@@ -77,17 +77,17 @@ export default function BackupPage() {
       </div>
 
       {/* Trigger backup */}
-      <div className="mb-5 flex items-center justify-between rounded-xl border border-[#E9EAEC] bg-white p-5">
+      <div className="mb-5 flex items-center justify-between rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] p-5">
         <div>
-          <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Trigger Manual Backup</p>
-          <p className="mt-1 max-w-lg text-[12px] text-[#9CA3AF]">
+          <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Trigger Manual Backup</p>
+          <p className="mt-1 max-w-lg text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
             Logs a backup event with your account and a timestamp. This does not yet perform an actual database
             snapshot — that mechanism isn&apos;t implemented server-side.
           </p>
         </div>
         <button
           onClick={() => setConfirmOpen(true)}
-          className="flex shrink-0 items-center gap-2 rounded-lg bg-[#3B82F6] px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
+          className="flex shrink-0 items-center gap-2 rounded-lg bg-[#3B82F6] px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
         >
           <DatabaseBackup size={15} />
           Trigger Backup
@@ -95,29 +95,29 @@ export default function BackupPage() {
       </div>
 
       {/* Backup history */}
-      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
+      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
           </div>
         ) : backups.length === 0 ? (
           <EmptyState icon={DatabaseBackup} title="No backups yet" description="Trigger your first manual backup above." />
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E9EAEC] bg-[#F9FAFB]">
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Date Triggered</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Triggered By</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">File Reference</th>
+              <tr className="border-b border-[#E9EAEC] dark:border-[#333333] bg-[#F9FAFB] dark:bg-[#171717]">
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Date Triggered</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Triggered By</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">File Reference</th>
               </tr>
             </thead>
             <tbody>
               {backups.map((b) => (
-                <tr key={b.id} className="border-b border-[#F4F5F7] transition last:border-b-0 hover:bg-[#F9FAFB]">
-                  <td className="px-4 py-3 text-[12px] font-semibold text-[#1F2937]">{formatISODateTime(b.backup_date)}</td>
-                  <td className="px-4 py-3 text-[12px] text-[#374151]">{b.trigger.username}</td>
+                <tr key={b.id} className="border-b border-[#F4F5F7] dark:border-[#262626] transition last:border-b-0 hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]">
+                  <td className="px-4 py-3 text-[12px] font-semibold text-[#1F2937] dark:text-white">{formatISODateTime(b.backup_date)}</td>
+                  <td className="px-4 py-3 text-[12px] text-[#374151] dark:text-[#D4D4D4]">{b.trigger.username}</td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F4F5F7] px-2.5 py-1 text-[11px] font-mono text-[#6B7280]">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F4F5F7] dark:bg-[#262626] px-2.5 py-1 text-[11px] font-mono text-[#6B7280] dark:text-[#A3A3A3]">
                       <FileArchive size={11} />
                       {b.file_reference ?? "—"}
                     </span>

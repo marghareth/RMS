@@ -98,7 +98,7 @@ export default function UsersListPage() {
         actions={
           <button
             onClick={() => router.push("/admin/users/new")}
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
+            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
           >
             <Plus size={15} />
             Add User
@@ -115,59 +115,59 @@ export default function UsersListPage() {
 
       {/* Search */}
       <div className="relative mb-4">
-        <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+        <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search username or role"
-          className="w-full rounded-xl border border-[#E9EAEC] bg-white py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6]"
+          className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
         />
       </div>
 
       {/* Users table */}
-      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
+      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState icon={Users} title="No users found" description="Try adjusting your search, or add a new user." />
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E9EAEC] bg-[#F9FAFB]">
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Username</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Role</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Status</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Created</th>
+              <tr className="border-b border-[#E9EAEC] dark:border-[#333333] bg-[#F9FAFB] dark:bg-[#171717]">
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Username</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Role</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Status</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Created</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody>
               {filtered.map((u) => (
-                <tr key={u.id} className="border-b border-[#F4F5F7] transition last:border-b-0 hover:bg-[#F9FAFB]">
-                  <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937]">{u.username}</td>
+                <tr key={u.id} className="border-b border-[#F4F5F7] dark:border-[#262626] transition last:border-b-0 hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]">
+                  <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937] dark:text-white">{u.username}</td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-[#EBF3FF] px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8]">
+                    <span className="inline-flex items-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
                       {roleLabel(u.role)}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                        u.is_active ? "bg-[#D1FAE5] text-[#059669]" : "bg-[#F4F5F7] text-[#9CA3AF]"
+                        u.is_active ? "bg-[#D1FAE5] dark:bg-emerald-500/15 text-[#059669] dark:text-[#34D399]" : "bg-[#F4F5F7] dark:bg-[#262626] text-[#9CA3AF] dark:text-[#A3A3A3]"
                       }`}
                     >
                       <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
                       {u.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-[#9CA3AF]">{formatISODate(u.created_at)}</td>
+                  <td className="px-4 py-3 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">{formatISODate(u.created_at)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => setEditId(u.id)}
-                        className="flex w-20 items-center justify-center gap-1.5 rounded-lg border border-[#E9EAEC] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#374151] transition hover:bg-[#F4F5F7]"
+                        className="flex w-20 items-center justify-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#333333] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                       >
                         <Pencil size={11} />
                         Edit
@@ -176,8 +176,8 @@ export default function UsersListPage() {
                         onClick={() => setDeactivateTarget(u)}
                         className={`flex w-30.5 items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition ${
                           u.is_active
-                            ? "border-[#FEE2E2] text-[#DC2626] hover:bg-[#FEE2E2]"
-                            : "border-[#D1FAE5] text-[#059669] hover:bg-[#D1FAE5]"
+                            ? "border-[#FEE2E2] dark:border-red-500/20 text-[#DC2626] dark:text-[#F87171] hover:bg-[#FEE2E2] dark:hover:bg-red-500/20"
+                            : "border-[#D1FAE5] dark:border-emerald-500/20 text-[#059669] dark:text-[#34D399] hover:bg-[#D1FAE5] dark:hover:bg-emerald-500/20"
                         }`}
                       >
                         <Power size={11} />

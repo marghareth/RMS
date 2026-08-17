@@ -165,21 +165,21 @@ export default function PuroksAdminPage() {
       />
 
       {/* Add new purok */}
-      <div className="bg-white rounded-xl border border-[#E9EAEC] p-4 mb-4 flex items-center gap-2">
+      <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#333333] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] p-4 mb-4 flex items-center gap-2">
         <div className="relative flex-1">
-          <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+          <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             placeholder="New purok name (e.g. Purok 5)"
-            className="w-full pl-9 pr-3 py-2.5 text-[13px] border border-[#E9EAEC] rounded-xl focus:outline-none focus:border-[#3B82F6] placeholder:text-[#9CA3AF] text-[#1F2937] transition"
+            className="w-full pl-9 pr-3 py-2.5 text-[13px] border border-[#E9EAEC] dark:border-[#333333] rounded-xl focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] text-[#1F2937] dark:text-white transition"
           />
         </div>
         <button
           onClick={handleAdd}
           disabled={adding || !newName.trim()}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[12px] font-bold transition shadow-sm disabled:opacity-50 shrink-0"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] text-white text-[12px] font-bold transition shadow-sm disabled:opacity-50 shrink-0"
         >
           <Plus size={14} />
           {adding ? "Adding…" : "Add Purok"}
@@ -187,32 +187,32 @@ export default function PuroksAdminPage() {
       </div>
 
       {error && (
-        <div className="mb-4 px-4 py-2.5 rounded-xl bg-red-50 text-red-600 text-[12px] font-medium">
+        <div className="mb-4 px-4 py-2.5 rounded-xl bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400 text-[12px] font-medium">
           {error}
         </div>
       )}
 
       {/* List */}
-      <div className="bg-white rounded-xl border border-[#E9EAEC] overflow-hidden">
+      <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#333333] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-6 h-6 border-2 border-[#3B82F6] border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : puroks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <div className="w-12 h-12 rounded-full bg-[#F4F5F7] flex items-center justify-center">
-              <MapPin size={20} className="text-[#D1D5DB]" />
+            <div className="w-12 h-12 rounded-full bg-[#F4F5F7] dark:bg-[#262626] flex items-center justify-center">
+              <MapPin size={20} className="text-[#D1D5DB] dark:text-[#525252]" />
             </div>
             <div className="text-center">
-              <p className="text-[13px] font-semibold text-[#6B7280]">No puroks yet</p>
-              <p className="text-[11px] text-[#9CA3AF] mt-0.5">Add your barangay&apos;s puroks above to get started</p>
+              <p className="text-[13px] font-semibold text-[#6B7280] dark:text-[#A3A3A3]">No puroks yet</p>
+              <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Add your barangay&apos;s puroks above to get started</p>
             </div>
           </div>
         ) : (
           <div>
-            <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-2.5 bg-[#F9FAFB] border-b border-[#E9EAEC]">
+            <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-2.5 bg-[#F9FAFB] dark:bg-[#171717] border-b border-[#E9EAEC] dark:border-[#333333]">
               {["Name", "Residents", "Households", ""].map((h) => (
-                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wide">{h}</span>
+                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>
               ))}
             </div>
 
@@ -223,7 +223,7 @@ export default function PuroksAdminPage() {
               return (
                 <div
                   key={p.id}
-                  className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-3.5 items-center border-b border-[#F4F5F7] last:border-0"
+                  className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-3.5 items-center border-b border-[#F4F5F7] dark:border-[#262626] last:border-0"
                 >
                   {/* Name / rename input */}
                   <div className="min-w-0">
@@ -236,27 +236,27 @@ export default function PuroksAdminPage() {
                           if (e.key === "Enter") handleRename(p.id);
                           if (e.key === "Escape") cancelEditing();
                         }}
-                        className="w-full text-[13px] border border-[#3B82F6] rounded-lg px-3 py-1.5 focus:outline-none text-[#1F2937]"
+                        className="w-full text-[13px] border border-[#3B82F6] dark:border-[#60A5FA] rounded-lg px-3 py-1.5 focus:outline-none text-[#1F2937] dark:text-white"
                       />
                     ) : (
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-[#EFF6FF] flex items-center justify-center shrink-0">
-                          <MapPin size={14} className="text-[#3B82F6]" />
+                        <div className="w-8 h-8 rounded-full bg-[#EFF6FF] dark:bg-blue-500/15 flex items-center justify-center shrink-0">
+                          <MapPin size={14} className="text-[#3B82F6] dark:text-[#60A5FA]" />
                         </div>
-                        <p className="text-[13px] font-bold text-[#1F2937] truncate">{p.name}</p>
+                        <p className="text-[13px] font-bold text-[#1F2937] dark:text-white truncate">{p.name}</p>
                       </div>
                     )}
                   </div>
 
                   {/* Resident count */}
-                  <span className="flex items-center gap-1.5 text-[12px] text-[#6B7280]">
-                    <Users size={13} className="text-[#9CA3AF]" />
+                  <span className="flex items-center gap-1.5 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
+                    <Users size={13} className="text-[#9CA3AF] dark:text-[#A3A3A3]" />
                     {p._count?.residents ?? 0}
                   </span>
 
                   {/* Household count */}
-                  <span className="flex items-center gap-1.5 text-[12px] text-[#6B7280]">
-                    <Home size={13} className="text-[#9CA3AF]" />
+                  <span className="flex items-center gap-1.5 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
+                    <Home size={13} className="text-[#9CA3AF] dark:text-[#A3A3A3]" />
                     {p._count?.households ?? 0}
                   </span>
 
@@ -267,7 +267,7 @@ export default function PuroksAdminPage() {
                         <button
                           onClick={() => handleRename(p.id)}
                           disabled={saving || !editingName.trim()}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-green-600 hover:bg-green-50 transition disabled:opacity-50"
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-green-600 dark:text-green-400 hover:bg-green-50 transition disabled:opacity-50"
                           title="Save"
                         >
                           <Check size={15} />
@@ -275,7 +275,7 @@ export default function PuroksAdminPage() {
                         <button
                           onClick={cancelEditing}
                           disabled={saving}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#F4F5F7] transition"
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
                           title="Cancel"
                         >
                           <X size={15} />
@@ -285,14 +285,14 @@ export default function PuroksAdminPage() {
                       <>
                         <button
                           onClick={() => startEditing(p)}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#F4F5F7] transition"
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
                           title="Rename"
                         >
                           <Pencil size={14} />
                         </button>
                         <button
                           onClick={() => { setDeleteTarget(p); setDeleteError(""); }}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-50 transition"
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-red-500 dark:text-red-400 hover:bg-red-50 transition"
                           title={inUse ? "Still assigned to residents or households" : "Delete"}
                         >
                           <Trash2 size={14} />
