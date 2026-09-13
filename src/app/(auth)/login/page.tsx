@@ -1,8 +1,10 @@
+// FILE: src/app/(auth)/login/page.tsx
 "use client";
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
@@ -33,66 +35,86 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F5F7] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 w-full max-w-sm p-10">
+    <div className="flex min-h-screen flex-col justify-between bg-white px-8 py-10">
+      <div />
 
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-full bg-blue-50 border-2 border-blue-100 flex items-center justify-center mb-5">
-            <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-              <polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
-          </div>
-          <h1 className="text-xl font-bold text-gray-900">Sign in</h1>
-          <p className="text-sm text-gray-500 mt-1">Barangay Records Management System</p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleLogin} className="flex flex-col gap-3">
-          <input
-            type="text"
-            placeholder="Administrator"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:bg-white transition"
-            required
-          />
-
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:bg-white transition pr-11"
-              required
+      <div className="flex flex-1 items-center justify-center">
+        <div className="w-full max-w-[340px]">
+          {/* mark */}
+          <svg width="20" height="24" viewBox="0 0 20 24" fill="none" className="mb-8">
+            <path
+              d="M12 0L2 13h7l-2 11 11-14h-7l1-10z"
+              fill="#0A0A0A"
             />
+          </svg>
+
+          <h1 className="text-[28px] font-bold leading-tight text-[#0A0A0A]">
+            Welcome back!
+          </h1>
+          <p className="mt-2 text-sm text-[#737373]">
+            Residents, requests, records — all in one place.
+          </p>
+
+          <form onSubmit={handleLogin} className="mt-8 flex flex-col gap-3">
+            <input
+              type="text"
+              placeholder="Your username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
+              required
+              className="w-full rounded-lg border border-[#E5E5E5] px-4 py-3 text-sm text-[#0A0A0A] placeholder:text-[#A3A3A3] transition focus:border-[#0A0A0A] focus:outline-none"
+            />
+
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+                className="w-full rounded-lg border border-[#E5E5E5] px-4 py-3 pr-11 text-sm text-[#0A0A0A] placeholder:text-[#A3A3A3] transition focus:border-[#0A0A0A] focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A3A3A3] hover:text-[#0A0A0A]"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+
+            {error && <p className="text-xs text-red-500">{error}</p>}
+
             <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              type="submit"
+              disabled={loading}
+              className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-[#0A0A0A] py-3 text-sm font-semibold text-white transition hover:bg-[#262626] disabled:opacity-70"
             >
-              {showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}
+              {loading ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" /> Signing in...
+                </>
+              ) : (
+                "Sign in"
+              )}
             </button>
-          </div>
+          </form>
 
-          {error && (
-            <p className="text-xs text-red-500 text-center">{error}</p>
-          )}
+          <p className="mt-5 text-xs text-[#737373]">
+            Access is provisioned by your barangay administrator.
+          </p>
+        </div>
+      </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm transition flex items-center justify-center gap-2 mt-1 disabled:opacity-70"
-          >
-            {loading ? <><Loader2 size={15} className="animate-spin"/> Signing in...</> : "Sign in"}
-          </button>
-
-          <a href="#" className="text-center text-xs text-blue-500 hover:underline mt-1">
-            Forgot password?
-          </a>
-        </form>
+      <div className="flex items-center justify-center gap-6 text-xs text-[#A3A3A3]">
+        <span>Brgy-RMS</span>
+        <span className="h-1 w-1 rounded-full bg-[#D4D4D4]" />
+        <Link href="/verify" className="hover:text-[#0A0A0A]">
+          Verify a certificate
+        </Link>
       </div>
     </div>
   );

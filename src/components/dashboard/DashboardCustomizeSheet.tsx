@@ -18,18 +18,31 @@ interface DashboardCustomizeSheetProps {
   onSaved: (prefs: DashboardPreferenceMap) => void;
 }
 
+// FIX: the toggle knob was positioned with a manually-calculated
+// `translate-x-4.5` — a fragile approach where the exact pixel math
+// (track width minus knob width minus padding) has to be recomputed by
+// hand any time either size changes, and any small rounding/box-sizing
+// difference pushes the circle outside the track on the right edge.
+// Rebuilt using flexbox instead: the knob is a flex child inside a
+// padded track, positioned with `justify-start`/`justify-end` rather
+// than a transform offset. This is structurally immune to overflow —
+// the knob is always constrained by the track's own padding box, no
+// matter what size either element ends up being.
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative h-5 w-9 shrink-0 rounded-full transition ${checked ? "bg-[#3B82F6]" : "bg-[#E5E7EB] dark:bg-[#262626]"}`}
+      className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors ${
+        checked ? "bg-[#3B82F6] justify-end" : "bg-[#E5E7EB] dark:bg-[#404040] justify-start"
+      }`}
     >
-      <span
-        className={`absolute top-0.5 h-4 w-4 rounded-full bg-white dark:bg-[#171717] shadow transition-transform ${
-          checked ? "translate-x-4.5" : "translate-x-0.5"
-        }`}
-      />
+      {/* Knob stays white in both themes — it needs to contrast against
+          the track whether the track is blue (checked) or gray (off),
+          so it should never pick up the app's dark card color. */}
+      <span className="h-4 w-4 rounded-full bg-white shadow" />
     </button>
   );
 }

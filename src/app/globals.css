@@ -84,3 +84,39 @@ body {
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
+
+/* FIX: native <select> dropdowns not aligning with dark mode.
+   A lot of <select> elements across the app never had an explicit
+   `bg-white` in their original className — they just relied on
+   inheriting a background from the white card/input group around them.
+   That's fine in light mode, but browsers don't reliably apply an
+   inherited CSS background to a <select>'s own native form-control
+   chrome (it's still partly OS/browser-themed by default), so those
+   selects kept rendering with a light box even after `.dark` was
+   active elsewhere on the page — while selects that DID have an
+   explicit `bg-white dark:bg-[...]` pair (added during the earlier
+   dark-mode pass) rendered correctly. That inconsistency between
+   dropdowns is exactly the bug being fixed here.
+   Placed in `@layer base` (lower priority than Tailwind's utilities
+   layer) so any select that already has an explicit `dark:bg-[...]`
+   Tailwind class keeps using that — this only supplies a sane default
+   for every select that doesn't. Also sets `color-scheme` so the
+   native OPTION popup itself (which CSS alone can't restyle) renders
+   with the browser's dark UI instead of a jarring white list. */
+@layer base {
+  select {
+    color-scheme: light;
+  }
+
+  .dark select {
+    color-scheme: dark;
+    background-color: #171717;
+    color: #ffffff;
+    border-color: #333333;
+  }
+
+  .dark select:disabled {
+    background-color: #1a1a1a;
+    color: #737373;
+  }
+}
