@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, SlidersHorizontal, ChevronRight,
-  Plus, X, Users,
+  Plus, X, Users, Mars, Venus,
 } from "lucide-react";
 import ResidentDetailSheet from "@/components/residents/ResidentDetailSheet";
 
@@ -254,9 +254,17 @@ export default function ResidentsPage() {
                   </div>
                 </div>
 
-                {/* Sex */}
-                <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full w-fit
-                  ${r.sex === "MALE" ? "bg-blue-50 text-blue-600" : "bg-pink-50 text-pink-600"}`}>
+                {/* Sex — icon + soft-pill treatment, matching the
+                    StatusBadge redesign so every "chip" in the app
+                    (statuses, sex, types) reads consistently. */}
+                <span
+                  className={`inline-flex items-center gap-1.5 w-fit rounded-full border px-2.5 py-1 text-xs font-medium ${
+                    r.sex === "MALE"
+                      ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/25"
+                      : "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-500/10 dark:text-pink-400 dark:border-pink-500/25"
+                  }`}
+                >
+                  {r.sex === "MALE" ? <Mars size={12} strokeWidth={2.25} /> : <Venus size={12} strokeWidth={2.25} />}
                   {r.sex === "MALE" ? "Male" : "Female"}
                 </span>
 
