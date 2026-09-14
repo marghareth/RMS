@@ -29,6 +29,17 @@ export const userUpdateSchema = userCreateSchema.partial().extend({
   password: z.string().min(8).optional(), // don't force a password change on update
 });
 
+// ─── MFA (TOTP) ─────────────────────────────────────────────────────────────
+export const mfaEnableSchema = z.object({
+  token: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code from your authenticator app"),
+});
+
+export const mfaDisableSchema = z.object({
+  password: nonEmptyString,
+  // Either a live TOTP code or a backup code is accepted here.
+  token: nonEmptyString,
+});
+
 // ─── HOUSEHOLDS ─────────────────────────────────────────────────────────────
 export const householdCreateSchema = z.object({
   purok_id: id,

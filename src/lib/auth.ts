@@ -1,61 +1,39 @@
 // FILE: src/lib/auth.ts
 //
-// SECURITY FIX: `authorize()` had no throttling at all — an attacker could
-// fire unlimited password guesses at any username with no delay, lockout,
-// or backoff (bcrypt.compare is deliberately slow, but that's not a
-// substitute for real rate limiting at scale/with parallel requests).
+// SECURITY: two layers here beyond a plain username/password check.
 //
-// Added a simple in-memory sliding-window limiter keyed by username: after
-// MAX_ATTEMPTS failed logins within WINDOW_MS, further attempts for that
-// username are rejected for the rest of the window, independent of
-// whether the password is actually correct.
+// 1. Login attempts are rate-limited (5 failures / 15 min per username)
+//    via the shared limiter in src/lib/rate-limit.ts — see that file for
+//    why the storage layer is a swappable interface rather than a bare
+//    Map, which is what this used to be. Only real failures (bad
+//    password, bad MFA code) are penalized; the "please enter your MFA
+//    code" round-trip on an otherwise-correct login is not, via
+//    `peek`/`penalize` instead of a single unconditional increment.
 //
-// LIMITATION: this store is per-process memory, so it resets on restart
-// and does NOT share state across multiple server instances/regions in a
-// horizontally-scaled deployment. That's fine for a single-instance
-// deployment (typical for a barangay-scale LGU system) but if this is
-// ever run behind a load balancer with multiple Node instances, replace
-// `attemptStore` with a shared store (e.g. Redis/Upstash) so the limit is
-// enforced globally rather than per-instance.
+// 2. TOTP multi-factor auth (src/lib/mfa.ts). Any user can enable it via
+//    /api/account/mfa/*; once `mfa_enabled` is true on their row, a valid
+//    6-digit code (or a one-time backup code) is required on every
+//    sign-in, not just the password. ADMIN and CAPTAIN carry the most
+//    sensitive permissions in this app (financials, blotter, resident
+//    PII), so those roles are nudged hard to enable it — see
+//    `mfaSetupRequired` below and the banner in the dashboard layout that
+//    reads it off the session — but existing admins are never locked out
+//    of an account they haven't enrolled yet; that would turn a security
+//    feature into a self-inflicted outage with no recovery path.
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./db";
 import bcrypt from "bcryptjs";
+import { verifyTotp, consumeBackupCode } from "./mfa";
+import { RateLimiter } from "./rate-limit";
 
-const MAX_ATTEMPTS = 5;
-const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const loginLimiter = new RateLimiter({
+  namespace: "login",
+  max: 5,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+});
 
-type AttemptRecord = { count: number; firstAttemptAt: number };
-const attemptStore = new Map<string, AttemptRecord>();
-
-function isRateLimited(username: string): boolean {
-  const record = attemptStore.get(username);
-  if (!record) return false;
-
-  const windowExpired = Date.now() - record.firstAttemptAt > WINDOW_MS;
-  if (windowExpired) {
-    attemptStore.delete(username);
-    return false;
-  }
-
-  return record.count >= MAX_ATTEMPTS;
-}
-
-function recordFailedAttempt(username: string): void {
-  const record = attemptStore.get(username);
-  const windowExpired = record && Date.now() - record.firstAttemptAt > WINDOW_MS;
-
-  if (!record || windowExpired) {
-    attemptStore.set(username, { count: 1, firstAttemptAt: Date.now() });
-    return;
-  }
-
-  record.count += 1;
-}
-
-function clearAttempts(username: string): void {
-  attemptStore.delete(username);
-}
+const ROLES_REQUIRING_MFA = new Set(["ADMIN", "CAPTAIN"]);
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -67,23 +45,27 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
+        // Populated on the second step of login, only when the account
+        // has MFA enabled. Absent for every other sign-in.
+        totp: { label: "Authentication code", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) return null;
 
         const username = credentials.username;
 
-        // Deliberately generic rejection (no "too many attempts" detail)
-        // so this branch is indistinguishable from a bad password to
-        // anyone probing for valid usernames.
-        if (isRateLimited(username)) return null;
+        // Read-only gate: doesn't count as an attempt by itself, but
+        // blocks entirely once too many *real* failures have already
+        // been recorded for this username.
+        const gate = await loginLimiter.peek(username);
+        if (!gate.allowed) return null;
 
         const user = await prisma.user.findUnique({
           where: { username },
         });
 
         if (!user || !user.is_active) {
-          recordFailedAttempt(username);
+          await loginLimiter.penalize(username);
           return null;
         }
 
@@ -93,16 +75,46 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!passwordMatch) {
-          recordFailedAttempt(username);
+          await loginLimiter.penalize(username);
           return null;
         }
 
-        clearAttempts(username);
+        // ── Second factor ──────────────────────────────────────────
+        if (user.mfa_enabled) {
+          const token = credentials.totp?.trim();
+
+          // No code submitted yet: this is the first-step form post.
+          // Signal the client to prompt for one and re-submit, rather
+          // than treating it as a failed login (and without penalizing
+          // the rate limiter for it — the password was correct).
+          if (!token) {
+            throw new Error("MFA_REQUIRED");
+          }
+
+          const validTotp = user.mfa_secret ? verifyTotp(user.mfa_secret, token) : false;
+
+          if (!validTotp) {
+            const { valid, remaining } = await consumeBackupCode(token, user.mfa_backup_codes);
+            if (!valid) {
+              await loginLimiter.penalize(username);
+              throw new Error("MFA_INVALID");
+            }
+            // Backup codes are single-use — persist the code's removal
+            // immediately so it can't be replayed.
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { mfa_backup_codes: remaining },
+            });
+          }
+        }
+
+        await loginLimiter.reset(username);
 
         return {
           id: String(user.id),
           username: user.username,
           role: user.role,
+          mfaSetupRequired: ROLES_REQUIRING_MFA.has(user.role) && !user.mfa_enabled,
         };
       },
     }),
@@ -113,6 +125,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.username = (user as any).username;
         token.role = (user as any).role;
+        token.mfaSetupRequired = (user as any).mfaSetupRequired;
       }
       return token;
     },
@@ -121,6 +134,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = token.id;
         (session.user as any).username = token.username;
         (session.user as any).role = token.role;
+        (session.user as any).mfaSetupRequired = token.mfaSetupRequired;
       }
       return session;
     },

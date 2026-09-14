@@ -1,0 +1,172 @@
+// FILE: src/lib/rate-limit.ts
+//
+// Shared rate-limiting building block, used by login (src/lib/auth.ts),
+// the public certificate-verification endpoint, and bulk certificate
+// actions. Previously each of these either had its own bespoke limiter
+// (login) or no limiting at all (verify, bulk actions).
+//
+// STORAGE: `RateLimitStore` is the one seam that matters for scaling.
+// `MemoryRateLimitStore` below keeps counts in a process-local Map, which
+// is fine for a single Node instance (typical for a barangay-scale
+// deployment) but — as flagged previously on the login limiter — does
+// NOT share state across multiple instances behind a load balancer. If
+// this app is ever deployed that way, write a second class implementing
+// `RateLimitStore` against Redis/Upstash (GET, INCR + PEXPIRE is the
+// whole implementation) and pass it into `new RateLimiter({ store })`
+// wherever a limiter is constructed. Nothing else in this file, or in any
+// of its callers, needs to change — that's the point of the interface.
+
+import { NextResponse } from "next/server";
+
+export interface RateLimitRecord {
+  count: number;
+  windowStartedAt: number;
+}
+
+export interface RateLimitStore {
+  /** Reads the current record for `key` without modifying it. Null if none exists or its window has expired. */
+  peek(key: string, windowMs: number): Promise<RateLimitRecord | null>;
+  /** Atomically increments the counter for `key`, starting a new window if the previous one expired. */
+  increment(key: string, windowMs: number): Promise<RateLimitRecord>;
+  /** Clears a key entirely — used on successful auth so a good attempt isn't held against future ones. */
+  reset(key: string): Promise<void>;
+}
+
+export class MemoryRateLimitStore implements RateLimitStore {
+  private store = new Map<string, RateLimitRecord>();
+
+  async peek(key: string, windowMs: number): Promise<RateLimitRecord | null> {
+    const existing = this.store.get(key);
+    if (!existing) return null;
+    if (Date.now() - existing.windowStartedAt > windowMs) return null;
+    return existing;
+  }
+
+  async increment(key: string, windowMs: number): Promise<RateLimitRecord> {
+    const now = Date.now();
+    const existing = this.store.get(key);
+
+    if (!existing || now - existing.windowStartedAt > windowMs) {
+      const fresh: RateLimitRecord = { count: 1, windowStartedAt: now };
+      this.store.set(key, fresh);
+      return fresh;
+    }
+
+    existing.count += 1;
+    return existing;
+  }
+
+  async reset(key: string): Promise<void> {
+    this.store.delete(key);
+  }
+}
+
+// One shared instance per process. Each named limiter below still keys
+// its own entries (see the `${namespace}:` prefix in RateLimiter), so
+// different limiters never collide with each other in this one map.
+const defaultStore = new MemoryRateLimitStore();
+
+export interface RateLimiterOptions {
+  /** Distinguishes this limiter's keys from every other limiter sharing a store. */
+  namespace: string;
+  /** How many hits are allowed within the window. */
+  max: number;
+  /** Window length in milliseconds. */
+  windowMs: number;
+  store?: RateLimitStore;
+}
+
+export interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  /** Seconds until the caller should retry — only meaningful when !allowed. */
+  retryAfterSeconds: number;
+}
+
+export class RateLimiter {
+  private namespace: string;
+  private max: number;
+  private windowMs: number;
+  private store: RateLimitStore;
+
+  constructor(options: RateLimiterOptions) {
+    this.namespace = options.namespace;
+    this.max = options.max;
+    this.windowMs = options.windowMs;
+    this.store = options.store ?? defaultStore;
+  }
+
+  private key(key: string): string {
+    return `${this.namespace}:${key}`;
+  }
+
+  private toResult(record: RateLimitRecord | null): RateLimitResult {
+    const count = record?.count ?? 0;
+    const allowed = count <= this.max;
+    const resetAt = (record?.windowStartedAt ?? Date.now()) + this.windowMs;
+    const retryAfterSeconds = Math.max(0, Math.ceil((resetAt - Date.now()) / 1000));
+    return { allowed, remaining: Math.max(0, this.max - count), retryAfterSeconds };
+  }
+
+  /**
+   * Simple case: every call to a rate-limited endpoint counts against the
+   * budget, whether it succeeds or fails. Use this for anything that
+   * isn't login's "only penalize on an actual wrong credential" shape —
+   * e.g. the public verify endpoint, bulk certificate actions.
+   */
+  async check(key: string): Promise<RateLimitResult> {
+    const record = await this.store.increment(this.key(key), this.windowMs);
+    return this.toResult(record);
+  }
+
+  /**
+   * Read-only: reports whether `key` is currently blocked without
+   * counting this call as an attempt. Use as the gate at the top of a
+   * flow where only some outcomes should count against the budget — e.g.
+   * login: a wrong password counts, but the "please enter your MFA code"
+   * round-trip on an otherwise-correct login should not.
+   */
+  async peek(key: string): Promise<RateLimitResult> {
+    const record = await this.store.peek(this.key(key), this.windowMs);
+    return this.toResult(record);
+  }
+
+  /** Records an actual failure (wrong password, wrong MFA code, etc.). */
+  async penalize(key: string): Promise<RateLimitResult> {
+    const record = await this.store.increment(this.key(key), this.windowMs);
+    return this.toResult(record);
+  }
+
+  async reset(key: string): Promise<void> {
+    await this.store.reset(this.key(key));
+  }
+}
+
+/**
+ * Best-effort client identifier for unauthenticated/public endpoints.
+ * Trusts `x-forwarded-for` when present (standard behind a reverse proxy
+ * or platform load balancer) and falls back to a constant so the limiter
+ * still degrades to "one shared bucket" rather than throwing when no
+ * proxy header is set (e.g. plain `next dev`).
+ */
+export function getClientIp(req: Request): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+  return "unknown";
+}
+
+/** Standard 429 JSON response with a Retry-After header. */
+export function tooManyRequestsResponse(retryAfterSeconds: number) {
+  return NextResponse.json(
+    {
+      error: "RATE_LIMITED",
+      message: "Too many requests. Please try again later.",
+    },
+    {
+      status: 429,
+      headers: { "Retry-After": String(retryAfterSeconds) },
+    }
+  );
+}

@@ -16,8 +16,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { Menu, Search, Bell, LogOut, ChevronDown, AlertTriangle, Clock, Info } from "lucide-react";
+import { Menu, Search, Bell, LogOut, ChevronDown, AlertTriangle, Clock, Info, ShieldCheck } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import Link from "next/link";
 
 // Friendly labels for the role codes stored on the User model
 // (see the Role type / PERMISSIONS matrix in src/lib/permission.ts).
@@ -233,6 +234,17 @@ export default function Topbar({
                 <p className="text-[13px] font-semibold text-[#1F2937] dark:text-white">{username}</p>
                 <p className="text-[11px] text-[#9CA3AF]">{roleLabel}</p>
               </div>
+              <Link
+                href="/account/security"
+                onClick={() => setMenuOpen(false)}
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] font-medium text-[#1F2937] transition hover:bg-[#F4F5F7] dark:text-white dark:hover:bg-[#1F1F1F]"
+              >
+                <ShieldCheck size={15} />
+                Security
+                {(session?.user as any)?.mfaSetupRequired && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-amber-500" />
+                )}
+              </Link>
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: "/login" })}

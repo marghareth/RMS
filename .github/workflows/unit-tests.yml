@@ -1,0 +1,44 @@
+# FILE: .github/workflows/unit-tests.yml
+name: Unit Tests (Vitest)
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+jobs:
+  test:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    env:
+      # `npm ci` triggers @prisma/client's postinstall hook, which runs
+      # `prisma generate`. prisma.config.ts reads DATABASE_URL eagerly
+      # (even just to generate the client, no real DB connection is
+      # needed), so a syntactically valid placeholder is enough here.
+      # None of the vitest unit tests touch a real database — every test
+      # that would need Prisma mocks '@/lib/db' or '@prisma/client'
+      # directly instead.
+      DATABASE_URL: "postgresql://user:password@localhost:5432/rms_ci"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-results
+          path: |
+            **/vitest-report*
+            **/coverage/**
+          if-no-files-found: ignore
+          retention-days: 30
