@@ -16,6 +16,7 @@ export async function getSession(req?: NextRequest) {
         id: String(token.id),
         username: token.username as string,
         role: token.role as string,
+        mfaSetupRequired: token.mfaSetupRequired as boolean | undefined,
       },
       expires: new Date((token.exp as number) * 1000).toISOString(),
     } as Session;

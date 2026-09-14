@@ -19,6 +19,16 @@ model User {
   is_active     Boolean  @default(true)
   created_at    DateTime @default(now())
 
+  // ── TOTP multi-factor auth ──
+  // mfa_secret is the base32 TOTP seed, only ever present once mfa_enabled
+  // is true (or mid-setup, pending confirmation — see /api/account/mfa).
+  // mfa_backup_codes are bcrypt-hashed one-time recovery codes; a code is
+  // removed from the array the moment it's consumed. Never store these
+  // in plaintext.
+  mfa_enabled       Boolean  @default(false)
+  mfa_secret        String?
+  mfa_backup_codes  String[] @default([])
+
   certificates_issued  Certificate[]
   blotter_updates      BlotterUpdate[]
   meeting_records      MeetingRecord[]
@@ -539,6 +549,13 @@ model BarangayId {
 }
 
 // ─── AUDIT LOGS ──────────────────────────────────────────────
+// Append-only at the database level: see the `audit_log_immutable`
+// trigger added in migrations/20260913000000_add_mfa_and_immutable_audit_log.
+// It rejects any UPDATE or DELETE against this table regardless of which
+// DB role issues it. Prisma has no first-class way to express "no update/
+// delete" in the schema itself, so this is enforced in raw SQL rather
+// than here — don't rely on application-level checks alone to protect
+// these rows.
 
 model AuditLog {
   id             Int      @id @default(autoincrement())
