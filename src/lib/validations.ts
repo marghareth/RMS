@@ -29,17 +29,6 @@ export const userUpdateSchema = userCreateSchema.partial().extend({
   password: z.string().min(8).optional(), // don't force a password change on update
 });
 
-// ─── MFA (TOTP) ─────────────────────────────────────────────────────────────
-export const mfaEnableSchema = z.object({
-  token: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code from your authenticator app"),
-});
-
-export const mfaDisableSchema = z.object({
-  password: nonEmptyString,
-  // Either a live TOTP code or a backup code is accepted here.
-  token: nonEmptyString,
-});
-
 // ─── HOUSEHOLDS ─────────────────────────────────────────────────────────────
 export const householdCreateSchema = z.object({
   purok_id: id,
@@ -292,7 +281,13 @@ export const equipmentCreateSchema = z.object({
   asset_type: z.string().trim().optional().nullable(),
 });
 
-export const equipmentUpdateSchema = equipmentCreateSchema.partial();
+// BUGFIX: see the comment on fundSourceUpdateSchema below — without this,
+// PATCH /api/equipment/[id] wrote `quantity: body.quantity` unconditionally
+// (no `"in body"` guard), so any edit that didn't resend `quantity` (e.g.
+// renaming an item) silently reset the real inventory count to 1.
+export const equipmentUpdateSchema = equipmentCreateSchema.partial().extend({
+  quantity: z.coerce.number().int().positive().optional(),
+});
 
 export const equipmentBorrowCreateSchema = z.object({
   equipment_id: id,
@@ -333,7 +328,14 @@ export const agendaItemCreateSchema = z.object({
   minutes: z.string().trim().optional().nullable(),
 });
 
-export const agendaItemUpdateSchema = agendaItemCreateSchema.partial().omit({ meeting_id: true });
+// BUGFIX: see the comment on fundSourceUpdateSchema below — without this,
+// PATCH /api/agenda-items/[id] wrote `sort_order: body.sort_order`
+// unconditionally (no `"in body"` guard), so any edit that didn't resend
+// `sort_order` (e.g. renaming an item) silently reset it to 0, scrambling
+// the agenda's display order.
+export const agendaItemUpdateSchema = agendaItemCreateSchema.partial().omit({ meeting_id: true }).extend({
+  sort_order: z.coerce.number().int().optional(),
+});
 
 // ─── BARANGAY ID ────────────────────────────────────────────────────────────
 export const barangayIdCreateSchema = z.object({
@@ -408,7 +410,22 @@ export const fundSourceCreateSchema = z.object({
   current_balance: z.coerce.number().nonnegative().optional().default(0),
 });
 
-export const fundSourceUpdateSchema = fundSourceCreateSchema.partial();
+// NOTE: .partial() on a schema with .default(...) fields does NOT make an
+// omitted field parse to `undefined` — Zod still applies the default,
+// so e.g. PATCHing `{ name: "x" }` alone would silently resolve
+// `current_balance`/`original_balance` to 0. Since callers rely on
+// `"field" in body` / `body.field ?? existing.field` to detect "was this
+// field actually sent?", every defaulted numeric field on an update
+// schema is re-declared here without `.default()` so omitting it really
+// does produce `undefined`. See revenueUpdateSchema/disbursementUpdateSchema/
+// appropriationUpdateSchema below for the same fix — this one was caught by
+// unit tests on the sibling schemas and applied here too for consistency,
+// even though the current fund-sources PATCH route happens to strip
+// current_balance unconditionally either way.
+export const fundSourceUpdateSchema = fundSourceCreateSchema.partial().extend({
+  original_balance: z.coerce.number().nonnegative().optional().nullable(),
+  current_balance: z.coerce.number().nonnegative().optional(),
+});
 
 export const appropriationCategoryEnum = z.enum(["PS", "MOOE", "CO"]);
 export const appropriationStatusEnum = z.enum(["PENDING", "APPROVED", "COMPLETED"]);
@@ -424,7 +441,17 @@ export const appropriationCreateSchema = z.object({
   fund_source_id: optionalId,
 });
 
-export const appropriationUpdateSchema = appropriationCreateSchema.partial();
+// BUGFIX: see the comment on fundSourceUpdateSchema above — without this,
+// `appropriationUpdateSchema.parse({ item_name: "x" })` resolved to
+// `{ item_name: "x", appropriated_amount: 0, obligated_amount: 0 }`, and
+// the PATCH /api/appropriations/[id] route writes that straight through
+// as `data: editable`, silently zeroing out a real appropriation's
+// budgeted/obligated amounts on any edit that doesn't re-specify them.
+export const appropriationUpdateSchema = appropriationCreateSchema.partial().extend({
+  appropriated_amount: z.coerce.number().nonnegative("Amount must be 0 or greater").optional(),
+  obligated_amount: z.coerce.number().nonnegative().optional(),
+  disbursed_amount: z.coerce.number().nonnegative().optional(),
+});
 
 export const revenueCreateSchema = z.object({
   // Never nullable/undefined at rest — defaults to 0 so the UI never has to
@@ -439,7 +466,15 @@ export const revenueCreateSchema = z.object({
   or_number: z.string().trim().optional().nullable(),
 });
 
-export const revenueUpdateSchema = revenueCreateSchema.partial();
+// BUGFIX: see the comment on fundSourceUpdateSchema above — without this,
+// PATCH /api/revenues/[id] read an omitted `amount` as 0 (via
+// `body.amount ?? Number(existing.amount)`, which only falls back on
+// null/undefined, not on 0), incorrectly treating any edit that didn't
+// resend `amount` as "amount changed to 0" and decrementing the linked
+// fund source's balance by the revenue's full original amount.
+export const revenueUpdateSchema = revenueCreateSchema.partial().extend({
+  amount: z.coerce.number().nonnegative("Amount must be 0 or greater").optional(),
+});
 
 export const disbursementCreateSchema = z.object({
   amount: z.coerce.number().nonnegative("Amount must be 0 or greater").default(0),
@@ -453,7 +488,12 @@ export const disbursementCreateSchema = z.object({
   fund_source_id: optionalId,
 });
 
-export const disbursementUpdateSchema = disbursementCreateSchema.partial();
+// BUGFIX: see the comment on revenueUpdateSchema above — the same issue
+// affected PATCH /api/disbursements/[id]'s fund-source AND appropriation
+// disbursed_amount reversal math.
+export const disbursementUpdateSchema = disbursementCreateSchema.partial().extend({
+  amount: z.coerce.number().nonnegative("Amount must be 0 or greater").optional(),
+});
 
 // ─── DASHBOARD CUSTOMIZATION (2.12) ────────────────────────────────────────
 // ─── AI FEATURES ────────────────────────────────────────────────────────────
