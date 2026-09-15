@@ -7,7 +7,7 @@ import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { residentUpdateSchema } from "@/lib/validations";
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("residents:read");
+  const auth = await requirePermission("residents:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;
@@ -67,7 +67,7 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
 });
 
 export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("residents:write");
+  const auth = await requirePermission("residents:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;
@@ -100,7 +100,7 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
 });
 
 export const DELETE = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("residents:write");
+  const auth = await requirePermission("residents:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;

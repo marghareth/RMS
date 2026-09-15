@@ -7,7 +7,7 @@ import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { runDatabaseBackup, BackupError } from "@/lib/backup";
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("backup:write");
+  const auth = await requirePermission("backup:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const backups = await prisma.backup.findMany({

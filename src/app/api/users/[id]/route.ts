@@ -46,7 +46,7 @@ async function wouldRemoveLastActiveAdmin(targetId: number, becomingRole: string
 }
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("users:read");
+  const auth = await requirePermission("users:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;
@@ -60,7 +60,7 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
 });
 
 export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("users:write");
+  const auth = await requirePermission("users:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;
@@ -110,7 +110,7 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
 });
 
 export const DELETE = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("users:write");
+  const auth = await requirePermission("users:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;

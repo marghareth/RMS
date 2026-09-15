@@ -23,7 +23,7 @@
 // has read access to that resource (e.g. a BHW who can't read blotter
 // cases won't see blotter-hearing notifications).
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { hasPermission } from "@/lib/permission";
@@ -42,8 +42,8 @@ interface NotificationItem {
 
 const SEVERITY_ORDER: Record<Severity, number> = { urgent: 0, warning: 1, info: 2 };
 
-export const GET = withErrorHandling(async () => {
-  const auth = await requirePermission("dashboard:read");
+export const GET = withErrorHandling(async (req: NextRequest) => {
+  const auth = await requirePermission("dashboard:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const role = (auth.session.user as any)?.role as string | undefined;

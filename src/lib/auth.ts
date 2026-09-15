@@ -20,6 +20,20 @@
 //    reads it off the session — but existing admins are never locked out
 //    of an account they haven't enrolled yet; that would turn a security
 //    feature into a self-inflicted outage with no recovery path.
+//
+// 3. BUGFIX — username-enumeration timing side-channel: the "user not
+//    found / inactive" branch used to `return` immediately, while a
+//    known username fell through to `bcrypt.compare(...)`, which is
+//    deliberately slow (that's the whole point of bcrypt). Those two
+//    branches therefore finished in measurably different times — fast
+//    for "no such user", slow for "user exists, wrong password" —
+//    letting an attacker script a login attempt per candidate username
+//    and tell which ones are real purely from response latency, no
+//    account lockout or password guess required. Fixed by running a
+//    throwaway `bcrypt.compare` against `DUMMY_PASSWORD_HASH` on that
+//    branch too, so both paths pay the same bcrypt cost before
+//    returning. It can never match a real login (the hash isn't tied to
+//    any account), so this only affects timing, not behavior.
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./db";
@@ -34,6 +48,18 @@ const loginLimiter = new RateLimiter({
 });
 
 const ROLES_REQUIRING_MFA = new Set(["ADMIN", "CAPTAIN"]);
+
+// Computed once at module load, not per-request — bcrypt hashing is the
+// expensive part, so this just needs to exist, not be regenerated. It
+// isn't, and never was, a real user's password hash; nothing this string
+// hashes to could ever match a real account's stored hash. Its only job
+// is to give `authorize()` something to run `bcrypt.compare` against on
+// the "no such user" branch so that branch costs the same as a genuine
+// wrong-password compare — see note 3 above.
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync(
+  "timing-side-channel-mitigation-only-not-a-real-account",
+  10
+);
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -65,6 +91,11 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user.is_active) {
+          // Pay the same bcrypt cost a real "wrong password" compare
+          // would below, purely so this branch isn't distinguishable by
+          // timing from that one — see note 3 at the top of this file.
+          // The result is always false; it exists only to burn time.
+          await bcrypt.compare(credentials.password, DUMMY_PASSWORD_HASH);
           await loginLimiter.penalize(username);
           return null;
         }

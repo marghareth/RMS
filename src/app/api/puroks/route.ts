@@ -5,8 +5,8 @@ import { requirePermission } from "@/lib/session";
 import { withErrorHandling } from "@/lib/api-handler";
 import { purokCreateSchema } from "@/lib/validations";
 
-export const GET = withErrorHandling(async () => {
-  const auth = await requirePermission("residents:read");
+export const GET = withErrorHandling(async (req: NextRequest) => {
+  const auth = await requirePermission("residents:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const puroks = await prisma.purok.findMany({

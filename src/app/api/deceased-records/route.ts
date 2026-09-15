@@ -16,7 +16,7 @@ const residentSelect = {
 } as const;
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("deceased:read");
+  const auth = await requirePermission("deceased:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);

@@ -1,7 +1,7 @@
 // FILE: src/app/api/pdf/barangay-id/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { createElement } from "react";
-import { renderToBuffer } from "@react-pdf/renderer";
+import { createElement, type ReactElement } from "react";
+import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { MOCK_ACTIVE_CAPTAIN, MOCK_BARANGAY_INFO } from "@/lib/mock/certificates";
@@ -34,7 +34,7 @@ function expiryDate(issuedDate: Date): Date {
 }
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("barangay_id:read");
+  const auth = await requirePermission("barangay_id:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;
@@ -54,6 +54,22 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const mi = resident.mname ? ` ${resident.mname[0]}.` : "";
   const fullName = `${resident.lname}, ${resident.fname}${ext}${mi}`.toUpperCase();
 
+  // TS FIX (TS2345): `renderToBuffer` expects `ReactElement<DocumentProps>`.
+  // `BarangayIdPDF` genuinely renders a `<Document>` at its root (see
+  // BarangayIdPDF.tsx) — this element is valid at runtime — but its own
+  // declared props (`BarangayIdPDFProps`: idNumber, fullName, address, ...)
+  // share zero field names with `DocumentProps` (title?, author?, subject?,
+  // etc. — all optional). TypeScript's "weak type detection" flags an
+  // assignment to an all-optional target type when the source type has no
+  // overlapping properties at all, on the assumption it's likely a mistake.
+  // It isn't one here — react-pdf's own props type just isn't structurally
+  // related to the props of the component that happens to render it. (The
+  // sibling routes using CertificatePDF/GenericReportPDF don't hit this only
+  // because those props objects happen to also declare a `title: string`
+  // field, which is enough to satisfy the overlap check by coincidence, not
+  // because they're actually solving a different problem.) The cast below
+  // is safe: it doesn't change what's rendered, only what TS is asked to
+  // check at this call site.
   const buffer = await renderToBuffer(
     createElement(BarangayIdPDF, {
       idNumber: barangayId.id_number,
@@ -70,7 +86,7 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
       province: MOCK_BARANGAY_INFO.province,
       captainName: MOCK_ACTIVE_CAPTAIN.name,
       captainPosition: MOCK_ACTIVE_CAPTAIN.position,
-    })
+    }) as ReactElement<DocumentProps>
   );
 
   return new NextResponse(new Uint8Array(buffer), {

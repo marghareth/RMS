@@ -7,7 +7,7 @@ import { withErrorHandling } from "@/lib/api-handler";
 import { registryUpdateSchema } from "@/lib/validations";
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("registries:read");
+  const auth = await requirePermission("registries:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;
@@ -32,7 +32,7 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
 });
 
 export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("registries:write");
+  const auth = await requirePermission("registries:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;
@@ -59,7 +59,7 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
 });
 
 export const DELETE = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("registries:write");
+  const auth = await requirePermission("registries:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;

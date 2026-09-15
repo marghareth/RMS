@@ -7,7 +7,7 @@ import { withErrorHandling } from "@/lib/api-handler";
 import { visitorLogUpdateSchema } from "@/lib/validations";
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("visitors:read");
+  const auth = await requirePermission("visitors:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;
@@ -18,7 +18,7 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
 });
 
 export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("visitors:write");
+  const auth = await requirePermission("visitors:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;
@@ -47,7 +47,7 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
 });
 
 export const DELETE = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("visitors:write");
+  const auth = await requirePermission("visitors:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;

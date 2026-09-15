@@ -29,6 +29,37 @@ export const userUpdateSchema = userCreateSchema.partial().extend({
   password: z.string().min(8).optional(), // don't force a password change on update
 });
 
+// ─── ACCOUNT / MFA (self-service TOTP enrollment) ──────────────────────────
+// BUGFIX: src/app/api/account/mfa/enable/route.ts and .../disable/route.ts
+// both import `mfaEnableSchema` / `mfaDisableSchema` from this file, but
+// neither schema was ever actually defined here — a straight "has no
+// exported member" compile error. It didn't surface as a runtime 500,
+// since nothing hit that code path in a way that failed loudly (and
+// `withErrorHandling` only catches errors thrown *during* a request, not
+// missing exports at build time) — but any real TS build/typecheck, or
+// an editor's language server, flags it immediately.
+//
+// Shapes below match exactly what each route destructures:
+//   - enable only needs the code the user's freshly-scanned authenticator
+//     produced.
+//   - disable needs the account password too, on top of a code that may
+//     be either a 6-digit TOTP or an "XXXX-XXXX" backup code (see
+//     generateBackupCodes() in src/lib/mfa.ts) — so `token` here is
+//     deliberately just "non-empty string, reasonable length", not a
+//     strict 6-digit pattern. The actual TOTP-format check (verifyTotp's
+//     regex) and the bcrypt-hashed backup-code lookup (consumeBackupCode)
+//     already happen at the route/mfa.ts level; duplicating a stricter
+//     pattern here would just reject valid backup codes at the schema
+//     before they ever got that far.
+export const mfaEnableSchema = z.object({
+  token: nonEmptyString.max(20),
+});
+
+export const mfaDisableSchema = z.object({
+  password: nonEmptyString,
+  token: nonEmptyString.max(20),
+});
+
 // ─── HOUSEHOLDS ─────────────────────────────────────────────────────────────
 export const householdCreateSchema = z.object({
   purok_id: id,

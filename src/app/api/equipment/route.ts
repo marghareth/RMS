@@ -7,7 +7,7 @@ import { withErrorHandling } from "@/lib/api-handler";
 import { equipmentCreateSchema } from "@/lib/validations";
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("equipment:read");
+  const auth = await requirePermission("equipment:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);
@@ -42,7 +42,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
 });
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("equipment:write");
+  const auth = await requirePermission("equipment:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = equipmentCreateSchema.parse(await req.json());

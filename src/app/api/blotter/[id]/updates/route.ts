@@ -7,7 +7,7 @@ import { withErrorHandling } from "@/lib/api-handler";
 import { blotterUpdateEntrySchema } from "@/lib/validations";
 
 export const POST = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("blotter:write");
+  const auth = await requirePermission("blotter:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;

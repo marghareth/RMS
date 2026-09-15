@@ -14,7 +14,7 @@ async function generateHouseholdNo(): Promise<string> {
 }
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("households:read");
+  const auth = await requirePermission("households:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);

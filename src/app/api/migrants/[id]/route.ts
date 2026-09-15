@@ -7,7 +7,7 @@ import { withErrorHandling } from "@/lib/api-handler";
 import { migrantUpdateSchema } from "@/lib/validations";
 
 export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("households:write");
+  const auth = await requirePermission("households:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;
@@ -38,7 +38,7 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
 });
 
 export const DELETE = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("households:write");
+  const auth = await requirePermission("households:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;

@@ -7,7 +7,7 @@ import { withErrorHandling } from "@/lib/api-handler";
 import { visitorLogCreateSchema, paginationSchema } from "@/lib/validations";
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("visitors:read");
+  const auth = await requirePermission("visitors:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);

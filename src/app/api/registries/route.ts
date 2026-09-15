@@ -7,7 +7,7 @@ import { withErrorHandling } from "@/lib/api-handler";
 import { registryCreateSchema } from "@/lib/validations";
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("registries:read");
+  const auth = await requirePermission("registries:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);
@@ -38,7 +38,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
 });
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("registries:write");
+  const auth = await requirePermission("registries:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = registryCreateSchema.parse(await req.json());

@@ -34,7 +34,7 @@ function residentName(r: { fname: string; lname: string; mname: string | null; n
 }
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("reports:read");
+  const auth = await requirePermission("reports:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { type: rawType } = await context!.params;
@@ -97,7 +97,7 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
             c.resident ? residentName(c.resident) : (c.manual_name ?? "\u2014"),
             c.certificate_type.replace(/_/g, " "),
             c.purpose,
-            fmtDate(c.issued_at),
+            c.issued_at ? fmtDate(c.issued_at) : "\u2014",
             c.issuer.username,
           ]),
         },

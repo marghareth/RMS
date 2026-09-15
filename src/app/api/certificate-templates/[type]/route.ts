@@ -11,7 +11,7 @@ function isValidType(type: string): type is CertificateTypeValue {
 }
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("certificates:read");
+  const auth = await requirePermission("certificates:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { type } = await context!.params;
@@ -35,7 +35,7 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
 });
 
 export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("certificates:write");
+  const auth = await requirePermission("certificates:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { type } = await context!.params;
