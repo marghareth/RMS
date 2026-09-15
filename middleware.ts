@@ -23,6 +23,9 @@ export default withAuth(
         if (req.nextUrl.pathname.startsWith("/login")) return true;
         if (req.nextUrl.pathname.startsWith("/verify")) return true;
         if (req.nextUrl.pathname.startsWith("/api/verify")) return true;
+        // Keep-alive ping (see src/app/api/ping/route.ts) is hit by an
+        // external cron job with no session — must stay public.
+        if (req.nextUrl.pathname.startsWith("/api/ping")) return true;
         return !!token;
       },
     },
@@ -34,9 +37,9 @@ export default withAuth(
 
 export const config = {
   // Protects everything except: /login, /verify, /api/auth/*, /api/verify,
-  // static assets, and Next.js internals. Add more public paths here if
-  // needed.
+  // /api/ping, static assets, and Next.js internals. Add more public
+  // paths here if needed.
   matcher: [
-    "/((?!login|verify|api/auth|api/verify|_next/static|_next/image|favicon.ico).*)",
+    "/((?!login|verify|api/auth|api/verify|api/ping|_next/static|_next/image|favicon.ico).*)",
   ],
 };
