@@ -1,0 +1,43 @@
+# FILE: .github/workflows/keep-supabase-alive.yml
+#
+# Hits the deployed app's public /api/ping route once a day so the
+# Supabase database sees regular activity and never reaches its 7-day
+# free-tier auto-pause window. This only works once the app is actually
+# deployed somewhere reachable (e.g. Vercel) — running only on localhost
+# does not count, since GitHub's servers need to be able to reach it.
+#
+# Setup:
+#   1. Deploy the app (e.g. to Vercel) and note its public URL.
+#   2. In the GitHub repo: Settings -> Secrets and variables -> Actions
+#      -> New repository secret, name it APP_URL, value e.g.
+#      https://your-app.vercel.app  (no trailing slash).
+#   3. That's it — this runs automatically on the schedule below. You can
+#      also trigger it manually from the Actions tab (workflow_dispatch)
+#      to confirm it's wired up correctly before waiting for the cron.
+
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Every day at 03:00 UTC. Well under the 7-day pause window, with
+    # plenty of margin for a missed/delayed run (GitHub cron can lag).
+    - cron: "0 3 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping keep-alive endpoint
+        run: |
+          if [ -z "${{ secrets.APP_URL }}" ]; then
+            echo "APP_URL secret is not set. Add it in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          response=$(curl -s -o /tmp/body.txt -w "%{http_code}" "${{ secrets.APP_URL }}/api/ping")
+          echo "HTTP status: $response"
+          cat /tmp/body.txt
+          if [ "$response" -ge 400 ]; then
+            echo "Ping failed."
+            exit 1
+          fi
