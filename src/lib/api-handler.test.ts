@@ -1,27 +1,10 @@
 // FILE: src/lib/api-handler.test.ts
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-// This sandbox has no network access to Prisma's engine-binary host, so
-// `prisma generate` can't produce a real generated client here — without
-// it, `@prisma/client`'s `Prisma` namespace is a pre-generate stub that's
-// missing `PrismaClientKnownRequestError`/`PrismaClientValidationError`.
-// Those two classes actually live in `@prisma/client/runtime/library`
-// independent of generation (a real generated client just re-exports
-// them), so we mock `@prisma/client` to expose the real classes the same
-// way a fully generated client would. This keeps the test asserting real
-// runtime behavior rather than working around a missing dependency.
-vi.mock('@prisma/client', async () => {
-  const lib = await import('@prisma/client/runtime/library');
-  return {
-    Prisma: {
-      PrismaClientKnownRequestError: lib.PrismaClientKnownRequestError,
-      PrismaClientValidationError: lib.PrismaClientValidationError,
-    },
-  };
-});
-
+// `@prisma/client` is shimmed globally in vitest.setup.ts (see the
+// comment there for why) — no per-file mock needed.
 const { Prisma } = await import('@prisma/client');
 const { withErrorHandling, ApiError } = await import('./api-handler');
 

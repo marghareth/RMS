@@ -9,6 +9,12 @@ import {
   appropriationCreateSchema,
   revenueCreateSchema,
   disbursementCreateSchema,
+  fundSourceUpdateSchema,
+  appropriationUpdateSchema,
+  revenueUpdateSchema,
+  disbursementUpdateSchema,
+  equipmentUpdateSchema,
+  agendaItemUpdateSchema,
   bulkReleaseCertificatesSchema,
   residentImportCommitSchema,
   dashboardPreferenceUpdateSchema,
@@ -200,6 +206,66 @@ describe('finance schemas', () => {
     });
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.amount).toBe(1500.5);
+  });
+});
+
+describe('update schemas do not silently zero-fill defaulted amount fields', () => {
+  // Regression coverage for a real bug: `<createSchema>.partial()` alone
+  // does NOT make an omitted `.default(0)` field parse to `undefined` —
+  // Zod still applies the default. The PATCH routes for these resources
+  // rely on `body.amount ?? existing.amount` / `"field" in body` to tell
+  // "omitted" apart from "explicitly set to 0", so a defaulted field
+  // silently reappearing as 0 corrupts fund-source balances and
+  // appropriation budgets on any partial edit that doesn't resend it.
+  // See fundSourceUpdateSchema/appropriationUpdateSchema/
+  // revenueUpdateSchema/disbursementUpdateSchema in validations.ts for
+  // the fix (each amount field is re-declared without `.default()`).
+
+  it('revenueUpdateSchema leaves amount undefined when omitted', () => {
+    const result = revenueUpdateSchema.parse({ source: 'Renamed source' });
+    expect(result.amount).toBeUndefined();
+    expect('amount' in result).toBe(false);
+  });
+
+  it('disbursementUpdateSchema leaves amount undefined when omitted', () => {
+    const result = disbursementUpdateSchema.parse({ payee: 'Renamed payee' });
+    expect(result.amount).toBeUndefined();
+  });
+
+  it('appropriationUpdateSchema leaves appropriated_amount/obligated_amount/disbursed_amount undefined when omitted', () => {
+    const result = appropriationUpdateSchema.parse({ item_name: 'Renamed item' });
+    expect(result.appropriated_amount).toBeUndefined();
+    expect(result.obligated_amount).toBeUndefined();
+    expect(result.disbursed_amount).toBeUndefined();
+  });
+
+  it('fundSourceUpdateSchema leaves original_balance/current_balance undefined when omitted', () => {
+    const result = fundSourceUpdateSchema.parse({ name: 'Renamed fund' });
+    expect(result.original_balance).toBeUndefined();
+    expect(result.current_balance).toBeUndefined();
+  });
+
+  it('still validates and coerces the amount when it IS explicitly provided', () => {
+    const result = revenueUpdateSchema.parse({ amount: '250.50' });
+    expect(result.amount).toBe(250.5);
+  });
+
+  it('still rejects a negative amount when explicitly provided', () => {
+    expect(revenueUpdateSchema.safeParse({ amount: -1 }).success).toBe(false);
+    expect(appropriationUpdateSchema.safeParse({ appropriated_amount: -1 }).success).toBe(false);
+  });
+
+  it('equipmentUpdateSchema leaves quantity undefined when omitted, but still validates it when given', () => {
+    const result = equipmentUpdateSchema.parse({ name: 'Renamed equipment' });
+    expect(result.quantity).toBeUndefined();
+    expect(equipmentUpdateSchema.safeParse({ quantity: 0 }).success).toBe(false); // must stay positive
+    expect(equipmentUpdateSchema.parse({ quantity: 5 }).quantity).toBe(5);
+  });
+
+  it('agendaItemUpdateSchema leaves sort_order undefined when omitted, but still validates it when given', () => {
+    const result = agendaItemUpdateSchema.parse({ title: 'Renamed agenda item' });
+    expect(result.sort_order).toBeUndefined();
+    expect(agendaItemUpdateSchema.parse({ sort_order: 3 }).sort_order).toBe(3);
   });
 });
 
