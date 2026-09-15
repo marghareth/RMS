@@ -5,8 +5,8 @@ import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { withErrorHandling } from "@/lib/api-handler";
 
-export const GET = withErrorHandling(async () => {
-  const auth = await requirePermission("settings:read");
+export const GET = withErrorHandling(async (req: NextRequest) => {
+  const auth = await requirePermission("settings:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const settings = await prisma.systemSetting.findMany();
@@ -18,7 +18,7 @@ export const GET = withErrorHandling(async () => {
 const settingsPatchSchema = z.record(z.string(), z.union([z.string(), z.number(), z.boolean()]));
 
 export const PATCH = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("settings:write");
+  const auth = await requirePermission("settings:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = settingsPatchSchema.parse(await req.json());

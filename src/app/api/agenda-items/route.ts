@@ -7,7 +7,7 @@ import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { agendaItemCreateSchema } from "@/lib/validations";
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("meetings:read");
+  const auth = await requirePermission("meetings:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);

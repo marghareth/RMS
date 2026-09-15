@@ -7,7 +7,7 @@ import { withErrorHandling } from "@/lib/api-handler";
 import { officialCreateSchema } from "@/lib/validations";
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("officials:read");
+  const auth = await requirePermission("officials:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);
@@ -24,7 +24,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
 });
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("officials:write");
+  const auth = await requirePermission("officials:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = officialCreateSchema.parse(await req.json());

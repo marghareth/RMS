@@ -42,7 +42,7 @@ async function generateQueueNumber(): Promise<string> {
 }
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("certificates:read");
+  const auth = await requirePermission("certificates:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);
@@ -108,7 +108,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
 });
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("certificates:write");
+  const auth = await requirePermission("certificates:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = certificateCreateSchema.parse(await req.json());

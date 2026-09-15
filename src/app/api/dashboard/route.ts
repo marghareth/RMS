@@ -22,14 +22,14 @@
 // "nothing to show" (see dashboard/page.tsx's `.length === 0` checks), so
 // no shape changes are needed there.
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { hasPermission } from "@/lib/permission";
 import { withErrorHandling } from "@/lib/api-handler";
 
-export const GET = withErrorHandling(async () => {
-  const auth = await requirePermission("dashboard:read");
+export const GET = withErrorHandling(async (req: NextRequest) => {
+  const auth = await requirePermission("dashboard:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const role = (auth.session.user as any)?.role as string;

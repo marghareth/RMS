@@ -100,9 +100,29 @@ export class RateLimiter {
     return `${this.namespace}:${key}`;
   }
 
-  private toResult(record: RateLimitRecord | null): RateLimitResult {
+  // BUGFIX: this used to be a single `count <= this.max` comparison shared
+  // by every caller, but "count" means two different things depending on
+  // when it's read:
+  //   - POST-increment (check/penalize): `record.count` already includes
+  //     *this* attempt, so `count <= max` is correct — it's how you allow
+  //     exactly `max` attempts total (the max'th increment still passes).
+  //   - PRE-increment (peek): `record.count` reflects only attempts
+  //     already recorded *before* this one. Reusing `count <= max` here
+  //     meant that once `max` prior failures had been penalized, peek()
+  //     still reported `allowed: true` for one more — e.g. with
+  //     max=5, after 5 recorded failures `peek()` saw count=5 and
+  //     `5 <= 5` let a 6th attempt through the login gate before
+  //     `penalize()` ever pushed the count to 6 and finally tripped
+  //     `peek()`'s block on attempt #7. "5 attempts / 15 min" was
+  //     actually enforcing 6.
+  //
+  // Fix: `toResult` now takes an explicit `phase` so pre- and
+  // post-increment reads use the comparison that's actually correct for
+  // what `count` means at that point, instead of assuming they're the
+  // same check.
+  private toResult(record: RateLimitRecord | null, phase: "pre" | "post"): RateLimitResult {
     const count = record?.count ?? 0;
-    const allowed = count <= this.max;
+    const allowed = phase === "post" ? count <= this.max : count < this.max;
     const resetAt = (record?.windowStartedAt ?? Date.now()) + this.windowMs;
     const retryAfterSeconds = Math.max(0, Math.ceil((resetAt - Date.now()) / 1000));
     return { allowed, remaining: Math.max(0, this.max - count), retryAfterSeconds };
@@ -116,7 +136,7 @@ export class RateLimiter {
    */
   async check(key: string): Promise<RateLimitResult> {
     const record = await this.store.increment(this.key(key), this.windowMs);
-    return this.toResult(record);
+    return this.toResult(record, "post");
   }
 
   /**
@@ -128,13 +148,13 @@ export class RateLimiter {
    */
   async peek(key: string): Promise<RateLimitResult> {
     const record = await this.store.peek(this.key(key), this.windowMs);
-    return this.toResult(record);
+    return this.toResult(record, "pre");
   }
 
   /** Records an actual failure (wrong password, wrong MFA code, etc.). */
   async penalize(key: string): Promise<RateLimitResult> {
     const record = await this.store.increment(this.key(key), this.windowMs);
-    return this.toResult(record);
+    return this.toResult(record, "post");
   }
 
   async reset(key: string): Promise<void> {

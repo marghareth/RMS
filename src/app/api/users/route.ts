@@ -8,7 +8,7 @@ import { userCreateSchema } from "@/lib/validations";
 import bcrypt from "bcryptjs";
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("users:read");
+  const auth = await requirePermission("users:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const users = await prisma.user.findMany({

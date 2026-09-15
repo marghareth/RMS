@@ -13,7 +13,7 @@ function generateIdNumber(): string {
 }
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("barangay_id:read");
+  const auth = await requirePermission("barangay_id:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);
@@ -44,7 +44,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
 });
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("barangay_id:write");
+  const auth = await requirePermission("barangay_id:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = barangayIdCreateSchema.parse(await req.json());

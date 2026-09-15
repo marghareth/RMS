@@ -76,7 +76,7 @@ function parseYearMonth(searchParams: URLSearchParams) {
 }
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requirePermission("reports:read");
+  const auth = await requirePermission("reports:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);
