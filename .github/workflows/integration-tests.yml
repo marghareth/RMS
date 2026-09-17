@@ -1,0 +1,60 @@
+# FILE: .github/workflows/integration-tests.yml
+name: Integration Tests (Vitest + Postgres)
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+jobs:
+  test:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    env:
+      # A fresh container for this job only — created and destroyed with
+      # the run, so there's no persistent data to protect here the way
+      # there is on a local machine. Name still contains "test" to satisfy
+      # tests/integration/setup/globalSetup.ts's safety check regardless.
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/brgy_rms_test"
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: brgy_rms_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write .env.test for the migrate/test scripts
+        run: echo "DATABASE_URL=$DATABASE_URL" > .env.test
+
+      - name: Apply migrations (prisma migrate deploy — never resets)
+        run: npm run test:integration:migrate
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-integration-results
+          path: |
+            **/vitest-report*
+          if-no-files-found: ignore
+          retention-days: 30
