@@ -26,14 +26,33 @@
   --color-text-light: #9ca3af;
 
   /* ── Registry accent (dashboard/overview redesign) ─────────────────────
-     A quiet "civic ledger" accent for KPI strips, tables, and status
-     dots on the dashboard + overview pages — additive to the tokens
-     above, which are untouched and still used everywhere else. */
+     A quiet "ledger" accent for KPI strips, tables, status dots, and the
+     spine + rail navigation — additive to the tokens above, which are
+     untouched and still used everywhere else.
+     NOTE: kept the historical variable names (--color-seal etc.) so every
+     existing call site (StatusBadge, the dashboard KPI strip, StatCard)
+     picks this up with no changes — only the hex values moved, from the
+     earlier seal-green direction to the blue accent the app already used
+     for --color-primary. --color-ink/--color-seal/--color-hairline are
+     the ones actually read by components today; the new --color-spine-*
+     and --color-flag-* tokens below are new, for the Sidebar rewrite. */
   --color-ink: #1b2430;
-  --color-seal: #0b6e4f;
-  --color-seal-hover: #095c41;
-  --color-seal-tint: #e8f3ee;
-  --color-hairline: #e4e1d8;
+  --color-seal: #3b82f6;
+  --color-seal-hover: #2563eb;
+  --color-seal-tint: #ebf3ff;
+  --color-hairline: #e1e3e8;
+
+  /* Status accents used sparingly — pending/needs-review and urgent/overdue,
+     kept apart from the blue accent so they never compete with it. */
+  --color-flag: #9c6512;
+  --color-flag-tint: #f5ecd9;
+  --color-alarm: #a32a25;
+  --color-alarm-tint: #f7e7e5;
+
+  /* Spine + rail (two-stage navigation) */
+  --color-spine: #12151c;
+  --color-spine-2: #1b2029;
+  --color-spine-text: #8891a3;
 
   color-scheme: light;
 }
@@ -58,10 +77,19 @@
   --color-text-light: #6b7280;
 
   --color-ink: #e5e7eb;
-  --color-seal: #34a37a;
-  --color-seal-hover: #3fbb8c;
-  --color-seal-tint: #11321f;
-  --color-hairline: #2a2f26;
+  --color-seal: #5b9bfa;
+  --color-seal-hover: #7cadfb;
+  --color-seal-tint: #14243f;
+  --color-hairline: #282d3a;
+
+  --color-flag: #d9a441;
+  --color-flag-tint: #2e2513;
+  --color-alarm: #e0716c;
+  --color-alarm-tint: #301a19;
+
+  --color-spine: #0a0c11;
+  --color-spine-2: #151923;
+  --color-spine-text: #818a9c;
 
   color-scheme: dark;
 }

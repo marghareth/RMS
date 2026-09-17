@@ -1,4 +1,9 @@
-// src/components/layout/NavItem.tsx
+// FILE: src/components/layout/NavItem.tsx
+// Renders one row inside the contextual RAIL (the 212px panel beside the
+// spine — see Sidebar.tsx). Previously this doubled as both the top-level
+// and indented-accordion-child row for the old single-column sidebar;
+// the accordion is gone now; every rail row is one flat list, so this
+// component lost its `indent` variant and the child-of-a-group left rule.
 "use client";
 
 import Link from "next/link";
@@ -12,7 +17,6 @@ interface NavItemProps {
   icon?: LucideIcon;
   addHref?: string;
   addLabel?: string;
-  indent?: boolean;
   exact?: boolean;
 }
 
@@ -22,7 +26,6 @@ export default function NavItem({
   icon: Icon,
   addHref,
   addLabel,
-  indent = false,
   exact = false,
 }: NavItemProps) {
   const pathname = usePathname();
@@ -32,28 +35,20 @@ export default function NavItem({
 
   return (
     <div className="group/item relative flex items-center">
-      {indent && active && (
-        <span className="absolute left-0 top-1/2 h-4 w-0.75 -translate-y-1/2 rounded-full bg-[#3B82F6]" />
-      )}
-
       <Link
         href={href}
-        className={`flex min-w-0 flex-1 items-center gap-3 rounded-lg py-2 text-[13px] font-medium transition-colors ${
-          indent ? "pl-4 pr-2" : "px-3 py-2.5"
-        } ${
+        className={`flex min-w-0 flex-1 items-center gap-2.5 rounded px-2 py-1.75 text-[13px] transition-colors ${
           active
-            ? indent
-              ? "bg-[#F4F5F7] font-semibold text-[#1F2937] dark:bg-[#1F1F1F] dark:text-white"
-              : "bg-[#3B82F6] text-white shadow-sm"
-            : "text-[#6B7280] hover:bg-[#F4F5F7] hover:text-[#1F2937] dark:hover:bg-[#1F1F1F] dark:hover:text-white"
+            ? "bg-[#EBF3FF] font-semibold text-[#3B82F6] dark:bg-[#14243F] dark:text-[#5B9BFA]"
+            : "text-[#5B6272] hover:bg-[#F8F9FB] hover:text-[#1B2230] dark:text-[#A2A8B8] dark:hover:bg-[#1A1E29] dark:hover:text-white"
         }`}
       >
         {Icon && (
           <Icon
-            size={18}
-            strokeWidth={active ? 2.25 : 2}
+            size={15}
+            strokeWidth={1.75}
             className={`shrink-0 ${
-              active ? "text-white" : "text-[#9CA3AF] group-hover/item:text-[#374151]"
+              active ? "text-[#3B82F6] dark:text-[#5B9BFA]" : "text-[#9096A3] dark:text-[#767D8F]"
             }`}
           />
         )}
@@ -64,13 +59,9 @@ export default function NavItem({
         <Link
           href={addHref}
           aria-label={addLabel ?? `Add ${label}`}
-          className={`mr-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-md opacity-0 transition-opacity group-hover/item:opacity-100 ${
-            active && !indent
-              ? "text-white hover:bg-white/20"
-              : "text-[#9CA3AF] hover:bg-[#E9EAEC] hover:text-[#374151] dark:hover:bg-[#262626] dark:hover:text-white"
-          }`}
+          className="mr-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded opacity-0 text-[#9096A3] transition-opacity hover:bg-[#ECEDF1] hover:text-[#1B2230] group-hover/item:opacity-100 dark:text-[#767D8F] dark:hover:bg-[#20242F] dark:hover:text-white"
         >
-          <Plus size={13} strokeWidth={2.5} />
+          <Plus size={12} strokeWidth={2.5} />
         </Link>
       )}
     </div>
