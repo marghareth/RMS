@@ -1,6 +1,6 @@
 // FILE: src/app/(dashboard)/layout.tsx
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 
@@ -23,7 +23,17 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // On phones/tablets the rail renders as an overlay drawer (see
+  // Sidebar.tsx), so it should start closed there. Starting from `false`
+  // (open) on every render — matching what the server always renders,
+  // since it has no viewport to check — and closing it here, once, after
+  // mount avoids a hydration mismatch; on desktop this effect is a no-op.
   const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    if (!window.matchMedia("(max-width: 1023px)").matches) return;
+    const frame = window.requestAnimationFrame(() => setCollapsed(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
   return (
     <div
       className="flex h-screen bg-[#F4F5F7] overflow-hidden dark:bg-[#0A0A0A]"
