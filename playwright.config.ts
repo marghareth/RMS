@@ -13,6 +13,14 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
+  // tests/integration/**/*.integration.test.ts are Vitest specs (see
+  // vitest.integration.config.ts) — they import from "vitest", not
+  // "@playwright/test". Playwright's default testMatch glob
+  // (`**/*.test.ts`) would otherwise pick them up too since they live
+  // under `testDir`, and fail trying to load a CJS require() of
+  // "vitest" from a Playwright-run file. Ignore that whole folder here
+  // so Playwright (CLI and the VS Code extension) never touches it.
+  testIgnore: '**/integration/**',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
