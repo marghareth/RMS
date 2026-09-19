@@ -164,16 +164,39 @@ export class RateLimiter {
 
 /**
  * Best-effort client identifier for unauthenticated/public endpoints.
- * Trusts `x-forwarded-for` when present (standard behind a reverse proxy
- * or platform load balancer) and falls back to a constant so the limiter
- * still degrades to "one shared bucket" rather than throwing when no
- * proxy header is set (e.g. plain `next dev`).
+ *
+ * SECURITY FIX: this used to return the *first* entry in `x-forwarded-for`
+ * — but that's the leftmost hop, which is whatever the client itself sent
+ * (`X-Forwarded-For: 1.1.1.1` is a completely ordinary header for any
+ * caller to set on a raw HTTP request). Proxies *append* to this header
+ * rather than replace it, so the value your own reverse proxy/load
+ * balancer actually observed and added is the *last* entry, not the
+ * first. Taking the first entry let anyone bypass IP-keyed rate limiting
+ * outright by sending a different fake address on every request — no
+ * proxy involved, no spoofing sophistication required.
+ *
+ * Prefers `x-real-ip` when present, since well-behaved proxies (nginx's
+ * `proxy_set_header X-Real-IP $remote_addr`, etc.) set it themselves as a
+ * single value rather than letting the client's own copy of it through.
+ * Falls back to the last `x-forwarded-for` entry, then to a constant so
+ * the limiter still degrades to "one shared bucket" rather than throwing
+ * when no proxy header is set at all (e.g. plain `next dev`).
+ *
+ * Still trust-on-first-use rather than a real client identity: a caller
+ * one hop closer than your reverse proxy (or the proxy itself, if it's
+ * ever misconfigured to forward these headers through unmodified) can
+ * still influence this value. Fine for the current use case (light
+ * defense-in-depth on a public, UUID-keyed lookup), not a substitute for
+ * per-account/per-token rate limiting on anything more sensitive.
  */
 export function getClientIp(req: Request): string {
-  const forwarded = req.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0].trim();
   const realIp = req.headers.get("x-real-ip");
   if (realIp) return realIp.trim();
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const hops = forwarded.split(",").map((h) => h.trim()).filter(Boolean);
+    if (hops.length > 0) return hops[hops.length - 1];
+  }
   return "unknown";
 }
 

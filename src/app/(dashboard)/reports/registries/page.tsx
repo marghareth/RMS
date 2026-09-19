@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, BookOpen, Download, Users, Heart, Accessibility } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, LabelList } from "recharts";
 import StatCard from "@/components/shared/StatCard";
 
 const MOCK = {
@@ -128,10 +128,10 @@ export default function RegistriesReportPage() {
     );
   }
 
-  const TABS: { key: Tab; label: string; icon: any; count: number; color: string }[] = [
-    { key: "seniors", label: "Senior Citizens", icon: Users,          count: data.seniors.total, color: "text-[#B45309] dark:text-[#FBBF24]" },
-    { key: "pwd",     label: "PWD",             icon: Accessibility,  count: data.pwd.total,     color: "text-[#3E5C76] dark:text-[#8FB0CC]" },
-    { key: "fourps",  label: "4Ps Beneficiaries",icon: Heart,         count: data.fourPs.total,  color: "text-[#0B6E4F] dark:text-[#34A37A]" },
+  const TABS: { key: Tab; label: string; icon: any; count: number }[] = [
+    { key: "seniors", label: "Senior Citizens", icon: Users,          count: data.seniors.total },
+    { key: "pwd",     label: "PWD",             icon: Accessibility,  count: data.pwd.total },
+    { key: "fourps",  label: "4Ps Beneficiaries",icon: Heart,         count: data.fourPs.total },
   ];
 
   return (
@@ -165,8 +165,6 @@ export default function RegistriesReportPage() {
             </button>
           </div>
         </div>
-        <div className="mt-4 h-px bg-[#1B2430] dark:bg-[#E5E7EB]" />
-        <div className="mt-0.75 h-px bg-[#E9EAEC] dark:bg-[#262626]" />
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-5">
@@ -176,16 +174,14 @@ export default function RegistriesReportPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`rounded-xl border px-5 py-4 text-left transition
-                ${tab === t.key ? "border-[#0B6E4F]/40 dark:border-[#34A37A]/50 bg-[#E8F3EE]/60 dark:bg-[#11321F]/70" : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] hover:border-[#0B6E4F]/30 dark:hover:border-[#34A37A]/40 hover:bg-[#E8F3EE]/50 dark:hover:bg-[#11321F]/60"}`}
+              className={`relative rounded-xl border px-5 py-4 text-left transition
+                ${tab === t.key ? "border-[#3B82F6] bg-[#EFF6FF] dark:border-[#60A5FA] dark:bg-[#0B1D33]" : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] hover:border-[#D1D5DB] dark:hover:border-[#404040]"}`}
             >
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-[#171717]">
-                  <Icon size={14} className={t.color} />
-                </div>
-                <span className={`text-[10px] font-bold uppercase tracking-wide ${tab === t.key ? "text-[#0B6E4F] dark:text-[#34A37A]" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>{t.label}</span>
+                <Icon size={14} className={tab === t.key ? "text-[#3B82F6] dark:text-[#60A5FA]" : "text-[#9CA3AF] dark:text-[#A3A3A3]"} />
+                <span className={`text-[11px] font-semibold ${tab === t.key ? "text-[#1D4ED8] dark:text-[#93C5FD]" : "text-[#6B7280] dark:text-[#A3A3A3]"}`}>{t.label}</span>
               </div>
-              <p className="text-[32px] font-bold leading-none tabular-nums text-[#1B2430] dark:text-white">
+              <p className="text-[28px] font-bold leading-none tabular-nums text-[#1B2430] dark:text-white">
                 {t.count}
               </p>
             </button>
@@ -195,38 +191,22 @@ export default function RegistriesReportPage() {
 
       {tab === "seniors" && (
         <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-5">
-            <ChartCard title="Senior Citizens by Purok">
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={data.seniors.byPurok} barSize={28}>
-                  <XAxis dataKey="purok" tick={{ fontSize: 10, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="count" radius={[5, 5, 0, 0]}>
-                    {data.seniors.byPurok.map((_, i) => <Cell key={i} fill={PUROK_COLORS[i]} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
-            <ChartCard title="Distribution">
-              <div className="space-y-3 pt-2">
-                {data.seniors.byPurok.map((p, i) => (
-                  <div key={p.purok} className="flex items-center gap-3">
-                    <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3] min-w-20">{p.purok}</span>
-                    <div className="flex-1 h-2 bg-[#F4F5F7] dark:bg-[#262626] rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${(p.count / data.seniors.total) * 100}%`, background: PUROK_COLORS[i] }} />
-                    </div>
-                    <span className="text-[12px] font-bold tabular-nums text-[#1B2430] dark:text-white min-w-7 text-right">{p.count}</span>
-                    <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] min-w-9">{((p.count / data.seniors.total) * 100).toFixed(1)}%</span>
-                  </div>
-                ))}
-              </div>
-            </ChartCard>
-          </div>
+          <ChartCard title="Senior Citizens by Purok">
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={data.seniors.byPurok} barSize={40} margin={{ top: 20 }}>
+                <XAxis dataKey="purok" tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148,163,184,0.08)" }} />
+                <Bar dataKey="count" radius={[5, 5, 0, 0]}>
+                  {data.seniors.byPurok.map((_, i) => <Cell key={i} fill={PUROK_COLORS[i]} />)}
+                  <LabelList dataKey="count" position="top" style={{ fontSize: 12, fontWeight: 700, fill: "#9CA3AF" }} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
 
           <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Senior Citizen Registry (Sample)</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Senior Citizen Registry</p>
             </div>
             <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
               {["Name", "Age", "Purok", "Sex"].map(h => <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>)}
@@ -288,7 +268,7 @@ export default function RegistriesReportPage() {
 
           <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">PWD Registry (Sample)</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">PWD Registry</p>
             </div>
             <div className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
               {["Name", "Disability Type", "Purok", "Sex"].map(h => <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>)}
@@ -316,28 +296,16 @@ export default function RegistriesReportPage() {
           </div>
 
           <ChartCard title="4Ps Beneficiaries by Purok">
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={data.fourPs.byPurok} barSize={32}>
-                <XAxis dataKey="purok" tick={{ fontSize: 10, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={data.fourPs.byPurok} barSize={40} margin={{ top: 20 }}>
+                <XAxis dataKey="purok" tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148,163,184,0.08)" }} />
                 <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                   {data.fourPs.byPurok.map((_, i) => <Cell key={i} fill={PUROK_COLORS[i]} />)}
+                  <LabelList dataKey="count" position="top" style={{ fontSize: 12, fontWeight: 700, fill: "#9CA3AF" }} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-            <div className="mt-4 space-y-2.5">
-              {data.fourPs.byPurok.map((p, i) => (
-                <div key={p.purok} className="flex items-center gap-3">
-                  <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3] min-w-20">{p.purok}</span>
-                  <div className="flex-1 h-2 bg-[#F4F5F7] dark:bg-[#262626] rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${(p.count / data.fourPs.total) * 100}%`, background: PUROK_COLORS[i] }} />
-                  </div>
-                  <span className="text-[12px] font-bold tabular-nums text-[#1B2430] dark:text-white min-w-7 text-right">{p.count}</span>
-                  <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] min-w-9">{((p.count / data.fourPs.total) * 100).toFixed(1)}%</span>
-                </div>
-              ))}
-            </div>
           </ChartCard>
         </div>
       )}
