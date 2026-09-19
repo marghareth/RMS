@@ -79,7 +79,7 @@ type ModuleItem =
 
 const mainNav: ModuleItem[] = [
   { type: "link", label: "Dashboard", spineLabel: "Home", href: "/dashboard", icon: LayoutDashboard, permission: "dashboard:read" },
-  { type: "link", label: "Visitor Log", spineLabel: "Visitors", href: "/visitors", icon: LogIn, addHref: "/visitors/new", permission: "visitors:read" },
+  { type: "link", label: "Visitor Log", spineLabel: "Visitors", href: "/visitors", icon: LogIn, permission: "visitors:read" },
   {
     type: "group",
     label: "RBI",
@@ -292,8 +292,8 @@ function SpineButton({
       title={item.label}
       className={`relative flex flex-col items-center gap-1 px-1 py-2.25 transition-colors ${
         active
-          ? "bg-white text-[#1B2230] dark:bg-[#151822] dark:text-[#E8E9EE]"
-          : "text-[#8891A3] hover:bg-[#1B2029] hover:text-[#E8E9EE]"
+          ? "bg-[#F4F5F7] text-[#1F2937] dark:bg-[#1F1F1F] dark:text-white"
+          : "text-[#6B7280] hover:bg-[#F4F5F7] hover:text-[#1F2937] dark:text-[#9CA3AF] dark:hover:bg-[#1F1F1F] dark:hover:text-white"
       }`}
     >
       {active && <span className="absolute left-0 top-0 bottom-0 w-0.75 bg-[#3B82F6]" />}
@@ -343,9 +343,9 @@ export default function Sidebar({
     <>
       {/* ══ Spine — always visible, one tab per module ══ */}
       <nav
-        className={`flex h-screen w-15 shrink-0 flex-col overflow-y-auto overflow-x-hidden border-r border-black/20 bg-[#12151C] pb-2 ${className}`}
+        className={`flex h-screen w-15 shrink-0 flex-col overflow-y-auto overflow-x-hidden border-r border-[#E9EAEC] bg-white pb-2 dark:border-[#262626] dark:bg-[#111111] ${className}`}
       >
-        <div className="flex h-15 shrink-0 items-center justify-center border-b border-white/[0.07]">
+        <div className="flex h-15 shrink-0 items-center justify-center border-b border-[#E9EAEC] dark:border-[#262626]">
           <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6">
             <path d="M12 2.6 20.2 8v1.5H3.8V8L12 2.6Z" fill="#3B82F6" />
             <rect x="5.4" y="10.6" width="2.3" height="7.4" fill="#3B82F6" />
@@ -366,7 +366,7 @@ export default function Sidebar({
           ))}
         </div>
 
-        <div className="mt-auto flex flex-col gap-0.5 border-t border-white/[0.07] pt-2">
+        <div className="mt-auto flex flex-col gap-0.5 border-t border-[#E9EAEC] pt-2 dark:border-[#262626]">
           {visibleBottom.map((item) => (
             <SpineButton
               key={item.label}
@@ -380,15 +380,15 @@ export default function Sidebar({
 
       {/* ══ Rail — the active module's own pages ══ */}
       <aside
-        className={`fixed inset-y-0 left-15 z-40 flex w-53 flex-col overflow-hidden border-r border-[#E1E3E8] bg-white transition-transform duration-200 ease-in-out dark:border-[#282D3A] dark:bg-[#151822] lg:static lg:inset-auto lg:translate-x-0 lg:transition-[width] ${
+        className={`fixed inset-y-0 left-15 z-40 flex w-53 flex-col overflow-hidden border-r border-[#E9EAEC] bg-white transition-transform duration-200 ease-in-out dark:border-[#262626] dark:bg-[#111111] lg:static lg:inset-auto lg:translate-x-0 lg:transition-[width] ${
           collapsed ? "-translate-x-[calc(100%+3.75rem)] lg:w-0 lg:border-r-0" : "translate-x-0 lg:w-53"
         } ${collapsed ? "" : "shadow-2xl lg:shadow-none"}`}
       >
-        <div className="flex h-15 shrink-0 flex-col justify-center border-b border-[#ECEDF1] px-4 dark:border-[#20242F]">
-          <b className="truncate text-[13px] font-semibold text-[#1B2230] dark:text-[#E8E9EE]">
+        <div className="flex h-15 shrink-0 flex-col justify-center border-b border-[#E9EAEC] px-4 dark:border-[#262626]">
+          <b className="truncate text-[13px] font-semibold text-[#1F2937] dark:text-white">
             {activeModule?.label ?? "Barangay RMS"}
           </b>
-          <small className="truncate text-[10.5px] text-[#9096A3] dark:text-[#767D8F]">
+          <small className="truncate text-[10.5px] text-[#6B7280] dark:text-[#9CA3AF]">
             {barangayName || "Records Management"}
           </small>
         </div>
@@ -412,7 +412,7 @@ export default function Sidebar({
               )}
             </>
           ) : (
-            <p className="px-2 py-3 text-[12px] text-[#9096A3] dark:text-[#767D8F]">
+            <p className="px-2 py-3 text-[12px] text-[#6B7280] dark:text-[#9CA3AF]">
               Pick a module from the left.
             </p>
           )}

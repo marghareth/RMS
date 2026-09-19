@@ -40,7 +40,7 @@ export default function NavItem({
         className={`flex min-w-0 flex-1 items-center gap-2.5 rounded px-2 py-1.75 text-[13px] transition-colors ${
           active
             ? "bg-[#EBF3FF] font-semibold text-[#3B82F6] dark:bg-[#14243F] dark:text-[#5B9BFA]"
-            : "text-[#5B6272] hover:bg-[#F8F9FB] hover:text-[#1B2230] dark:text-[#A2A8B8] dark:hover:bg-[#1A1E29] dark:hover:text-white"
+            : "text-[#6B7280] hover:bg-[#F4F5F7] hover:text-[#1F2937] dark:text-[#9CA3AF] dark:hover:bg-[#1F1F1F] dark:hover:text-white"
         }`}
       >
         {Icon && (
@@ -48,7 +48,7 @@ export default function NavItem({
             size={15}
             strokeWidth={1.75}
             className={`shrink-0 ${
-              active ? "text-[#3B82F6] dark:text-[#5B9BFA]" : "text-[#9096A3] dark:text-[#767D8F]"
+              active ? "text-[#3B82F6] dark:text-[#5B9BFA]" : "text-[#9CA3AF]"
             }`}
           />
         )}
@@ -59,7 +59,7 @@ export default function NavItem({
         <Link
           href={addHref}
           aria-label={addLabel ?? `Add ${label}`}
-          className="mr-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded opacity-0 text-[#9096A3] transition-opacity hover:bg-[#ECEDF1] hover:text-[#1B2230] group-hover/item:opacity-100 dark:text-[#767D8F] dark:hover:bg-[#20242F] dark:hover:text-white"
+          className="mr-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded opacity-0 text-[#9CA3AF] transition-opacity hover:bg-[#E9EAEC] hover:text-[#1F2937] group-hover/item:opacity-100 dark:hover:bg-[#1F1F1F] dark:hover:text-white"
         >
           <Plus size={12} strokeWidth={2.5} />
         </Link>

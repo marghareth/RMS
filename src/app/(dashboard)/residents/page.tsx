@@ -46,27 +46,27 @@ function FilterPanel({
   const set = (k: keyof FilterState, v: string) => setLocal(p => ({ ...p, [k]: v }));
 
   return (
-    <div className="bg-white dark:bg-[#151822] border-b border-[#E1E3E8] dark:border-[#282D3A] px-4 py-3 space-y-3">
+    <div className="bg-white dark:bg-[#111111] border-b border-[#E9EAEC] dark:border-[#262626] px-4 py-3 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-[12px] font-semibold text-[#1B2230] dark:text-[#E8E9EE]">Filters</span>
-        <button onClick={onClose} className="text-[#9096A3] dark:text-[#767D8F] hover:text-[#5B6272] dark:hover:text-[#A2A8B8] transition">
+        <span className="text-[12px] font-semibold text-[#1F2937] dark:text-white">Filters</span>
+        <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#6B7280] dark:hover:text-[#9CA3AF] transition">
           <X size={14} />
         </button>
       </div>
       <div className="grid grid-cols-3 gap-2">
         <div>
-          <label className="text-[10.5px] font-medium text-[#9096A3] dark:text-[#767D8F] block mb-1">Sex</label>
+          <label className="text-[10.5px] font-medium text-[#9CA3AF] block mb-1">Sex</label>
           <select value={local.sex} onChange={e => set("sex", e.target.value)}
-            className="w-full text-[11px] border border-[#E1E3E8] dark:border-[#282D3A] rounded px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] bg-white dark:bg-[#151822]">
+            className="w-full text-[11px] border border-[#E9EAEC] dark:border-[#262626] rounded px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] bg-white dark:bg-[#111111]">
             <option value="">All</option>
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
           </select>
         </div>
         <div>
-          <label className="text-[10.5px] font-medium text-[#9096A3] dark:text-[#767D8F] block mb-1">Civil status</label>
+          <label className="text-[10.5px] font-medium text-[#9CA3AF] block mb-1">Civil status</label>
           <select value={local.civil_status} onChange={e => set("civil_status", e.target.value)}
-            className="w-full text-[11px] border border-[#E1E3E8] dark:border-[#282D3A] rounded px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] bg-white dark:bg-[#151822]">
+            className="w-full text-[11px] border border-[#E9EAEC] dark:border-[#262626] rounded px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] bg-white dark:bg-[#111111]">
             <option value="">All</option>
             <option value="SINGLE">Single</option>
             <option value="MARRIED">Married</option>
@@ -76,9 +76,9 @@ function FilterPanel({
           </select>
         </div>
         <div>
-          <label className="text-[10.5px] font-medium text-[#9096A3] dark:text-[#767D8F] block mb-1">Purok</label>
+          <label className="text-[10.5px] font-medium text-[#9CA3AF] block mb-1">Purok</label>
           <select value={local.purok_id} onChange={e => set("purok_id", e.target.value)}
-            className="w-full text-[11px] border border-[#E1E3E8] dark:border-[#282D3A] rounded px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] bg-white dark:bg-[#151822]">
+            className="w-full text-[11px] border border-[#E9EAEC] dark:border-[#262626] rounded px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] bg-white dark:bg-[#111111]">
             <option value="">All Puroks</option>
             {puroks.map(p => <option key={p.id} value={String(p.id)}>{p.name}</option>)}
           </select>
@@ -86,7 +86,7 @@ function FilterPanel({
       </div>
       <div className="flex gap-2">
         <button onClick={() => setLocal({ sex: "", civil_status: "", purok_id: "" })}
-          className="flex-1 text-[11px] py-1.5 rounded border border-[#E1E3E8] dark:border-[#282D3A] text-[#5B6272] dark:text-[#A2A8B8] hover:bg-[#F8F9FB] dark:hover:bg-[#1A1E29] transition">
+          className="flex-1 text-[11px] py-1.5 rounded border border-[#E9EAEC] dark:border-[#262626] text-[#6B7280] dark:text-[#9CA3AF] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition">
           Clear
         </button>
         <button onClick={() => { onChange(local); onClose(); }}
@@ -153,12 +153,12 @@ export default function ResidentsPage() {
     <div className="flex flex-col h-full">
 
       {/* ── Page header ── */}
-      <div className="flex items-end justify-between gap-4 flex-wrap pb-3.5 border-b border-[#E1E3E8] dark:border-[#282D3A] mb-4">
+      <div className="flex items-end justify-between gap-4 flex-wrap pb-3.5 border-b border-[#E9EAEC] dark:border-[#262626] mb-4">
         <div>
-          <h1 className="text-[22px] font-semibold tracking-tight text-[#1B2230] dark:text-[#E8E9EE]">
+          <h1 className="text-[22px] font-semibold tracking-tight text-[#1F2937] dark:text-white">
             Residents
           </h1>
-          <p className="text-[12.5px] text-[#5B6272] dark:text-[#A2A8B8] mt-0.5">
+          <p className="text-[12.5px] text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">
             {loading ? "Loading…" : `${residents.length} resident${residents.length !== 1 ? "s" : ""} on file`}
           </p>
         </div>
@@ -172,15 +172,15 @@ export default function ResidentsPage() {
       </div>
 
       {/* ── Search + filter bar ── */}
-      <div className="bg-white dark:bg-[#151822] rounded border border-[#E1E3E8] dark:border-[#282D3A] overflow-hidden mb-4">
+      <div className="bg-white dark:bg-[#111111] rounded border border-[#E9EAEC] dark:border-[#262626] overflow-hidden mb-4">
         <div className="flex items-center gap-2 px-3.5 py-2.5">
           <div className="relative flex-1">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9096A3] dark:text-[#767D8F]" />
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Find a resident by name"
-              className="w-full pl-8 pr-3 h-9 text-[13px] bg-[#F8F9FB] dark:bg-[#1A1E29] rounded border border-transparent focus:outline-none focus:border-[#3B82F6] focus:bg-white dark:focus:bg-[#151822] transition placeholder:text-[#9096A3] dark:placeholder:text-[#767D8F] text-[#1B2230] dark:text-[#E8E9EE]"
+              className="w-full pl-8 pr-3 h-9 text-[13px] bg-[#F4F5F7] dark:bg-[#1F1F1F] rounded border border-transparent focus:outline-none focus:border-[#3B82F6] focus:bg-white dark:focus:bg-[#111111] transition placeholder:text-[#9CA3AF] text-[#1F2937] dark:text-white"
             />
           </div>
           <button
@@ -188,7 +188,7 @@ export default function ResidentsPage() {
             className={`h-9 w-9 flex items-center justify-center rounded transition shrink-0 relative border
               ${showFilter || activeFilters > 0
                 ? "bg-[#EBF3FF] border-[#3B82F6] text-[#3B82F6] dark:bg-[#14243F] dark:text-[#5B9BFA] dark:border-[#5B9BFA]"
-                : "bg-white dark:bg-[#151822] border-[#E1E3E8] dark:border-[#282D3A] text-[#5B6272] dark:text-[#A2A8B8] hover:border-[#9096A3]"}`}
+                : "bg-white dark:bg-[#111111] border-[#E9EAEC] dark:border-[#262626] text-[#6B7280] dark:text-[#9CA3AF] hover:border-[#9CA3AF]"}`}
           >
             <SlidersHorizontal size={14} strokeWidth={1.8} />
             {activeFilters > 0 && (
@@ -211,7 +211,7 @@ export default function ResidentsPage() {
       </div>
 
       {/* ── Ledger table ── */}
-      <div className="bg-white dark:bg-[#151822] rounded border border-[#E1E3E8] dark:border-[#282D3A] overflow-hidden flex-1 flex flex-col">
+      <div className="bg-white dark:bg-[#111111] rounded border border-[#E9EAEC] dark:border-[#262626] overflow-hidden flex-1 flex flex-col">
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -219,12 +219,12 @@ export default function ResidentsPage() {
           </div>
         ) : residents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div className="w-11 h-11 rounded-full bg-[#F8F9FB] dark:bg-[#1A1E29] flex items-center justify-center">
-              <Users size={19} strokeWidth={1.6} className="text-[#C7CBD3] dark:text-[#484F5C]" />
+            <div className="w-11 h-11 rounded-full bg-[#F4F5F7] dark:bg-[#1F1F1F] flex items-center justify-center">
+              <Users size={19} strokeWidth={1.6} className="text-[#9CA3AF] dark:text-[#6B7280]" />
             </div>
             <div className="text-center">
-              <p className="text-[13px] font-medium text-[#5B6272] dark:text-[#A2A8B8]">No residents found</p>
-              <p className="text-[11.5px] text-[#9096A3] dark:text-[#767D8F] mt-0.5">Try adjusting your search or filters</p>
+              <p className="text-[13px] font-medium text-[#6B7280] dark:text-[#9CA3AF]">No residents found</p>
+              <p className="text-[11.5px] text-[#9CA3AF] mt-0.5">Try adjusting your search or filters</p>
             </div>
           </div>
         ) : (
@@ -235,7 +235,7 @@ export default function ResidentsPage() {
                   {["Resident", "Sex", "Civil status", "Purok", ""].map(h => (
                     <th
                       key={h}
-                      className="sticky top-0 z-1 bg-[#F8F9FB] dark:bg-[#1A1E29] text-left text-[10.5px] font-semibold text-[#9096A3] dark:text-[#767D8F] px-4 py-2.5 border-b border-[#E1E3E8] dark:border-[#282D3A] whitespace-nowrap"
+                      className="sticky top-0 z-1 bg-[#F4F5F7] dark:bg-[#1F1F1F] text-left text-[10.5px] font-semibold text-[#9CA3AF] px-4 py-2.5 border-b border-[#E9EAEC] dark:border-[#262626] whitespace-nowrap"
                     >
                       {h}
                     </th>
@@ -247,13 +247,13 @@ export default function ResidentsPage() {
                   <tr
                     key={r.id}
                     onClick={() => setSelectedId(r.id)}
-                    className="group cursor-pointer border-b border-[#ECEDF1] dark:border-[#20242F] last:border-0 hover:bg-[#F8F9FB] dark:hover:bg-[#1A1E29] transition-colors"
+                    className="group cursor-pointer border-b border-[#E9EAEC] dark:border-[#262626] last:border-0 hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition-colors"
                   >
                     {/* Name — left edge carries an archived flag, when relevant */}
                     <td className="relative px-4 py-3 pl-4.25">
                       <span
                         className={`absolute left-0 top-0 bottom-0 w-0.75 ${
-                          r.is_archived ? "bg-[#9096A3] dark:bg-[#767D8F]" : "bg-transparent"
+                          r.is_archived ? "bg-[#9CA3AF]" : "bg-transparent"
                         }`}
                       />
                       <div className="flex items-center gap-2.5 min-w-0">
@@ -261,8 +261,8 @@ export default function ResidentsPage() {
                           {r.fname[0]}{r.lname[0]}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[13px] font-semibold text-[#1B2230] dark:text-[#E8E9EE] truncate">{fullName(r)}</p>
-                          <p className="text-[11px] text-[#9096A3] dark:text-[#767D8F] font-mono">
+                          <p className="text-[13px] font-semibold text-[#1F2937] dark:text-white truncate">{fullName(r)}</p>
+                          <p className="text-[11px] text-[#9CA3AF] font-mono">
                             BM{String(r.id).padStart(7, "0")}
                           </p>
                         </div>
@@ -284,12 +284,12 @@ export default function ResidentsPage() {
                     </td>
 
                     {/* Civil Status */}
-                    <td className="px-4 py-3 text-[12.5px] text-[#5B6272] dark:text-[#A2A8B8]">
+                    <td className="px-4 py-3 text-[12.5px] text-[#6B7280] dark:text-[#9CA3AF]">
                       {r.civil_status.replace("_", "-").toLowerCase().replace(/^\w/, c => c.toUpperCase())}
                     </td>
 
                     {/* Purok */}
-                    <td className="px-4 py-3 text-[12.5px] text-[#5B6272] dark:text-[#A2A8B8]">
+                    <td className="px-4 py-3 text-[12.5px] text-[#6B7280] dark:text-[#9CA3AF]">
                       {r.purok?.name ?? "—"}
                     </td>
 
@@ -297,7 +297,7 @@ export default function ResidentsPage() {
                         row never visually shifts when the pointer arrives */}
                     <td className="px-4 py-3">
                       <div className="flex justify-end">
-                        <ChevronRight size={16} strokeWidth={1.8} className="text-[#C7CBD3] dark:text-[#484F5C] group-hover:text-[#3B82F6] dark:group-hover:text-[#5B9BFA] transition-colors" />
+                        <ChevronRight size={16} strokeWidth={1.8} className="text-[#9CA3AF] dark:text-[#6B7280] group-hover:text-[#3B82F6] dark:group-hover:text-[#5B9BFA] transition-colors" />
                       </div>
                     </td>
                   </tr>

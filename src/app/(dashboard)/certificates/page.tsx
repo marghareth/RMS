@@ -184,7 +184,7 @@ export default function CertificatesListPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => router.push("/certificates/templates")}
-              className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] bg-white px-4 py-2.5 text-[13px] font-bold text-[#374151] transition hover:bg-[#F4F5F7]"
+              className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-2.5 text-[13px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
             >
               <FileEdit size={15} />
               Manage Templates
@@ -211,18 +211,18 @@ export default function CertificatesListPage() {
       {/* Search + filters */}
       <div className="relative mb-4 flex items-center gap-2">
         <div className="relative flex-1">
-          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search cert no., resident name, or purpose"
-            className="w-full rounded-xl border border-[#E9EAEC] bg-white py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6]"
+            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#A3A3A3] focus:border-[#3B82F6]"
           />
         </div>
         <button
           onClick={() => setShowFilter((v) => !v)}
           className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
-            showFilter || activeFilterCount ? "bg-[#3B82F6] text-white" : "border border-[#E9EAEC] bg-white text-[#6B7280] hover:bg-[#F4F5F7]"
+            showFilter || activeFilterCount ? "bg-[#3B82F6] text-white" : "border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
           }`}
         >
           <SlidersHorizontal size={15} />
@@ -234,22 +234,22 @@ export default function CertificatesListPage() {
         </button>
 
         {showFilter && (
-          <div className="absolute right-0 top-full z-20 mt-2 w-80 space-y-3 rounded-xl border border-[#E9EAEC] bg-white p-4 shadow-lg">
+          <div className="absolute right-0 top-full z-20 mt-2 w-80 space-y-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4 shadow-lg">
             <div className="mb-1 flex items-center justify-between">
-              <span className="text-[12px] font-bold uppercase tracking-wide text-[#1F2937]">Filters</span>
+              <span className="text-[12px] font-bold uppercase tracking-wide text-[#1F2937] dark:text-white">Filters</span>
               <button onClick={() => setShowFilter(false)}>
-                <X size={14} className="text-[#9CA3AF]" />
+                <X size={14} className="text-[#9CA3AF] dark:text-[#A3A3A3]" />
               </button>
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                 Certificate Type
               </label>
               <select
                 value={filters.certificate_type}
                 onChange={(e) => setFilters((f) => ({ ...f, certificate_type: e.target.value }))}
-                className="w-full rounded-lg border border-[#E9EAEC] px-3 py-2 text-[12px] outline-none focus:border-[#3B82F6]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[12px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6]"
               >
                 <option value="">All Types</option>
                 {CERTIFICATE_TYPES.map((t) => (
@@ -262,35 +262,35 @@ export default function CertificatesListPage() {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                   From
                 </label>
                 <input
                   type="date"
                   value={filters.date_from}
                   onChange={(e) => setFilters((f) => ({ ...f, date_from: e.target.value }))}
-                  className="w-full rounded-lg border border-[#E9EAEC] px-2 py-2 text-[12px] outline-none focus:border-[#3B82F6]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2 py-2 text-[12px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6]"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                   To
                 </label>
                 <input
                   type="date"
                   value={filters.date_to}
                   onChange={(e) => setFilters((f) => ({ ...f, date_to: e.target.value }))}
-                  className="w-full rounded-lg border border-[#E9EAEC] px-2 py-2 text-[12px] outline-none focus:border-[#3B82F6]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2 py-2 text-[12px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6]"
                 />
               </div>
             </div>
 
-            <label className="flex items-center gap-2 text-[12px] font-medium text-[#374151]">
+            <label className="flex items-center gap-2 text-[12px] font-medium text-[#374151] dark:text-[#D4D4D4]">
               <input
                 type="checkbox"
                 checked={filters.flagged_only}
                 onChange={(e) => setFilters((f) => ({ ...f, flagged_only: e.target.checked }))}
-                className="h-3.5 w-3.5 rounded border-[#D1D5DB] text-[#3B82F6] focus:ring-[#3B82F6]"
+                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-[#3B82F6] focus:ring-[#3B82F6]"
               />
               Walk-in / flagged only
             </label>
@@ -298,7 +298,7 @@ export default function CertificatesListPage() {
             <div className="flex gap-2 pt-1">
               <button
                 onClick={() => setFilters(EMPTY_FILTERS)}
-                className="flex-1 rounded-lg border border-[#E9EAEC] py-2 text-[12px] text-[#6B7280] transition hover:bg-[#F4F5F7]"
+                className="flex-1 rounded-lg border border-[#E9EAEC] dark:border-[#262626] py-2 text-[12px] text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
               >
                 Clear
               </button>
@@ -315,22 +315,22 @@ export default function CertificatesListPage() {
 
       {/* Certificates table */}
       {selectedIds.size > 0 && (
-        <div className="mb-3 flex items-center justify-between rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-2.5">
+        <div className="mb-3 flex items-center justify-between rounded-lg border border-[#BFDBFE] dark:border-[#3B5A85] bg-[#EFF6FF] dark:bg-[#14243F] px-4 py-2.5">
           <div className="flex items-center gap-2">
-            <CheckCheck size={14} className="text-[#2563EB]" />
-            <span className="text-[12px] font-semibold text-[#1D4ED8]">
+            <CheckCheck size={14} className="text-[#2563EB] dark:text-[#60A5FA]" />
+            <span className="text-[12px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
               {selectedIds.size} selected
             </span>
-            <button onClick={clearSelection} className="text-[11px] font-semibold text-[#6B7280] hover:text-[#374151]">
+            <button onClick={clearSelection} className="text-[11px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] hover:text-[#374151] dark:hover:text-white">
               Clear
             </button>
           </div>
           <div className="flex items-center gap-2">
-            {bulkError && <span className="text-[11px] text-[#B91C1C]">{bulkError}</span>}
+            {bulkError && <span className="text-[11px] text-[#B91C1C] dark:text-[#F87171]">{bulkError}</span>}
             <button
               onClick={handleBulkPrint}
               disabled={bulkPrinting}
-              className="flex items-center gap-1.5 rounded-lg border border-[#BFDBFE] bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#1D4ED8] transition hover:bg-[#EFF6FF] disabled:opacity-60"
+              className="flex items-center gap-1.5 rounded-lg border border-[#BFDBFE] dark:border-[#3B5A85] bg-white dark:bg-[#171717] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#1D4ED8] dark:text-[#93C5FD] transition hover:bg-[#EFF6FF] dark:hover:bg-[#1F1F1F] disabled:opacity-60"
             >
               {bulkPrinting ? <Loader2 size={12} className="animate-spin" /> : <Printer size={12} />}
               Print Selected
@@ -347,7 +347,7 @@ export default function CertificatesListPage() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
+      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
@@ -361,7 +361,7 @@ export default function CertificatesListPage() {
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E9EAEC] bg-[#F9FAFB]">
+              <tr className="border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
                 <th className="w-10 px-4 py-3">
                   <input
                     type="checkbox"
@@ -370,15 +370,15 @@ export default function CertificatesListPage() {
                       if (e.target.checked) setSelectedIds(new Set(filtered.map((c) => c.id)));
                       else clearSelection();
                     }}
-                    className="h-3.5 w-3.5 rounded border-[#D1D5DB]"
+                    className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040]"
                   />
                 </th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Cert No.</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Type</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Resident</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Purpose</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Status</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Issued</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Cert No.</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Type</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Resident</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Purpose</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Status</th>
+                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Issued</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -387,39 +387,39 @@ export default function CertificatesListPage() {
                 <tr
                   key={c.id}
                   onClick={() => setSelectedId(c.id)}
-                  className="cursor-pointer border-b border-[#F4F5F7] transition last:border-b-0 hover:bg-[#F9FAFB]"
+                  className="cursor-pointer border-b border-[#F4F5F7] dark:border-[#262626] transition last:border-b-0 hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
                 >
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       checked={selectedIds.has(c.id)}
                       onChange={() => toggleSelected(c.id)}
-                      className="h-3.5 w-3.5 rounded border-[#D1D5DB]"
+                      className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040]"
                     />
                   </td>
-                  <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937]">{c.certificate_no}</td>
+                  <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937] dark:text-white">{c.certificate_no}</td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-[#EBF3FF] px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8]">
+                    <span className="inline-flex items-center rounded-full bg-[#EBF3FF] dark:bg-[#14243F] px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
                       {certTypeLabel(c.certificate_type)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-[#374151]">
+                  <td className="px-4 py-3 text-[12px] text-[#374151] dark:text-[#D4D4D4]">
                     <div className="flex items-center gap-1.5">
                       {c.resident ? residentFullName(c.resident) : c.manual_name}
                       {c.flagged_manual && (
-                        <span className="rounded-full bg-[#FEF3C7] px-1.5 py-0.5 text-[9px] font-bold uppercase text-[#D97706]">
+                        <span className="rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-[#D97706] dark:text-amber-400">
                           Walk-in
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="max-w-55 truncate px-4 py-3 text-[12px] text-[#6B7280]">{c.purpose}</td>
+                  <td className="max-w-55 truncate px-4 py-3 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{c.purpose}</td>
                   <td className="px-4 py-3">
                     <StatusBadge status={c.status} />
                   </td>
-                  <td className="px-4 py-3 text-[12px] text-[#6B7280]">{formatISODate(certDisplayDate(c))}</td>
+                  <td className="px-4 py-3 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{formatISODate(certDisplayDate(c))}</td>
                   <td className="px-4 py-3 text-right">
-                    <ChevronRight size={15} className="ml-auto text-[#D1D5DB]" />
+                    <ChevronRight size={15} className="ml-auto text-[#D1D5DB] dark:text-[#404040]" />
                   </td>
                 </tr>
               ))}
