@@ -200,7 +200,6 @@ export function getClientIp(req: Request): string {
   return "unknown";
 }
 
-/** Standard 429 JSON response with a Retry-After header. */
 export function tooManyRequestsResponse(retryAfterSeconds: number) {
   return NextResponse.json(
     {
