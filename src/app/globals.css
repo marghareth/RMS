@@ -14,6 +14,7 @@
 }
 
 :root {
+  --font-inter: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --color-primary: #3b82f6;
   --color-primary-hover: #2563eb;
   --color-primary-tint: #ebf3ff;

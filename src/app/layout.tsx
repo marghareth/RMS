@@ -1,14 +1,24 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import "@fontsource-variable/inter";
 import "./globals.css";
 import AuthSessionProvider from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
+// FIX: next/font/google fetches Inter from fonts.googleapis.com at build
+// time — same category of problem already called out and fixed in
+// (dashboard)/layout.tsx for "Google Sans" (see that file's comment): a
+// third-party network dependency at build time, plus a per-session
+// privacy leak at runtime for what's meant to be an internal
+// records-management system. It made `next build` hard-fail in any
+// environment without outbound access to Google's CDN.
+//
+// Self-hosted instead via @fontsource-variable/inter, which bundles the
+// actual woff2 files inside node_modules (fetched once from npm at
+// `npm install`, not from Google on every build/request). The variable
+// font's family name, "Inter Variable", is wired into the --font-inter
+// custom property in globals.css, which --font-sans already falls back
+// through — see the @theme block there.
 
 export const metadata: Metadata = {
   title: "Brgy-RMS",
@@ -43,7 +53,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
+      <body className="font-sans antialiased" suppressHydrationWarning>
         <ThemeProvider>
           <AuthSessionProvider>{children}</AuthSessionProvider>
         </ThemeProvider>

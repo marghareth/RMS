@@ -38,10 +38,11 @@ const securityHeaders = [
   // Disable browser features this app never needs, defense-in-depth
   // against a compromised/malicious dependency trying to use them.
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-  // Baseline CSP: same-origin by default, but explicitly allow the
-  // sub-resources this app is already known to load (Google Fonts CSS —
-  // see note in (dashboard)/layout.tsx about removing that; keep this
-  // entry only if a self-hosted font migration hasn't happened yet).
+  // Baseline CSP: same-origin by default. Fonts (Inter, via
+  // @fontsource-variable/inter — see src/app/layout.tsx) are bundled and
+  // served from this origin, so no external font-src/style-src allowance
+  // for Google Fonts is needed anymore; the migration mentioned in the
+  // old version of this comment is done.
   // 'unsafe-eval' is only added in development — Next.js dev tooling
   // needs it, but production React never calls eval() so the real policy
   // stays strict where it actually matters.
@@ -50,8 +51,8 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
+      "style-src 'self' 'unsafe-inline'",
+      "font-src 'self'",
       "img-src 'self' data: blob:",
       "connect-src 'self'",
       "frame-ancestors 'none'",

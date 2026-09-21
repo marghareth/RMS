@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Package, Save, User, CalendarDays } from "lucide-react";
 
@@ -76,7 +76,21 @@ function TextInput({
 }
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+// BUGFIX: `next build` failed with "useSearchParams() should be wrapped in a
+// suspense boundary" — useSearchParams() needs a Suspense boundary above it
+// so the route's static shell can render without blocking on the client-only
+// search-param read. Split into an inner component (the real page) plus a
+// thin default export that wraps it in <Suspense>.
+// https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
 export default function BorrowEquipmentPage() {
+  return (
+    <Suspense fallback={null}>
+      <BorrowEquipmentPageInner />
+    </Suspense>
+  );
+}
+
+function BorrowEquipmentPageInner() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const preselected  = searchParams.get("equipment_id") ?? "";

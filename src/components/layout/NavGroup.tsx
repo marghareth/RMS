@@ -90,7 +90,6 @@ export default function NavGroup({
                 href={child.href}
                 addHref={child.addHref}
                 exact={child.exact}
-                indent
               />
             ))}
           </div>

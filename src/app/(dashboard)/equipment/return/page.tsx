@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft, Package, CheckCircle2, AlertTriangle,
@@ -61,7 +61,19 @@ function InfoRow({ label, value, accent }: { label: string; value: React.ReactNo
 }
 
 // ─── PAGE (reads the query param, keys the content by it) ────────────────────
+// BUGFIX: `next build` failed with "useSearchParams() should be wrapped in a
+// suspense boundary". Split into an inner component plus a thin default
+// export that wraps it in <Suspense> — see equipment/borrow/page.tsx for the
+// same fix and a link to the Next.js docs on why this is required.
 export default function ReturnEquipmentPage() {
+  return (
+    <Suspense fallback={null}>
+      <ReturnEquipmentPageInner />
+    </Suspense>
+  );
+}
+
+function ReturnEquipmentPageInner() {
   const searchParams = useSearchParams();
   const borrowingId  = searchParams.get("borrowing_id") ?? "1";
 
