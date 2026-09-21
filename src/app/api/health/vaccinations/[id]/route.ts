@@ -16,12 +16,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
+import { withErrorHandling } from "@/lib/api-handler";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("health:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const id = parseInt(params.id);
+  const { id: idParam } = await context!.params;
+  const id = parseInt(idParam);
   if (isNaN(id)) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
   const vaccination = await prisma.vaccination.findUnique({
@@ -34,34 +36,25 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   if (!vaccination) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(vaccination);
-}
+});
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export const DELETE = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("health:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const id = parseInt(params.id);
+  const { id: idParam } = await context!.params;
+  const id = parseInt(idParam);
   if (isNaN(id)) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
-  try {
-    await prisma.vaccination.delete({ where: { id } });
+  await prisma.vaccination.delete({ where: { id } });
 
-    await logAudit({
-      user_id:        parseInt(auth.session.user.id),
-      action:         "DELETE",
-      table_affected: "Vaccination",
-      record_id:      id,
-      details:        `Deleted vaccination record ID: ${id}`,
-    });
+  await logAudit({
+    user_id:        parseInt(auth.session.user.id),
+    action:         "DELETE",
+    table_affected: "Vaccination",
+    record_id:      id,
+    details:        `Deleted vaccination record ID: ${id}`,
+  });
 
-    return NextResponse.json({ message: "Vaccination record deleted successfully" });
-  } catch (e: any) {
-    if (e.code === "P2025") {
-      return NextResponse.json({ error: "NOT_FOUND", message: "Vaccination record not found." }, { status: 404 });
-    }
-    return NextResponse.json(
-      { error: "SERVER_ERROR", message: e?.message || "Failed to delete vaccination record." },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ message: "Vaccination record deleted successfully" });
+});

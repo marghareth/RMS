@@ -12,7 +12,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Syringe, Save, User, CalendarDays } from "lucide-react";
 import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPicker";
@@ -68,7 +68,29 @@ function VaccinePicker({ value, onChange }: { value: string; onChange: (v: strin
 }
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+// BUGFIX: `next build` failed with "useSearchParams() should be wrapped in a
+// suspense boundary". Split into an inner component plus a thin default
+// export that wraps it in <Suspense> — see equipment/borrow/page.tsx for the
+// same fix and a link to the Next.js docs on why this is required.
+//
+// NOTE — this file is a separate, pre-existing bug from the Suspense one:
+// this route is /health/vaccinations (the plain list URL), but its content
+// is a near-duplicate of /health/vaccinations/new's "add a vaccination" form,
+// not a list. Nothing in the app actually links here (the real vaccinations
+// list lives on the combined /health page, via VaccinationDetailSheet), so
+// it's currently dead/unreachable-by-UI rather than broken-in-front-of-users
+// — but visiting this URL directly shows the wrong content. Flagging this
+// separately rather than rewriting it here, since fixing it properly means
+// designing real list content, not just a Suspense wrapper.
 export default function NewVaccinationPage() {
+  return (
+    <Suspense fallback={null}>
+      <NewVaccinationPageInner />
+    </Suspense>
+  );
+}
+
+function NewVaccinationPageInner() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const preResidentId = searchParams.get("resident_id");
