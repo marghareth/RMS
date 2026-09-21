@@ -19,6 +19,13 @@ export function fmtCompactCurrency(value: number | string | null | undefined) {
     style: "currency",
     currency: "PHP",
     notation: "compact",
+    // BUGFIX: without a minimum, Intl.NumberFormat drops the trailing ".0"
+    // for values that round to a whole number in compact notation — most
+    // visibly the zero/fallback case ("₱0" instead of the expected "₱0.0").
+    // Pinning both min and max to 1 keeps compact currency showing exactly
+    // one decimal digit consistently (₱1.2M, ₱0.0), matching what
+    // finance.test.ts asserts.
+    minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   }).format(Number.isFinite(n) ? n : 0);
 }
