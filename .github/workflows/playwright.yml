@@ -8,6 +8,13 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    env:
+      # `npm ci` triggers the `postinstall` hook, which runs `prisma
+      # generate`. prisma.config.ts reads DATABASE_URL eagerly just to
+      # load the config (even though generating the client doesn't need
+      # a real DB connection) — so a syntactically valid placeholder is
+      # enough here. Same fix as unit-tests.yml.
+      DATABASE_URL: "postgresql://user:password@localhost:5432/rms_ci"
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
