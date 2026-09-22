@@ -26,7 +26,17 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const res = await signIn("credentials", { username, password, redirect: false });
+    let res;
+    try {
+      res = await signIn("credentials", { username, password, redirect: false });
+    } catch {
+      // signIn() rejecting (network failure, blocked request, etc.) used to
+      // leave the button stuck on "Signing in..." forever since nothing
+      // downstream ever ran. Surface it as a normal error instead.
+      setError("Couldn't reach the server. Please check your connection and try again.");
+      setLoading(false);
+      return;
+    }
 
     if (res?.ok) {
       router.push("/dashboard");
@@ -48,7 +58,14 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const res = await signIn("credentials", { username, password, totp, redirect: false });
+    let res;
+    try {
+      res = await signIn("credentials", { username, password, totp, redirect: false });
+    } catch {
+      setError("Couldn't reach the server. Please check your connection and try again.");
+      setLoading(false);
+      return;
+    }
 
     if (res?.ok) {
       router.push("/dashboard");
