@@ -200,7 +200,7 @@ export default function EditEquipmentPage() {
           <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
         </button>
         <div>
-          <h1 className="text-[18px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Edit Equipment</h1>
+          <h1 className="text-[20px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Edit Equipment</h1>
           <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Update equipment details</p>
         </div>
       </div>

@@ -213,7 +213,7 @@ export default function EquipmentDetailPage() {
               )}
             </div>
             <div>
-              <h1 className="text-[17px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">{equipment.name}</h1>
+              <h1 className="text-[19px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">{equipment.name}</h1>
               <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Equipment ID: #{String(equipment.id).padStart(5, "0")}</p>
             </div>
           </div>

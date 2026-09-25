@@ -111,7 +111,7 @@ export default function CertificateTemplatesPage() {
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Manage Certificate Templates</h1>
+        <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Manage Certificate Templates</h1>
         <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">
           Edit the wording used when a certificate of each type is previewed or printed.
         </p>

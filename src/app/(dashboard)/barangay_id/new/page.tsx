@@ -63,7 +63,7 @@ export default function NewBarangayIdPage() {
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Issue New Barangay ID</h1>
+        <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Issue New Barangay ID</h1>
         <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">
           An ID number will be generated automatically (preview: {previewIdNumber}).
         </p>

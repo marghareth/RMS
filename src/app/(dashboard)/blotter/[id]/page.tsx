@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/blotter/[id]/page.tsx
 // FILE PATH: src/app/(dashboard)/blotter/[id]/page.tsx
 // Replace the entire contents of this file with the code below.
 
@@ -194,7 +195,7 @@ export default function BlotterCaseDetailPage() {
             Back to Blotter
           </button>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">{blotterCase.case_number}</h1>
+            <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">{blotterCase.case_number}</h1>
             <StatusBadge status={blotterCase.status} />
             {blotterCase.escalated && <StatusBadge status="ESCALATED" />}
           </div>

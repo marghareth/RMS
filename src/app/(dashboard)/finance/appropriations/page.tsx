@@ -101,7 +101,7 @@ export default function AppropriationsPage() {
     <div>
       <div className="mb-5 flex items-start justify-between">
         <div>
-          <h1 className="text-[20px] font-bold text-[#1F2937] dark:text-white">Appropriations</h1>
+          <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Appropriations</h1>
           <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">Budget items allocated across PS, MOOE, and Capital Outlay</p>
         </div>
         <button

@@ -111,7 +111,7 @@ export default function CertificateDetailPage() {
             Back to Certificates
           </button>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">{certificate.certificate_no}</h1>
+            <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">{certificate.certificate_no}</h1>
             <span className="inline-flex items-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
               {certTypeLabel(certificate.certificate_type)}
             </span>

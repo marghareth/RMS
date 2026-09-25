@@ -158,7 +158,7 @@ export default function BudgetOverviewPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-[22px] font-bold tracking-tight text-[#1B2430] dark:text-white">Budget Overview</h1>
+        <h1 className="text-[24px] font-bold tracking-tight text-[#1B2430] dark:text-white">Budget Overview</h1>
         <p className="mt-1 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">Barangay-wide appropriations, revenue, and disbursement snapshot</p>
       </div>
 

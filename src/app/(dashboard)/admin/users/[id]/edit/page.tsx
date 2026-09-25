@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/admin/users/[id]/edit/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -123,7 +124,7 @@ export default function EditUserPage() {
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Edit User</h1>
+        <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Edit User</h1>
         <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">{original.username}</p>
       </div>
 

@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/reports/registries/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -147,7 +148,7 @@ export default function RegistriesReportPage() {
                 <BookOpen size={18} className="text-[#0E7490] dark:text-[#22D3EE]" />
               </div>
               <div>
-                <h1 className="text-[17px] font-bold text-[#1B2430] dark:text-white uppercase tracking-wide">Special Registries</h1>
+                <h1 className="text-[19px] font-bold text-[#1B2430] dark:text-white uppercase tracking-wide">Special Registries</h1>
                 <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Senior citizens, PWD, and 4Ps per purok</p>
               </div>
             </div>

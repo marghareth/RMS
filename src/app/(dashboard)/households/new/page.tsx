@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/households/new/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -315,7 +316,7 @@ export default function NewHouseholdPage() {
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Add Household</h1>
+        <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Add Household</h1>
         <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">
           A household number will be generated automatically once saved.
         </p>

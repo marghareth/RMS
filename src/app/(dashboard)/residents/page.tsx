@@ -155,7 +155,7 @@ export default function ResidentsPage() {
       {/* ── Page header ── */}
       <div className="flex items-end justify-between gap-4 flex-wrap pb-3.5 border-b border-[#E9EAEC] dark:border-[#262626] mb-4">
         <div>
-          <h1 className="text-[22px] font-semibold tracking-tight text-[#1F2937] dark:text-white">
+          <h1 className="text-[24px] font-semibold tracking-tight text-[#1F2937] dark:text-white">
             Residents
           </h1>
           <p className="text-[12.5px] text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">

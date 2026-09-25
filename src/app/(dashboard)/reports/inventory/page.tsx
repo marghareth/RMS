@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/reports/inventory/page.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -117,7 +118,7 @@ export default function InventoryReportPage() {
                 <Package size={18} className="text-[#B3261E] dark:text-[#F87171]" />
               </div>
               <div>
-                <h1 className="text-[17px] font-bold text-[#1B2430] dark:text-white uppercase tracking-wide">Inventory Report</h1>
+                <h1 className="text-[19px] font-bold text-[#1B2430] dark:text-white uppercase tracking-wide">Inventory Report</h1>
                 <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Equipment status and year-end inventory</p>
               </div>
             </div>
