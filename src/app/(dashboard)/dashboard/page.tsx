@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/dashboard/page.tsx
 "use client";
 
 // FILE: src/app/(dashboard)/dashboard/page.tsx
@@ -421,7 +422,7 @@ export default function DashboardPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-[#9CA3AF] dark:text-[#A3A3A3]">Overview</p>
-            <h1 className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-[#1B2430] dark:text-white">Dashboard</h1>
+            <h1 className="mt-1 text-[26px] font-bold leading-tight tracking-tight text-[#1B2430] dark:text-white">Dashboard</h1>
             <p className="mt-1 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">{today}</p>
           </div>
           <button

@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/reports/population/page.tsx
 "use client";
 
 import { Fragment, useState } from "react";
@@ -89,7 +90,7 @@ export default function PopulationReportPage() {
                 <Users size={18} className="text-[#3E5C76] dark:text-[#8FB0CC]" />
               </div>
               <div>
-                <h1 className="text-[17px] font-bold text-[#1B2430] dark:text-white uppercase tracking-wide">Population Report</h1>
+                <h1 className="text-[19px] font-bold text-[#1B2430] dark:text-white uppercase tracking-wide">Population Report</h1>
                 <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Resident demographics and distribution</p>
               </div>
             </div>

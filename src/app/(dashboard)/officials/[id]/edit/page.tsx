@@ -132,7 +132,7 @@ export default function EditOfficialPage() {
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Edit Official</h1>
+        <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Edit Official</h1>
         <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">{residentFullName(original.resident)}</p>
       </div>
 

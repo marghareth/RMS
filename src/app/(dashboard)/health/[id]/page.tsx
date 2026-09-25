@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/health/[id]/page.tsx
 // FILE PATH: src/app/(dashboard)/health/[id]/page.tsx
 // This is the PAGE component. Make sure this — and only this — is what
 // lives at that path. The GET/PATCH/DELETE route code belongs in a
@@ -139,7 +140,7 @@ function HealthRecordDetailContent({ id }: { id: string }) {
               <Heart size={18} className="text-white" />
             </div>
             <div>
-              <h1 className="text-[16px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">{record.record_type}</h1>
+              <h1 className="text-[18px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">{record.record_type}</h1>
               <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Health Record #{String(record.id).padStart(5, "0")}</p>
             </div>
           </div>

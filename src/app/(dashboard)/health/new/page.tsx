@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/health/new/page.tsx
 // FILE PATH: src/app/(dashboard)/health/new/page.tsx
 // Replace the entire contents of this file with the code below.
 //
@@ -139,7 +140,7 @@ export default function NewHealthRecordPage() {
           <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
         </button>
         <div>
-          <h1 className="text-[18px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Add Health Record</h1>
+          <h1 className="text-[20px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Add Health Record</h1>
           <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Record a residents health condition or checkup</p>
         </div>
       </div>

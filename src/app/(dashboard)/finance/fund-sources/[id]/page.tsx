@@ -79,7 +79,7 @@ export default function FundSourceDetailPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">{fundSource.name}</h1>
+              <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">{fundSource.name}</h1>
               <span
                 className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                   fundSource.status === "ACTIVE" ? "bg-green-50 dark:bg-green-500/15 text-green-600 dark:text-green-400" : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-[#A3A3A3]"

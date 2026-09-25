@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/financial/summary/page.tsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -68,7 +69,7 @@ export default function FinancialSummaryPage() {
             <ArrowLeft size={14} />
             Back to Financial Records
           </button>
-          <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Financial Summary</h1>
+          <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Financial Summary</h1>
           <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">Monthly income vs. expense breakdown</p>
         </div>
         <div className="flex items-center gap-2">

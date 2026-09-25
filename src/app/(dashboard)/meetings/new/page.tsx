@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/meetings/new/page.tsx
 "use client";
 // FILE: src/app/(dashboard)/meetings/new/page.tsx
 
@@ -63,7 +64,7 @@ export default function NewMeetingPage() {
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">New Meeting Record</h1>
+        <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">New Meeting Record</h1>
         <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">
           Encode a SB meeting or barangay assembly. Agenda items can be added once the meeting is created.
         </p>

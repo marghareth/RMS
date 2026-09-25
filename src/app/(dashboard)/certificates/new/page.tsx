@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/certificates/new/page.tsx
 "use client";
 
 import { useMemo, useState } from "react";
@@ -125,7 +126,7 @@ export default function NewCertificatePage() {
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Request Certificate</h1>
+        <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Request Certificate</h1>
         <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">
           Auto-fills from the residents profile. A certificate number will be generated automatically.
         </p>

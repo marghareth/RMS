@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/health/vaccinations/[id]/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -109,7 +110,7 @@ function VaccinationDetailContent({ id }: { id: string }) {
               <Syringe size={18} className="text-white" />
             </div>
             <div>
-              <h1 className="text-[16px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">{vaccination.vaccine_name}</h1>
+              <h1 className="text-[18px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">{vaccination.vaccine_name}</h1>
               <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Vaccination Record #{String(vaccination.id).padStart(5, "0")}</p>
             </div>
           </div>

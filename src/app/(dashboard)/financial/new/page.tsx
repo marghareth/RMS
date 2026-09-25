@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/financial/new/page.tsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -77,7 +78,7 @@ export default function NewFinancialRecordPage() {
       </button>
 
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#1F2937] dark:text-white">Add Transaction</h1>
+        <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Add Transaction</h1>
         <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">Record a new income or expense entry.</p>
       </div>
 

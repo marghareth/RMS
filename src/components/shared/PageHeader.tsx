@@ -1,3 +1,4 @@
+// FILE: src/components/shared/PageHeader.tsx
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
@@ -8,7 +9,7 @@ export default function PageHeader({ title, subtitle, actions }: PageHeaderProps
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
-        <h1 className="text-[20px] font-bold text-[#1F2937] dark:text-white leading-tight">{title}</h1>
+        <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white leading-tight">{title}</h1>
         {subtitle && <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}

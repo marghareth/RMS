@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/health/page.tsx
 // FILE PATH: src/app/(dashboard)/health/page.tsx
 // Replace the entire contents of this file with the code below.
 //
@@ -182,7 +183,7 @@ export default function HealthPage() {
       {/* ── Page header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[18px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Health Records</h1>
+          <h1 className="text-[20px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Health Records</h1>
           <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Community health monitoring and vaccination tracking</p>
         </div>
         <div className="flex gap-2">

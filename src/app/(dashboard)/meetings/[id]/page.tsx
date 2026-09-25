@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/meetings/[id]/page.tsx
 "use client";
 // FILE: src/app/(dashboard)/meetings/[id]/page.tsx
 
@@ -260,7 +261,7 @@ export default function MeetingDetailPage() {
                   </span>
                 )}
               </div>
-              <h1 className="mt-1 truncate text-xl font-bold text-[#1F2937] dark:text-white">
+              <h1 className="mt-1 truncate text-[22px] font-bold text-[#1F2937] dark:text-white">
                 {meeting.title || meetingTypeLabel(meeting.meeting_type)}
               </h1>
               <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">

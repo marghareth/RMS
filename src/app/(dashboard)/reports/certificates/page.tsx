@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/reports/certificates/page.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -115,7 +116,7 @@ export default function CertificatesReportPage() {
                 <FileText size={18} className="text-[#0B6E4F] dark:text-[#34A37A]" />
               </div>
               <div>
-                <h1 className="text-[17px] font-bold text-[#1B2430] dark:text-white uppercase tracking-wide">Certificate Report</h1>
+                <h1 className="text-[19px] font-bold text-[#1B2430] dark:text-white uppercase tracking-wide">Certificate Report</h1>
                 <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Issuance history and breakdown by type</p>
               </div>
             </div>
