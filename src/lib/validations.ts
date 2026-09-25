@@ -120,6 +120,11 @@ export const residentCreateSchema = z.object({
   income_bracket: z.string().trim().optional().nullable(),
   sector: z.enum(["SENIOR", "PWD", "YOUTH", "4PS", "N/A"]).optional().nullable(),
 
+  // The real date this person became a barangay resident (not when the
+  // record was typed in — see the schema comment on Resident.residency_start_date
+  // and the eligibility check in POST /api/certificates).
+  residency_start_date: dateString.optional().nullable(),
+
   // ── Contact (2.9) ──
   email: z.string().trim().email().optional().nullable().or(z.literal("")),
   mobile: z.string().trim().optional().nullable(),

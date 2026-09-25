@@ -16,9 +16,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { Menu, Search, Bell, LogOut, ChevronDown, AlertTriangle, Clock, Info, ShieldCheck } from "lucide-react";
+import { Menu, Search, Bell, LogOut, ChevronDown, AlertTriangle, Clock, Info, ShieldCheck, HelpCircle } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import Link from "next/link";
+import { useOnboarding } from "@/components/onboarding/OnboardingProvider";
 
 // Friendly labels for the role codes stored on the User model
 // (see the Role type / PERMISSIONS matrix in src/lib/permission.ts).
@@ -65,6 +66,7 @@ export default function Topbar({
   const router = useRouter();
   const [search, setSearch] = useState("");
   const { data: session } = useSession();
+  const { start: startTour } = useOnboarding();
 
   const username = (session?.user as any)?.username ?? "User";
   const roleCode = (session?.user as any)?.role ?? "";
@@ -128,7 +130,7 @@ export default function Topbar({
       </button>
 
       <div className="flex min-w-0 flex-1 items-center">
-        <div className="relative w-full max-w-md">
+        <div data-tour="topbar-search" className="relative w-full max-w-md">
           <Search
             size={16}
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
@@ -146,10 +148,21 @@ export default function Topbar({
 
         <ThemeToggle />
 
+        <button
+          type="button"
+          data-tour="topbar-help"
+          onClick={startTour}
+          aria-label="Replay product tour"
+          title="Replay product tour"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#6B7280] transition-colors hover:bg-[#F4F5F7] hover:text-[#1F2937] dark:hover:bg-[#1F1F1F] dark:hover:text-white"
+        >
+          <HelpCircle size={18} />
+        </button>
+
         <div className="mx-1 hidden h-6 w-px bg-[#E9EAEC] dark:bg-[#262626] sm:block" />
 
         {/* Notifications */}
-        <div ref={notifRef} className="relative">
+        <div ref={notifRef} data-tour="topbar-notifications" className="relative">
           <button
             type="button"
             aria-label="Notifications"
@@ -210,7 +223,7 @@ export default function Topbar({
         <div className="mx-1 hidden h-6 w-px bg-[#E9EAEC] sm:block" />
 
         {/* User menu */}
-        <div ref={menuRef} className="relative">
+        <div ref={menuRef} data-tour="topbar-user-menu" className="relative">
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}

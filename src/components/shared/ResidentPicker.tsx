@@ -25,6 +25,16 @@ export interface PickedResident {
   // second fetch or a separate picker component.
   civil_status?: string;
   household?: { id: number; address: string } | null;
+  // Already returned by /api/residents (full Resident row, no `select`
+  // clause) — just wasn't on this type before. Needed by any consumer
+  // that has to compute residency length client-side, e.g. the 6-month
+  // eligibility check on the certificate request form.
+  created_at?: string;
+  // The real, user-provided residency start date (see the schema comment
+  // on Resident.residency_start_date) — preferred over created_at for
+  // that same eligibility check; created_at is only a fallback for rows
+  // where this is still null.
+  residency_start_date?: string | null;
 }
 
 function calcAge(birthdate: string) {

@@ -123,10 +123,16 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       throw new ApiError(404, "NOT_FOUND", "Resident not found");
     }
 
+    // Prefer the real, user-provided residency start date over `created_at`
+    // (when the record was typed into RMS — not necessarily when the
+    // person actually moved in). Falls back to created_at only for rows
+    // saved before residency_start_date existed / was left blank.
+    const residencyReference = resident.residency_start_date ?? resident.created_at;
+
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    if (resident.created_at > sixMonthsAgo) {
+    if (residencyReference > sixMonthsAgo) {
       throw new ApiError(
         400,
         "RESIDENCY_CHECK_FAILED",

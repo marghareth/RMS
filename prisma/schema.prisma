@@ -142,6 +142,7 @@ model Resident {
   is_deceased            Boolean     @default(false)
   created_at             DateTime    @default(now())
   updated_at             DateTime    @updatedAt
+  residency_start_date   DateTime?
 
   // ── Contact (2.9) ──
   email                  String?

@@ -3,6 +3,8 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
+import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
+import TourOverlay from "@/components/onboarding/TourOverlay";
 // TEST: dashboard-only typeface trial (Manrope, in place of the site-wide
 // Inter). Self-hosted the same way Inter is — via a Fontsource variable
 // package, bundled from npm at install time, not fetched from a
@@ -81,16 +83,19 @@ export default function DashboardLayout({
   }, []);
 
   return (
-    <div className="flex h-screen bg-[#F4F5F7] overflow-hidden dark:bg-[#0A0A0A]">
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Topbar onMenuClick={() => setCollapsed(!collapsed)} />
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-7xl px-6 py-6 sm:px-8 sm:py-8">
-            {children}
-          </div>
-        </main>
+    <OnboardingProvider>
+      <div className="flex h-screen bg-[#F4F5F7] overflow-hidden dark:bg-[#0A0A0A]">
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+          <Topbar onMenuClick={() => setCollapsed(!collapsed)} />
+          <main className="flex-1 overflow-y-auto">
+            <div className="mx-auto w-full max-w-7xl px-6 py-6 sm:px-8 sm:py-8">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+      <TourOverlay />
+    </OnboardingProvider>
   );
 }
