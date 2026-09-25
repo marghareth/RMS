@@ -97,6 +97,72 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
       canReadEquipment ? prisma.equipment.count() : Promise.resolve(0),
     ]);
 
+  // ── Residents by classification (dashboard "Population Overview" pie) ──
+  // No single column captures this — it's derived from three different
+  // places (SpecialRegistry, the newer multi-value ResidentSector, and
+  // age) so we pull just the fields needed to classify each resident and
+  // bucket them in JS. Fine at barangay scale (hundreds to a few thousand
+  // residents); if this ever needs to run against a much larger roll,
+  // switch to a SQL CASE/groupBy instead of classifying row-by-row here.
+  const classificationSource = canReadResidents
+    ? await prisma.resident.findMany({
+        where: { is_archived: false },
+        select: {
+          birthdate: true,
+          sectors: { select: { sector_type: true } },
+          special_registries: { select: { registry_type: true } },
+          government_assistance: { select: { id: true } },
+        },
+      })
+    : [];
+
+  function ageOn(birthdate: Date, on: Date): number {
+    let age = on.getFullYear() - birthdate.getFullYear();
+    const monthDiff = on.getMonth() - birthdate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && on.getDate() < birthdate.getDate())) age--;
+    return age;
+  }
+
+  // Priority order when a resident matches more than one bucket (e.g. a
+  // senior who is also a 4Ps beneficiary shows as "Senior Citizen" —
+  // mirrors how the Special Registries report treats overlapping cases).
+  // "4Ps Beneficiary" stands in for the reference design's "Indigent" —
+  // the schema has no raw income-based indigency flag, but 4Ps enrollment
+  // (GovernmentAssistance / the FOUR_PS registry) is the closest tracked
+  // proxy for a household the barangay has identified as low-income.
+  const CLASSIFICATION_ORDER = [
+    "Senior Citizen",
+    "Persons with Disabilities",
+    "4Ps Beneficiary",
+    "Youth",
+    "Children",
+    "Not Classified",
+  ] as const;
+  const classificationCounts = new Map<string, number>(CLASSIFICATION_ORDER.map((c) => [c, 0]));
+
+  for (const r of classificationSource) {
+    const age = ageOn(r.birthdate, now);
+    const sectorTypes = new Set(r.sectors.map((s) => s.sector_type));
+    const isSenior = sectorTypes.has("SENIOR") || r.special_registries.some((sr) => sr.registry_type === "SENIOR_CITIZEN") || age >= 60;
+    const isPwd    = sectorTypes.has("PWD") || r.special_registries.some((sr) => sr.registry_type === "PWD");
+    const is4ps    = sectorTypes.has("4PS") || r.special_registries.some((sr) => sr.registry_type === "FOUR_PS") || r.government_assistance.length > 0;
+    const isYouth  = sectorTypes.has("YOUTH") || (age >= 15 && age <= 30);
+
+    const bucket = isSenior ? "Senior Citizen"
+      : isPwd   ? "Persons with Disabilities"
+      : is4ps   ? "4Ps Beneficiary"
+      : isYouth ? "Youth"
+      : age < 15 ? "Children"
+      : "Not Classified";
+
+    classificationCounts.set(bucket, (classificationCounts.get(bucket) ?? 0) + 1);
+  }
+
+  const residentsByClassification = CLASSIFICATION_ORDER.map((classification) => ({
+    classification,
+    count: classificationCounts.get(classification) ?? 0,
+  }));
+
   const [residentsByPurok, residentsBySex, recentActivity, recentBlotterCases, documentsByStatus] =
     await Promise.all([
       canReadResidents
@@ -167,6 +233,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
     certsThisYear,
     residentsByPurok,
     residentsBySex,
+    residentsByClassification,
     recentActivity,
     recentBlotterCases,
     // ── Batch 11 (Dashboard Customization) ──

@@ -339,8 +339,8 @@ export default function Sidebar({
           collapsed ? "-translate-x-full lg:w-0 lg:border-r-0" : "translate-x-0 shadow-2xl lg:w-64 lg:shadow-none"
         } ${className}`}
       >
-        <div data-tour="sidebar-logo" className="flex h-15 shrink-0 items-center gap-2.5 border-b border-[#E9EAEC] px-4 dark:border-[#262626]">
-          <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 shrink-0">
+        <div data-tour="sidebar-logo" className="flex min-h-15 shrink-0 items-start gap-2.5 border-b border-[#E9EAEC] px-4 py-3 dark:border-[#262626]">
+          <svg viewBox="0 0 24 24" fill="none" className="mt-0.5 h-6 w-6 shrink-0">
             <path d="M12 2.6 20.2 8v1.5H3.8V8L12 2.6Z" fill="#3B82F6" />
             <rect x="5.4" y="10.6" width="2.3" height="7.4" fill="#3B82F6" />
             <rect x="10.85" y="10.6" width="2.3" height="7.4" fill="#3B82F6" />
@@ -348,7 +348,7 @@ export default function Sidebar({
             <rect x="3.4" y="19.2" width="17.2" height="2.2" rx="1" fill="#3B82F6" />
           </svg>
           <div className="min-w-0">
-            <b className="block truncate text-[13px] font-semibold text-[#1F2937] dark:text-white">Barangay RMS</b>
+            <b className="line-clamp-2 wrap-break-word text-[15px] font-semibold leading-tight text-[#1F2937] dark:text-white">Barangay Records Management System</b>
             <small className="block truncate text-[10.5px] text-[#6B7280] dark:text-[#9CA3AF]">
               {barangayName || "Records Management"}
             </small>

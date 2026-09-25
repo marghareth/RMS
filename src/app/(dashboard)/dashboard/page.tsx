@@ -20,8 +20,9 @@
 import { useEffect, useState } from "react";
 import {
   ArrowUpRight, ArrowDownRight, SlidersHorizontal,
-  UserPlus, FilePlus2, ScrollText, LogIn,
+  UserPlus, FilePlus2, ScrollText, LogIn, Users, Mars, Venus,
 } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import Link from "next/link";
 import StatusBadge from "@/components/shared/StatusBadge";
 import DashboardCustomizeSheet from "@/components/dashboard/DashboardCustomizeSheet";
@@ -60,6 +61,8 @@ interface DashboardData {
   settledCases: number;
   totalAssets: number;
   documentsByStatus: { status: string; count: number }[];
+  residentsBySex: { sex: string; count: number }[];
+  residentsByClassification: { classification: string; count: number }[];
   trends: {
     residents: number | null;
     households: number | null;
@@ -234,6 +237,102 @@ function PriorityTasksPanel({ data }: { data: DashboardData }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── POPULATION OVERVIEW (classification pie + male/female counts) ─────────────
+// Same two-block layout as the reference dashboard mockup (classification
+// pie + legend on the left, total population with a male/female
+// breakdown on the right) — restyled with this app's own chart palette
+// (the AGE_COLORS/CIVIL_COLORS set already used on the Population and
+// Special Registries reports) instead of the mockup's colors.
+const CLASSIFICATION_COLORS: Record<string, string> = {
+  "Senior Citizen": "#3E5C76",
+  "Persons with Disabilities": "#0E7490",
+  "4Ps Beneficiary": "#0B6E4F",
+  "Youth": "#6D4AFF",
+  "Children": "#B45309",
+  "Not Classified": "#9CA3AF",
+};
+
+function ClassificationTooltip({ active, payload }: any) {
+  if (!active || !payload?.length) return null;
+  const p = payload[0];
+  return (
+    <div className="rounded-xl border border-[#E9EAEC] bg-white px-3 py-2 text-[11px] shadow-lg dark:border-[#262626] dark:bg-[#171717]">
+      <p className="font-bold text-[#1B2430] dark:text-white">{p.name}</p>
+      <p className="text-[#6B7280] dark:text-[#A3A3A3]">{p.value?.toLocaleString()} resident{p.value === 1 ? "" : "s"}</p>
+    </div>
+  );
+}
+
+function PopulationOverviewPanel({ data }: { data: DashboardData }) {
+  const classification = data.residentsByClassification.filter((c) => c.count > 0);
+  const male = data.residentsBySex.find((s) => s.sex === "MALE")?.count ?? 0;
+  const female = data.residentsBySex.find((s) => s.sex === "FEMALE")?.count ?? 0;
+
+  return (
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr]">
+      <div className="rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
+        <h2 className="text-[13px] font-bold text-[#1B2430] dark:text-white">Residents per Classification</h2>
+        <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Seniors, PWD, 4Ps, youth, and children on file</p>
+
+        {classification.length === 0 ? (
+          <p className="py-6 text-center text-xs text-[#9CA3AF] dark:text-[#A3A3A3]">No residents on file yet.</p>
+        ) : (
+          <div className="mt-4 flex flex-col items-center gap-5 sm:flex-row">
+            <div className="h-44 w-44 shrink-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={classification} dataKey="count" nameKey="classification" cx="50%" cy="50%" innerRadius={38} outerRadius={78} paddingAngle={2}>
+                    {classification.map((c) => (
+                      <Cell key={c.classification} fill={CLASSIFICATION_COLORS[c.classification] ?? "#9CA3AF"} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<ClassificationTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="w-full flex-1 space-y-2">
+              {classification.map((c) => (
+                <div key={c.classification} className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: CLASSIFICATION_COLORS[c.classification] ?? "#9CA3AF" }} />
+                    <span className="truncate text-[12px] text-[#374151] dark:text-[#D4D4D4]">{c.classification}</span>
+                  </div>
+                  <span className="shrink-0 text-[12px] font-bold tabular-nums text-[#1B2430] dark:text-white">{c.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
+        <h2 className="text-[13px] font-bold text-[#1B2430] dark:text-white">Total Population</h2>
+        <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Registered, non-archived residents</p>
+
+        <div className="mt-4 flex items-center gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EBF3FF] dark:bg-[#0B1D33]">
+            <Users size={20} className="text-[#3B82F6] dark:text-[#60A5FA]" />
+          </span>
+          <p className="text-[32px] font-bold leading-none tabular-nums text-[#1B2430] dark:text-white">
+            {data.totalResidents.toLocaleString()}
+          </p>
+        </div>
+
+        <div className="mt-5 flex items-center gap-6">
+          <div className="flex items-center gap-2" title="Male">
+            <Mars size={18} className="shrink-0 text-[#3E5C76] dark:text-[#8FB0CC]" />
+            <span className="text-[15px] font-bold tabular-nums text-[#1B2430] dark:text-white">{male.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center gap-2" title="Female">
+            <Venus size={18} className="shrink-0 text-[#6D4AFF] dark:text-[#A78BFA]" />
+            <span className="text-[15px] font-bold tabular-nums text-[#1B2430] dark:text-white">{female.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -443,6 +542,13 @@ export default function DashboardPage() {
         <div data-tour="dashboard-kpi">
           <LedgerStatStrip stats={visibleStats} />
         </div>
+      )}
+
+      {/* Population Overview — classification pie + male/female counts.
+          Always shown, same as Recent Blotter Cases below; not wired into
+          DashboardCustomizeSheet's per-widget toggles. */}
+      {data.residentsByClassification.some((c) => c.count > 0) && (
+        <PopulationOverviewPanel data={data} />
       )}
 
       {/* Quick Actions + Priority Tasks */}
