@@ -1,7 +1,7 @@
 // FILE: src/app/(dashboard)/certificates/templates/page.tsx
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, FileEdit, RotateCcw, Save, Info, ChevronRight, CheckCircle2 } from "lucide-react";
 import { CERTIFICATE_TYPES, CertificateType, MOCK_ACTIVE_CAPTAIN, MOCK_BARANGAY_INFO } from "@/lib/mock/certificates";
@@ -205,6 +205,58 @@ function TemplateEditor({
   const previewClosing = useMemo(() => renderTemplate(draftClosing, SAMPLE_VALUES), [draftClosing]);
   const previewTitle = useMemo(() => renderTemplate(draftTitle, SAMPLE_VALUES), [draftTitle]);
 
+  // ── Click-to-insert placeholders ────────────────────────────────────────
+  // Admins found the raw {{full_name}} syntax confusing to type by hand, so
+  // instead of asking them to memorize/copy tokens, each placeholder is now
+  // a clickable chip labeled in plain English (e.g. "Full Name"). Clicking
+  // one inserts the underlying {{token}} into whichever field — Title,
+  // Body, or Closing Line — the admin was last focused on, at their cursor
+  // position, so they never have to type a curly brace themselves.
+  type FieldKey = "title" | "body" | "closing";
+  const FIELD_LABELS: Record<FieldKey, string> = {
+    title: "Title / Heading",
+    body: "Body",
+    closing: "Closing / Signatory Line",
+  };
+  const [activeField, setActiveField] = useState<FieldKey>("body");
+  const titleRef = useRef<HTMLInputElement>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const closingRef = useRef<HTMLTextAreaElement>(null);
+
+  function fieldRef(field: FieldKey) {
+    return field === "title" ? titleRef : field === "body" ? bodyRef : closingRef;
+  }
+  function fieldValue(field: FieldKey) {
+    return field === "title" ? draftTitle : field === "body" ? draftBody : draftClosing;
+  }
+  function setFieldValue(field: FieldKey, value: string) {
+    if (field === "title") setDraftTitle(value);
+    else if (field === "body") setDraftBody(value);
+    else setDraftClosing(value);
+  }
+
+  function insertPlaceholder(token: string) {
+    const el = fieldRef(activeField).current;
+    const value = fieldValue(activeField);
+    // Fall back to appending at the end if we don't have a live cursor
+    // position (e.g. the chip was clicked before the field was ever focused).
+    const start = el?.selectionStart ?? value.length;
+    const end = el?.selectionEnd ?? value.length;
+    const nextValue = value.slice(0, start) + token + value.slice(end);
+    const nextCursor = start + token.length;
+
+    setFieldValue(activeField, nextValue);
+
+    // Wait for React to re-render the (now longer) field, then return focus
+    // to it with the cursor sitting right after what was just inserted —
+    // so the admin can keep typing without hunting for their place.
+    requestAnimationFrame(() => {
+      const target = fieldRef(activeField).current;
+      target?.focus();
+      target?.setSelectionRange(nextCursor, nextCursor);
+    });
+  }
+
   return (
     <>
       <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
@@ -233,9 +285,13 @@ function TemplateEditor({
               Title / Heading
             </label>
             <input
+              ref={titleRef}
               value={draftTitle}
               onChange={(e) => setDraftTitle(e.target.value)}
-              className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] font-semibold uppercase tracking-wide text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+              onFocus={() => setActiveField("title")}
+              className={`w-full rounded-lg border px-3 py-2.5 text-[13px] font-semibold uppercase tracking-wide text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] ${
+                activeField === "title" ? "border-[#3B82F6] dark:border-[#60A5FA]" : "border-[#E9EAEC] dark:border-[#262626]"
+              }`}
             />
           </div>
 
@@ -244,10 +300,14 @@ function TemplateEditor({
               Body
             </label>
             <textarea
+              ref={bodyRef}
               value={draftBody}
               onChange={(e) => setDraftBody(e.target.value)}
+              onFocus={() => setActiveField("body")}
               rows={6}
-              className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+              className={`w-full resize-none rounded-lg border px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] ${
+                activeField === "body" ? "border-[#3B82F6] dark:border-[#60A5FA]" : "border-[#E9EAEC] dark:border-[#262626]"
+              }`}
             />
           </div>
 
@@ -256,10 +316,14 @@ function TemplateEditor({
               Closing / Signatory Line
             </label>
             <textarea
+              ref={closingRef}
               value={draftClosing}
               onChange={(e) => setDraftClosing(e.target.value)}
+              onFocus={() => setActiveField("closing")}
               rows={2}
-              className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+              className={`w-full resize-none rounded-lg border px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] ${
+                activeField === "closing" ? "border-[#3B82F6] dark:border-[#60A5FA]" : "border-[#E9EAEC] dark:border-[#262626]"
+              }`}
             />
           </div>
 
@@ -267,18 +331,28 @@ function TemplateEditor({
             <div className="mb-1.5 flex items-center gap-1.5">
               <Info size={12} className="text-[#6B7280] dark:text-[#A3A3A3]" />
               <p className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
-                Available Placeholders
+                Insert a Placeholder
               </p>
             </div>
+            <p className="mb-2 text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">
+              Click a field below to drop it into the{" "}
+              <span className="font-semibold text-[#1F2937] dark:text-white">{FIELD_LABELS[activeField]}</span>{" "}
+              field — it will be swapped for the real value when the certificate is printed.
+            </p>
             <div className="flex flex-wrap gap-1.5">
               {TEMPLATE_PLACEHOLDERS.map((p) => (
-                <span
+                <button
                   key={p.token}
+                  type="button"
                   title={p.description}
-                  className="rounded-md bg-white dark:bg-[#171717] px-2 py-1 font-mono text-[10px] text-[#3B82F6] dark:text-[#60A5FA] shadow-sm"
+                  onClick={() => insertPlaceholder(p.token)}
+                  className="group flex flex-col items-start rounded-md border border-transparent bg-white dark:bg-[#171717] px-2.5 py-1.5 text-left shadow-sm transition hover:border-[#3B82F6] hover:bg-[#EBF3FF] dark:hover:border-[#60A5FA] dark:hover:bg-blue-500/10"
                 >
-                  {p.token}
-                </span>
+                  <span className="text-[11px] font-semibold text-[#1F2937] dark:text-white">{p.label}</span>
+                  <span className="font-mono text-[9px] text-[#9CA3AF] dark:text-[#737373] group-hover:text-[#3B82F6] dark:group-hover:text-[#60A5FA]">
+                    {p.token}
+                  </span>
+                </button>
               ))}
             </div>
           </div>

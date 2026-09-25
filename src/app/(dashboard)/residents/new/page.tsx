@@ -18,6 +18,10 @@ interface MemberDraft {
   place_of_birth:        string;
   sex:                   string;
   civil_status:          string;
+  // The real date they became a barangay resident — not the same as when
+  // this record is saved. Used by the certificate 6-month eligibility
+  // check (see POST /api/certificates) instead of the record's created_at.
+  residency_start_date:  string;
   citizenship:           string;
   educational_attainment: string;
   occupation:            string;
@@ -35,6 +39,7 @@ interface HouseholdDraft {
 const EMPTY_MEMBER: Omit<MemberDraft, "_key"> = {
   fname: "", lname: "", mname: "", name_extension: "",
   birthdate: "", place_of_birth: "", sex: "", civil_status: "",
+  residency_start_date: "",
   citizenship: "Filipino", educational_attainment: "", occupation: "", sector: "",
 };
 
@@ -109,6 +114,7 @@ function ConfirmMemberModal({
     ["Name", `${member.fname} ${member.mname ? member.mname + " " : ""}${member.lname}${member.name_extension ? " " + member.name_extension : ""}`],
     ["Date of Birth", member.birthdate ? new Date(member.birthdate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }).toUpperCase() : "—"],
     ["Place of Birth", member.place_of_birth || "—"],
+    ["Resident Since", member.residency_start_date ? new Date(member.residency_start_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }).toUpperCase() : "—"],
     ["Civil Status", member.civil_status || "—"],
     ["Citizenship", member.citizenship || "—"],
     ["Educ. Attainment", member.educational_attainment || "—"],
@@ -255,7 +261,7 @@ export default function NewRBIPage() {
   const step1Valid = hh.address.trim() && hh.purok_id && hh.housing_type && hh.water_source && hh.comfort_room;
 
   // ── Member form helpers ──────────────────────────────────────────────────
-  const memberFormValid = form.fname && form.lname && form.birthdate && form.sex && form.civil_status;
+  const memberFormValid = form.fname && form.lname && form.birthdate && form.sex && form.civil_status && form.residency_start_date;
 
   function handleAddClick() {
     if (!memberFormValid) { setError("Please fill in required member fields."); return; }
@@ -329,6 +335,7 @@ export default function NewRBIPage() {
             name_extension:         m.name_extension || null,
             birthdate:              m.birthdate,
             place_of_birth:         m.place_of_birth || null,
+            residency_start_date:   m.residency_start_date || null,
             sex:                    m.sex,
             civil_status:           m.civil_status,
             citizenship:            m.citizenship || "Filipino",
@@ -502,6 +509,20 @@ export default function NewRBIPage() {
                   options={[{ value: "MALE", label: "Male" }, { value: "FEMALE", label: "Female" }]}
                   required
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <TextField
+                  label="Residing in Barangay Since"
+                  value={form.residency_start_date}
+                  onChange={v => setField("residency_start_date", v)}
+                  type="date"
+                  required
+                />
+                <p className="col-span-1 self-end pb-3 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
+                  The date they actually moved in / became a resident — used for the 6-month certificate
+                  eligibility rule. Not the same as today&apos;s date, unless they truly just moved in.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 gap-4">

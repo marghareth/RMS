@@ -427,6 +427,7 @@ export default function DashboardPage() {
           </div>
           <button
             onClick={() => setCustomizeOpen(true)}
+            data-tour="dashboard-customize"
             className="flex shrink-0 items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-2.5 text-[13px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
           >
             <SlidersHorizontal size={14} />
@@ -438,12 +439,20 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI ledger strip */}
-      {visibleStats.length > 0 && <LedgerStatStrip stats={visibleStats} />}
+      {visibleStats.length > 0 && (
+        <div data-tour="dashboard-kpi">
+          <LedgerStatStrip stats={visibleStats} />
+        </div>
+      )}
 
       {/* Quick Actions + Priority Tasks */}
       {(isOn("quick_actions") || isOn("priority_tasks")) && (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          {isOn("quick_actions") && <QuickActionsPanel />}
+          {isOn("quick_actions") && (
+            <div data-tour="dashboard-quick-actions">
+              <QuickActionsPanel />
+            </div>
+          )}
           {isOn("priority_tasks") && <PriorityTasksPanel data={data} />}
         </div>
       )}

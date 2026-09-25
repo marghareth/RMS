@@ -28,6 +28,11 @@ interface Resident {
   sector: string | null;
   purok_id: number | null;
   household_id: number | null;
+  // The real date they became a barangay resident — see the schema
+  // comment on Resident.residency_start_date. Null on rows created
+  // before this field existed; the certificate eligibility check falls
+  // back to created_at for those.
+  residency_start_date: string | null;
 }
 
 interface ResidentForm {
@@ -39,6 +44,7 @@ interface ResidentForm {
   place_of_birth:         string;
   sex:                    string;
   civil_status:           string;
+  residency_start_date:   string;
   citizenship:            string;
   religion:               string;
   nationality:            string;
@@ -61,6 +67,7 @@ function buildForm(r: Resident): ResidentForm {
     place_of_birth:         r.place_of_birth         ?? "",
     sex:                    r.sex                    ?? "",
     civil_status:           r.civil_status           ?? "",
+    residency_start_date:   r.residency_start_date ? r.residency_start_date.split("T")[0] : "",
     citizenship:            r.citizenship            ?? "Filipino",
     religion:               r.religion               ?? "",
     nationality:            r.nationality            ?? "Filipino",
@@ -77,6 +84,7 @@ function buildForm(r: Resident): ResidentForm {
 const EMPTY: ResidentForm = {
   fname: "", lname: "", mname: "", name_extension: "",
   birthdate: "", place_of_birth: "", sex: "", civil_status: "",
+  residency_start_date: "",
   citizenship: "Filipino", religion: "", nationality: "Filipino",
   employment_status: "", educational_attainment: "", occupation: "",
   income_bracket: "", sector: "", purok_id: "", household_id: "",
@@ -226,8 +234,9 @@ export default function EditResidentPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          purok_id:     form.purok_id     ? parseInt(form.purok_id)     : null,
-          household_id: form.household_id ? parseInt(form.household_id) : null,
+          purok_id:             form.purok_id     ? parseInt(form.purok_id)     : null,
+          household_id:         form.household_id ? parseInt(form.household_id) : null,
+          residency_start_date: form.residency_start_date || null,
         }),
       });
       if (!res.ok) throw new Error("Failed to save changes");
@@ -315,6 +324,17 @@ export default function EditResidentPage() {
             value={form.place_of_birth}
             onChange={v => set("place_of_birth", v)}
           />
+          <div className="grid grid-cols-2 gap-3">
+            <TextInput
+              label="Residing in Barangay Since"
+              value={form.residency_start_date}
+              onChange={v => set("residency_start_date", v)}
+              type="date"
+            />
+            <p className="self-end pb-2.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
+              Used for the 6-month certificate eligibility rule — set this if it was left blank at RBI creation.
+            </p>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <SelectInput
               label="Sex" value={form.sex} onChange={v => set("sex", v)} required

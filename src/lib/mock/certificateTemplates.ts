@@ -21,16 +21,23 @@ export interface CertificateTemplateMock {
 }
 
 // Available placeholder tokens, interpolated at preview/print time.
-export const TEMPLATE_PLACEHOLDERS: { token: string; description: string }[] = [
-  { token: "{{full_name}}", description: "Applicant's full name (uppercase)" },
-  { token: "{{address}}", description: "Applicant's address" },
-  { token: "{{purpose}}", description: "Purpose entered when the certificate was issued" },
-  { token: "{{captain_name}}", description: "Active Barangay Captain's name" },
-  { token: "{{captain_position}}", description: "Active Captain's position title" },
-  { token: "{{barangay_name}}", description: "Barangay name" },
-  { token: "{{city}}", description: "City / Municipality" },
-  { token: "{{province}}", description: "Province" },
-  { token: "{{date_issued}}", description: "Date the certificate was issued" },
+//
+// `label` is the plain-English name shown to barangay staff on the
+// clickable chip (see TemplateEditor in the templates page) — the raw
+// `{{token}}` syntax was confusing non-technical editors, so the UI now
+// leads with the friendly name and shows the token underneath only as a
+// secondary hint. Clicking a chip inserts `token` at the cursor, so
+// nobody has to type the curly braces by hand.
+export const TEMPLATE_PLACEHOLDERS: { token: string; label: string; description: string }[] = [
+  { token: "{{full_name}}", label: "Full Name", description: "Applicant's full name (uppercase)" },
+  { token: "{{address}}", label: "Address", description: "Applicant's address" },
+  { token: "{{purpose}}", label: "Purpose", description: "Purpose entered when the certificate was issued" },
+  { token: "{{captain_name}}", label: "Captain's Name", description: "Active Barangay Captain's name" },
+  { token: "{{captain_position}}", label: "Captain's Position", description: "Active Captain's position title" },
+  { token: "{{barangay_name}}", label: "Barangay Name", description: "Barangay name" },
+  { token: "{{city}}", label: "City / Municipality", description: "City / Municipality" },
+  { token: "{{province}}", label: "Province", description: "Province" },
+  { token: "{{date_issued}}", label: "Date Issued", description: "Date the certificate was issued" },
 ];
 
 // Extracted from the previous hardcoded `certificateBody()` switch-case, now

@@ -262,13 +262,38 @@ function useBarangayName(): string {
   return name;
 }
 
+// Onboarding-tour hooks for specific nav rows (see src/lib/onboarding/steps.ts).
+// Only rows common to most roles are worth targeting — TourOverlay skips a
+// step gracefully if its target isn't in the DOM, but there's no point
+// aiming at something most roles will never see.
+const TOUR_ID_BY_LABEL: Record<string, string> = {
+  Dashboard: "nav-dashboard",
+  RBI: "nav-rbi",
+  Documents: "nav-documents",
+};
+
 function renderModule(item: ModuleItem) {
+  const tourId = TOUR_ID_BY_LABEL[item.label];
+
   if (item.type === "link") {
-    return (
-      <NavItem key={item.label} label={item.label} href={item.href} icon={item.icon} addHref={item.addHref} variant="top" />
+    const navItem = <NavItem label={item.label} href={item.href} icon={item.icon} addHref={item.addHref} variant="top" />;
+    return tourId ? (
+      <div key={item.label} data-tour={tourId}>
+        {navItem}
+      </div>
+    ) : (
+      <div key={item.label}>{navItem}</div>
     );
   }
-  return <NavGroup key={item.label} label={item.label} icon={item.icon} basePath={item.basePath} items={item.children} />;
+
+  const navGroup = <NavGroup label={item.label} icon={item.icon} basePath={item.basePath} items={item.children} />;
+  return tourId ? (
+    <div key={item.label} data-tour={tourId}>
+      {navGroup}
+    </div>
+  ) : (
+    <div key={item.label}>{navGroup}</div>
+  );
 }
 
 export default function Sidebar({
@@ -314,7 +339,7 @@ export default function Sidebar({
           collapsed ? "-translate-x-full lg:w-0 lg:border-r-0" : "translate-x-0 shadow-2xl lg:w-64 lg:shadow-none"
         } ${className}`}
       >
-        <div className="flex h-15 shrink-0 items-center gap-2.5 border-b border-[#E9EAEC] px-4 dark:border-[#262626]">
+        <div data-tour="sidebar-logo" className="flex h-15 shrink-0 items-center gap-2.5 border-b border-[#E9EAEC] px-4 dark:border-[#262626]">
           <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 shrink-0">
             <path d="M12 2.6 20.2 8v1.5H3.8V8L12 2.6Z" fill="#3B82F6" />
             <rect x="5.4" y="10.6" width="2.3" height="7.4" fill="#3B82F6" />
