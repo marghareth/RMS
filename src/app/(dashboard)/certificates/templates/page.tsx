@@ -12,10 +12,9 @@ import {
   TEMPLATE_PLACEHOLDERS,
   CertificateTemplateMock,
 } from "@/lib/mock/certificateTemplates";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import PlaceholderRichInput, { PlaceholderRichInputHandle } from "@/components/certificates/PlaceholderRichInput";
 
-// Sample values used to render the live preview — stands in for a real
-// resident + certificate record so admins can see the merged output while
-// editing, without needing to issue an actual certificate first.
 const SAMPLE_VALUES = {
   full_name: "SANTOS, MARIA R.",
   address: "Purok II, Brgy. Quisol",
@@ -31,15 +30,8 @@ const SAMPLE_VALUES = {
 export default function CertificateTemplatesPage() {
   const router = useRouter();
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // Swap this for a real fetch once the database is connected (see the
-  // commented-out effect below).
-  // const [templates, setTemplates] = useState<CertificateTemplateMock[]>(() => getMockTemplates());
-
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
   const [templates, setTemplates] = useState<CertificateTemplateMock[]>([]);
   const [loading, setLoading] = useState(true);
-  //
   useEffect(() => {
     fetch("/api/certificate-templates")
       .then((r) => r.json())
@@ -53,6 +45,10 @@ export default function CertificateTemplatesPage() {
 
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Replaces the old `confirm(...)` before resetting a template — same
+  // themed ConfirmDialog used everywhere else in the app instead of the
+  // browser's native (and dark-mode-blind) confirm box.
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   function selectType(type: CertificateType) {
     setSelectedType(type);
@@ -61,8 +57,6 @@ export default function CertificateTemplatesPage() {
 
   async function handleSave(values: { title: string; body: string; closing_line: string }) {
     setSaving(true);
-
-    // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
     try {
       const res = await fetch(`/api/certificate-templates/${selectedType}`, {
         method: "PATCH",
@@ -81,12 +75,14 @@ export default function CertificateTemplatesPage() {
     }
   }
 
-  async function handleReset() {
+  function handleReset() {
     if (!selected) return;
-    if (!confirm(`Reset the "${selected.title}" template to its default wording? Unsaved edits will be lost.`)) return;
-    setSaving(true);
+    setResetConfirmOpen(true);
+  }
 
-    // ── REAL RESET (disabled until API/DB is wired up) ─────────────────
+  async function confirmReset() {
+    if (!selected) return;
+    setSaving(true);
     try {
       const res = await fetch(`/api/certificate-templates/${selectedType}/reset`, { method: "POST" });
       if (!res.ok) throw new Error("Failed to reset template");
@@ -97,6 +93,7 @@ export default function CertificateTemplatesPage() {
       console.error(e);
     } finally {
       setSaving(false);
+      setResetConfirmOpen(false);
     }
   }
 
@@ -118,7 +115,6 @@ export default function CertificateTemplatesPage() {
       </div>
 
       <div className="flex gap-5">
-        {/* ── Left: type list ── */}
         <div className="w-70 shrink-0 overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
           {CERTIFICATE_TYPES.map((t) => {
             const tpl = templates.find((x) => x.certificate_type === t.value);
@@ -146,7 +142,6 @@ export default function CertificateTemplatesPage() {
           })}
         </div>
 
-        {/* ── Right: editor + live preview ── */}
         <div className="flex-1 space-y-5">
           {loading || !selected ? (
             <div className="flex items-center justify-center rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-16 text-[12px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3]">
@@ -154,10 +149,6 @@ export default function CertificateTemplatesPage() {
             </div>
           ) : (
             <TemplateEditor
-              // Keying on the template's identity + last-updated timestamp
-              // makes React reset the editor's local draft state whenever a
-              // different type is selected, or after a save/reset changes
-              // the underlying record — with no effect required.
               key={`${selected.certificate_type}:${selected.updated_at}`}
               type={selectedType}
               template={selected}
@@ -169,14 +160,22 @@ export default function CertificateTemplatesPage() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={resetConfirmOpen}
+        variant="warning"
+        title="Reset Template"
+        message={`Reset the "${selected?.title}" template to its default wording? Unsaved edits will be lost.`}
+        confirmLabel="Reset"
+        cancelLabel="Cancel"
+        loading={saving}
+        onConfirm={confirmReset}
+        onCancel={() => setResetConfirmOpen(false)}
+      />
     </div>
   );
 }
 
-// ── Editor + live preview for a single template ─────────────────────────────
-// Local draft state is initialized straight from `template` and reset by
-// React whenever the parent's `key` changes (new type selected, or the
-// template was just saved/reset) — no synchronizing effect needed.
 function TemplateEditor({
   type,
   template,
@@ -205,13 +204,6 @@ function TemplateEditor({
   const previewClosing = useMemo(() => renderTemplate(draftClosing, SAMPLE_VALUES), [draftClosing]);
   const previewTitle = useMemo(() => renderTemplate(draftTitle, SAMPLE_VALUES), [draftTitle]);
 
-  // ── Click-to-insert placeholders ────────────────────────────────────────
-  // Admins found the raw {{full_name}} syntax confusing to type by hand, so
-  // instead of asking them to memorize/copy tokens, each placeholder is now
-  // a clickable chip labeled in plain English (e.g. "Full Name"). Clicking
-  // one inserts the underlying {{token}} into whichever field — Title,
-  // Body, or Closing Line — the admin was last focused on, at their cursor
-  // position, so they never have to type a curly brace themselves.
   type FieldKey = "title" | "body" | "closing";
   const FIELD_LABELS: Record<FieldKey, string> = {
     title: "Title / Heading",
@@ -219,42 +211,21 @@ function TemplateEditor({
     closing: "Closing / Signatory Line",
   };
   const [activeField, setActiveField] = useState<FieldKey>("body");
-  const titleRef = useRef<HTMLInputElement>(null);
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
-  const closingRef = useRef<HTMLTextAreaElement>(null);
+
+  // Each field is now a chip-based PlaceholderRichInput rather than a plain
+  // input/textarea, so insertion is handled by the component's own
+  // insertToken() — no more manual selectionStart/selectionEnd math here.
+  const titleRef = useRef<PlaceholderRichInputHandle>(null);
+  const bodyRef = useRef<PlaceholderRichInputHandle>(null);
+  const closingRef = useRef<PlaceholderRichInputHandle>(null);
 
   function fieldRef(field: FieldKey) {
     return field === "title" ? titleRef : field === "body" ? bodyRef : closingRef;
   }
-  function fieldValue(field: FieldKey) {
-    return field === "title" ? draftTitle : field === "body" ? draftBody : draftClosing;
-  }
-  function setFieldValue(field: FieldKey, value: string) {
-    if (field === "title") setDraftTitle(value);
-    else if (field === "body") setDraftBody(value);
-    else setDraftClosing(value);
-  }
 
   function insertPlaceholder(token: string) {
-    const el = fieldRef(activeField).current;
-    const value = fieldValue(activeField);
-    // Fall back to appending at the end if we don't have a live cursor
-    // position (e.g. the chip was clicked before the field was ever focused).
-    const start = el?.selectionStart ?? value.length;
-    const end = el?.selectionEnd ?? value.length;
-    const nextValue = value.slice(0, start) + token + value.slice(end);
-    const nextCursor = start + token.length;
-
-    setFieldValue(activeField, nextValue);
-
-    // Wait for React to re-render the (now longer) field, then return focus
-    // to it with the cursor sitting right after what was just inserted —
-    // so the admin can keep typing without hunting for their place.
-    requestAnimationFrame(() => {
-      const target = fieldRef(activeField).current;
-      target?.focus();
-      target?.setSelectionRange(nextCursor, nextCursor);
-    });
+    const bareToken = token.replace(/[{}]/g, "");
+    fieldRef(activeField).current?.insertToken(bareToken);
   }
 
   return (
@@ -284,11 +255,14 @@ function TemplateEditor({
             <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
               Title / Heading
             </label>
-            <input
+            <PlaceholderRichInput
               ref={titleRef}
-              value={draftTitle}
-              onChange={(e) => setDraftTitle(e.target.value)}
+              initialValue={draftTitle}
+              onChange={setDraftTitle}
               onFocus={() => setActiveField("title")}
+              rows={1}
+              multiline={false}
+              placeholder="Enter certificate title…"
               className={`w-full rounded-lg border px-3 py-2.5 text-[13px] font-semibold uppercase tracking-wide text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] ${
                 activeField === "title" ? "border-[#3B82F6] dark:border-[#60A5FA]" : "border-[#E9EAEC] dark:border-[#262626]"
               }`}
@@ -299,13 +273,14 @@ function TemplateEditor({
             <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
               Body
             </label>
-            <textarea
+            <PlaceholderRichInput
               ref={bodyRef}
-              value={draftBody}
-              onChange={(e) => setDraftBody(e.target.value)}
+              initialValue={draftBody}
+              onChange={setDraftBody}
               onFocus={() => setActiveField("body")}
               rows={6}
-              className={`w-full resize-none rounded-lg border px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] ${
+              placeholder="Write the certificate body here…"
+              className={`w-full rounded-lg border px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] ${
                 activeField === "body" ? "border-[#3B82F6] dark:border-[#60A5FA]" : "border-[#E9EAEC] dark:border-[#262626]"
               }`}
             />
@@ -315,13 +290,14 @@ function TemplateEditor({
             <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
               Closing / Signatory Line
             </label>
-            <textarea
+            <PlaceholderRichInput
               ref={closingRef}
-              value={draftClosing}
-              onChange={(e) => setDraftClosing(e.target.value)}
+              initialValue={draftClosing}
+              onChange={setDraftClosing}
               onFocus={() => setActiveField("closing")}
               rows={2}
-              className={`w-full resize-none rounded-lg border px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] ${
+              placeholder="Write the closing / signatory line here…"
+              className={`w-full rounded-lg border px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] ${
                 activeField === "closing" ? "border-[#3B82F6] dark:border-[#60A5FA]" : "border-[#E9EAEC] dark:border-[#262626]"
               }`}
             />

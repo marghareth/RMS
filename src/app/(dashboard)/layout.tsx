@@ -5,6 +5,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 import TourOverlay from "@/components/onboarding/TourOverlay";
+import BeginnerPromptModal from "@/components/onboarding/BeginnerPromptModal";
 // TEST: dashboard-only typeface trial (Manrope, in place of the site-wide
 // Inter). Self-hosted the same way Inter is — via a Fontsource variable
 // package, bundled from npm at install time, not fetched from a
@@ -95,6 +96,7 @@ export default function DashboardLayout({
           </main>
         </div>
       </div>
+      <BeginnerPromptModal />
       <TourOverlay />
     </OnboardingProvider>
   );

@@ -66,7 +66,7 @@ export default function Topbar({
   const router = useRouter();
   const [search, setSearch] = useState("");
   const { data: session } = useSession();
-  const { start: startTour } = useOnboarding();
+  const { start: startTour, startPageTour, currentPageTour } = useOnboarding();
 
   const username = (session?.user as any)?.username ?? "User";
   const roleCode = (session?.user as any)?.role ?? "";
@@ -76,6 +76,8 @@ export default function Topbar({
   // ── User menu ──
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const helpRef = useRef<HTMLDivElement>(null);
 
   // ── Notifications ──
   const [notifOpen, setNotifOpen] = useState(false);
@@ -104,6 +106,7 @@ export default function Topbar({
     function handleClickOutside(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false);
+      if (helpRef.current && !helpRef.current.contains(e.target as Node)) setHelpOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -148,16 +151,51 @@ export default function Topbar({
 
         <ThemeToggle />
 
-        <button
-          type="button"
-          data-tour="topbar-help"
-          onClick={startTour}
-          aria-label="Replay product tour"
-          title="Replay product tour"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#6B7280] transition-colors hover:bg-[#F4F5F7] hover:text-[#1F2937] dark:hover:bg-[#1F1F1F] dark:hover:text-white"
-        >
-          <HelpCircle size={18} />
-        </button>
+        {/* Guided tour menu — offers this page's mini-tour (if one exists) and
+            the general dashboard walkthrough, so "?" stays useful no matter
+            which page the user is on. */}
+        <div ref={helpRef} data-tour="topbar-help" className="relative">
+          <button
+            type="button"
+            onClick={() => setHelpOpen((v) => !v)}
+            aria-label="Guided tour"
+            title="Guided tour"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#6B7280] transition-colors hover:bg-[#F4F5F7] hover:text-[#1F2937] dark:hover:bg-[#1F1F1F] dark:hover:text-white"
+          >
+            <HelpCircle size={18} />
+          </button>
+
+          {helpOpen && (
+            <div className="absolute right-0 top-11 z-50 w-60 rounded-xl border border-[#E9EAEC] bg-white py-1.5 shadow-xl dark:border-[#333333] dark:bg-[#171717]">
+              {currentPageTour && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHelpOpen(false);
+                    startPageTour();
+                  }}
+                  className="flex w-full flex-col items-start gap-0.5 px-3.5 py-2 text-left transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
+                >
+                  <span className="text-[13px] font-semibold text-[#1F2937] dark:text-white">
+                    Tour this page
+                  </span>
+                  <span className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{currentPageTour.label}</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setHelpOpen(false);
+                  startTour();
+                }}
+                className="flex w-full flex-col items-start gap-0.5 px-3.5 py-2 text-left transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
+              >
+                <span className="text-[13px] font-semibold text-[#1F2937] dark:text-white">Dashboard overview</span>
+                <span className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Navigation &amp; the basics</span>
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="mx-1 hidden h-6 w-px bg-[#E9EAEC] dark:bg-[#262626] sm:block" />
 

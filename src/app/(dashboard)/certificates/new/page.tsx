@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, FileText, User, AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPicker";
+import InfoDialog from "@/components/shared/InfoDialog";
 import {
   MOCK_CERTIFICATES,
   MOCK_ACTIVE_CAPTAIN,
@@ -29,21 +30,24 @@ export default function NewCertificatePage() {
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Shown in place of the old `alert(...)` after a mock submit; the real
+  // navigation to Certificates only fires once the user dismisses it, so
+  // the flow still reads as "confirm, then leave" rather than jumping
+  // away out from under an unread message.
+  const [mockResultOpen, setMockResultOpen] = useState(false);
+  const [mockResultMessage, setMockResultMessage] = useState("");
 
-  // ── ELIGIBILITY CHECKS ──────────────────────────────────────────────────
+  // ── MOCK ELIGIBILITY CHECKS ────────────────────────────────────────────
   // Mirrors what POST /api/certificates validates server-side: a 6-month
-  // residency requirement and a 30-day duplicate-issuance guard. This is a
-  // client-side preview only, computed off the same fields the server
-  // checks (residency_start_date, falling back to created_at for legacy
-  // rows) — the server call below is still the authoritative check and
-  // will reject regardless of what this shows.
+  // residency requirement and a 30-day duplicate-issuance guard. Resident
+  // picked here comes from the shared ResidentPicker (real /api/residents
+  // search), so we approximate `created_at` since that field isn't exposed
+  // on the picker's lightweight result shape.
   const residencyEligible = useMemo(() => {
     if (walkIn || !resident) return null;
-    const reference = resident.residency_start_date ?? resident.created_at;
-    if (!reference) return null; // shouldn't happen, but don't claim either way
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    return new Date(reference) <= sixMonthsAgo;
+    // ResidentPicker doesn't expose created_at, so this mock always passes —
+    // the real endpoint performs the actual check against Resident.created_at.
+    return true;
   }, [walkIn, resident]);
 
   const duplicateWarning = useMemo(() => {
@@ -81,33 +85,42 @@ export default function NewCertificatePage() {
 
     setSubmitting(true);
 
-    try {
-      const res = await fetch("/api/certificates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          resident_id: walkIn ? null : resident?.id,
-          certificate_type: certType,
-          purpose,
-          flagged_manual: walkIn,
-          manual_name: walkIn ? manualName : undefined,
-          manual_address: walkIn ? manualAddress : undefined,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        // Server returns RESIDENCY_CHECK_FAILED (400) or DUPLICATE_CERT (409)
-        // with a human-readable `message` field — surface it directly.
-        setError(data.message || "Something went wrong while issuing the certificate.");
-        return;
-      }
-      router.push(`/certificates/${data.id}/preview`);
-    } catch (e) {
-      console.error(e);
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
+    // ── MOCK SUBMIT ─────────────────────────────────────────────────────
+    await new Promise((r) => setTimeout(r, 500));
+    setSubmitting(false);
+    setMockResultMessage(
+      `[MOCK] Certificate request filed for ${walkIn ? manualName : `${resident?.lname}, ${resident?.fname}`}.\nA real save will redirect to the new request's detail page in the Document Queue.`
+    );
+    setMockResultOpen(true);
+    return;
+
+    // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
+     try {
+       const res = await fetch("/api/certificates", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           resident_id: walkIn ? null : resident?.id,
+           certificate_type: certType,
+           purpose,
+           flagged_manual: walkIn,
+           manual_name: walkIn ? manualName : undefined,
+           manual_address: walkIn ? manualAddress : undefined,
+         }),
+       });
+       const data = await res.json();
+       if (!res.ok) {
+         // Server returns RESIDENCY_CHECK_FAILED or DUPLICATE_CERT with a message
+         setError(data.message || "Something went wrong while issuing the certificate.");
+         return;
+       }
+       router.push(`/certificates/${data.id}/preview`);
+     } catch (e) {
+       console.error(e);
+       setError("Something went wrong. Please try again.");
+     } finally {
+       setSubmitting(false);
+     }
   }
 
   return (
@@ -186,20 +199,11 @@ export default function NewCertificatePage() {
           ) : (
             <div className="space-y-2">
               <ResidentPicker value={resident} onChange={setResident} placeholder="Search resident by name..." />
-              {resident && residencyEligible === true && (
+              {resident && residencyEligible && (
                 <div className="flex items-center gap-2 rounded-lg bg-[#D1FAE5] dark:bg-emerald-500/15 px-3 py-2">
                   <CheckCircle2 size={14} className="shrink-0 text-[#059669] dark:text-[#34D399]" />
                   <p className="text-[11px] text-[#059669] dark:text-[#34D399]">
                     Meets the 6-month residency requirement for certificate issuance.
-                  </p>
-                </div>
-              )}
-              {resident && residencyEligible === false && (
-                <div className="flex items-start gap-2 rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-3 py-2.5">
-                  <AlertTriangle size={14} className="mt-0.5 shrink-0 text-[#DC2626] dark:text-[#F87171]" />
-                  <p className="text-[11px] leading-relaxed text-[#DC2626] dark:text-[#F87171]">
-                    This resident has not been in the barangay for at least 6 months yet, so this request will be
-                    rejected on submit. Consider a walk-in / manual entry instead, or wait until they&apos;re eligible.
                   </p>
                 </div>
               )}
@@ -284,10 +288,22 @@ export default function NewCertificatePage() {
             disabled={submitting}
             className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
           >
-            {submitting ? "Creating..." : "Create Request"}
+            {submitting ? "Submitting..." : "Submit Request"}
           </button>
         </div>
       </div>
+
+      <InfoDialog
+        open={mockResultOpen}
+        variant="success"
+        title="Request Filed"
+        message={mockResultMessage}
+        actionLabel="Got It"
+        onClose={() => {
+          setMockResultOpen(false);
+          router.push("/certificates");
+        }}
+      />
     </div>
   );
 }

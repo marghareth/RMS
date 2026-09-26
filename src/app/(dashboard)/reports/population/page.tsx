@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { useReportData } from "@/lib/hooks/useReportData";
 import StatCard from "@/components/shared/StatCard";
+import InfoDialog from "@/components/shared/InfoDialog";
 
 interface PurokCount {
   purok: string;
@@ -58,6 +59,7 @@ export default function PopulationReportPage() {
   const { data, loading } = useReportData<PopulationReportData>("population", { year });
 
   const [exporting, setExporting] = useState(false);
+  const [exportErrorOpen, setExportErrorOpen] = useState(false);
 
   async function handleExportPdf() {
     if (!data) return;
@@ -71,7 +73,7 @@ export default function PopulationReportPage() {
       );
     } catch (e) {
       console.error("Failed to generate PDF", e);
-      alert("Something went wrong while generating the PDF. Please try again.");
+      setExportErrorOpen(true);
     } finally {
       setExporting(false);
     }
@@ -239,6 +241,14 @@ export default function PopulationReportPage() {
           </ChartCard>
         </>
       )}
+
+      <InfoDialog
+        open={exportErrorOpen}
+        variant="error"
+        title="Export Failed"
+        message="Something went wrong while generating the PDF. Please try again."
+        onClose={() => setExportErrorOpen(false)}
+      />
     </div>
   );
 }

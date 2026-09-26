@@ -190,6 +190,7 @@ export default function CertificatesListPage() {
               Manage Templates
             </button>
             <button
+              data-tour="page-certificates-add"
               onClick={() => router.push("/certificates/new")}
               className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
             >
@@ -201,7 +202,7 @@ export default function CertificatesListPage() {
       />
 
       {/* Stat cards */}
-      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div data-tour="page-certificates-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Issued" value={stats.total} sub="All-time records" icon={FileText} color="blue" />
         <StatCard label="This Month" value={stats.thisMonth} sub="Issued this month" icon={CalendarDays} color="green" />
         <StatCard label="This Year" value={stats.thisYear} sub="Issued this year" icon={CalendarRange} color="amber" />
@@ -210,7 +211,7 @@ export default function CertificatesListPage() {
 
       {/* Search + filters */}
       <div className="relative mb-4 flex items-center gap-2">
-        <div className="relative flex-1">
+        <div data-tour="page-certificates-search" className="relative flex-1">
           <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
           <input
             value={search}
@@ -220,6 +221,7 @@ export default function CertificatesListPage() {
           />
         </div>
         <button
+          data-tour="page-certificates-filter"
           onClick={() => setShowFilter((v) => !v)}
           className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
             showFilter || activeFilterCount ? "bg-[#3B82F6] text-white" : "border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
@@ -347,7 +349,7 @@ export default function CertificatesListPage() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+      <div data-tour="page-certificates-table" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />

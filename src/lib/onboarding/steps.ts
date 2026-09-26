@@ -1,8 +1,14 @@
 // FILE: src/lib/onboarding/steps.ts
 //
-// The guided tour for new users. Each step points at a real element in the
-// dashboard layout via a `data-tour="..."` attribute (see Sidebar.tsx,
-// Topbar.tsx, and dashboard/page.tsx for where each attribute lives).
+// The GENERAL guided tour — the one shown from the beginner prompt on a
+// user's first /dashboard visit, covering navigation and the dashboard
+// itself. For tours scoped to one specific page (Residents, Blotter, a
+// certificate request form, etc.), see pageTours.ts instead — same TourStep
+// shape, different registry, auto-launched per-page rather than once.
+//
+// Each step points at a real element in the dashboard layout via a
+// `data-tour="..."` attribute (see Sidebar.tsx, Topbar.tsx, and
+// dashboard/page.tsx for where each attribute lives).
 //
 // The tour is intentionally role-agnostic: every role sees a slightly
 // different sidebar and dashboard (per src/lib/permission.ts), so rather
@@ -18,17 +24,8 @@
 // -mode feel the tour is going for. Leave it out for steps that are purely
 // informational.
 
-export type TourPlacement = "top" | "bottom" | "left" | "right";
-
-export interface TourStep {
-  id: string;
-  /** CSS selector, matched against a `data-tour` attribute in the DOM. */
-  target: string;
-  placement: TourPlacement;
-  title: string;
-  body: string;
-  hint?: string;
-}
+import type { TourStep } from "./types";
+export type { TourPlacement, TourStep } from "./types";
 
 export const ONBOARDING_STEPS: TourStep[] = [
   {
@@ -38,12 +35,23 @@ export const ONBOARDING_STEPS: TourStep[] = [
     title: "Welcome to Barangay RMS \u{1F44B}",
     body: "This is where your barangay's residents, documents, blotter cases, finances, and more all live in one place. Let's walk through the basics — it only takes about a minute.",
   },
+  // ── Every row in the sidebar, top to bottom (see mainNav/bottomNav in
+  // Sidebar.tsx) — a role that can't see a given row just never renders
+  // its data-tour attribute, so TourOverlay's retry-then-skip logic
+  // quietly steps over it; nothing below needs a per-role variant.
   {
     id: "nav-dashboard",
     target: '[data-tour="nav-dashboard"]',
     placement: "right",
     title: "Home base",
     body: "Dashboard is where you land every time you log in — a live snapshot of what's happening across the barangay today.",
+  },
+  {
+    id: "nav-visitors",
+    target: '[data-tour="nav-visitors"]',
+    placement: "right",
+    title: "Visitor Log",
+    body: "Log walk-in visitors to the barangay hall, and see who's checked in right now.",
   },
   {
     id: "nav-rbi",
@@ -54,11 +62,95 @@ export const ONBOARDING_STEPS: TourStep[] = [
     hint: "Try it: click RBI now to expand the list.",
   },
   {
+    id: "nav-registries",
+    target: '[data-tour="nav-registries"]',
+    placement: "right",
+    title: "Special Registries",
+    body: "Senior citizens, PWD, and 4Ps beneficiaries — sectors that need their own tracking on top of the regular resident record.",
+  },
+  {
     id: "nav-documents",
     target: '[data-tour="nav-documents"]',
     placement: "right",
     title: "Certificates & IDs",
     body: "Issuing a residency certificate or a barangay ID happens here, along with the request queue and release tracking.",
+  },
+  {
+    id: "nav-blotter",
+    target: '[data-tour="nav-blotter"]',
+    placement: "right",
+    title: "Blotter",
+    body: "File incident complaints and track each case from filed, through hearings, to resolved.",
+  },
+  {
+    id: "nav-health",
+    target: '[data-tour="nav-health"]',
+    placement: "right",
+    title: "Health",
+    body: "Health records and vaccination history for residents.",
+  },
+  {
+    id: "nav-inventory",
+    target: '[data-tour="nav-inventory"]',
+    placement: "right",
+    title: "Inventory",
+    body: "Barangay equipment and assets — who currently has what borrowed, and when it's due back.",
+  },
+  {
+    id: "nav-financial",
+    target: '[data-tour="nav-financial"]',
+    placement: "right",
+    title: "Financial",
+    body: "The day-to-day income and expense ledger, with a running summary.",
+  },
+  {
+    id: "nav-finance",
+    target: '[data-tour="nav-finance"]',
+    placement: "right",
+    title: "Finance",
+    body: "The fuller finance suite — budgets, appropriations, revenue tracking, and fund sources.",
+  },
+  {
+    id: "nav-assembly",
+    target: '[data-tour="nav-assembly"]',
+    placement: "right",
+    title: "Assembly",
+    body: "Barangay assembly and committee meetings — agendas, minutes, and attendance.",
+  },
+  {
+    id: "nav-calendar",
+    target: '[data-tour="nav-calendar"]',
+    placement: "right",
+    title: "Calendar",
+    body: "Every scheduled meeting and event in one place.",
+  },
+  {
+    id: "nav-officials",
+    target: '[data-tour="nav-officials"]',
+    placement: "right",
+    title: "Officials",
+    body: "The current roster of barangay officials and their positions.",
+  },
+  {
+    id: "nav-reports",
+    target: '[data-tour="nav-reports"]',
+    placement: "right",
+    title: "Reports",
+    body: "Generate population, financial, blotter, and inventory reports for any period.",
+  },
+  {
+    id: "nav-admin",
+    target: '[data-tour="nav-admin"]',
+    placement: "right",
+    title: "Admin tools",
+    body: "User accounts, Puroks, audit logs, and backups — for administrators.",
+  },
+  {
+    id: "nav-settings",
+    target: '[data-tour="nav-settings"]',
+    placement: "right",
+    title: "Settings",
+    body: "Barangay details, signatories, and this Guided Tour's on/off switch all live here.",
   },
   {
     id: "topbar-search",

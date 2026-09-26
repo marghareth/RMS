@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, UserCog, Eye, EyeOff, Users } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
+import InfoDialog from "@/components/shared/InfoDialog";
 import { UserMock, ROLES, Role } from "@/lib/mock/admin";
 
 export default function EditUserPage() {
@@ -46,6 +47,9 @@ export default function EditUserPage() {
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Replaces the old `alert(...)` — navigation is deferred to the dialog's
+  // dismissal so the admin actually sees the confirmation before leaving.
+  const [mockResultOpen, setMockResultOpen] = useState(false);
 
   if (loading) {
     return (
@@ -89,8 +93,8 @@ export default function EditUserPage() {
     // ── MOCK SUBMIT ─────────────────────────────────────────────────────
     await new Promise((r) => setTimeout(r, 500));
     setSubmitting(false);
-    alert(`[MOCK] User "${original!.username}" updated.\nA real save will redirect back to the user list.`);
-    router.push("/admin/users");
+    setMockResultOpen(true);
+    return;
 
     // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
      try {
@@ -211,6 +215,18 @@ export default function EditUserPage() {
           </div>
         </div>
       </div>
+
+      <InfoDialog
+        open={mockResultOpen}
+        variant="success"
+        title="User Updated"
+        message={`[MOCK] User "${original!.username}" updated.\nA real save will redirect back to the user list.`}
+        actionLabel="Got It"
+        onClose={() => {
+          setMockResultOpen(false);
+          router.push("/admin/users");
+        }}
+      />
     </div>
   );
 }

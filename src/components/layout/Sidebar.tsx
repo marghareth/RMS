@@ -262,14 +262,29 @@ function useBarangayName(): string {
   return name;
 }
 
-// Onboarding-tour hooks for specific nav rows (see src/lib/onboarding/steps.ts).
-// Only rows common to most roles are worth targeting — TourOverlay skips a
-// step gracefully if its target isn't in the DOM, but there's no point
-// aiming at something most roles will never see.
+// Onboarding-tour hooks — every sidebar row gets one, not just the first
+// few, so the general tour (see src/lib/onboarding/steps.ts) walks
+// through the entire nav rather than stopping partway. A role that can't
+// see a given row simply never renders that data-tour attribute, and
+// TourOverlay already skips any step whose target isn't in the DOM, so
+// this stays safe for every role without needing a per-role step list.
 const TOUR_ID_BY_LABEL: Record<string, string> = {
   Dashboard: "nav-dashboard",
+  "Visitor Log": "nav-visitors",
   RBI: "nav-rbi",
+  Registries: "nav-registries",
   Documents: "nav-documents",
+  Blotter: "nav-blotter",
+  Health: "nav-health",
+  Inventory: "nav-inventory",
+  Financial: "nav-financial",
+  Finance: "nav-finance",
+  Assembly: "nav-assembly",
+  Calendar: "nav-calendar",
+  Officials: "nav-officials",
+  Reports: "nav-reports",
+  Admin: "nav-admin",
+  Settings: "nav-settings",
 };
 
 function renderModule(item: ModuleItem) {
@@ -339,8 +354,8 @@ export default function Sidebar({
           collapsed ? "-translate-x-full lg:w-0 lg:border-r-0" : "translate-x-0 shadow-2xl lg:w-64 lg:shadow-none"
         } ${className}`}
       >
-        <div data-tour="sidebar-logo" className="flex min-h-15 shrink-0 items-start gap-2.5 border-b border-[#E9EAEC] px-4 py-3 dark:border-[#262626]">
-          <svg viewBox="0 0 24 24" fill="none" className="mt-0.5 h-6 w-6 shrink-0">
+        <div data-tour="sidebar-logo" className="flex h-15 shrink-0 items-center gap-2.5 border-b border-[#E9EAEC] px-4 dark:border-[#262626]">
+          <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 shrink-0">
             <path d="M12 2.6 20.2 8v1.5H3.8V8L12 2.6Z" fill="#3B82F6" />
             <rect x="5.4" y="10.6" width="2.3" height="7.4" fill="#3B82F6" />
             <rect x="10.85" y="10.6" width="2.3" height="7.4" fill="#3B82F6" />
@@ -348,7 +363,7 @@ export default function Sidebar({
             <rect x="3.4" y="19.2" width="17.2" height="2.2" rx="1" fill="#3B82F6" />
           </svg>
           <div className="min-w-0">
-            <b className="line-clamp-2 wrap-break-word text-[15px] font-semibold leading-tight text-[#1F2937] dark:text-white">Barangay Records Management System</b>
+            <b className="block truncate text-[13px] font-semibold text-[#1F2937] dark:text-white">Barangay RMS</b>
             <small className="block truncate text-[10.5px] text-[#6B7280] dark:text-[#9CA3AF]">
               {barangayName || "Records Management"}
             </small>
