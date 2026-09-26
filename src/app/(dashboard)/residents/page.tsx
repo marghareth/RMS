@@ -163,6 +163,7 @@ export default function ResidentsPage() {
           </p>
         </div>
         <button
+          data-tour="page-residents-add"
           onClick={() => router.push("/residents/new")}
           className="flex items-center gap-2 px-3.5 h-9 rounded bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[13px] font-medium transition"
         >
@@ -174,7 +175,7 @@ export default function ResidentsPage() {
       {/* ── Search + filter bar ── */}
       <div className="bg-white dark:bg-[#111111] rounded border border-[#E9EAEC] dark:border-[#262626] overflow-hidden mb-4">
         <div className="flex items-center gap-2 px-3.5 py-2.5">
-          <div className="relative flex-1">
+          <div data-tour="page-residents-search" className="relative flex-1">
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
             <input
               value={search}
@@ -184,6 +185,7 @@ export default function ResidentsPage() {
             />
           </div>
           <button
+            data-tour="page-residents-filter"
             onClick={() => setShowFilter(v => !v)}
             className={`h-9 w-9 flex items-center justify-center rounded transition shrink-0 relative border
               ${showFilter || activeFilters > 0
@@ -211,7 +213,7 @@ export default function ResidentsPage() {
       </div>
 
       {/* ── Ledger table ── */}
-      <div className="bg-white dark:bg-[#111111] rounded border border-[#E9EAEC] dark:border-[#262626] overflow-hidden flex-1 flex flex-col">
+      <div data-tour="page-residents-table" className="bg-white dark:bg-[#111111] rounded border border-[#E9EAEC] dark:border-[#262626] overflow-hidden flex-1 flex flex-col">
 
         {loading ? (
           <div className="flex items-center justify-center py-20">

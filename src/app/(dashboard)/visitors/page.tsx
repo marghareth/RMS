@@ -92,6 +92,7 @@ export default function VisitorLogListPage() {
         subtitle="Track walk-in visitors to the barangay hall"
         actions={
           <button
+            data-tour="page-visitors-add"
             onClick={() => setSelectedId("new")}
             className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
           >
@@ -102,7 +103,7 @@ export default function VisitorLogListPage() {
       />
 
       {/* Stat cards */}
-      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div data-tour="page-visitors-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Checked In Now" value={counts.active} sub="Currently in the building" icon={LogIn} color="blue" />
         <StatCard label="Visitors Today" value={counts.today} sub="Logged since midnight" icon={DoorOpen} color="amber" />
         <StatCard label="Checked Out" value={counts.total - counts.active} sub="Completed visits" icon={LogOut} color="green" />
@@ -110,7 +111,7 @@ export default function VisitorLogListPage() {
 
       {/* Search + filters */}
       <div className="relative mb-4 flex items-center gap-2">
-        <div className="relative flex-1">
+        <div data-tour="page-visitors-search" className="relative flex-1">
           <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
           <input
             value={search}

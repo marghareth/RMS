@@ -7,18 +7,21 @@
 // inside the hole genuinely reach the real element underneath — needed
 // for steps like "try clicking RBI to expand it".
 //
-// Each step's target is looked up live via `document.querySelector`
-// (see ONBOARDING_STEPS) and re-measured on resize/scroll. If a target
-// never appears (e.g. this role's sidebar has no "Documents" group), the
-// step is skipped automatically after a short retry window rather than
-// stalling the tour.
+// Each step's target is looked up live via `document.querySelector` and
+// re-measured on resize/scroll. If a target never appears (e.g. this
+// role's sidebar has no "Documents" group), the step is skipped
+// automatically after a short retry window rather than stalling the tour.
+// Works the same whether the active tour is the general one (steps.ts) or
+// a per-page one (pageTours.ts) — OnboardingProvider exposes whichever
+// step list applies via `steps`.
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, MousePointerClick } from "lucide-react";
 import { useOnboarding } from "./OnboardingProvider";
-import { ONBOARDING_STEPS, type TourPlacement } from "@/lib/onboarding/steps";
+import { useIsClient } from "@/lib/hooks/useIsClient";
+import type { TourPlacement } from "@/lib/onboarding/types";
 
 const PAD = 8; // breathing room between the target and the cutout edge
 const GAP = 14; // breathing room between the cutout and the tooltip card
@@ -44,6 +47,37 @@ function toRect(el: Element): Rect {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), Math.max(min, max));
+}
+
+// Picks the side to actually render on. A step's `placement` is only a
+// preference — on a narrow window (or a target sitting close to an edge),
+// the requested side may not have room for a 328px-wide card, and simply
+// clamping the position back on-screen would leave the card overlapping
+// the very element it's supposed to be pointing at. So: use the
+// preference if it fits, otherwise fall back through the other sides in
+// order, and if truly nothing fits comfortably (a very small viewport),
+// use whichever side has the most room rather than the requested one.
+function pickPlacement(rect: Rect, preferred: TourPlacement, vw: number, vh: number): TourPlacement {
+  const space = {
+    left: rect.left,
+    right: vw - (rect.left + rect.width),
+    top: rect.top,
+    bottom: vh - (rect.top + rect.height),
+  };
+  const needed = {
+    left: CARD_W + GAP + MARGIN,
+    right: CARD_W + GAP + MARGIN,
+    top: CARD_H_ESTIMATE + GAP + MARGIN,
+    bottom: CARD_H_ESTIMATE + GAP + MARGIN,
+  };
+
+  if (space[preferred] >= needed[preferred]) return preferred;
+
+  const fallbackOrder: TourPlacement[] = ["bottom", "right", "top", "left"];
+  for (const p of fallbackOrder) {
+    if (space[p] >= needed[p]) return p;
+  }
+  return (Object.keys(space) as TourPlacement[]).reduce((best, side) => (space[side] > space[best] ? side : best), "bottom" as TourPlacement);
 }
 
 function tooltipPosition(rect: Rect, placement: TourPlacement) {
@@ -87,24 +121,32 @@ function tooltipPosition(rect: Rect, placement: TourPlacement) {
 }
 
 export default function TourOverlay() {
-  const { isActive, stepIndex, totalSteps, next, prev, close } = useOnboarding();
+  const { isActive, stepIndex, steps, totalSteps, next, prev, close } = useOnboarding();
+  const isClient = useIsClient();
   const [rect, setRect] = useState<Rect | null>(null);
   const retriesRef = useRef(0);
-  const mounted = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false
-  );
 
-  const step = ONBOARDING_STEPS[stepIndex];
+  const step = steps[stepIndex];
   const isLast = stepIndex === totalSteps - 1;
   const isFirst = stepIndex === 0;
 
+  // Clear the last-known target position the moment the tour closes, so
+  // reopening a (possibly different) tour never flashes the previous
+  // tour's highlight box for a frame before it's re-measured. Done as a
+  // synchronous state update during render — react.dev's documented
+  // "adjusting state when a prop changes" pattern, tracked via useState
+  // rather than useRef since this project's react-hooks/refs rule
+  // disallows reading/writing a ref during render — rather than inside a
+  // useEffect, which is what react-hooks/set-state-in-effect flags.
+  const [prevIsActive, setPrevIsActive] = useState(isActive);
+  if (isActive !== prevIsActive) {
+    setPrevIsActive(isActive);
+    if (!isActive && rect !== null) setRect(null);
+  }
+
   // Resolve + track the current step's target element.
   useEffect(() => {
-    if (!isActive) {
-      return;
-    }
+    if (!isActive) return;
     retriesRef.current = 0;
     let cancelled = false;
     let retryTimer: number | undefined;
@@ -130,14 +172,13 @@ export default function TourOverlay() {
       if (!cancelled) setRect(toRect(el));
     }
 
-    const measureFrame = window.requestAnimationFrame(measure);
+    measure();
     return () => {
       cancelled = true;
-      window.cancelAnimationFrame(measureFrame);
       if (retryTimer) window.clearTimeout(retryTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, stepIndex]);
+  }, [isActive, stepIndex, steps]);
 
   // Keep the cutout/card glued to the target while scrolling/resizing.
   useEffect(() => {
@@ -165,7 +206,7 @@ export default function TourOverlay() {
     return () => window.removeEventListener("keydown", onKey);
   }, [isActive, close]);
 
-  if (!mounted || !isActive || !rect) return null;
+  if (!isClient || !isActive || !rect) return null;
 
   const hole = {
     top: rect.top - PAD,
@@ -173,7 +214,10 @@ export default function TourOverlay() {
     width: rect.width + PAD * 2,
     height: rect.height + PAD * 2,
   };
-  const pos = tooltipPosition(rect, step.placement);
+  const vw = typeof window !== "undefined" ? window.innerWidth : 1280;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 800;
+  const resolvedPlacement = pickPlacement(rect, step.placement, vw, vh);
+  const pos = tooltipPosition(rect, resolvedPlacement);
 
   return createPortal(
     <div aria-live="polite" role="dialog" aria-label="Product tour">
@@ -192,7 +236,7 @@ export default function TourOverlay() {
 
       {/* Tooltip card */}
       <div
-        className="fixed z-102 w-82 rounded-xl border border-[#E9EAEC] bg-white p-5 shadow-2xl dark:border-[#333333] dark:bg-[#171717]"
+        className="fixed z-102 w-82 overflow-hidden rounded-xl border border-[#E9EAEC] bg-white p-5 shadow-2xl dark:border-[#333333] dark:bg-[#171717]"
         style={{ top: pos.top, left: pos.left }}
       >
         <div className="flex items-start justify-between gap-3">
@@ -209,7 +253,19 @@ export default function TourOverlay() {
           </button>
         </div>
 
-        <h3 className="mt-2 text-[15px] font-bold leading-snug text-[#1B2430] dark:text-white">{step.title}</h3>
+        {/* Proportional progress bar — replaces a former one-dot-per-step
+            row, which overflowed this card's fixed width once a tour grew
+            past roughly 15 steps (24, in the general tour) and pushed the
+            Back/Next buttons outside the card entirely. A bar scales to any
+            step count without changing layout. */}
+        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-[#E9EAEC] dark:bg-[#333333]">
+          <div
+            className="h-full rounded-full bg-[#0B6E4F] transition-all duration-200 dark:bg-[#34A37A]"
+            style={{ width: `${((stepIndex + 1) / totalSteps) * 100}%` }}
+          />
+        </div>
+
+        <h3 className="mt-3 text-[15px] font-bold leading-snug text-[#1B2430] dark:text-white">{step.title}</h3>
         <p className="mt-1.5 text-[13px] leading-relaxed text-[#4B5563] dark:text-[#D4D4D4]">{step.body}</p>
 
         {step.hint && (
@@ -219,35 +275,23 @@ export default function TourOverlay() {
           </p>
         )}
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-1">
-            {ONBOARDING_STEPS.map((s, i) => (
-              <span
-                key={s.id}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === stepIndex ? "w-4 bg-[#0B6E4F] dark:bg-[#34A37A]" : "w-1.5 bg-[#E9EAEC] dark:bg-[#333333]"
-                }`}
-              />
-            ))}
-          </div>
-          <div className="flex items-center gap-2">
-            {!isFirst && (
-              <button
-                type="button"
-                onClick={prev}
-                className="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-[#6B7280] transition hover:bg-[#F4F5F7] dark:text-[#A3A3A3] dark:hover:bg-[#1F1F1F]"
-              >
-                Back
-              </button>
-            )}
+        <div className="mt-4 flex items-center justify-end gap-2">
+          {!isFirst && (
             <button
               type="button"
-              onClick={isLast ? close : next}
-              className="rounded-lg bg-[#0B6E4F] px-4 py-1.5 text-[12px] font-bold text-white transition hover:bg-[#0A5C42] dark:bg-[#34A37A] dark:text-[#0A0A0A] dark:hover:bg-[#2E9169]"
+              onClick={prev}
+              className="shrink-0 rounded-lg px-3 py-1.5 text-[12px] font-semibold text-[#6B7280] transition hover:bg-[#F4F5F7] dark:text-[#A3A3A3] dark:hover:bg-[#1F1F1F]"
             >
-              {isLast ? "Finish" : "Next"}
+              Back
             </button>
-          </div>
+          )}
+          <button
+            type="button"
+            onClick={isLast ? close : next}
+            className="shrink-0 rounded-lg bg-[#0B6E4F] px-4 py-1.5 text-[12px] font-bold text-white transition hover:bg-[#0A5C42] dark:bg-[#34A37A] dark:text-[#0A0A0A] dark:hover:bg-[#2E9169]"
+          >
+            {isLast ? "Finish" : "Next"}
+          </button>
         </div>
 
         <button

@@ -180,19 +180,21 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
       };
 
       if (isNew) {
-        await fetch("/api/visitor-logs", {
+        const res = await fetch("/api/visitor-logs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        if (!res.ok) throw new Error("Failed to create visitor log entry");
         onSaved?.();
         onClose();
       } else if (visitor) {
-        await fetch(`/api/visitor-logs/${visitor.id}`, {
+        const res = await fetch(`/api/visitor-logs/${visitor.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        if (!res.ok) throw new Error("Failed to update visitor log entry");
         await refetch();
         setEditing(false);
         onSaved?.();
@@ -208,7 +210,8 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
     if (!visitor) return;
     setCheckingOut(true);
     try {
-      await fetch(`/api/visitor-logs/${visitor.id}/checkout`, { method: "POST" });
+      const res = await fetch(`/api/visitor-logs/${visitor.id}/checkout`, { method: "POST" });
+      if (!res.ok) throw new Error("Check-out failed");
       await refetch();
       onSaved?.();
     } catch (e) {
@@ -222,7 +225,8 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
     if (!visitor) return;
     setDeleting(true);
     try {
-      await fetch(`/api/visitor-logs/${visitor.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/visitor-logs/${visitor.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete visitor log entry");
       setConfirmDeleteOpen(false);
       onSaved?.();
       onClose();
@@ -260,11 +264,11 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
               <SheetHeader>
                 <div className="min-w-0">
                   <SheetTitle>
-                    {isNew ? "New Visitor" : editing ? "Edit Visitor" : visitor!.visitor_name}
+                    {isNew ? "New Visitor" : editing ? "Edit Visitor" : (visitor?.visitor_name ?? "Visitor")}
                   </SheetTitle>
-                  {!isNew && !editing && (
+                  {!isNew && !editing && visitor && (
                     <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-                      {isActive ? "Currently checked in" : `Checked out ${formatDateTime(visitor!.time_out)}`}
+                      {isActive ? "Currently checked in" : `Checked out ${formatDateTime(visitor.time_out)}`}
                     </p>
                   )}
                 </div>
@@ -313,17 +317,17 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                       placeholder="e.g. Barangay Secretary"
                     />
                   </div>
-                ) : (
+                ) : visitor ? (
                   <>
                     {/* Visitor Info */}
                     <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                       <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
                         Visitor Info
                       </p>
-                      <InfoRow icon={User} label="Name" value={visitor!.visitor_name} />
-                      <InfoRow icon={Phone} label="Contact" value={visitor!.contact} />
-                      <InfoRow icon={FileText} label="Purpose" value={visitor!.purpose} />
-                      <InfoRow icon={UserRound} label="Person to Visit" value={visitor!.person_to_visit} />
+                      <InfoRow icon={User} label="Name" value={visitor.visitor_name} />
+                      <InfoRow icon={Phone} label="Contact" value={visitor.contact} />
+                      <InfoRow icon={FileText} label="Purpose" value={visitor.purpose} />
+                      <InfoRow icon={UserRound} label="Person to Visit" value={visitor.person_to_visit} />
                     </div>
 
                     {/* Timeline */}
@@ -333,8 +337,8 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                         {isActive && <StatusBadge status="ACTIVE" />}
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        <InfoRow icon={Clock} label="Time In" value={formatDateTime(visitor!.time_in)} />
-                        <InfoRow icon={Clock} label="Time Out" value={formatDateTime(visitor!.time_out)} />
+                        <InfoRow icon={Clock} label="Time In" value={formatDateTime(visitor.time_in)} />
+                        <InfoRow icon={Clock} label="Time Out" value={formatDateTime(visitor.time_out)} />
                       </div>
                     </div>
 
@@ -342,11 +346,17 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                     <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                       <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Metadata</p>
                       <div className="grid grid-cols-2 gap-2">
-                        <InfoRow icon={Clock} label="Created" value={formatDateTime(visitor!.created_at)} />
-                        <InfoRow icon={Clock} label="Updated" value={formatDateTime(visitor!.updated_at)} />
+                        <InfoRow icon={Clock} label="Created" value={formatDateTime(visitor.created_at)} />
+                        <InfoRow icon={Clock} label="Updated" value={formatDateTime(visitor.updated_at)} />
                       </div>
                     </div>
                   </>
+                ) : (
+                  // Defensive fallback: visitor became unavailable (e.g. deleted
+                  // in another tab) after the initial load succeeded. Without
+                  // this branch the code above would dereference `visitor` while
+                  // it's null and crash the whole sheet.
+                  <EmptyState icon={User} title="Visitor not found" description="This entry may have been deleted." />
                 )}
               </SheetBody>
 

@@ -21,13 +21,9 @@ export interface CertificateTemplateMock {
 }
 
 // Available placeholder tokens, interpolated at preview/print time.
-//
-// `label` is the plain-English name shown to barangay staff on the
-// clickable chip (see TemplateEditor in the templates page) — the raw
-// `{{token}}` syntax was confusing non-technical editors, so the UI now
-// leads with the friendly name and shows the token underneath only as a
-// secondary hint. Clicking a chip inserts `token` at the cursor, so
-// nobody has to type the curly braces by hand.
+// `label` is the friendly name shown on insert buttons and on the inline
+// chip that replaces raw {{token}} text in the editor — see
+// PlaceholderRichInput, which is what actually resolves label -> token.
 export const TEMPLATE_PLACEHOLDERS: { token: string; label: string; description: string }[] = [
   { token: "{{full_name}}", label: "Full Name", description: "Applicant's full name (uppercase)" },
   { token: "{{address}}", label: "Address", description: "Applicant's address" },

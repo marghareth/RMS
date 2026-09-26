@@ -110,6 +110,7 @@ export default function BlotterListPage() {
         subtitle="File complaints, track hearings, and manage case statuses"
         actions={
           <button
+            data-tour="page-blotter-add"
             onClick={() => router.push("/blotter/new")}
             className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
           >
@@ -120,7 +121,7 @@ export default function BlotterListPage() {
       />
 
       {/* Stat cards */}
-      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div data-tour="page-blotter-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Filed" value={counts.filed} sub="Awaiting first hearing" icon={FolderOpen} color="blue" />
         <StatCard label="Ongoing" value={counts.ongoing} sub="Active mediation" icon={Clock} color="amber" />
         <StatCard label="Resolved" value={counts.resolved} sub="Settled this period" icon={CheckCircle2} color="green" />
@@ -129,7 +130,7 @@ export default function BlotterListPage() {
 
       {/* Search + filters */}
       <div className="relative mb-4 flex items-center gap-2">
-        <div className="relative flex-1">
+        <div data-tour="page-blotter-search" className="relative flex-1">
           <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
           <input
             value={search}
