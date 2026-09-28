@@ -175,7 +175,7 @@ function NewVaccinationPageInner() {
              cards below) — ResidentPicker's search-results dropdown is
              absolutely positioned and needs to render outside this card's
              bounds. overflow-hidden would clip it off after ~1 row. */}
-        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626]">
+        <div data-tour="page-health-vaccination-new-resident" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626]">
           <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] rounded-t-xl">
             <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
               <User size={14} className="text-white" />
@@ -196,7 +196,7 @@ function NewVaccinationPageInner() {
         </div>
 
         {/* ── Vaccine picker card ── */}
-        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+        <div data-tour="page-health-vaccination-new-vaccine" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
           <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
             <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
               <Syringe size={14} className="text-white" />
@@ -225,7 +225,7 @@ function NewVaccinationPageInner() {
         </div>
 
         {/* ── Date card ── */}
-        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+        <div data-tour="page-health-vaccination-new-date" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
           <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
             <div className="w-8 h-8 rounded-lg bg-green-500 dark:bg-green-500 flex items-center justify-center">
               <CalendarDays size={14} className="text-white" />
@@ -272,7 +272,7 @@ function NewVaccinationPageInner() {
         )}
 
         {/* ── Actions ── */}
-        <div className="flex gap-3 pb-6">
+        <div data-tour="page-health-vaccination-new-save" className="flex gap-3 pb-6">
           <button onClick={() => router.push("/health")} className="flex-1 py-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[13px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-white transition">
             Cancel
           </button>

@@ -51,6 +51,41 @@ function fundSourceDetail(pathname: string) {
   return /^\/finance\/fund-sources\/\d+$/.test(pathname);
 }
 
+/** Matches /equipment/<numeric id> — one item's detail page (not /equipment/new, /borrow or /return). */
+function equipmentDetail(pathname: string) {
+  return /^\/equipment\/\d+$/.test(pathname);
+}
+
+/** Matches /equipment/<numeric id>/edit. */
+function equipmentEdit(pathname: string) {
+  return /^\/equipment\/\d+\/edit$/.test(pathname);
+}
+
+/** Matches /health/<numeric id> — one health record's detail page (not /health/new). */
+function healthDetail(pathname: string) {
+  return /^\/health\/\d+$/.test(pathname);
+}
+
+/** Matches /health/<numeric id>/edit. */
+function healthEdit(pathname: string) {
+  return /^\/health\/\d+\/edit$/.test(pathname);
+}
+
+/**
+ * Matches both /health/vaccinations/new and /health/vaccinations. The plain
+ * URL is what the sidebar's "Vaccinations" link points at, and it currently
+ * renders the same Add Vaccination form (see the note at the top of
+ * health/vaccinations/page.tsx), so it shares this tour.
+ */
+function vaccinationForm(pathname: string) {
+  return pathname === "/health/vaccinations" || pathname === "/health/vaccinations/new";
+}
+
+/** Matches /health/vaccinations/<numeric id> — one vaccination record's detail page. */
+function vaccinationDetail(pathname: string) {
+  return /^\/health\/vaccinations\/\d+$/.test(pathname);
+}
+
 export const PAGE_TOURS: PageTour[] = [
   {
     id: "residents",
@@ -1194,6 +1229,517 @@ export const PAGE_TOURS: PageTour[] = [
         placement: "top",
         title: "The numbers behind the chart",
         body: "The same figures as a table, one row per month, handy for reports.",
+        waitMs: 6000,
+      },
+    ],
+  },
+
+  // ── Inventory (equipment) ────────────────────────────────────────
+  {
+    id: "equipment",
+    match: exact("/equipment"),
+    label: "Inventory",
+    steps: [
+      {
+        id: "equipment-add",
+        target: '[data-tour="page-equipment-add"]',
+        placement: "left",
+        title: "Add equipment",
+        body: "Register a new item here: its name, how many you have, its condition and, if you like, what it cost and where it's kept.",
+        hint: "Try it: click to open the form.",
+      },
+      {
+        id: "equipment-stats",
+        target: '[data-tour="page-equipment-stats"]',
+        placement: "bottom",
+        title: "Inventory at a glance",
+        body: "Total item types, how many are serviceable, how many are out on loan right now, and how many are overdue. Keep an eye on the Overdue count.",
+      },
+      {
+        id: "equipment-search",
+        target: '[data-tour="page-equipment-search"]',
+        placement: "right",
+        title: "Find an item",
+        body: "Type part of an item's name and the list narrows as you type.",
+      },
+      {
+        id: "equipment-filters",
+        target: '[data-tour="page-equipment-filters"]',
+        placement: "right",
+        title: "Filter by status",
+        body: "OK shows serviceable items, Broken shows unserviceable ones, and Missing shows items that can't be found. Once items have a Type, a Type dropdown appears just below.",
+      },
+      {
+        id: "equipment-list",
+        target: '[data-tour="page-equipment-list"]',
+        placement: "right",
+        title: "Pick an item",
+        body: "Each row shows the type, the quantity and how many are borrowed, with a warning if one is overdue. Click a row and its full details open on the right.",
+        hint: "Try it: click a different item.",
+      },
+      {
+        id: "equipment-borrowed",
+        target: '[data-tour="page-equipment-borrowed"]',
+        placement: "top",
+        title: "Lending and returning",
+        body: "This panel lists who currently has the item and when it is due. Use Lend Out to record a new loan, and Return beside a borrower when the item comes back.",
+        waitMs: 6000,
+      },
+    ],
+  },
+  {
+    id: "equipment-new",
+    match: exact("/equipment/new"),
+    label: "Add Equipment",
+    steps: [
+      {
+        id: "equipment-new-name",
+        target: '[data-tour="page-equipment-new-name"]',
+        placement: "bottom",
+        title: "Name the item",
+        body: "Use a plain name people will recognize, like Folding Tables or Generator. This field is required.",
+      },
+      {
+        id: "equipment-new-qty",
+        target: '[data-tour="page-equipment-new-qty"]',
+        placement: "bottom",
+        title: "Quantity and condition",
+        body: "Enter how many pieces you have (at least 1) and their overall condition.",
+      },
+      {
+        id: "equipment-new-type",
+        target: '[data-tour="page-equipment-new-type"]',
+        placement: "top",
+        title: "Type and serial number",
+        body: "Type groups similar items, such as Furniture or Electronics, so you can filter by it later. Add a serial number if the item has one.",
+      },
+      {
+        id: "equipment-new-value",
+        target: '[data-tour="page-equipment-new-value"]',
+        placement: "top",
+        title: "Cost and current value",
+        body: "Optional, but useful. Record what the item cost and what it is worth now so your inventory carries a value.",
+      },
+      {
+        id: "equipment-new-status",
+        target: '[data-tour="page-equipment-new-status"]',
+        placement: "top",
+        title: "Set its status",
+        body: "Serviceable means ready to use. Choose Unserviceable if it's broken, or Missing if it can't be found.",
+      },
+      {
+        id: "equipment-new-save",
+        target: '[data-tour="page-equipment-new-save"]',
+        placement: "top",
+        title: "Save it",
+        body: "Save Equipment becomes available once the name and quantity are filled in. Cancel discards the form.",
+      },
+    ],
+  },
+  {
+    id: "equipment-detail",
+    match: equipmentDetail,
+    label: "Equipment Details",
+    steps: [
+      {
+        id: "equipment-detail-actions",
+        target: '[data-tour="page-equipment-detail-actions"]',
+        placement: "bottom",
+        title: "Lend it or edit it",
+        body: "Lend Out records a new loan for this item. Edit lets you correct its details.",
+        waitMs: 6000,
+      },
+      {
+        id: "equipment-detail-info",
+        target: '[data-tour="page-equipment-detail-info"]',
+        placement: "right",
+        title: "Everything about the item",
+        body: "Status, condition, serial number, valuation, where it's assigned, and when it was added to the inventory.",
+        waitMs: 6000,
+      },
+      {
+        id: "equipment-detail-stats",
+        target: '[data-tour="page-equipment-detail-stats"]',
+        placement: "right",
+        title: "Loan numbers",
+        body: "How many units are out right now, how many of those are overdue, and how many times the item has been borrowed in total.",
+        waitMs: 6000,
+      },
+      {
+        id: "equipment-detail-tabs",
+        target: '[data-tour="page-equipment-detail-tabs"]',
+        placement: "bottom",
+        title: "Two views",
+        body: "Currently Borrowed shows who has the item now. Return History shows loans that have already come back.",
+        hint: "Try it: click Return History.",
+        waitMs: 6000,
+      },
+      {
+        id: "equipment-detail-list",
+        target: '[data-tour="page-equipment-detail-list"]',
+        placement: "top",
+        title: "The loan records",
+        body: "Each row is one loan, with the borrower and the dates. On Currently Borrowed, use Return to check an item back in.",
+        waitMs: 6000,
+      },
+    ],
+  },
+  {
+    id: "equipment-edit",
+    match: equipmentEdit,
+    label: "Edit Equipment",
+    steps: [
+      {
+        id: "equipment-edit-name",
+        target: '[data-tour="page-equipment-edit-name"]',
+        placement: "bottom",
+        title: "The item's name",
+        body: "Correct the name if it was mistyped. This field is required.",
+        waitMs: 6000,
+      },
+      {
+        id: "equipment-edit-qty",
+        target: '[data-tour="page-equipment-edit-qty"]',
+        placement: "bottom",
+        title: "Quantity and condition",
+        body: "Update the number of pieces (at least 1) and their condition, for example after a repair or when some are lost.",
+      },
+      {
+        id: "equipment-edit-type",
+        target: '[data-tour="page-equipment-edit-type"]',
+        placement: "top",
+        title: "Type and serial number",
+        body: "Change the Type used for filtering, or add or correct the serial number.",
+      },
+      {
+        id: "equipment-edit-value",
+        target: '[data-tour="page-equipment-edit-value"]',
+        placement: "top",
+        title: "Cost and current value",
+        body: "Keep the item's value up to date so inventory reports stay accurate.",
+      },
+      {
+        id: "equipment-edit-status",
+        target: '[data-tour="page-equipment-edit-status"]',
+        placement: "top",
+        title: "Update its status",
+        body: "Switch to Unserviceable if the item breaks, or Missing if it can't be found. Switch back to Serviceable once it's usable again.",
+      },
+      {
+        id: "equipment-edit-save",
+        target: '[data-tour="page-equipment-edit-save"]',
+        placement: "top",
+        title: "Save your changes",
+        body: "Save Changes applies the edits. Cancel leaves the item as it was.",
+      },
+    ],
+  },
+  {
+    id: "equipment-borrow",
+    match: exact("/equipment/borrow"),
+    label: "Lend Out Equipment",
+    steps: [
+      {
+        id: "equipment-borrow-equipment",
+        target: '[data-tour="page-equipment-borrow-equipment"]',
+        placement: "bottom",
+        title: "Choose the item",
+        body: "Pick what is being lent. If you came here from an item's page, it's already selected. A small card confirms the quantity and status.",
+      },
+      {
+        id: "equipment-borrow-borrower",
+        target: '[data-tour="page-equipment-borrow-borrower"]',
+        placement: "bottom",
+        title: "Who is borrowing",
+        body: "If the borrower is a resident, link them and the name fills in automatically. Otherwise, type the borrower's name yourself.",
+      },
+      {
+        id: "equipment-borrow-schedule",
+        target: '[data-tour="page-equipment-borrow-schedule"]',
+        placement: "top",
+        title: "Set the dates",
+        body: "Enter the date the item leaves and the date it should come back. The return date can't be earlier than the borrow date.",
+      },
+      {
+        id: "equipment-borrow-save",
+        target: '[data-tour="page-equipment-borrow-save"]',
+        placement: "top",
+        title: "Record the loan",
+        body: "Record Borrowing becomes available once the item, the borrower's name and both dates are filled in.",
+      },
+    ],
+  },
+  {
+    id: "equipment-return",
+    match: exact("/equipment/return"),
+    label: "Process Return",
+    steps: [
+      {
+        id: "equipment-return-summary",
+        target: '[data-tour="page-equipment-return-summary"]',
+        placement: "bottom",
+        title: "Check the borrow record",
+        body: "Make sure this is the right loan: the item, the borrower, when it went out and when it was due. Overdue loans are flagged in red.",
+        waitMs: 6000,
+      },
+      {
+        id: "equipment-return-condition",
+        target: '[data-tour="page-equipment-return-condition"]',
+        placement: "bottom",
+        title: "How did it come back?",
+        body: "Choose Good, Fair or Damaged. This is required, and it's recorded with the return.",
+        hint: "Try it: pick a condition.",
+        waitMs: 6000,
+      },
+      {
+        id: "equipment-return-remarks",
+        target: '[data-tour="page-equipment-return-remarks"]',
+        placement: "top",
+        title: "Add notes",
+        body: "Optional. Note anything worth remembering, such as a scratch, a missing part or a late return.",
+        waitMs: 6000,
+      },
+      {
+        id: "equipment-return-confirm",
+        target: '[data-tour="page-equipment-return-confirm"]',
+        placement: "top",
+        title: "Confirm the return",
+        body: "Confirm Return becomes available once a condition is chosen. It checks the item back in and closes the loan.",
+        waitMs: 6000,
+      },
+    ],
+  },
+
+  // ── Health ───────────────────────────────────────────────────────
+  {
+    id: "health",
+    match: exact("/health"),
+    label: "Health Records",
+    steps: [
+      {
+        id: "health-add",
+        target: '[data-tour="page-health-add"]',
+        placement: "bottom",
+        title: "Add a health record",
+        body: "Log a condition or checkup for a resident, such as hypertension, a prenatal checkup or a dengue case.",
+        hint: "Try it: click to open the form.",
+      },
+      {
+        id: "health-vaccination-add",
+        target: '[data-tour="page-health-vaccination-add"]',
+        placement: "bottom",
+        title: "Add a vaccination",
+        body: "Record a dose given to a resident: which vaccine and on what date.",
+      },
+      {
+        id: "health-stats",
+        target: '[data-tour="page-health-stats"]',
+        placement: "bottom",
+        title: "Community health at a glance",
+        body: "Total records, vaccinations given, active cases (ongoing conditions such as hypertension or diabetes), and how many different residents are covered.",
+      },
+      {
+        id: "health-tabs",
+        target: '[data-tour="page-health-tabs"]',
+        placement: "bottom",
+        title: "Two lists in one place",
+        body: "Switch between Health Records (conditions and checkups) and Vaccinations. The number on each tab is its total.",
+        hint: "Try it: click the Vaccinations tab.",
+      },
+      {
+        id: "health-search",
+        target: '[data-tour="page-health-search"]',
+        placement: "bottom",
+        title: "Search",
+        body: "Type a resident's name or a record type. Both tabs filter together as you type.",
+      },
+      {
+        id: "health-table",
+        target: '[data-tour="page-health-table"]',
+        placement: "top",
+        title: "Open a record",
+        body: "Click View on any row to open its details in a side panel. Health records can be edited or deleted there; vaccination records can be deleted.",
+        waitMs: 6000,
+      },
+    ],
+  },
+  {
+    id: "health-new",
+    match: exact("/health/new"),
+    label: "Add Health Record",
+    steps: [
+      {
+        id: "health-new-resident",
+        target: '[data-tour="page-health-new-resident"]',
+        placement: "bottom",
+        title: "Who is it for?",
+        body: "Search for the resident by name and select them. The resident must already be in the Residents list.",
+        hint: "Try it: start typing a name.",
+      },
+      {
+        id: "health-new-type",
+        target: '[data-tour="page-health-new-type"]',
+        placement: "bottom",
+        title: "Choose the record type",
+        body: "Pick the condition or checkup. If none fits, choose Other and type the specific condition yourself.",
+      },
+      {
+        id: "health-new-notes",
+        target: '[data-tour="page-health-new-notes"]',
+        placement: "top",
+        title: "Notes",
+        body: "Optional. Add findings, recommendations, medications or referrals, anything the next health worker should know.",
+      },
+      {
+        id: "health-new-save",
+        target: '[data-tour="page-health-new-save"]',
+        placement: "top",
+        title: "Save the record",
+        body: "Save Health Record becomes available once a resident and a record type are chosen. Cancel discards the form.",
+      },
+    ],
+  },
+  {
+    id: "health-detail",
+    match: healthDetail,
+    label: "Health Record",
+    steps: [
+      {
+        id: "health-detail-actions",
+        target: '[data-tour="page-health-detail-actions"]',
+        placement: "left",
+        title: "Edit or delete",
+        body: "Edit changes the record type and the notes. Delete removes the record permanently, and asks you to confirm first.",
+        waitMs: 6000,
+      },
+      {
+        id: "health-detail-record",
+        target: '[data-tour="page-health-detail-record"]',
+        placement: "right",
+        title: "The record",
+        body: "The record type, who recorded it and when, and the notes or findings.",
+        waitMs: 6000,
+      },
+      {
+        id: "health-detail-resident",
+        target: '[data-tour="page-health-detail-resident"]',
+        placement: "left",
+        title: "About the resident",
+        body: "Age, sex and Purok at a glance. View Full Profile opens their resident record.",
+        waitMs: 6000,
+      },
+      {
+        id: "health-detail-quick",
+        target: '[data-tour="page-health-detail-quick"]',
+        placement: "left",
+        title: "Shortcuts",
+        body: "Jump straight to the Add Health Record or Add Vaccination form without going back to the list.",
+        waitMs: 6000,
+      },
+    ],
+  },
+  {
+    id: "health-edit",
+    match: healthEdit,
+    label: "Edit Health Record",
+    steps: [
+      {
+        id: "health-edit-type",
+        target: '[data-tour="page-health-edit-type"]',
+        placement: "bottom",
+        title: "Change the record type",
+        body: "Fix the type if it was entered wrong. The resident can't be changed here. To move a record to someone else, delete it and add a new one.",
+        waitMs: 6000,
+      },
+      {
+        id: "health-edit-notes",
+        target: '[data-tour="page-health-edit-notes"]',
+        placement: "top",
+        title: "Update the notes",
+        body: "Add new findings or correct what's there. The character count helps you keep notes brief.",
+        waitMs: 6000,
+      },
+      {
+        id: "health-edit-save",
+        target: '[data-tour="page-health-edit-save"]',
+        placement: "top",
+        title: "Save your changes",
+        body: "Save Changes applies the edits and returns you to the record. Cancel leaves it as it was.",
+        waitMs: 6000,
+      },
+    ],
+  },
+  {
+    id: "health-vaccination-new",
+    match: vaccinationForm,
+    label: "Add Vaccination",
+    steps: [
+      {
+        id: "health-vaccination-new-resident",
+        target: '[data-tour="page-health-vaccination-new-resident"]',
+        placement: "bottom",
+        title: "Who received it?",
+        body: "Search for the resident by name and select them. If you came from a resident's record, they're already selected.",
+        hint: "Try it: start typing a name.",
+      },
+      {
+        id: "health-vaccination-new-vaccine",
+        target: '[data-tour="page-health-vaccination-new-vaccine"]',
+        placement: "bottom",
+        title: "Pick the vaccine",
+        body: "Vaccines are grouped: routine immunization, COVID-19 and others. Choose Other (specify) to type a vaccine that isn't listed.",
+      },
+      {
+        id: "health-vaccination-new-date",
+        target: '[data-tour="page-health-vaccination-new-date"]',
+        placement: "top",
+        title: "Date given",
+        body: "Enter the day the dose was given. Dates in the future can't be chosen.",
+      },
+      {
+        id: "health-vaccination-new-save",
+        target: '[data-tour="page-health-vaccination-new-save"]',
+        placement: "top",
+        title: "Save the vaccination",
+        body: "The save button becomes available once the resident, the vaccine and the date are all filled in. Cancel discards the form.",
+      },
+    ],
+  },
+  {
+    id: "health-vaccination-detail",
+    match: vaccinationDetail,
+    label: "Vaccination Record",
+    steps: [
+      {
+        id: "health-vaccination-detail-record",
+        target: '[data-tour="page-health-vaccination-detail-record"]',
+        placement: "right",
+        title: "The vaccination",
+        body: "Which vaccine was given, on what date, and who recorded it.",
+        waitMs: 6000,
+      },
+      {
+        id: "health-vaccination-detail-resident",
+        target: '[data-tour="page-health-vaccination-detail-resident"]',
+        placement: "left",
+        title: "About the resident",
+        body: "Age, sex and birthdate at a glance. View Full Profile opens their resident record.",
+        waitMs: 6000,
+      },
+      {
+        id: "health-vaccination-detail-quick",
+        target: '[data-tour="page-health-vaccination-detail-quick"]',
+        placement: "left",
+        title: "Shortcuts",
+        body: "Add Another Vaccination opens the form with this resident already selected, handy for multi-dose schedules. Add Health Record opens that form instead.",
+        waitMs: 6000,
+      },
+      {
+        id: "health-vaccination-detail-delete",
+        target: '[data-tour="page-health-vaccination-detail-delete"]',
+        placement: "left",
+        title: "Delete",
+        body: "Removes this vaccination permanently, after you confirm. There's no Edit for vaccinations: if the vaccine or date was wrong, delete the record and add a new one.",
         waitMs: 6000,
       },
     ],
