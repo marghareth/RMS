@@ -188,14 +188,14 @@ export default function HealthPage() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => router.push("/health/vaccinations/new")}
+            data-tour="page-health-vaccination-add" onClick={() => router.push("/health/vaccinations/new")}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[#6B7280] dark:text-[#A3A3A3] text-[13px] font-bold hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
           >
             <Syringe size={14} />
             Add Vaccination
           </button>
           <button
-            onClick={() => router.push("/health/new")}
+            data-tour="page-health-add" onClick={() => router.push("/health/new")}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] text-white text-[13px] font-bold transition shadow-sm"
           >
             <Plus size={14} />
@@ -205,7 +205,7 @@ export default function HealthPage() {
       </div>
 
       {/* ── Stat cards ── */}
-      <div className="grid grid-cols-4 gap-4">
+      <div data-tour="page-health-stats" className="grid grid-cols-4 gap-4">
         <StatCard label="Total Health Records" value={healthTotal}       sub="All recorded conditions" icon={Heart}       color="red" />
         <StatCard label="Vaccinations Given"    value={vaccinationTotal} sub="Doses administered"      icon={Syringe}     color="blue" />
         <StatCard label="Active Cases"          value={activeCases}      sub="Ongoing treatment"       icon={Activity}    color="amber" />
@@ -217,11 +217,11 @@ export default function HealthPage() {
 
         {/* Toolbar */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-          <div className="flex items-center gap-2">
+          <div data-tour="page-health-tabs" className="flex items-center gap-2">
             <TabBtn label="Health Records" count={healthTotal}       icon={Heart}   active={tab === "health"}      onClick={() => setTab("health")}      />
             <TabBtn label="Vaccinations"   count={vaccinationTotal}  icon={Syringe} active={tab === "vaccination"} onClick={() => setTab("vaccination")} />
           </div>
-          <div className="relative w-56">
+          <div data-tour="page-health-search" className="relative w-56">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
             <input
               value={search}
@@ -234,7 +234,7 @@ export default function HealthPage() {
 
         {/* ── HEALTH RECORDS TAB ── */}
         {tab === "health" && (
-          <div>
+          <div data-tour="page-health-table">
             {/* Table header */}
             <div className="grid grid-cols-[2fr_1.5fr_2.5fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
               {["Resident", "Record Type", "Notes", "Date", "Action"].map(h => (
@@ -293,7 +293,7 @@ export default function HealthPage() {
 
         {/* ── VACCINATIONS TAB ── */}
         {tab === "vaccination" && (
-          <div>
+          <div data-tour="page-health-table">
             {/* Table header */}
             <div className="grid grid-cols-[2fr_2fr_1.5fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
               {["Resident", "Vaccine", "Date Given", "Recorded By", "Action"].map(h => (

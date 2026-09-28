@@ -116,7 +116,7 @@ function VaccinationDetailContent({ id }: { id: string }) {
           </div>
         </div>
         <button
-          onClick={() => setConfirmOpen(true)}
+          data-tour="page-health-vaccination-detail-delete" onClick={() => setConfirmOpen(true)}
           disabled={deleting}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-red-200 text-red-500 dark:text-red-400 text-[12px] font-bold hover:bg-red-50 transition disabled:opacity-50"
         >
@@ -133,7 +133,7 @@ function VaccinationDetailContent({ id }: { id: string }) {
       <div className="grid grid-cols-3 gap-5">
 
         {/* ── Left: Vaccination details ── */}
-        <div className="col-span-2 space-y-4">
+        <div data-tour="page-health-vaccination-detail-record" className="col-span-2 space-y-4">
 
           {/* Vaccine banner */}
           <div className="rounded-xl border border-blue-100 bg-[#EFF6FF] dark:bg-blue-500/15 px-5 py-5 flex items-center gap-4">
@@ -170,7 +170,7 @@ function VaccinationDetailContent({ id }: { id: string }) {
         <div className="space-y-4">
 
           {/* Resident card */}
-          <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+          <div data-tour="page-health-vaccination-detail-resident" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
             <div className="flex items-center gap-3 px-4 py-3 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
               <div className="w-7 h-7 rounded-lg bg-[#3B82F6] flex items-center justify-center">
                 <User size={13} className="text-white" />
@@ -200,7 +200,7 @@ function VaccinationDetailContent({ id }: { id: string }) {
           </div>
 
           {/* Quick actions */}
-          <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-4">
+          <div data-tour="page-health-vaccination-detail-quick" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-4">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white mb-3">Quick Actions</p>
             <div className="space-y-2">
               <button
