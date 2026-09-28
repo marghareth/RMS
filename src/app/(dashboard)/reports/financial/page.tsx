@@ -89,7 +89,7 @@ export default function FinancialReportPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div data-tour="page-reports-financial-controls" className="flex items-center gap-2">
             <select value={year} onChange={e => setYear(e.target.value)}
               className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
@@ -119,13 +119,13 @@ export default function FinancialReportPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-4 mb-5">
+          <div data-tour="page-reports-financial-stats" className="grid grid-cols-3 gap-4 mb-5">
             <StatCard label="Total Income"  value={fmt(data.totalIncome)}  icon={TrendingUp}   color="green" />
             <StatCard label="Total Expense" value={fmt(data.totalExpense)} icon={TrendingDown} color="red" />
             <StatCard label="Net Balance"   value={fmt(data.netBalance)}   icon={Scale}         color="blue" />
           </div>
 
-          <ChartCard title="Monthly Income vs. Expense" className="mb-5">
+          <div data-tour="page-reports-financial-monthly"><ChartCard title="Monthly Income vs. Expense" className="mb-5">
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={data.byMonth} barSize={16} barGap={4}>
                 <CartesianGrid stroke="#F4F5F7" strokeDasharray="4 4" vertical={false} />
@@ -140,9 +140,9 @@ export default function FinancialReportPage() {
               <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#0B6E4F] dark:bg-[#34A37A]" /><span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">Income</span></div>
               <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#B3261E] dark:bg-[#F87171]" /><span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">Expense</span></div>
             </div>
-          </ChartCard>
+          </ChartCard></div>
 
-          <div className="grid grid-cols-2 gap-5 mb-5">
+          <div data-tour="page-reports-financial-categories" className="grid grid-cols-2 gap-5 mb-5">
 
             <ChartCard title="Income by Category">
               <div className="space-y-3">
@@ -183,7 +183,7 @@ export default function FinancialReportPage() {
             </ChartCard>
           </div>
 
-          <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+          <div data-tour="page-reports-financial-recent" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
               <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Recent Transactions</p>
             </div>

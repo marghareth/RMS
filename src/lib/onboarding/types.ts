@@ -14,4 +14,11 @@ export interface TourStep {
   body: string;
   /** Short, phrased as something to actually try right now ("Try typing…"). Optional — leave out for purely informational steps. */
   hint?: string;
+  /**
+   * How long (ms) to keep looking for `target` before giving up and skipping
+   * the step. Defaults to ~900ms, which suits elements that are on screen
+   * immediately. Set higher (e.g. 6000) for targets that only render after
+   * a data fetch finishes, such as report charts and tables.
+   */
+  waitMs?: number;
 }

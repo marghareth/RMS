@@ -156,7 +156,10 @@ export default function TourOverlay() {
       const el = document.querySelector(step.target);
       if (!el) {
         retriesRef.current += 1;
-        if (retriesRef.current > MAX_RETRIES) {
+        // Per-step override (see TourStep.waitMs) for targets that only
+        // appear after a data fetch; falls back to the default budget.
+        const maxRetries = step.waitMs ? Math.ceil(step.waitMs / RETRY_MS) : MAX_RETRIES;
+        if (retriesRef.current > maxRetries) {
           // Not available for this role/page — skip it rather than stall.
           if (isLast) close();
           else next();

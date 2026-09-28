@@ -123,7 +123,7 @@ export default function InventoryReportPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div data-tour="page-reports-inventory-controls" className="flex items-center gap-2">
             <select value={year} onChange={e => setYear(e.target.value)}
               className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
@@ -146,7 +146,7 @@ export default function InventoryReportPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-5 gap-3 mb-5">
+          <div data-tour="page-reports-inventory-stats" className="grid grid-cols-5 gap-3 mb-5">
             <StatCard label="Total Items"   value={data.total}         icon={Package}       color="blue" />
             <StatCard label="Serviceable"   value={data.serviceable}   icon={CheckCircle2}  color="green" />
             <StatCard label="Unserviceable" value={data.unserviceable} icon={AlertTriangle} color="amber" />
@@ -154,7 +154,7 @@ export default function InventoryReportPage() {
             <StatCard label="Currently Out" value={data.currentlyOut}  icon={Clock}         color="blue" />
           </div>
 
-          <div className="grid grid-cols-3 gap-5 mb-5">
+          <div data-tour="page-reports-inventory-charts" className="grid grid-cols-3 gap-5 mb-5">
 
             <ChartCard title="Status Breakdown">
               <ResponsiveContainer width="100%" height={130}>
@@ -189,7 +189,7 @@ export default function InventoryReportPage() {
             </ChartCard>
           </div>
 
-          <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden mb-5">
+          <div data-tour="page-reports-inventory-list" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden mb-5">
             <div className="px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
               <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Equipment Inventory List</p>
             </div>
@@ -214,7 +214,7 @@ export default function InventoryReportPage() {
             ))}
           </div>
 
-          <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+          <div data-tour="page-reports-inventory-borrowings" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
               <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Recent Borrow Transactions</p>
             </div>

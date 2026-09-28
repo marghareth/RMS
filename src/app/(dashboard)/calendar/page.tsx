@@ -282,6 +282,7 @@ export default function CalendarPage() {
         subtitle="Barangay events, meetings, and important dates"
         actions={
           <button
+            data-tour="page-calendar-add"
             onClick={() => openAddSheet()}
             className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
           >
@@ -296,7 +297,7 @@ export default function CalendarPage() {
         <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           <div className="mb-4 flex items-center justify-between">
             <p className="text-[15px] font-bold text-[#1F2937] dark:text-white">{formatMonthLabel(viewDate)}</p>
-            <div className="flex items-center gap-1.5">
+            <div data-tour="page-calendar-nav" className="flex items-center gap-1.5">
               <button
                 onClick={() => { const t = today(); setViewDate(utcDate(t.getUTCFullYear(), t.getUTCMonth(), 1)); setSelectedDate(t); }}
                 className="rounded-lg px-3 py-1.5 text-[11px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
@@ -334,7 +335,7 @@ export default function CalendarPage() {
           </div>
 
           {/* Day cells */}
-          <div className="grid grid-cols-7 gap-1.5">
+          <div data-tour="page-calendar-grid" className="grid grid-cols-7 gap-1.5">
             {gridDays.map((day) => {
               const key = dateKey(day);
               const inMonth = day.getUTCMonth() === currentMonth;
@@ -380,7 +381,7 @@ export default function CalendarPage() {
         </div>
 
         {/* ── Selected day panel ── */}
-        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+        <div data-tour="page-calendar-day" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           <p className="text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">Selected Date</p>
           <p className="mb-4 text-[14px] font-bold text-[#1F2937] dark:text-white">{formatFullLabel(selectedDate)}</p>
 

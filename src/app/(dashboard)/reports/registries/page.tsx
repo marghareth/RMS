@@ -153,7 +153,7 @@ export default function RegistriesReportPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div data-tour="page-reports-registries-controls" className="flex items-center gap-2">
             <select value={year} onChange={e => setYear(e.target.value)}
               className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
@@ -168,7 +168,7 @@ export default function RegistriesReportPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-5">
+      <div data-tour="page-reports-registries-tabs" className="grid grid-cols-3 gap-4 mb-5">
         {TABS.map(t => {
           const Icon = t.icon;
           return (
@@ -191,7 +191,7 @@ export default function RegistriesReportPage() {
       </div>
 
       {tab === "seniors" && (
-        <div className="space-y-5">
+        <div data-tour="page-reports-registries-content" className="space-y-5">
           <ChartCard title="Senior Citizens by Purok">
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={data.seniors.byPurok} barSize={40} margin={{ top: 20 }}>
@@ -228,7 +228,7 @@ export default function RegistriesReportPage() {
       )}
 
       {tab === "pwd" && (
-        <div className="space-y-5">
+        <div data-tour="page-reports-registries-content" className="space-y-5">
           <div className="grid grid-cols-2 gap-5">
             <ChartCard title="PWD by Disability Type">
               <div className="flex items-center gap-3">
@@ -290,7 +290,7 @@ export default function RegistriesReportPage() {
       )}
 
       {tab === "fourps" && (
-        <div className="space-y-5">
+        <div data-tour="page-reports-registries-content" className="space-y-5">
           <div className="grid grid-cols-2 gap-4 mb-2">
             <StatCard label="Total Beneficiaries" value={data.fourPs.total} icon={Heart} color="green" />
             <StatCard label="Registered Households" value={data.fourPs.households} icon={Users} color="blue" />
