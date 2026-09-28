@@ -1,6 +1,5 @@
 // FILE: src/app/(dashboard)/meetings/[id]/page.tsx
 "use client";
-// FILE: src/app/(dashboard)/meetings/[id]/page.tsx
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -224,7 +223,7 @@ export default function MeetingDetailPage() {
     <div>
       {/* Header */}
       <div className="mb-5 flex items-start justify-between gap-4">
-        <div className="min-w-0">
+        <div data-tour="page-meetings-detail-header" className="min-w-0">
           <button
             onClick={() => router.push("/meetings")}
             className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
@@ -273,7 +272,7 @@ export default function MeetingDetailPage() {
           )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-2 print:hidden">
+        <div data-tour="page-meetings-detail-actions" className="flex shrink-0 items-center gap-2 print:hidden">
           {!editingMeeting ? (
             <>
               <button
@@ -404,7 +403,7 @@ export default function MeetingDetailPage() {
       )}
 
       {/* Agenda Items */}
-      <div className="mb-5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+      <div data-tour="page-meetings-detail-agenda" className="mb-5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ListChecks size={15} className="text-[#6B7280] dark:text-[#A3A3A3]" />
@@ -476,7 +475,7 @@ export default function MeetingDetailPage() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* ── Left: minutes ── */}
-        <div className="lg:col-span-2">
+        <div data-tour="page-meetings-detail-minutes" className="lg:col-span-2">
           <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Minutes</p>
@@ -531,7 +530,7 @@ export default function MeetingDetailPage() {
         </div>
 
         {/* ── Right: meeting info ── */}
-        <div className="lg:col-span-1">
+        <div data-tour="page-meetings-detail-info" className="lg:col-span-1">
           <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
             <p className="mb-3 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Meeting Info</p>
             <div className="space-y-3">

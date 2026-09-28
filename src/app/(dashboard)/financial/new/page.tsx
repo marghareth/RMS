@@ -84,7 +84,7 @@ export default function NewFinancialRecordPage() {
 
       <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
         {/* Type toggle */}
-        <div className="mb-5 grid grid-cols-2 gap-3">
+        <div data-tour="page-financial-new-type" className="mb-5 grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => {
@@ -119,7 +119,7 @@ export default function NewFinancialRecordPage() {
 
         <div className="space-y-4">
           {/* Category quick-picks */}
-          <div>
+          <div data-tour="page-financial-new-category">
             <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
               Category <span className="font-normal normal-case text-[#9CA3AF] dark:text-[#A3A3A3]">(fills description below)</span>
             </label>
@@ -141,7 +141,7 @@ export default function NewFinancialRecordPage() {
             </div>
           </div>
 
-          <div>
+          <div data-tour="page-financial-new-description">
             <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
               Description
             </label>
@@ -154,7 +154,7 @@ export default function NewFinancialRecordPage() {
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div data-tour="page-financial-new-amount" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                 Amount (PHP)
@@ -200,6 +200,7 @@ export default function NewFinancialRecordPage() {
               Cancel
             </button>
             <button
+              data-tour="page-financial-new-save"
               onClick={handleSubmit}
               disabled={submitting}
               className={`rounded-lg px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition disabled:opacity-60 ${

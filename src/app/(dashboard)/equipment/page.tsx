@@ -168,6 +168,7 @@ export default function EquipmentPage() {
         subtitle="Equipment management and borrow tracking"
         actions={
           <button
+            data-tour="page-equipment-add"
             onClick={() => router.push("/equipment/new")}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[13px] font-bold transition shadow-sm"
           >
@@ -178,7 +179,7 @@ export default function EquipmentPage() {
       />
 
       {/* ── Stat cards ── */}
-      <div className="grid grid-cols-4 gap-4">
+      <div data-tour="page-equipment-stats" className="grid grid-cols-4 gap-4">
         <StatCard label="Total Equipment"    value={totalItems}   sub="item types"       icon={Package}       color="blue" />
         <StatCard label="Serviceable"        value={serviceable}  sub="ready for use"    icon={CheckCircle2}  color="green" />
         <StatCard label="Currently Borrowed" value={currentlyOut} sub="active borrows"   icon={Clock}         color="blue" />
@@ -193,7 +194,7 @@ export default function EquipmentPage() {
 
           {/* Search + filter */}
           <div className="px-4 pt-4 pb-3 space-y-2 border-b border-[#E9EAEC] dark:border-[#262626]">
-            <div className="relative">
+            <div data-tour="page-equipment-search" className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
               <input
                 value={search}
@@ -203,7 +204,7 @@ export default function EquipmentPage() {
               />
             </div>
             {/* Status filter tabs */}
-            <div className="flex gap-1">
+            <div data-tour="page-equipment-filters" className="flex gap-1">
               {(["ALL", "SERVICEABLE", "UNSERVICEABLE", "MISSING"] as const).map(s => (
                 <button
                   key={s}
@@ -230,7 +231,7 @@ export default function EquipmentPage() {
           </div>
 
           {/* List */}
-          <div className="flex-1 overflow-y-auto">
+          <div data-tour="page-equipment-list" className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
@@ -293,7 +294,7 @@ export default function EquipmentPage() {
 
         {/* Right detail panel */}
         {selected ? (
-          <div className="flex-1 bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-y-auto p-6">
+          <div data-tour="page-equipment-detail" className="flex-1 bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-y-auto p-6">
 
             {/* Header */}
             <div className="flex items-start justify-between mb-5 pb-4 border-b border-[#E9EAEC] dark:border-[#262626]">
@@ -410,7 +411,7 @@ export default function EquipmentPage() {
             </div>
 
             {/* Active borrowings */}
-            <div className="border-t border-[#E9EAEC] dark:border-[#262626] pt-5">
+            <div data-tour="page-equipment-borrowed" className="border-t border-[#E9EAEC] dark:border-[#262626] pt-5">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">
                   Currently Borrowed
@@ -464,7 +465,7 @@ export default function EquipmentPage() {
             </div>
 
             {/* Actions */}
-            <div className="mt-5 pt-4 border-t border-[#E9EAEC] dark:border-[#262626] flex gap-2">
+            <div data-tour="page-equipment-actions" className="mt-5 pt-4 border-t border-[#E9EAEC] dark:border-[#262626] flex gap-2">
               <button
                 onClick={() => router.push(`/equipment/borrow?equipment_id=${selected.id}`)}
                 className="flex-1 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-bold transition"

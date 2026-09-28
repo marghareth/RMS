@@ -65,6 +65,7 @@ export default function FundSourceDetailPage() {
   return (
     <div>
       <button
+        data-tour="page-fund-source-detail-back"
         onClick={() => router.push("/finance/fund-sources")}
         className="mb-4 flex items-center gap-1.5 text-[13px] font-medium text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
       >
@@ -72,7 +73,7 @@ export default function FundSourceDetailPage() {
         Back to Fund Sources
       </button>
 
-      <div className="mb-5 flex items-start justify-between">
+      <div data-tour="page-fund-source-detail-header" className="mb-5 flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/15">
             <Landmark size={20} className="text-blue-500 dark:text-blue-400" />
@@ -100,13 +101,13 @@ export default function FundSourceDetailPage() {
         </div>
       )}
 
-      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div data-tour="page-fund-source-detail-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Current Balance" value={fmtCurrency(fundSource.current_balance)} sub={`Started at ${fmtCurrency(fundSource.original_balance)}`} icon={Wallet} color="blue" />
         <StatCard label="Total Revenue" value={fmtCurrency(totalRevenue)} sub="All-time collected" icon={TrendingUp} color="green" />
         <StatCard label="Total Disbursed" value={fmtCurrency(totalDisbursed)} sub="All-time paid out" icon={TrendingDown} color="red" />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+      <div data-tour="page-fund-source-detail-history" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
         <div className="border-b border-[#E9EAEC] dark:border-[#262626] px-5 py-3">
           <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Transaction History</p>
         </div>

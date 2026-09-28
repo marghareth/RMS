@@ -27,7 +27,9 @@ function ChartCard({
   children,
   className = "",
   action,
+  tour,
 }: {
+  tour?: string;
   title: string;
   subtitle?: string;
   children: React.ReactNode;
@@ -35,7 +37,7 @@ function ChartCard({
   action?: React.ReactNode;
 }) {
   return (
-    <div className={`rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5 ${className}`}>
+    <div data-tour={tour} className={`rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5 ${className}`}>
       <div className="mb-5 flex items-start justify-between gap-3">
         <div>
           <p className="text-[13px] font-bold text-[#1B2430] dark:text-white">{title}</p>
@@ -162,14 +164,14 @@ export default function BudgetOverviewPage() {
         <p className="mt-1 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">Barangay-wide appropriations, revenue, and disbursement snapshot</p>
       </div>
 
-      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div data-tour="page-finance-overview-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="Appropriated" value={fmtCompactCurrency(totals.appropriated)} sub="Total budget set" icon={ClipboardList} color="blue" />
         <StatCard label="Obligated" value={fmtCompactCurrency(totals.obligated)} sub="Committed spending" icon={TrendingDown} color="amber" />
         <StatCard label="Disbursed" value={fmtCompactCurrency(totals.disbursed)} sub="Actually paid out" icon={TrendingDown} color="red" />
         <StatCard label="Revenue" value={fmtCompactCurrency(totals.revenue)} sub="All-time collected" icon={TrendingUp} color="green" />
         <StatCard label="Fund Balance" value={fmtCompactCurrency(totals.balance)} sub="Across all fund sources" icon={Wallet} color="teal" />
       </div>
-      <ChartCard title="Appropriation Utilization by Category" subtitle="Disbursed against appropriated, per category" className="mb-5">
+      <ChartCard tour="page-finance-overview-utilization" title="Appropriation Utilization by Category" subtitle="Disbursed against appropriated, per category" className="mb-5">
         <div className="space-y-5">
           {byCategory.map((c) => (
             <div key={c.cat}>
@@ -197,7 +199,7 @@ export default function BudgetOverviewPage() {
       </ChartCard>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <ChartCard title="Revenue vs. Disbursement" subtitle="Last 6 months">
+        <ChartCard tour="page-finance-overview-revenue" title="Revenue vs. Disbursement" subtitle="Last 6 months">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={revenueVsDisbursement} barSize={14} barGap={4}>
               <CartesianGrid stroke="#F4F5F7" strokeDasharray="4 4" vertical={false} />
@@ -210,7 +212,7 @@ export default function BudgetOverviewPage() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Fund Balance Trend" subtitle="Last 6 months">
+        <ChartCard tour="page-finance-overview-trend" title="Fund Balance Trend" subtitle="Last 6 months">
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={fundBalanceTrend}>
               <CartesianGrid stroke="#F4F5F7" strokeDasharray="4 4" vertical={false} />
@@ -222,7 +224,7 @@ export default function BudgetOverviewPage() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Appropriation Breakdown" subtitle="Share of total appropriated budget, by category" className="lg:col-span-2">
+        <ChartCard tour="page-finance-overview-breakdown" title="Appropriation Breakdown" subtitle="Share of total appropriated budget, by category" className="lg:col-span-2">
           {categoryBreakdown.length === 0 ? (
             <p className="py-12 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No appropriations recorded yet.</p>
           ) : (

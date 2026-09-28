@@ -222,15 +222,17 @@ export default function EditEquipmentPage() {
         <div className="p-6 space-y-5">
 
           {/* Name */}
+          <div data-tour="page-equipment-edit-name">
           <TextInput
             label="Equipment Name"
             value={form.name}
             onChange={v => set("name", v)}
             required
           />
+          </div>
 
           {/* Quantity + Condition */}
-          <div className="grid grid-cols-2 gap-4">
+          <div data-tour="page-equipment-edit-qty" className="grid grid-cols-2 gap-4">
             <div>
               <FieldLabel required>Quantity</FieldLabel>
               <input
@@ -250,7 +252,7 @@ export default function EditEquipmentPage() {
           </div>
 
           {/* Type + Serial Number */}
-          <div className="grid grid-cols-2 gap-4">
+          <div data-tour="page-equipment-edit-type" className="grid grid-cols-2 gap-4">
             <TextInput
               label="Type"
               value={form.asset_type}
@@ -282,7 +284,7 @@ export default function EditEquipmentPage() {
           />
 
           {/* Valuation */}
-          <div className="grid grid-cols-2 gap-4">
+          <div data-tour="page-equipment-edit-value" className="grid grid-cols-2 gap-4">
             <TextInput
               label="Purchase Cost (₱)"
               value={form.purchase_cost}
@@ -334,7 +336,7 @@ export default function EditEquipmentPage() {
           </div>
 
           {/* Status */}
-          <div>
+          <div data-tour="page-equipment-edit-status">
             <FieldLabel required>Status</FieldLabel>
             <div className="flex gap-3">
               <StatusCard value="SERVICEABLE"   label="Serviceable"   description="Ready for use"      dot="bg-green-500 dark:bg-green-500" selected={form.status === "SERVICEABLE"}   onClick={() => set("status", "SERVICEABLE")}   />
@@ -352,7 +354,7 @@ export default function EditEquipmentPage() {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
+        <div data-tour="page-equipment-edit-save" className="flex items-center justify-between px-6 py-4 border-t border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
           <button
             onClick={() => router.push(`/equipment/${params.id}`)}
             className="px-5 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[13px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-white transition"

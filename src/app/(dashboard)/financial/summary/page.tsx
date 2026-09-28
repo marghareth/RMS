@@ -74,6 +74,7 @@ export default function FinancialSummaryPage() {
         </div>
         <div className="flex items-center gap-2">
           <select
+            data-tour="page-financial-summary-year"
             value={year}
             onChange={(e) => setYear(e.target.value)}
             className="rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
@@ -88,6 +89,7 @@ export default function FinancialSummaryPage() {
               window.open(`/api/pdf/report/financial?year=${year}`, "_blank")
               — hits the not-yet-implemented /api/pdf/report/[type] route. */}
           <button
+            data-tour="page-financial-summary-export"
             onClick={() => window.print()}
             className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-2.5 text-[13px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] print:hidden"
           >
@@ -98,7 +100,7 @@ export default function FinancialSummaryPage() {
       </div>
 
       {/* Year totals */}
-      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div data-tour="page-financial-summary-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Total Income" value={formatCurrency(totals.income)} sub={`Year ${year}`} icon={TrendingUp} color="green" />
         <StatCard label="Total Expense" value={formatCurrency(totals.expense)} sub={`Year ${year}`} icon={TrendingDown} color="red" />
         <StatCard
@@ -111,7 +113,7 @@ export default function FinancialSummaryPage() {
       </div>
 
       {/* Monthly bar chart */}
-      <div className="mb-5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+      <div data-tour="page-financial-summary-chart" className="mb-5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Monthly Breakdown</p>
           <div className="flex items-center gap-4 text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">
@@ -171,7 +173,7 @@ export default function FinancialSummaryPage() {
       </div>
 
       {/* Monthly table */}
-      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+      <div data-tour="page-financial-summary-table" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
