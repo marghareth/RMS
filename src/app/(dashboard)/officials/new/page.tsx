@@ -86,7 +86,7 @@ export default function NewOfficialPage() {
 
       <div className="space-y-5">
         {/* Resident */}
-        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+        <div data-tour="page-officials-new-resident" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           <div className="mb-4 flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
               <UserCheck size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
@@ -97,7 +97,7 @@ export default function NewOfficialPage() {
         </div>
 
         {/* Official details */}
-        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+        <div data-tour="page-officials-new-details" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           <div className="mb-4 flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F4F5F7] dark:bg-[#262626]">
               <Phone size={14} className="text-[#374151] dark:text-[#D4D4D4]" />
@@ -106,7 +106,7 @@ export default function NewOfficialPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div data-tour="page-officials-new-position" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                   Position
@@ -155,7 +155,7 @@ export default function NewOfficialPage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div data-tour="page-officials-new-term" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                   Term Start
@@ -194,7 +194,7 @@ export default function NewOfficialPage() {
 
         {error && <p className="rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-4 py-3 text-[12px] text-[#DC2626] dark:text-[#F87171]">{error}</p>}
 
-        <div className="flex items-center justify-end gap-3 pb-8">
+        <div data-tour="page-officials-new-save" className="flex items-center justify-end gap-3 pb-8">
           <button
             onClick={() => router.push("/officials")}
             className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"

@@ -122,7 +122,7 @@ export default function BlotterReportPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div data-tour="page-reports-blotter-controls" className="flex items-center gap-2">
             <select value={year} onChange={e => setYear(e.target.value)}
               className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
@@ -152,7 +152,7 @@ export default function BlotterReportPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-5 gap-3 mb-5">
+          <div data-tour="page-reports-blotter-stats" className="grid grid-cols-5 gap-3 mb-5">
             <StatCard label="Total Cases" value={data.total}     icon={Shield}       color="blue" />
             <StatCard label="Filed"       value={data.filed}     icon={FolderOpen}   color="blue" />
             <StatCard label="Ongoing"     value={data.ongoing}   icon={Clock}        color="amber" />
@@ -160,7 +160,7 @@ export default function BlotterReportPage() {
             <StatCard label="Escalated"   value={data.escalated} icon={AlertTriangle} color="red" />
           </div>
 
-          <div className="grid grid-cols-2 gap-5 mb-5">
+          <div data-tour="page-reports-blotter-charts" className="grid grid-cols-2 gap-5 mb-5">
 
             <ChartCard title="Cases by Status">
               <div className="flex items-center gap-4">
@@ -230,7 +230,7 @@ export default function BlotterReportPage() {
             </div>
           </ChartCard>
 
-          <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+          <div data-tour="page-reports-blotter-recent" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
               <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Recent Cases</p>
             </div>

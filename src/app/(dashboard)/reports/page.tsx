@@ -213,6 +213,7 @@ export default function ReportsPage() {
         subtitle={`Overview as of ${today}`}
         actions={
           <button
+            data-tour="page-reports-export-all"
             onClick={handleExportAll}
             disabled={exporting}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[#6B7280] dark:text-[#A3A3A3] text-[13px] font-bold hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -223,7 +224,7 @@ export default function ReportsPage() {
         }
       />
 
-      <div className="grid grid-cols-4 gap-3">
+      <div data-tour="page-reports-stats" className="grid grid-cols-4 gap-3">
         <StatCard label="Total Residents" value={summary.totalResidents.toLocaleString()} icon={Users} color="blue" />
         <StatCard label="Certs This Month" value={summary.certificatesMonth} icon={FileText} color="green" />
         <StatCard label="Active Blotter" value={summary.activeBlotter} icon={Shield} color="amber" />
@@ -232,14 +233,14 @@ export default function ReportsPage() {
 
       <div>
         <p className="text-[11px] font-bold uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3] mb-3">Report Modules</p>
-        <div className="grid grid-cols-3 gap-4">
+        <div data-tour="page-reports-modules" className="grid grid-cols-3 gap-4">
           {REPORT_MODULES.map(mod => (
             <ModuleCard key={mod.key} mod={mod} onClick={() => router.push(`/reports/${mod.key}`)} />
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-5">
+      <div data-tour="page-reports-charts" className="grid grid-cols-2 gap-5">
         <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-5">
           <div className="flex items-center justify-between mb-4">
             <p className="text-[12px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Population by Purok</p>
@@ -297,7 +298,7 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+      <div data-tour="page-reports-certs" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
           <p className="text-[12px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Certificates Issued This Month</p>
           <button onClick={() => router.push("/reports/certificates")} className="text-[11px] font-bold text-[#0B6E4F] dark:text-[#34A37A] hover:text-[#095c41] dark:hover:text-[#3FBB8C] transition">

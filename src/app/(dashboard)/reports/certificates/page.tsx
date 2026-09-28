@@ -121,7 +121,7 @@ export default function CertificatesReportPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div data-tour="page-reports-certificates-controls" className="flex items-center gap-2">
             <select value={year} onChange={e => setYear(e.target.value)}
               className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
@@ -151,13 +151,13 @@ export default function CertificatesReportPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-4 mb-5">
+          <div data-tour="page-reports-certificates-stats" className="grid grid-cols-3 gap-4 mb-5">
             <StatCard label="Total This Year" value={data.totalThisYear} icon={CalendarRange} color="blue" />
             <StatCard label="This Month" value={data.totalThisMonth} icon={CalendarDays} color="green" />
             <StatCard label="Certificate Types" value={data.byType.length} icon={Layers} color="purple" />
           </div>
 
-          <div className="grid grid-cols-2 gap-5 mb-5">
+          <div data-tour="page-reports-certificates-charts" className="grid grid-cols-2 gap-5 mb-5">
 
             <ChartCard title="Issuance by Type">
               <ResponsiveContainer width="100%" height={220}>
@@ -204,7 +204,7 @@ export default function CertificatesReportPage() {
             </div>
           </ChartCard>
 
-          <div className="mt-5 bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+          <div data-tour="page-reports-certificates-recent" className="mt-5 bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
               <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Recent Issuances</p>
             </div>

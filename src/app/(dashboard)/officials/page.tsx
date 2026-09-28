@@ -139,6 +139,7 @@ export default function OfficialsListPage() {
         subtitle="Directory of elected and appointed officials"
         actions={
           <button
+            data-tour="page-officials-add"
             onClick={() => router.push("/officials/new")}
             className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
           >
@@ -149,7 +150,7 @@ export default function OfficialsListPage() {
       />
 
       {/* Stat cards */}
-      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div data-tour="page-officials-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard label="Total Officials" value={stats.total} sub="All records" icon={UserCheck} color="blue" />
         <StatCard label="Active" value={stats.active} sub="Currently serving" icon={Power} color="green" />
         <StatCard
@@ -163,9 +164,9 @@ export default function OfficialsListPage() {
 
       <div className="flex min-h-[calc(100vh-280px)] gap-5">
         {/* ── Left: list panel ── */}
-        <div className="flex w-85 shrink-0 flex-col overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+        <div data-tour="page-officials-list" className="flex w-85 shrink-0 flex-col overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
           <div className="border-b border-[#E9EAEC] dark:border-[#262626] px-4 pt-4 pb-3">
-            <div className="relative mb-3">
+            <div data-tour="page-officials-search" className="relative mb-3">
               <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
               <input
                 value={search}
@@ -174,7 +175,7 @@ export default function OfficialsListPage() {
                 className="w-full rounded-xl border border-transparent bg-[#F4F5F7] dark:bg-[#262626] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:bg-white dark:focus:bg-[#171717]"
               />
             </div>
-            <label className="flex items-center gap-2 text-[11px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
+            <label data-tour="page-officials-active" className="flex items-center gap-2 text-[11px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
               <input
                 type="checkbox"
                 checked={activeOnly}
@@ -222,7 +223,7 @@ export default function OfficialsListPage() {
         </div>
 
         {/* ── Right: detail panel ── */}
-        <div className="flex-1 overflow-y-auto rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+        <div data-tour="page-officials-detail" className="flex-1 overflow-y-auto rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
           {!selected ? (
             <div className="flex h-full items-center justify-center">
               <EmptyState

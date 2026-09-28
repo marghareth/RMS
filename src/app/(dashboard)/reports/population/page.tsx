@@ -105,7 +105,7 @@ export default function PopulationReportPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div data-tour="page-reports-population-controls" className="flex items-center gap-2">
             <select value={year} onChange={e => setYear(e.target.value)}
               className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
@@ -130,6 +130,7 @@ export default function PopulationReportPage() {
       ) : (
         <>
           <div
+            data-tour="page-reports-population-stats"
             className="grid gap-4 mb-5"
             style={{ gridTemplateColumns: `2fr repeat(${data.bySex.length}, 1fr)` }}
           >
@@ -145,7 +146,7 @@ export default function PopulationReportPage() {
             ))}
           </div>
 
-          <div className="grid grid-cols-2 gap-5 mb-5">
+          <div data-tour="page-reports-population-charts" className="grid grid-cols-2 gap-5 mb-5">
 
             <ChartCard title="Population by Purok">
               <ResponsiveContainer width="100%" height={200}>
@@ -232,7 +233,7 @@ export default function PopulationReportPage() {
             </ChartCard>
           </div>
 
-          <ChartCard title="Household Count by Purok">
+          <div data-tour="page-reports-population-households"><ChartCard title="Household Count by Purok">
             <div className="grid grid-cols-[1fr_1fr_1fr_1fr] gap-0">
               {["Purok", "Residents", "Households", "Avg / HH"].map(h => (
                 <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide py-2 border-b border-[#F4F5F7] dark:border-[#262626]">{h}</span>
@@ -246,7 +247,7 @@ export default function PopulationReportPage() {
                 </Fragment>
               ))}
             </div>
-          </ChartCard>
+          </ChartCard></div>
         </>
       )}
 
