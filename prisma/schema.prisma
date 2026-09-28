@@ -142,6 +142,17 @@ model Resident {
   is_deceased            Boolean     @default(false)
   created_at             DateTime    @default(now())
   updated_at             DateTime    @updatedAt
+
+  // ── Residency ──
+  // The real, user-provided date this person became a resident of the
+  // barangay, captured at RBI creation. Added to fix the certificate
+  // 6-month eligibility check, which used to compare against `created_at`
+  // (i.e. when the record was typed into RMS, not when the person
+  // actually moved in) — a resident encoded last week after living here
+  // 10 years was wrongly failing the check. Nullable because rows created
+  // before this column existed have no real value for it; see the
+  // migration for the backfill and /api/certificates for the
+  // fallback-to-created_at logic covering any row that's still null.
   residency_start_date   DateTime?
 
   // ── Contact (2.9) ──
@@ -245,6 +256,18 @@ model Certificate {
   flagged_manual   Boolean         @default(false)
   manual_name      String?
   manual_address   String?
+
+  // ── Per-document correction (distinct from manual_name/manual_address
+  // above, which stand in for a resident record that doesn't exist at all
+  // for walk-ins). These are for the opposite case: a resident record DOES
+  // exist and is linked, but staff need to fix a typo (e.g. in spelling)
+  // on this one printed certificate without editing — and thereby
+  // changing everywhere else that uses — the resident's actual record.
+  // Null means "use the resident's real name/address as usual"; see
+  // buildCertificatePdfProps, which prefers these over the resident's
+  // live data whenever they're set. ──
+  override_full_name String?
+  override_address   String?
 
   // ── Document Request Workflow (2.7) ──
   queue_number     String          @unique // auto-generated at creation, e.g. Q-2026-0001

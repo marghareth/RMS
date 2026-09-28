@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Printer, FileX } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import { useBarangayInfo } from "@/lib/hooks/useBarangayInfo";
 
 interface HearingCase {
   id: number;
@@ -18,12 +19,6 @@ interface HearingCase {
   hearing_date: string | null;
   status: string;
 }
-
-const BARANGAY_NAME = "Barangay Quisol";
-const CITY = "Danao City";
-const PROVINCE = "Cebu";
-const CAPTAIN_NAME = "Pedro C. Barriga Garcia";
-const CAPTAIN_POSITION = "Punong Barangay";
 
 function formatLongDate(iso: string | null) {
   if (!iso) return null;
@@ -39,6 +34,14 @@ export default function BlotterHearingNoticePage() {
   const router = useRouter();
   const params = useParams();
   const caseId = Number(params.id);
+
+  // Real barangay + signatory (General Settings / Officials) — this notice
+  // is printed and served, so it can't carry another barangay's name.
+  const { barangay, captain } = useBarangayInfo();
+  const BARANGAY_NAME = barangay.name || "Barangay";
+  const LOCATION = [barangay.city, barangay.province].filter(Boolean).join(", ");
+  const CAPTAIN_NAME = captain.name;
+  const CAPTAIN_POSITION = captain.position;
 
   const [blotterCase, setBlotterCase] = useState<HearingCase | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,7 +118,7 @@ export default function BlotterHearingNoticePage() {
           <p className="mt-1 text-[16px] font-black uppercase tracking-wide text-[#1F2937]">
             {BARANGAY_NAME}
           </p>
-          <p className="text-[11px] text-[#6B7280]">{CITY}, {PROVINCE}</p>
+          <p className="text-[11px] text-[#6B7280]">{LOCATION}</p>
           <p className="mt-4 text-[14px] font-black uppercase tracking-widest text-[#1F2937]">
             Notice of Hearing
           </p>

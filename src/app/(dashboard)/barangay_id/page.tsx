@@ -25,9 +25,11 @@ import {
   expiryDate,
   isExpired,
 } from "@/lib/mock/barangayId";
+import { useBarangayInfo } from "@/lib/hooks/useBarangayInfo";
 
 export default function BarangayIdListPage() {
   const router = useRouter();
+  const { barangay } = useBarangayInfo();
 
   const [ids, setIds] = useState<BarangayIdMock[]>([]);
   const [loading, setLoading] = useState(true);
@@ -193,8 +195,8 @@ export default function BarangayIdListPage() {
                     <p className="text-[9px] font-semibold uppercase tracking-widest opacity-80">
                       Republic of the Philippines
                     </p>
-                    <p className="truncate text-[13px] font-black uppercase tracking-wide">Barangay Quisol</p>
-                    <p className="text-[9px] opacity-80">Danao City, Cebu</p>
+                    <p className="truncate text-[13px] font-black uppercase tracking-wide">{barangay.name || "Barangay"}</p>
+                    <p className="text-[9px] opacity-80">{[barangay.city, barangay.province].filter(Boolean).join(", ")}</p>
                   </div>
                 </div>
 

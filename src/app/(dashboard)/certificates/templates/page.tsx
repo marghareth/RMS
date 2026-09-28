@@ -4,7 +4,8 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, FileEdit, RotateCcw, Save, Info, ChevronRight, CheckCircle2 } from "lucide-react";
-import { CERTIFICATE_TYPES, CertificateType, MOCK_ACTIVE_CAPTAIN, MOCK_BARANGAY_INFO } from "@/lib/mock/certificates";
+import { CERTIFICATE_TYPES, CertificateType } from "@/lib/mock/certificates";
+import { useBarangayInfo } from "@/lib/hooks/useBarangayInfo";
 import {
   updateMockTemplate,
   resetMockTemplate,
@@ -14,18 +15,6 @@ import {
 } from "@/lib/mock/certificateTemplates";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import PlaceholderRichInput, { PlaceholderRichInputHandle } from "@/components/certificates/PlaceholderRichInput";
-
-const SAMPLE_VALUES = {
-  full_name: "SANTOS, MARIA R.",
-  address: "Purok II, Brgy. Quisol",
-  purpose: "Requirement for school enrollment of dependent",
-  captain_name: MOCK_ACTIVE_CAPTAIN.name,
-  captain_position: MOCK_ACTIVE_CAPTAIN.position,
-  barangay_name: MOCK_BARANGAY_INFO.name,
-  city: MOCK_BARANGAY_INFO.city,
-  province: MOCK_BARANGAY_INFO.province,
-  date_issued: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
-};
 
 export default function CertificateTemplatesPage() {
   const router = useRouter();
@@ -195,14 +184,33 @@ function TemplateEditor({
   const [draftBody, setDraftBody] = useState(template.body);
   const [draftClosing, setDraftClosing] = useState(template.closing_line);
 
+  // Sample applicant details are placeholders for the live preview, but the
+  // barangay and signatory are the real ones so the preview matches what
+  // will actually print.
+  const { barangay, captain } = useBarangayInfo();
+  const sampleValues = useMemo(
+    () => ({
+      full_name: "SANTOS, MARIA R.",
+      address: `Purok II, ${barangay.name || "Barangay"}`,
+      purpose: "Requirement for school enrollment of dependent",
+      captain_name: captain.name,
+      captain_position: captain.position,
+      barangay_name: barangay.name,
+      city: barangay.city,
+      province: barangay.province,
+      date_issued: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+    }),
+    [barangay, captain]
+  );
+
   const isDirty =
     draftTitle !== template.title ||
     draftBody !== template.body ||
     draftClosing !== template.closing_line;
 
-  const previewBody = useMemo(() => renderTemplate(draftBody, SAMPLE_VALUES), [draftBody]);
-  const previewClosing = useMemo(() => renderTemplate(draftClosing, SAMPLE_VALUES), [draftClosing]);
-  const previewTitle = useMemo(() => renderTemplate(draftTitle, SAMPLE_VALUES), [draftTitle]);
+  const previewBody = useMemo(() => renderTemplate(draftBody, sampleValues), [draftBody, sampleValues]);
+  const previewClosing = useMemo(() => renderTemplate(draftClosing, sampleValues), [draftClosing, sampleValues]);
+  const previewTitle = useMemo(() => renderTemplate(draftTitle, sampleValues), [draftTitle, sampleValues]);
 
   type FieldKey = "title" | "body" | "closing";
   const FIELD_LABELS: Record<FieldKey, string> = {
@@ -367,7 +375,7 @@ function TemplateEditor({
             This certification is being issued upon the request of the above-named person for the purpose of:
           </p>
           <p className="rounded-lg bg-white dark:bg-[#171717] px-4 py-3 text-center text-[13px] font-semibold uppercase text-[#1F2937] dark:text-white">
-            {SAMPLE_VALUES.purpose}
+            {sampleValues.purpose}
           </p>
           <p className="indent-8 text-justify text-[13px] leading-loose text-[#374151] dark:text-[#D4D4D4]">{previewClosing}</p>
         </div>

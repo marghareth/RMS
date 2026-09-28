@@ -1,3 +1,4 @@
+// FILE: src/lib/pdf/PopulationReportPDF.tsx
 // Real, downloadable PDF document for the Population Report, built with
 // @react-pdf/renderer. Rendered client-side via generatePdf.ts's
 // downloadPdf() helper — no server round-trip needed since the report data
@@ -29,15 +30,16 @@ function pct(n: number, total: number) {
 export default function PopulationReportPDF({
   data,
   year,
-  barangayName = "Barangay Quisol",
-  city = "Danao City",
-  province = "Cebu",
+  barangayName = "",
+  city = "",
+  province = "",
 }: PopulationReportPDFProps) {
   const generatedOn = new Date().toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
   });
+  const location = [city, province].filter(Boolean).join(", ");
 
   return (
     <Document>
@@ -45,8 +47,8 @@ export default function PopulationReportPDF({
         {/* Header */}
         <View style={s.header}>
           <View style={s.headerLeft}>
-            <Text style={s.barangayName}>{barangayName}</Text>
-            <Text style={s.headerSub}>{city}, {province}</Text>
+            <Text style={s.barangayName}>{barangayName || "Barangay"}</Text>
+            {location ? <Text style={s.headerSub}>{location}</Text> : null}
           </View>
           <View>
             <Text style={s.reportTitle}>Population Report</Text>

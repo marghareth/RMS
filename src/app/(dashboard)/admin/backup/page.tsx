@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { DatabaseBackup, ShieldCheck, Clock, FileArchive } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
@@ -61,7 +62,11 @@ export default function BackupPage() {
 
   return (
     <div>
-      <PageHeader title="Backup" subtitle="Manual backup trigger and backup history" />
+      <PageHeader
+        title="Backup"
+        subtitle="Manual backup trigger and backup history"
+        tutorial={ADMIN_TUTORIALS.backup}
+      />
 
       {/* Stat cards */}
       <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">

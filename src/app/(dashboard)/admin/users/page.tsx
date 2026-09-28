@@ -5,6 +5,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Users, UserCheck, UserX, Search, Plus, Pencil, Power } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
@@ -95,6 +96,7 @@ export default function UsersListPage() {
       <PageHeader
         title="User Management"
         subtitle="Accounts with access to this system"
+        tutorial={ADMIN_TUTORIALS.users}
         actions={
           <button
             onClick={() => router.push("/admin/users/new")}

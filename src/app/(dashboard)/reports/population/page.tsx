@@ -9,6 +9,7 @@ import {
   PieChart, Pie, Cell,
 } from "recharts";
 import { useReportData } from "@/lib/hooks/useReportData";
+import { useBarangayInfo } from "@/lib/hooks/useBarangayInfo";
 import StatCard from "@/components/shared/StatCard";
 import InfoDialog from "@/components/shared/InfoDialog";
 
@@ -57,6 +58,7 @@ export default function PopulationReportPage() {
   const [year, setYear] = useState(new Date().getFullYear().toString());
 
   const { data, loading } = useReportData<PopulationReportData>("population", { year });
+  const { barangay } = useBarangayInfo();
 
   const [exporting, setExporting] = useState(false);
   const [exportErrorOpen, setExportErrorOpen] = useState(false);
@@ -68,7 +70,13 @@ export default function PopulationReportPage() {
       const { default: PopulationReportPDF } = await import("@/lib/pdf/PopulationReportPDF");
       const { downloadPdf } = await import("@/lib/pdf/generatePdf");
       await downloadPdf(
-        <PopulationReportPDF data={data} year={year} />,
+        <PopulationReportPDF
+          data={data}
+          year={year}
+          barangayName={barangay.name}
+          city={barangay.city}
+          province={barangay.province}
+        />,
         `population-report-${year}.pdf`
       );
     } catch (e) {

@@ -4,6 +4,7 @@
 import { useRouter } from "next/navigation";
 import { Users, History, DatabaseBackup, ChevronRight, MapPin } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
 
 const SECTIONS = [
   {
@@ -48,7 +49,11 @@ export default function AdminHubPage() {
 
   return (
     <div>
-      <PageHeader title="Admin" subtitle="System administration and configuration" />
+      <PageHeader
+        title="Admin"
+        subtitle="System administration and configuration"
+        tutorial={ADMIN_TUTORIALS.hub}
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {SECTIONS.map((s) => {

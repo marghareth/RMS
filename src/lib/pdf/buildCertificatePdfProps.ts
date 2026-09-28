@@ -7,7 +7,7 @@
 
 import QRCode from "qrcode";
 import { renderTemplate } from "@/lib/mock/certificateTemplates";
-import { MOCK_ACTIVE_CAPTAIN, MOCK_BARANGAY_INFO } from "@/lib/mock/certificates";
+import { getBarangayContext } from "@/lib/barangay-info";
 
 // Structural types rather than importing Prisma's generated types directly —
 // keeps this helper decoupled from exactly which fields a given `include`
@@ -72,15 +72,17 @@ export async function buildCertificatePdfProps(
 
   const address = certificate.resident?.household?.address ?? certificate.manual_address ?? "this barangay";
 
+  const { barangay, captain } = await getBarangayContext();
+
   const values: Record<string, string> = {
     full_name: fullName,
     address,
     purpose: certificate.purpose,
-    captain_name: MOCK_ACTIVE_CAPTAIN.name,
-    captain_position: MOCK_ACTIVE_CAPTAIN.position,
-    barangay_name: MOCK_BARANGAY_INFO.name,
-    city: MOCK_BARANGAY_INFO.city,
-    province: MOCK_BARANGAY_INFO.province,
+    captain_name: captain.name,
+    captain_position: captain.position,
+    barangay_name: barangay.name,
+    city: barangay.city,
+    province: barangay.province,
     date_issued: certificate.issued_at
       ? new Date(certificate.issued_at).toLocaleDateString("en-US", {
           month: "long",
@@ -107,12 +109,12 @@ export async function buildCertificatePdfProps(
     certificateNo: certificate.certificate_no,
     applicantName: fullName,
     flaggedManual: certificate.flagged_manual,
-    captainName: MOCK_ACTIVE_CAPTAIN.name,
-    captainPosition: MOCK_ACTIVE_CAPTAIN.position,
-    barangayName: MOCK_BARANGAY_INFO.name,
-    city: MOCK_BARANGAY_INFO.city,
-    province: MOCK_BARANGAY_INFO.province,
-    region: MOCK_BARANGAY_INFO.region,
+    captainName: captain.name,
+    captainPosition: captain.position,
+    barangayName: barangay.name,
+    city: barangay.city,
+    province: barangay.province,
+    region: barangay.region,
     qrDataUrl,
   };
 }

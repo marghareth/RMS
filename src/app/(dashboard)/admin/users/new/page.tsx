@@ -4,8 +4,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, UserPlus, Eye, EyeOff } from "lucide-react";
+import PageTutorial from "@/components/shared/PageTutorial";
+import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
 import { ROLES, Role, MOCK_USERS } from "@/lib/mock/admin";
-import InfoDialog from "@/components/shared/InfoDialog";
 
 export default function NewUserPage() {
   const router = useRouter();
@@ -17,9 +18,6 @@ export default function NewUserPage() {
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  // Replaces the old `alert(...)` — navigation is deferred to the dialog's
-  // dismissal so the admin actually sees the confirmation before leaving.
-  const [mockResultOpen, setMockResultOpen] = useState(false);
 
   async function handleSubmit() {
     setError("");
@@ -45,8 +43,8 @@ export default function NewUserPage() {
     // ── MOCK SUBMIT ─────────────────────────────────────────────────────
     await new Promise((r) => setTimeout(r, 500));
     setSubmitting(false);
-    setMockResultOpen(true);
-    return;
+    alert(`[MOCK] User "${username}" created with role ${role}.\nA real save will redirect back to the user list.`);
+    router.push("/admin/users");
 
     // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
     try {
@@ -79,9 +77,12 @@ export default function NewUserPage() {
         Back to Users
       </button>
 
-      <div className="mb-5">
-        <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Add User</h1>
-        <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">Create a new account with system access.</p>
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Add User</h1>
+          <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">Create a new account with system access.</p>
+        </div>
+        <PageTutorial tutorial={ADMIN_TUTORIALS.usersNew} />
       </div>
 
       <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
@@ -164,18 +165,6 @@ export default function NewUserPage() {
           </div>
         </div>
       </div>
-
-      <InfoDialog
-        open={mockResultOpen}
-        variant="success"
-        title="User Created"
-        message={`[MOCK] User "${username}" created with role ${role}.\nA real save will redirect back to the user list.`}
-        actionLabel="Got It"
-        onClose={() => {
-          setMockResultOpen(false);
-          router.push("/admin/users");
-        }}
-      />
     </div>
   );
 }
