@@ -218,7 +218,7 @@ export default function EquipmentDetailPage() {
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div data-tour="page-equipment-detail-actions" className="flex gap-2">
           <button
             onClick={() => router.push(`/equipment/borrow?equipment_id=${equipment.id}`)}
             className="px-4 py-2 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] dark:hover:bg-[#F59E0B] text-white text-[12px] font-bold transition"
@@ -237,7 +237,7 @@ export default function EquipmentDetailPage() {
       <div className="grid grid-cols-3 gap-5">
 
         {/* ── Left: Info card ── */}
-        <div className="col-span-1 space-y-4">
+        <div data-tour="page-equipment-detail-info" className="col-span-1 space-y-4">
           <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-5">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white mb-3">Equipment Info</p>
 
@@ -309,7 +309,7 @@ export default function EquipmentDetailPage() {
           </div>
 
           {/* Quick stats */}
-          <div className="grid grid-cols-2 gap-3">
+          <div data-tour="page-equipment-detail-stats" className="grid grid-cols-2 gap-3">
             <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 py-3 text-center">
               <p className={`text-[22px] font-black ${active.length > 0 ? "text-[#3B82F6] dark:text-[#60A5FA]" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
                 {active.length}
@@ -333,12 +333,12 @@ export default function EquipmentDetailPage() {
         <div className="col-span-2 bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
 
           {/* Tab bar */}
-          <div className="flex items-center gap-2 px-5 py-3 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
+          <div data-tour="page-equipment-detail-tabs" className="flex items-center gap-2 px-5 py-3 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
             <Tab label="Currently Borrowed" count={active.length}   active={tab === "active"}  onClick={() => setTab("active")}  />
             <Tab label="Return History"     count={returned.length} active={tab === "history"} onClick={() => setTab("history")} />
           </div>
 
-          <div className="p-5 space-y-3">
+          <div data-tour="page-equipment-detail-list" className="p-5 space-y-3">
             {tab === "active" ? (
               active.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-2">

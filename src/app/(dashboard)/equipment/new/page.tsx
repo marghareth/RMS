@@ -202,6 +202,7 @@ export default function NewEquipmentPage() {
         <div className="p-6 space-y-5">
 
           {/* Name */}
+          <div data-tour="page-equipment-new-name">
           <TextInput
             label="Equipment Name"
             value={form.name}
@@ -209,9 +210,10 @@ export default function NewEquipmentPage() {
             placeholder="e.g. Megaphone, Folding Tables, Generator"
             required
           />
+          </div>
 
           {/* Quantity + Condition */}
-          <div className="grid grid-cols-2 gap-4">
+          <div data-tour="page-equipment-new-qty" className="grid grid-cols-2 gap-4">
             <div>
               <FieldLabel required>Quantity</FieldLabel>
               <input
@@ -231,7 +233,7 @@ export default function NewEquipmentPage() {
           </div>
 
           {/* Type + Serial Number */}
-          <div className="grid grid-cols-2 gap-4">
+          <div data-tour="page-equipment-new-type" className="grid grid-cols-2 gap-4">
             <TextInput
               label="Type"
               value={form.asset_type}
@@ -263,7 +265,7 @@ export default function NewEquipmentPage() {
           />
 
           {/* Valuation */}
-          <div className="grid grid-cols-2 gap-4">
+          <div data-tour="page-equipment-new-value" className="grid grid-cols-2 gap-4">
             <TextInput
               label="Purchase Cost (₱)"
               value={form.purchase_cost}
@@ -315,7 +317,7 @@ export default function NewEquipmentPage() {
           </div>
 
           {/* Status */}
-          <div>
+          <div data-tour="page-equipment-new-status">
             <FieldLabel required>Status</FieldLabel>
             <div className="flex gap-3">
               <StatusOption
@@ -365,7 +367,7 @@ export default function NewEquipmentPage() {
         </div>
 
         {/* Footer actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
+        <div data-tour="page-equipment-new-save" className="flex items-center justify-between px-6 py-4 border-t border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
           <button
             onClick={() => router.push("/equipment")}
             className="px-5 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[13px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-white transition"

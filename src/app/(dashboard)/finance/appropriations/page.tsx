@@ -105,6 +105,7 @@ export default function AppropriationsPage() {
           <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">Budget items allocated across PS, MOOE, and Capital Outlay</p>
         </div>
         <button
+          data-tour="page-appropriations-add"
           onClick={() => setShowForm((v) => !v)}
           className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
         >
@@ -173,7 +174,7 @@ export default function AppropriationsPage() {
       )}
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="relative min-w-50 flex-1">
+        <div data-tour="page-appropriations-search" className="relative min-w-50 flex-1">
           <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
           <input
             value={search}
@@ -182,7 +183,7 @@ export default function AppropriationsPage() {
             className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
           />
         </div>
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]">
+        <select data-tour="page-appropriations-filters" value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]">
           <option value="">All Categories</option>
           {(["PS", "MOOE", "CO"] as const).map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
@@ -192,7 +193,7 @@ export default function AppropriationsPage() {
         </select>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+      <div data-tour="page-appropriations-table" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />

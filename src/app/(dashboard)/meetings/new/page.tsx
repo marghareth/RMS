@@ -1,6 +1,5 @@
 // FILE: src/app/(dashboard)/meetings/new/page.tsx
 "use client";
-// FILE: src/app/(dashboard)/meetings/new/page.tsx
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -76,7 +75,7 @@ export default function NewMeetingPage() {
           <label className="mb-2 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
             Meeting Type
           </label>
-          <div className="grid grid-cols-2 gap-3">
+          <div data-tour="page-meetings-new-type" className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setMeetingType("SB_MEETING")}
@@ -117,7 +116,7 @@ export default function NewMeetingPage() {
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div data-tour="page-meetings-new-when" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
                 Meeting Date
@@ -154,7 +153,7 @@ export default function NewMeetingPage() {
             />
           </div>
 
-          <div>
+          <div data-tour="page-meetings-new-minutes">
             <div className="mb-1.5 flex items-center gap-1.5">
               <FileText size={12} className="text-[#6B7280] dark:text-[#A3A3A3]" />
               <label className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
@@ -183,6 +182,7 @@ export default function NewMeetingPage() {
               Cancel
             </button>
             <button
+              data-tour="page-meetings-new-save"
               onClick={handleSubmit}
               disabled={submitting}
               className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"

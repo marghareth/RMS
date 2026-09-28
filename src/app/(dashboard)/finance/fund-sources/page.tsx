@@ -73,13 +73,14 @@ export default function FundSourcesPage() {
   return (
     <div>
       <div className="mb-5 flex items-start justify-between">
-        <div>
+        <div data-tour="page-fund-sources-summary">
           <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Fund Sources</h1>
           <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
             {items.length} source(s) · Combined balance {fmtCurrency(totalBalance)}
           </p>
         </div>
         <button
+          data-tour="page-fund-sources-add"
           onClick={() => setShowForm((v) => !v)}
           className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
         >
@@ -142,7 +143,7 @@ export default function FundSourcesPage() {
         </div>
       )}
 
-      <div className="mb-4 flex gap-1">
+      <div data-tour="page-fund-sources-tabs" className="mb-4 flex gap-1">
         {(["", "ACTIVE", "INACTIVE"] as const).map((s) => (
           <button
             key={s || "ALL"}
@@ -165,7 +166,7 @@ export default function FundSourcesPage() {
           <EmptyState icon={Landmark} title="No fund sources found" description="Add a fund source to start tracking its balance." />
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+        <div data-tour="page-fund-sources-list" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
           {/* Table header */}
           <div className="grid grid-cols-[2fr_1fr_1fr_0.4fr] gap-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] px-5 py-2.5">
             {["Fund Source", "Status", "Current Balance", ""].map((h) => (

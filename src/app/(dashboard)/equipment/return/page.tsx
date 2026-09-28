@@ -226,7 +226,7 @@ function ReturnEquipmentContent({ borrowingId }: { borrowingId: string }) {
       <div className="space-y-4">
 
         {/* ── Borrow summary card ── */}
-        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+        <div data-tour="page-equipment-return-summary" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
@@ -278,7 +278,7 @@ function ReturnEquipmentContent({ borrowingId }: { borrowingId: string }) {
         </div>
 
         {/* ── Return condition card ── */}
-        <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+        <div data-tour="page-equipment-return-condition" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
           <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
             <div className="w-8 h-8 rounded-lg bg-green-500 dark:bg-green-500 flex items-center justify-center">
               <RotateCcw size={14} className="text-white" />
@@ -338,7 +338,7 @@ function ReturnEquipmentContent({ borrowingId }: { borrowingId: string }) {
               <label className="text-[10px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] uppercase tracking-wide block mb-1.5">
                 Notes (optional)
               </label>
-              <textarea
+              <textarea data-tour="page-equipment-return-remarks"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
                 placeholder="Any additional remarks about the return..."
@@ -357,7 +357,7 @@ function ReturnEquipmentContent({ borrowingId }: { borrowingId: string }) {
         )}
 
         {/* ── Actions ── */}
-        <div className="flex gap-3 pb-6">
+        <div data-tour="page-equipment-return-confirm" className="flex gap-3 pb-6">
           <button
             onClick={() => router.push("/equipment")}
             className="flex-1 py-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[13px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
