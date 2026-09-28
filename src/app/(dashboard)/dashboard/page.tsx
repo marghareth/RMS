@@ -61,7 +61,7 @@ interface DashboardData {
   settledCases: number;
   totalAssets: number;
   documentsByStatus: { status: string; count: number }[];
-  residentsBySex: { sex: string; count: number }[];
+  residentsBySex: { sex: string; count?: number; _count?: number | { _all?: number } }[];
   residentsByClassification: { classification: string; count: number }[];
   trends: {
     residents: number | null;
@@ -269,8 +269,25 @@ function ClassificationTooltip({ active, payload }: any) {
 
 function PopulationOverviewPanel({ data }: { data: DashboardData }) {
   const classification = data.residentsByClassification.filter((c) => c.count > 0);
-  const male = data.residentsBySex.find((s) => s.sex === "MALE")?.count ?? 0;
-  const female = data.residentsBySex.find((s) => s.sex === "FEMALE")?.count ?? 0;
+  // Accepts both the normalised `{ sex, count }` rows and Prisma's raw
+  // `{ sex, _count }` (number or `{ _all }`), so the card keeps working even
+  // if the API and page are deployed out of step.
+  const rowCount = (r: DashboardData["residentsBySex"][number]): number => {
+    if (typeof r.count === "number") return r.count;
+    if (typeof r._count === "number") return r._count;
+    return Number(r._count?._all) || 0;
+  };
+  const sexCount = (label: "MALE" | "FEMALE") =>
+    data.residentsBySex.filter((s) => s.sex?.trim().toUpperCase() === label).reduce((sum, s) => sum + rowCount(s), 0);
+  const male = sexCount("MALE");
+  const female = sexCount("FEMALE");
+  const total = data.totalResidents;
+  const unspecified = Math.max(total - male - female, 0);
+  const share = (n: number) => (total > 0 ? (n / total) * 100 : 0);
+  const sexRows = [
+    { key: "male", label: "Male", count: male, Icon: Mars, chip: "bg-[#E8EEF4] dark:bg-[#1B2A38]", icon: "text-[#3E5C76] dark:text-[#8FB0CC]", bar: "bg-[#3E5C76] dark:bg-[#8FB0CC]" },
+    { key: "female", label: "Female", count: female, Icon: Venus, chip: "bg-[#EEE9FF] dark:bg-[#251C4A]", icon: "text-[#6D4AFF] dark:text-[#A78BFA]", bar: "bg-[#6D4AFF] dark:bg-[#A78BFA]" },
+  ];
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr]">
@@ -317,20 +334,44 @@ function PopulationOverviewPanel({ data }: { data: DashboardData }) {
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EBF3FF] dark:bg-[#0B1D33]">
             <Users size={20} className="text-[#3B82F6] dark:text-[#60A5FA]" />
           </span>
-          <p className="text-[32px] font-bold leading-none tabular-nums text-[#1B2430] dark:text-white">
-            {data.totalResidents.toLocaleString()}
-          </p>
+          <div>
+            <p className="text-[32px] font-bold leading-none tabular-nums text-[#1B2430] dark:text-white">{total.toLocaleString()}</p>
+            <p className="mt-1 text-[11px] font-medium text-[#9CA3AF] dark:text-[#A3A3A3]">{total === 1 ? "resident" : "residents"}</p>
+          </div>
         </div>
 
-        <div className="mt-5 flex items-center gap-6">
-          <div className="flex items-center gap-2" title="Male">
-            <Mars size={18} className="shrink-0 text-[#3E5C76] dark:text-[#8FB0CC]" />
-            <span className="text-[15px] font-bold tabular-nums text-[#1B2430] dark:text-white">{male.toLocaleString()}</span>
-          </div>
-          <div className="flex items-center gap-2" title="Female">
-            <Venus size={18} className="shrink-0 text-[#6D4AFF] dark:text-[#A78BFA]" />
-            <span className="text-[15px] font-bold tabular-nums text-[#1B2430] dark:text-white">{female.toLocaleString()}</span>
-          </div>
+        {/* Proportional split — one glance shows the male/female balance. */}
+        <div
+          className="mt-5 flex h-2 w-full overflow-hidden rounded-full bg-[#F1F2F4] dark:bg-[#262626]"
+          role="img"
+          aria-label={`${male} male, ${female} female${unspecified ? `, ${unspecified} not specified` : ""}`}
+        >
+          {sexRows.map((r) => (
+            <div key={r.key} className={`${r.bar} h-full transition-[width] duration-500`} style={{ width: `${share(r.count)}%` }} />
+          ))}
+        </div>
+
+        <div className="mt-4 space-y-2.5">
+          {sexRows.map((r) => (
+            <div key={r.key} className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${r.chip}`}>
+                  <r.Icon size={15} className={r.icon} />
+                </span>
+                <span className="text-[12px] text-[#374151] dark:text-[#D4D4D4]">{r.label}</span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-[15px] font-bold tabular-nums text-[#1B2430] dark:text-white">{r.count.toLocaleString()}</span>
+                <span className="w-9 text-right text-[11px] tabular-nums text-[#9CA3AF] dark:text-[#A3A3A3]">{Math.round(share(r.count))}%</span>
+              </div>
+            </div>
+          ))}
+          {unspecified > 0 && (
+            <div className="flex items-center justify-between gap-3 border-t border-dashed border-[#E9EAEC] pt-2.5 dark:border-[#333333]">
+              <span className="text-[11.5px] text-[#9CA3AF] dark:text-[#A3A3A3]">Not specified</span>
+              <span className="text-[12px] font-semibold tabular-nums text-[#6B7280] dark:text-[#A3A3A3]">{unspecified.toLocaleString()}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

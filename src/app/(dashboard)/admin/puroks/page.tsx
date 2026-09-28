@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { MapPin, Plus, Pencil, Trash2, Check, X, Users, Home } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
@@ -162,6 +163,7 @@ export default function PuroksAdminPage() {
       <PageHeader
         title="Puroks"
         subtitle="Manage the puroks / zones used across residents, households, and filters."
+        tutorial={ADMIN_TUTORIALS.puroks}
       />
 
       {/* Add new purok */}

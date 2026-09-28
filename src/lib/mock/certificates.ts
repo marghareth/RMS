@@ -91,6 +91,11 @@ export interface CertificateMock {
   flagged_manual: boolean;
   manual_name: string | null;
   manual_address: string | null;
+  // Per-document correction of the printed name/address — see the schema
+  // comment on Certificate.override_full_name. Optional on the type so
+  // older mock data / callers that predate it still compile.
+  override_full_name?: string | null;
+  override_address?: string | null;
 }
 
 // Stands in for the active Barangay Captain, auto-pulled via BrgyOfficial

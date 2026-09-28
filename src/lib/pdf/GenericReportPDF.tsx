@@ -33,15 +33,16 @@ export default function GenericReportPDF({
   periodLabel,
   stats,
   tables,
-  barangayName = "Barangay Quisol",
-  city = "Danao City",
-  province = "Cebu",
+  barangayName = "",
+  city = "",
+  province = "",
 }: GenericReportPDFProps) {
   const generatedOn = new Date().toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
   });
+  const location = [city, province].filter(Boolean).join(", ");
 
   return (
     <Document>
@@ -49,8 +50,8 @@ export default function GenericReportPDF({
         {/* Header */}
         <View style={s.header}>
           <View style={s.headerLeft}>
-            <Text style={s.barangayName}>{barangayName}</Text>
-            <Text style={s.headerSub}>{city}, {province}</Text>
+            <Text style={s.barangayName}>{barangayName || "Barangay"}</Text>
+            {location ? <Text style={s.headerSub}>{location}</Text> : null}
           </View>
           <View>
             <Text style={s.reportTitle}>{reportTitle}</Text>

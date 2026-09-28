@@ -1,14 +1,12 @@
 // FILE: src/app/(dashboard)/certificates/new/page.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, FileText, User, AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPicker";
-import InfoDialog from "@/components/shared/InfoDialog";
 import {
-  MOCK_CERTIFICATES,
-  MOCK_ACTIVE_CAPTAIN,
+  CertificateMock,
   CERTIFICATE_TYPES,
   CertificateType,
   isEligibleByResidency,
@@ -16,9 +14,13 @@ import {
   formatISODate,
   certDisplayDate,
 } from "@/lib/mock/certificates";
+import { useBarangayInfo } from "@/lib/hooks/useBarangayInfo";
 
 export default function NewCertificatePage() {
   const router = useRouter();
+
+  // Real signatory (active Punong Barangay, or the General Settings override).
+  const { captain } = useBarangayInfo();
 
   const [walkIn, setWalkIn] = useState(false);
   const [resident, setResident] = useState<PickedResident | null>(null);
@@ -30,19 +32,13 @@ export default function NewCertificatePage() {
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  // Shown in place of the old `alert(...)` after a mock submit; the real
-  // navigation to Certificates only fires once the user dismisses it, so
-  // the flow still reads as "confirm, then leave" rather than jumping
-  // away out from under an unread message.
-  const [mockResultOpen, setMockResultOpen] = useState(false);
-  const [mockResultMessage, setMockResultMessage] = useState("");
 
-  // ── MOCK ELIGIBILITY CHECKS ────────────────────────────────────────────
-  // Mirrors what POST /api/certificates validates server-side: a 6-month
-  // residency requirement and a 30-day duplicate-issuance guard. Resident
-  // picked here comes from the shared ResidentPicker (real /api/residents
-  // search), so we approximate `created_at` since that field isn't exposed
-  // on the picker's lightweight result shape.
+  // ── ELIGIBILITY HINTS ──────────────────────────────────────────────────
+  // POST /api/certificates is the authority for both rules (6-month
+  // residency, 30-day duplicate guard); these just surface them early.
+  // ResidentPicker's lightweight result doesn't expose `created_at`, so the
+  // residency hint can't be computed here and always passes — the server
+  // performs the real check against Resident.created_at.
   const residencyEligible = useMemo(() => {
     if (walkIn || !resident) return null;
     // ResidentPicker doesn't expose created_at, so this mock always passes —
@@ -50,10 +46,34 @@ export default function NewCertificatePage() {
     return true;
   }, [walkIn, resident]);
 
-  const duplicateWarning = useMemo(() => {
-    if (walkIn || !resident || !certType) return null;
-    return findRecentDuplicate(MOCK_CERTIFICATES, resident.id, certType);
-  }, [walkIn, resident, certType]);
+  // 30-day duplicate warning, checked against the resident's REAL certificates
+  // (this used to search a hardcoded MOCK_CERTIFICATES list, so it could never
+  // warn about anything actually on file). Results are keyed by resident+type
+  // and only trusted while that key still matches the current selection, so
+  // switching residents can't surface a stale warning. POST /api/certificates
+  // re-checks server-side regardless.
+  const [dupResult, setDupResult] = useState<{ key: string; cert: CertificateMock | null } | null>(null);
+  const dupKey = !walkIn && resident && certType ? `${resident.id}:${certType}` : null;
+
+  useEffect(() => {
+    if (!dupKey || !resident || !certType) return;
+    let ignore = false;
+    fetch(`/api/certificates?resident_id=${resident.id}&certificate_type=${certType}&limit=20`)
+      .then((r) => (r.ok ? r.json() : { certificates: [] }))
+      .then((json) => {
+        if (ignore) return;
+        setDupResult({ key: dupKey, cert: findRecentDuplicate(json.certificates ?? [], resident.id, certType) });
+      })
+      .catch(() => {
+        if (!ignore) setDupResult({ key: dupKey, cert: null });
+      });
+    return () => {
+      ignore = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dupKey]);
+
+  const duplicateWarning = dupKey && dupResult?.key === dupKey ? dupResult.cert : null;
 
   async function handleSubmit() {
     setError("");
@@ -85,42 +105,32 @@ export default function NewCertificatePage() {
 
     setSubmitting(true);
 
-    // ── MOCK SUBMIT ─────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 500));
-    setSubmitting(false);
-    setMockResultMessage(
-      `[MOCK] Certificate request filed for ${walkIn ? manualName : `${resident?.lname}, ${resident?.fname}`}.\nA real save will redirect to the new request's detail page in the Document Queue.`
-    );
-    setMockResultOpen(true);
-    return;
-
-    // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-     try {
-       const res = await fetch("/api/certificates", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({
-           resident_id: walkIn ? null : resident?.id,
-           certificate_type: certType,
-           purpose,
-           flagged_manual: walkIn,
-           manual_name: walkIn ? manualName : undefined,
-           manual_address: walkIn ? manualAddress : undefined,
-         }),
-       });
-       const data = await res.json();
-       if (!res.ok) {
-         // Server returns RESIDENCY_CHECK_FAILED or DUPLICATE_CERT with a message
-         setError(data.message || "Something went wrong while issuing the certificate.");
-         return;
-       }
-       router.push(`/certificates/${data.id}/preview`);
-     } catch (e) {
-       console.error(e);
-       setError("Something went wrong. Please try again.");
-     } finally {
-       setSubmitting(false);
-     }
+    try {
+      const res = await fetch("/api/certificates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resident_id: walkIn ? null : resident?.id,
+          certificate_type: certType,
+          purpose,
+          flagged_manual: walkIn,
+          manual_name: walkIn ? manualName : undefined,
+          manual_address: walkIn ? manualAddress : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        // Server returns RESIDENCY_CHECK_FAILED or DUPLICATE_CERT with a message
+        setError(data.message || "Something went wrong while filing the certificate request.");
+        return;
+      }
+      router.push(`/certificates/${data.id}/preview`);
+    } catch (e) {
+      console.error(e);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -266,9 +276,18 @@ export default function NewCertificatePage() {
             <div className="flex items-start gap-2 rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15 px-3 py-2.5">
               <Info size={14} className="mt-0.5 shrink-0 text-[#1D4ED8] dark:text-[#93C5FD]" />
               <p className="text-[11px] leading-relaxed text-[#1D4ED8] dark:text-[#93C5FD]">
-                This certificate will be signed by{" "}
-                <span className="font-semibold">{MOCK_ACTIVE_CAPTAIN.name}</span>, the active{" "}
-                {MOCK_ACTIVE_CAPTAIN.position} ({MOCK_ACTIVE_CAPTAIN.term}), auto-attached as signatory.
+                {captain.name ? (
+                  <>
+                    This certificate will be signed by <span className="font-semibold">{captain.name}</span>, the active{" "}
+                    {captain.position}
+                    {captain.term ? ` (${captain.term})` : ""}, auto-attached as signatory.
+                  </>
+                ) : (
+                  <>
+                    No active Punong Barangay is on file, so the signatory line will print blank. Add one under
+                    Officials, or set a signatory in Admin → Settings.
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -292,18 +311,6 @@ export default function NewCertificatePage() {
           </button>
         </div>
       </div>
-
-      <InfoDialog
-        open={mockResultOpen}
-        variant="success"
-        title="Request Filed"
-        message={mockResultMessage}
-        actionLabel="Got It"
-        onClose={() => {
-          setMockResultOpen(false);
-          router.push("/certificates");
-        }}
-      />
     </div>
   );
 }

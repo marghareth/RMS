@@ -1,0 +1,102 @@
+// FILE: src/app/api/pdf/barangay-id/[id]/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { createElement, type ReactElement } from "react";
+import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
+import { prisma } from "@/lib/db";
+import { requirePermission } from "@/lib/session";
+import { getBarangayContext } from "@/lib/barangay-info";
+import BarangayIdPDF from "@/lib/pdf/BarangayIdPDF";
+import { withErrorHandling } from "@/lib/api-handler";
+
+// @react-pdf/renderer renders with a real Node canvas/font pipeline, which
+// isn't available on the Edge runtime — this route must run on Node.
+export const runtime = "nodejs";
+
+function calcAge(birthdate: Date): number {
+  const today = new Date();
+  let age = today.getFullYear() - birthdate.getFullYear();
+  const m = today.getMonth() - birthdate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthdate.getDate())) age--;
+  return age;
+}
+
+function formatShortDate(d: Date): string {
+  return d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
+}
+
+// Barangay IDs are valid for 3 years from issuance — the schema has no
+// dedicated expiry column, so it's derived here the same way the on-screen
+// card preview derives it (see lib/mock/barangayId.ts's expiryDate()).
+function expiryDate(issuedDate: Date): Date {
+  const d = new Date(issuedDate);
+  d.setFullYear(d.getFullYear() + 3);
+  return d;
+}
+
+export const GET = withErrorHandling(async (req: NextRequest, context) => {
+  const auth = await requirePermission("barangay_id:read", req);
+  if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+  const { id: idParam } = await context!.params;
+  const id = parseInt(idParam);
+  if (Number.isNaN(id)) {
+    return NextResponse.json({ error: "Invalid barangay ID id" }, { status: 400 });
+  }
+
+  const barangayId = await prisma.barangayId.findUnique({
+    where: { id },
+    include: { resident: { include: { household: true } } },
+  });
+  if (!barangayId) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const { resident } = barangayId;
+  const ext = resident.name_extension ? ` ${resident.name_extension}` : "";
+  const mi = resident.mname ? ` ${resident.mname[0]}.` : "";
+  const fullName = `${resident.lname}, ${resident.fname}${ext}${mi}`.toUpperCase();
+
+  // TS FIX (TS2345): `renderToBuffer` expects `ReactElement<DocumentProps>`.
+  // `BarangayIdPDF` genuinely renders a `<Document>` at its root (see
+  // BarangayIdPDF.tsx) — this element is valid at runtime — but its own
+  // declared props (`BarangayIdPDFProps`: idNumber, fullName, address, ...)
+  // share zero field names with `DocumentProps` (title?, author?, subject?,
+  // etc. — all optional). TypeScript's "weak type detection" flags an
+  // assignment to an all-optional target type when the source type has no
+  // overlapping properties at all, on the assumption it's likely a mistake.
+  // It isn't one here — react-pdf's own props type just isn't structurally
+  // related to the props of the component that happens to render it. (The
+  // sibling routes using CertificatePDF/GenericReportPDF don't hit this only
+  // because those props objects happen to also declare a `title: string`
+  // field, which is enough to satisfy the overlap check by coincidence, not
+  // because they're actually solving a different problem.) The cast below
+  // is safe: it doesn't change what's rendered, only what TS is asked to
+  // check at this call site.
+  const { barangay, captain } = await getBarangayContext();
+
+  const buffer = await renderToBuffer(
+    createElement(BarangayIdPDF, {
+      idNumber: barangayId.id_number,
+      fullName,
+      address: resident.household?.address ?? "—",
+      birthdateFormatted: formatShortDate(resident.birthdate),
+      age: calcAge(resident.birthdate),
+      sexShort: resident.sex === "MALE" ? "M" : "F",
+      civilStatus: resident.civil_status,
+      issuedDateFormatted: formatShortDate(barangayId.issued_date),
+      validUntilFormatted: formatShortDate(expiryDate(barangayId.issued_date)),
+      barangayName: barangay.name,
+      city: barangay.city,
+      province: barangay.province,
+      captainName: captain.name,
+      captainPosition: captain.position,
+    }) as ReactElement<DocumentProps>
+  );
+
+  return new NextResponse(new Uint8Array(buffer), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `inline; filename="barangay-id-${barangayId.id}.pdf"`,
+      "Content-Length": String(buffer.length),
+    },
+  });
+});

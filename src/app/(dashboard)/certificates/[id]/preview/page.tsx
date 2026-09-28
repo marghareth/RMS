@@ -3,7 +3,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Printer, Download, FileText, FileEdit } from "lucide-react";
+import { ArrowLeft, Printer, Download, FileText, FileEdit, Pencil } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import {
   MOCK_ACTIVE_CAPTAIN,
@@ -23,6 +23,15 @@ export default function CertificatePreviewPage() {
   const [certLoading, setCertLoading] = useState(true);
   const [template, setTemplate] = useState<CertificateTemplateMock | null>(null);
   const [templateLoading, setTemplateLoading] = useState(true);
+
+  // Per-document correction of the printed name/address (see the schema
+  // comment on Certificate.override_full_name). Fixes a typo on THIS
+  // certificate only — it never touches the resident's record.
+  const [editingOverride, setEditingOverride] = useState(false);
+  const [overrideNameDraft, setOverrideNameDraft] = useState("");
+  const [overrideAddressDraft, setOverrideAddressDraft] = useState("");
+  const [savingOverride, setSavingOverride] = useState(false);
+  const [overrideError, setOverrideError] = useState("");
 
   // Reset to a "loading" state the instant certId changes, before either
   // fetch effect below even runs — done during render rather than inside
@@ -105,10 +114,16 @@ export default function CertificatePreviewPage() {
         date_issued: "",
       };
     }
-    const name = certificate.resident
-      ? residentFullName(certificate.resident).toUpperCase()
-      : (certificate.manual_name ?? "").toUpperCase();
-    const address = certificate.resident?.household?.address ?? certificate.manual_address ?? "this barangay";
+    const name =
+      certificate.override_full_name ||
+      (certificate.resident
+        ? residentFullName(certificate.resident).toUpperCase()
+        : (certificate.manual_name ?? "").toUpperCase());
+    const address =
+      certificate.override_address ||
+      certificate.resident?.household?.address ||
+      certificate.manual_address ||
+      "this barangay";
     return {
       full_name: name,
       address,
@@ -162,9 +177,55 @@ export default function CertificatePreviewPage() {
     );
   }
 
-  const applicantName = certificate.resident
-    ? residentFullName(certificate.resident)
-    : certificate.manual_name ?? "—";
+  const applicantName =
+    certificate.override_full_name ||
+    (certificate.resident ? residentFullName(certificate.resident) : certificate.manual_name ?? "—");
+  const hasOverride = !!(certificate.override_full_name || certificate.override_address);
+
+  // What the fields would print without a correction — shown as the input
+  // placeholders so staff can see what they're overriding.
+  const originalName = certificate.resident
+    ? residentFullName(certificate.resident).toUpperCase()
+    : (certificate.manual_name ?? "").toUpperCase();
+  const originalAddress =
+    certificate.resident?.household?.address || certificate.manual_address || "this barangay";
+
+  function openOverridePanel() {
+    setOverrideNameDraft(certificate?.override_full_name ?? "");
+    setOverrideAddressDraft(certificate?.override_address ?? "");
+    setOverrideError("");
+    setEditingOverride(true);
+  }
+
+  async function handleSaveOverride() {
+    setSavingOverride(true);
+    setOverrideError("");
+    try {
+      const res = await fetch(`/api/certificates/${certId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        // Empty string clears the correction back to the resident's real data.
+        body: JSON.stringify({
+          override_full_name: overrideNameDraft,
+          override_address: overrideAddressDraft,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setOverrideError(data.message || "Failed to save the correction.");
+        return;
+      }
+      // PATCH returns the bare certificate row (no relations), so merge it
+      // into what we already have instead of replacing it.
+      setCertificate((prev) => (prev ? { ...prev, ...data } : prev));
+      setEditingOverride(false);
+    } catch (e) {
+      console.error(e);
+      setOverrideError("Something went wrong. Please try again.");
+    } finally {
+      setSavingOverride(false);
+    }
+  }
 
   return (
     <div>
@@ -178,6 +239,13 @@ export default function CertificatePreviewPage() {
           Back to Certificate
         </button>
         <div className="flex items-center gap-2">
+          <button
+            onClick={openOverridePanel}
+            className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-2.5 text-[13px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
+          >
+            <Pencil size={14} />
+            Correct Name / Address
+          </button>
           <button
             onClick={() => router.push("/certificates/templates")}
             className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-2.5 text-[13px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
@@ -201,6 +269,79 @@ export default function CertificatePreviewPage() {
           </button>
         </div>
       </div>
+
+      {editingOverride && (
+        <div className="mb-5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5 print:hidden">
+          <div className="mb-1 flex items-center gap-2">
+            <Pencil size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
+            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
+              Correct This Document
+            </p>
+          </div>
+          <p className="mb-4 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
+            Type the correct spelling below. This only changes what prints on this one certificate — the
+            resident&apos;s record and every other certificate stay as they are. Leave a field blank to use the
+            original.
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                Full Name (as printed)
+              </label>
+              <input
+                value={overrideNameDraft}
+                onChange={(e) => setOverrideNameDraft(e.target.value)}
+                placeholder={originalName}
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-transparent px-3 py-2.5 text-[13px] uppercase text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                Address (as printed)
+              </label>
+              <input
+                value={overrideAddressDraft}
+                onChange={(e) => setOverrideAddressDraft(e.target.value)}
+                placeholder={originalAddress}
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-transparent px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+              />
+            </div>
+          </div>
+          {overrideError && (
+            <p className="mt-3 text-[12px] font-semibold text-[#DC2626] dark:text-[#F87171]">{overrideError}</p>
+          )}
+          <div className="mt-4 flex items-center justify-end gap-3">
+            <button
+              onClick={() => setEditingOverride(false)}
+              disabled={savingOverride}
+              className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveOverride}
+              disabled={savingOverride}
+              className="rounded-lg bg-[#3B82F6] px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+            >
+              {savingOverride ? "Saving..." : "Save Correction"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!editingOverride && hasOverride && (
+        <div className="mb-5 flex items-center justify-between rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-2.5 print:hidden">
+          <p className="text-[12px] font-semibold text-amber-800 dark:text-amber-300">
+            This certificate prints a corrected name/address that differs from the resident&apos;s record.
+          </p>
+          <button
+            onClick={openOverridePanel}
+            className="text-[12px] font-bold text-amber-800 dark:text-amber-300 underline"
+          >
+            Edit
+          </button>
+        </div>
+      )}
 
       {/* Printable document */}
       <div className="mx-auto max-w-3xl rounded-xl border border-[#E9EAEC] bg-white p-12 shadow-sm print:border-none print:p-0 print:shadow-none">

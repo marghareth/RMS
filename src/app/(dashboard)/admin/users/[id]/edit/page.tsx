@@ -5,7 +5,8 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, UserCog, Eye, EyeOff, Users } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
-import InfoDialog from "@/components/shared/InfoDialog";
+import PageTutorial from "@/components/shared/PageTutorial";
+import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
 import { UserMock, ROLES, Role } from "@/lib/mock/admin";
 
 export default function EditUserPage() {
@@ -47,9 +48,6 @@ export default function EditUserPage() {
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  // Replaces the old `alert(...)` — navigation is deferred to the dialog's
-  // dismissal so the admin actually sees the confirmation before leaving.
-  const [mockResultOpen, setMockResultOpen] = useState(false);
 
   if (loading) {
     return (
@@ -93,8 +91,8 @@ export default function EditUserPage() {
     // ── MOCK SUBMIT ─────────────────────────────────────────────────────
     await new Promise((r) => setTimeout(r, 500));
     setSubmitting(false);
-    setMockResultOpen(true);
-    return;
+    alert(`[MOCK] User "${original!.username}" updated.\nA real save will redirect back to the user list.`);
+    router.push("/admin/users");
 
     // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
      try {
@@ -127,9 +125,12 @@ export default function EditUserPage() {
         Back to Users
       </button>
 
-      <div className="mb-5">
-        <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Edit User</h1>
-        <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">{original.username}</p>
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Edit User</h1>
+          <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">{original.username}</p>
+        </div>
+        <PageTutorial tutorial={ADMIN_TUTORIALS.usersEdit} />
       </div>
 
       <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
@@ -215,18 +216,6 @@ export default function EditUserPage() {
           </div>
         </div>
       </div>
-
-      <InfoDialog
-        open={mockResultOpen}
-        variant="success"
-        title="User Updated"
-        message={`[MOCK] User "${original!.username}" updated.\nA real save will redirect back to the user list.`}
-        actionLabel="Got It"
-        onClose={() => {
-          setMockResultOpen(false);
-          router.push("/admin/users");
-        }}
-      />
     </div>
   );
 }

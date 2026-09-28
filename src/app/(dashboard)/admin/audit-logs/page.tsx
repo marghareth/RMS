@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { History, Search, SlidersHorizontal, X } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
 import EmptyState from "@/components/shared/EmptyState";
 import {
   AuditLogMock,
@@ -81,7 +82,11 @@ export default function AuditLogsPage() {
 
   return (
     <div>
-      <PageHeader title="Audit Logs" subtitle="Every action taken across the system" />
+      <PageHeader
+        title="Audit Logs"
+        subtitle="Every action taken across the system"
+        tutorial={ADMIN_TUTORIALS.auditLogs}
+      />
 
       {/* Search + filters */}
       <div className="relative mb-4 flex items-center gap-2">

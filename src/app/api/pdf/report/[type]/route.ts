@@ -9,6 +9,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import GenericReportPDF, { StatItem, TableSection } from "@/lib/pdf/GenericReportPDF";
+import { getBarangayInfo } from "@/lib/barangay-info";
 import { withErrorHandling } from "@/lib/api-handler";
 
 // @react-pdf/renderer renders with a real Node canvas/font pipeline, which
@@ -248,12 +249,22 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
     }
   }
 
+  const barangay = await getBarangayInfo();
+
   const buffer = await renderToBuffer(
     // @react-pdf/renderer types renderToBuffer as expecting ReactElement<DocumentProps>.
     // Since GenericReportPDFProps shares no keys with that (all-optional) interface,
     // TS's weak-type check flags this even though the component genuinely renders a
     // <Document> — a known typing false-positive with this library, not a real error.
-    createElement(GenericReportPDF, { reportTitle, periodLabel, stats, tables }) as Parameters<typeof renderToBuffer>[0]
+    createElement(GenericReportPDF, {
+      reportTitle,
+      periodLabel,
+      stats,
+      tables,
+      barangayName: barangay.name,
+      city: barangay.city,
+      province: barangay.province,
+    }) as Parameters<typeof renderToBuffer>[0]
   );
 
   return new NextResponse(new Uint8Array(buffer), {

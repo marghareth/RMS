@@ -232,7 +232,21 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
     certsThisMonth,
     certsThisYear,
     residentsByPurok,
-    residentsBySex,
+    // Prisma's groupBy returns `{ sex, _count }`; the dashboard card reads
+    // `{ sex, count }` (same shape as documentsByStatus below). Passing the
+    // raw rows through made Male/Female always render 0 despite a correct
+    // total. Sex is also free-text in the schema, so normalise to upper case
+    // and merge, so "Male"/"MALE" rows can't be missed or split.
+    residentsBySex: Object.entries(
+      (residentsBySex as { sex: string; _count: number | { _all?: number } }[]).reduce<Record<string, number>>((acc, r) => {
+        const key = (r.sex ?? "").trim().toUpperCase();
+        // groupBy's `_count: true` is a number on most Prisma versions but can
+        // come back as `{ _all }` — accept both so this never yields NaN.
+        const n = typeof r._count === "number" ? r._count : (r._count?._all ?? 0);
+        acc[key] = (acc[key] ?? 0) + n;
+        return acc;
+      }, {})
+    ).map(([sex, count]) => ({ sex, count })),
     residentsByClassification,
     recentActivity,
     recentBlotterCases,

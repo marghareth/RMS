@@ -210,6 +210,19 @@ export const certificatePaymentSchema = z.object({
   payment_status: paymentStatusEnum,
 });
 
+// Combined shape for PATCH /api/certificates/[id] — payment_status and the
+// per-document overrides (see the schema comment on
+// Certificate.override_full_name for why those are separate from editing
+// the resident record) are unrelated concerns updated from different
+// parts of the UI, but share one endpoint, so every field here is optional
+// and the route only touches whichever keys were sent. An empty string
+// clears an override back to "use the resident's real data".
+export const certificateUpdateSchema = z.object({
+  payment_status: paymentStatusEnum.optional(),
+  override_full_name: z.string().trim().max(200).optional().nullable(),
+  override_address: z.string().trim().max(300).optional().nullable(),
+});
+
 export const certificateTemplateUpdateSchema = z.object({
   title: nonEmptyString,
   body: nonEmptyString,
