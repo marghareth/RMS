@@ -1,4 +1,5 @@
 // FILE: src/app/api/meetings/route.ts
+import type { Prisma, MeetingType, MeetingStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -23,10 +24,10 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   });
   const skip = (page - 1) * limit;
 
-  const where: any = {
+  const where: Prisma.MeetingRecordWhereInput = {
     AND: [
-      meeting_type ? { meeting_type } : {},
-      status ? { status } : {},
+      meeting_type ? { meeting_type: meeting_type as MeetingType } : {},
+      status ? { status: status as MeetingStatus } : {},
       location ? { location: { contains: location, mode: "insensitive" } } : {},
       title ? { title: { contains: title, mode: "insensitive" } } : {},
       date_from ? { meeting_date: { gte: new Date(date_from) } } : {},

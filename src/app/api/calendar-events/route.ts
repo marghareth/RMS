@@ -1,4 +1,5 @@
 // FILE: src/app/api/calendar-events/route.ts
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -17,7 +18,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   // The month-grid view always requests a bounded range (the visible
   // weeks), but support an unbounded list too for anything that just
   // wants "everything" (e.g. a future upcoming-events widget).
-  const where: any = {
+  const where: Prisma.CalendarEventWhereInput = {
     AND: [
       date_from ? { event_date: { gte: new Date(date_from) } } : {},
       date_to ? { event_date: { lte: new Date(date_to) } } : {},

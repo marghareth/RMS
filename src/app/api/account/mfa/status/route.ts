@@ -1,15 +1,14 @@
 // FILE: src/app/api/account/mfa/status/route.ts
 //
 // GET — whether the current user has MFA enabled, and whether their role
-// is one where it's strongly recommended (ADMIN/CAPTAIN). Drives both
+// requires it (ADMIN/CAPTAIN — see src/lib/mfa-policy.ts). Drives both
 // the account security page and the dashboard nudge banner.
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/session";
 import { withErrorHandling } from "@/lib/api-handler";
-
-const ROLES_REQUIRING_MFA = new Set(["ADMIN", "CAPTAIN"]);
+import { roleRequiresMfa, isMfaEnforcementOn } from "@/lib/mfa-policy";
 
 export const GET = withErrorHandling(async () => {
   const auth = await requireAuth();
@@ -21,7 +20,10 @@ export const GET = withErrorHandling(async () => {
 
   return NextResponse.json({
     enabled: user.mfa_enabled,
-    recommended: ROLES_REQUIRING_MFA.has(user.role),
+    recommended: roleRequiresMfa(user.role),
+    // True when this account is blocked from the rest of the app until it
+    // enrolls (role requires MFA, not enrolled, enforcement not switched off).
+    enforced: roleRequiresMfa(user.role) && !user.mfa_enabled && isMfaEnforcementOn(),
     backupCodesRemaining: user.mfa_backup_codes.length,
   });
 });

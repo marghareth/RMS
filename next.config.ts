@@ -64,6 +64,15 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  // The Barangay ID pages used to live at /barangay_id (underscore) while
+  // the API used /barangay-id. Everything is hyphenated now; keep old
+  // bookmarks working.
+  async redirects() {
+    return [
+      { source: "/barangay_id", destination: "/barangay-id", permanent: true },
+      { source: "/barangay_id/:path*", destination: "/barangay-id/:path*", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

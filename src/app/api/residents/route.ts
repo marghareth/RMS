@@ -1,4 +1,5 @@
 // FILE: src/app/api/residents/route.ts
+import type { Prisma, CivilStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -23,7 +24,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   });
   const skip = (page - 1) * limit;
 
-  const where: any = {
+  const where: Prisma.ResidentWhereInput = {
     is_archived,
     AND: [
       search
@@ -37,7 +38,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
         : {},
       purok_id     ? { purok_id:     parseInt(purok_id) } : {},
       sex          ? { sex }                              : {},
-      civil_status ? { civil_status }                     : {},
+      civil_status ? { civil_status: civil_status as CivilStatus } : {},
       unassigned   ? { household_id: null }                : {},
     ],
   };

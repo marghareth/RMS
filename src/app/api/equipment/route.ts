@@ -1,4 +1,5 @@
 // FILE: src/app/api/equipment/route.ts
+import type { Prisma, EquipmentStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -15,9 +16,9 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   const asset_type = searchParams.get("asset_type");
   const search = searchParams.get("search") || "";
 
-  const where: any = {
+  const where: Prisma.EquipmentWhereInput = {
     AND: [
-      status ? { status } : {},
+      status ? { status: status as EquipmentStatus } : {},
       asset_type ? { asset_type } : {},
       search
         ? {

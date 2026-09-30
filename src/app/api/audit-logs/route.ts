@@ -1,4 +1,5 @@
 // FILE: src/app/api/audit-logs/route.ts
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -20,7 +21,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   });
   const skip = (page - 1) * limit;
 
-  const where: any = {
+  const where: Prisma.AuditLogWhereInput = {
     AND: [
       user_id ? { user_id: parseInt(user_id) } : {},
       table_affected ? { table_affected } : {},

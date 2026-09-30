@@ -1,4 +1,4 @@
-// FILE: src/app/(dashboard)/barangay_id/new/page.tsx
+// FILE: src/app/(dashboard)/barangay-id/new/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -43,7 +43,7 @@ export default function NewBarangayIdPage() {
         setError(data.message || data.error || "Failed to issue barangay ID.");
         return;
       }
-      router.push("/barangay_id");
+      router.push("/barangay-id");
     } catch (e) {
       console.error(e);
       setError("Something went wrong while saving. Please try again.");
@@ -55,7 +55,7 @@ export default function NewBarangayIdPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <button
-        onClick={() => router.push("/barangay_id")}
+        onClick={() => router.push("/barangay-id")}
         className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
       >
         <ArrowLeft size={14} />
@@ -117,7 +117,7 @@ export default function NewBarangayIdPage() {
 
           <div data-tour="page-barangay-id-new-save" className="flex items-center justify-end gap-3 pt-2">
             <button
-              onClick={() => router.push("/barangay_id")}
+              onClick={() => router.push("/barangay-id")}
               className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
             >
               Cancel

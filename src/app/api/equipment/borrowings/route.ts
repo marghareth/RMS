@@ -1,4 +1,5 @@
 // FILE: src/app/api/equipment/borrowings/route.ts
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
@@ -13,7 +14,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
 
   const { searchParams } = new URL(req.url);
   const is_returned = searchParams.get("is_returned");
-  const where: any = is_returned === "false" ? { actual_return: null } : {};
+  const where: Prisma.EquipmentBorrowingWhereInput = is_returned === "false" ? { actual_return: null } : {};
 
   // auto flag overdue
   await prisma.equipmentBorrowing.updateMany({

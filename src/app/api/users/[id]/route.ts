@@ -24,6 +24,7 @@
 // and resolving each field to `body.field ?? existing.field` before the
 // check and before the write, so partial updates are evaluated against
 // what the record will actually become.
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -87,23 +88,28 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
     );
   }
 
-  const data: any = { role: resolvedRole, is_active: resolvedIsActive };
+  const data: Prisma.UserUpdateInput = { role: resolvedRole, is_active: resolvedIsActive };
   if (body.password) {
     data.password_hash = await bcrypt.hash(body.password, 10);
   }
 
-  const user = await prisma.user.update({
-    where: { id },
-    data,
-    select: { id: true, username: true, role: true, is_active: true },
-  });
-
-  await logAudit({
-    user_id: parseInt(auth.session.user.id),
-    action: "UPDATE",
-    table_affected: "User",
-    record_id: id,
-    details: `Updated user ID: ${id}`,
+  const user = await prisma.$transaction(async (tx) => {
+    const updated = await tx.user.update({
+      where: { id },
+      data,
+      select: { id: true, username: true, role: true, is_active: true },
+    });
+    await logAudit(
+      {
+        user_id: parseInt(auth.session.user.id),
+        action: "UPDATE",
+        table_affected: "User",
+        record_id: id,
+        details: `Updated user ID: ${id}`,
+      },
+      tx
+    );
+    return updated;
   });
 
   return NextResponse.json(user);
@@ -130,14 +136,18 @@ export const DELETE = withErrorHandling(async (req: NextRequest, context) => {
     }
   }
 
-  await prisma.user.update({ where: { id }, data: { is_active: false } });
-
-  await logAudit({
-    user_id: parseInt(auth.session.user.id),
-    action: "DEACTIVATE",
-    table_affected: "User",
-    record_id: id,
-    details: `Deactivated user ID: ${id}`,
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id }, data: { is_active: false } });
+    await logAudit(
+      {
+        user_id: parseInt(auth.session.user.id),
+        action: "DEACTIVATE",
+        table_affected: "User",
+        record_id: id,
+        details: `Deactivated user ID: ${id}`,
+      },
+      tx
+    );
   });
 
   return NextResponse.json({ message: "User deactivated" });

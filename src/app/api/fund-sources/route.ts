@@ -1,4 +1,5 @@
 // FILE: src/app/api/fund-sources/route.ts
+import type { Prisma, FundSourceStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -14,9 +15,9 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   const status = searchParams.get("status");
   const search = searchParams.get("search") || "";
 
-  const where: any = {
+  const where: Prisma.FundSourceWhereInput = {
     AND: [
-      status ? { status } : {},
+      status ? { status: status as FundSourceStatus } : {},
       search
         ? {
             OR: [

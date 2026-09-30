@@ -1,4 +1,5 @@
 // FILE: src/app/api/certificates/route.ts
+import type { Prisma, CertificateType, RequestStatus, PaymentStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -66,12 +67,12 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   });
   const skip = (page - 1) * limit;
 
-  const where: any = {
+  const where: Prisma.CertificateWhereInput = {
     AND: [
       resident_id ? { resident_id: parseInt(resident_id) } : {},
-      certificate_type ? { certificate_type } : {},
-      status ? { status } : {},
-      payment_status ? { payment_status } : {},
+      certificate_type ? { certificate_type: certificate_type as CertificateType } : {},
+      status ? { status: status as RequestStatus } : {},
+      payment_status ? { payment_status: payment_status as PaymentStatus } : {},
       date_from ? { requested_at: { gte: new Date(date_from) } } : {},
       date_to ? { requested_at: { lte: new Date(date_to) } } : {},
       released_from ? { issued_at: { gte: new Date(released_from) } } : {},

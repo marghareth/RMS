@@ -1,4 +1,5 @@
 // FILE: src/app/api/deceased-records/route.ts
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -30,7 +31,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   });
   const skip = (page - 1) * limit;
 
-  const where: any = {
+  const where: Prisma.DeceasedRecordWhereInput = {
     AND: [
       underlying_cause ? { underlying_cause } : {},
       date_from ? { date_of_death: { gte: new Date(date_from) } } : {},

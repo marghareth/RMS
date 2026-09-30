@@ -1,3 +1,4 @@
+// FILE: src/components/layout/Topbar.tsx
 // FILE PATH: src/components/layout/Topbar.tsx
 // Replace the entire contents of this file with the code below.
 //
@@ -68,8 +69,8 @@ export default function Topbar({
   const { data: session } = useSession();
   const { start: startTour, startPageTour, currentPageTour } = useOnboarding();
 
-  const username = (session?.user as any)?.username ?? "User";
-  const roleCode = (session?.user as any)?.role ?? "";
+  const username = session?.user?.username ?? "User";
+  const roleCode = session?.user?.role ?? "";
   const roleLabel = ROLE_LABELS[roleCode] ?? roleCode ?? "—";
   const initial = username.charAt(0).toUpperCase();
 
@@ -292,7 +293,7 @@ export default function Topbar({
               >
                 <ShieldCheck size={15} />
                 Security
-                {(session?.user as any)?.mfaSetupRequired && (
+                {session?.user?.mfaSetupRequired && (
                   <span className="ml-auto h-1.5 w-1.5 rounded-full bg-amber-500" />
                 )}
               </Link>

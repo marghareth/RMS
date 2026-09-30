@@ -6,11 +6,14 @@ import { prisma } from '@/lib/db';
 import { logAudit } from '@/lib/audit';
 import bcrypt from 'bcryptjs';
 
-vi.mock('@/lib/db', () => ({
-  prisma: {
+vi.mock('@/lib/db', () => {
+  const prisma: any = {
     user: { findUnique: vi.fn(), update: vi.fn(), count: vi.fn() },
-  },
-}));
+  };
+  // Interactive transaction: run the callback against the same mocked client.
+  prisma.$transaction = vi.fn(async (fn: (tx: unknown) => unknown) => fn(prisma));
+  return { prisma };
+});
 
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn() }));
 
@@ -130,7 +133,7 @@ describe('PATCH /api/users/[id] — last-admin protection', () => {
     (prisma.user.findUnique as any).mockResolvedValue({ role: 'ENCODER', is_active: true });
     (prisma.user.update as any).mockResolvedValue({ id: 5, username: 'x' });
     await PATCH(makeReq({ role: 'BHW' }), makeContext('5'));
-    expect(logAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'UPDATE', table_affected: 'User', record_id: 5 }));
+    expect(logAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'UPDATE', table_affected: 'User', record_id: 5 }), expect.anything());
   });
 });
 
@@ -168,6 +171,6 @@ describe('DELETE /api/users/[id] (soft deactivate) — last-admin protection', (
     (prisma.user.findUnique as any).mockResolvedValue({ role: 'ENCODER', is_active: true });
     (prisma.user.update as any).mockResolvedValue({ id: 5, is_active: false });
     await DELETE(new NextRequest('http://localhost/api/users/5'), makeContext('5'));
-    expect(logAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'DEACTIVATE', table_affected: 'User', record_id: 5 }));
+    expect(logAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'DEACTIVATE', table_affected: 'User', record_id: 5 }), expect.anything());
   });
 });

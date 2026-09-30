@@ -1,4 +1,5 @@
 // FILE: src/app/api/health/route.ts
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -19,7 +20,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   });
   const skip = (page - 1) * limit;
 
-  const where: any = {
+  const where: Prisma.HealthRecordWhereInput = {
     AND: [
       resident_id ? { resident_id: parseInt(resident_id) } : {},
       search

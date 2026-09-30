@@ -1,4 +1,5 @@
 // FILE: src/app/api/appropriations/route.ts
+import type { Prisma, AppropriationCategory, AppropriationStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -16,10 +17,10 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   const fund_source_id = searchParams.get("fund_source_id");
   const search = searchParams.get("search") || "";
 
-  const where: any = {
+  const where: Prisma.AppropriationWhereInput = {
     AND: [
-      category ? { category } : {},
-      status ? { status } : {},
+      category ? { category: category as AppropriationCategory } : {},
+      status ? { status: status as AppropriationStatus } : {},
       fund_source_id ? { fund_source_id: parseInt(fund_source_id) } : {},
       search ? { item_name: { contains: search, mode: "insensitive" } } : {},
     ],

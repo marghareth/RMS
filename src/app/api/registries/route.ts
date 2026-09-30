@@ -1,4 +1,5 @@
 // FILE: src/app/api/registries/route.ts
+import type { Prisma, RegistryType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -14,9 +15,9 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   const registry_type = searchParams.get("registry_type");
   const purok_id = searchParams.get("purok_id");
 
-  const where: any = {
+  const where: Prisma.SpecialRegistryWhereInput = {
     AND: [
-      registry_type ? { registry_type } : {},
+      registry_type ? { registry_type: registry_type as RegistryType } : {},
       purok_id ? { resident: { purok_id: parseInt(purok_id) } } : {},
     ],
   };

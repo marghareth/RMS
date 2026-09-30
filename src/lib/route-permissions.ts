@@ -1,29 +1,32 @@
 // FILE: src/lib/route-permissions.ts
 //
-// SECURITY FIX: previously the only thing keeping a low-privilege role out
-// of a page it shouldn't see (e.g. /admin/audit-logs, /finance/overview)
-// was Sidebar.tsx hiding the *link* to it. The page itself had no guard,
-// so anyone who typed the URL directly still got the full page shell
-// (layout, filters, buttons) even though the underlying API calls would
-// come back 401/403. That's security-through-obscurity, not real
-// authorization.
+// SECURITY: page-level authorization. Previously the only thing keeping a
+// low-privilege role out of a page it shouldn't see (e.g. /admin/audit-logs,
+// /finance/overview) was Sidebar.tsx hiding the *link* to it — the page
+// itself had no guard, so anyone who typed the URL still got the full page
+// shell even though the underlying API calls came back 401/403. That's
+// security-through-obscurity, not authorization.
 //
-// This file is the single source of truth mapping a dashboard URL prefix
-// to the permission(s) required to view it — deliberately mirrors the
-// `permission` fields already declared in Sidebar.tsx's `mainNav` /
-// `bottomNav`, since those were already sourced from each page's
-// underlying API route(s) (see the comment at the top of Sidebar.tsx).
+// This file is the single source of truth mapping a dashboard URL prefix to
+// the permission(s) required to view it, and `middleware.ts` now enforces
+// it on every request (redirecting to /access-denied). It mirrors the
+// `permission` fields declared in Sidebar.tsx's nav config, which were
+// themselves sourced from each page's underlying API route(s). The API
+// routes remain the real data-level authority (requirePermission) — this
+// is the matching guard for the page shells.
 //
-// Kept dependency-free (no lucide-react/React imports) so it's safe to
-// import from `middleware.ts`, which runs on the Edge runtime.
+// Runs on the Edge runtime (middleware), so this module and
+// `./permission` must stay dependency-free: no Prisma, no Node APIs, no
+// React/lucide imports.
 //
 // `permission` is either one required string, or an array where ALL are
 // required (mirrors Sidebar's `isAllowed` semantics for fan-out pages like
 // /finance/overview).
 //
-// Longer/more specific prefixes MUST come before shorter ones of the same
-// branch (e.g. "/finance/overview" before "/finance") since matching below
-// is "does the pathname start with this prefix", first match wins.
+// Matching is longest-prefix-wins (see `findRoutePermission`), so entry
+// order below does not affect correctness.
+
+import { hasPermission } from "./permission";
 
 export type RoutePermission = string | string[];
 
@@ -44,7 +47,7 @@ export const ROUTE_PERMISSIONS: { prefix: string; permission: RoutePermission }[
   { prefix: "/certificates", permission: "certificates:read" },
   { prefix: "/document-queue", permission: "certificates:read" },
   { prefix: "/document-release", permission: "certificates:read" },
-  { prefix: "/barangay_id", permission: "barangay_id:read" },
+  { prefix: "/barangay-id", permission: "barangay_id:read" },
 
   { prefix: "/blotter", permission: "blotter:read" },
 
@@ -99,4 +102,18 @@ export function findRoutePermission(pathname: string): RoutePermission | null {
     .find((r) => pathname === r.prefix || pathname.startsWith(`${r.prefix}/`));
 
   return match ? match.permission : null;
+}
+
+/**
+ * True if `role` may view `pathname`. Paths with no entry in
+ * ROUTE_PERMISSIONS (e.g. /account/security, /access-denied) are allowed —
+ * they only require being signed in, which middleware checks separately.
+ * A missing/unknown role is denied on every gated path.
+ */
+export function canAccessRoute(role: string | null | undefined, pathname: string): boolean {
+  const required = findRoutePermission(pathname);
+  if (required === null) return true;
+  if (!role) return false;
+  const all = Array.isArray(required) ? required : [required];
+  return all.every((perm) => hasPermission(role, perm));
 }

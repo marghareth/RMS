@@ -182,26 +182,27 @@ export const ADMIN_TUTORIALS = {
   backup: {
     title: "How to use Backup",
     intro:
-      "Record that a backup was requested and review the history of past requests.",
+      "Create a downloadable copy of the whole database and review the history of past backups.",
     steps: [
       {
         title: "Review the summary",
         description:
-          "The cards show how many backups are on record and when the last one was triggered.",
+          "The cards show how many backups are on record and when the last one was made.",
       },
       {
         title: "Trigger a backup",
         description:
-          "Click Trigger Backup, then confirm in the popup. A new entry with your name and the time is added to the history.",
+          "Click Trigger Backup, then confirm in the popup. The server runs a database dump and a new entry with your name and the time is added to the history.",
       },
       {
-        title: "Check the history",
+        title: "Download a copy",
         description:
-          "The table lists each request with its date, who triggered it, and a file reference.",
+          "Use the Download link on any entry to save the file. Keep copies somewhere safe and off the server. Backup files contain all resident records.",
       },
     ],
     tips: [
-      "Right now this logs the request only; it does not yet create a copy of the database. Keep using your database provider's own backups for real protection.",
+      "This button needs a server that can run pg_dump and keep files on disk. On serverless hosting (e.g. Vercel) it is unavailable — use the scheduled backup workflow or your database provider's backups instead.",
+      "A backup can be restored with psql.",
     ],
   },
 

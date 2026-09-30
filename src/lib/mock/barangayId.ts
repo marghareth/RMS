@@ -5,6 +5,7 @@
 //   POST /api/barangay-id   → BarangayId & { resident, issuer }
 // Note: there is no /api/barangay-id/[id] route (no GET/PATCH/DELETE by id) —
 // issued IDs are append-only from the UI's perspective, matching the current API.
+// The printable PDF is served separately by /api/pdf/barangay-id/[id].
 
 export interface IdResidentMock {
   id: number;

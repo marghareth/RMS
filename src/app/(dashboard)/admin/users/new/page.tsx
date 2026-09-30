@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, UserPlus, Eye, EyeOff } from "lucide-react";
 import PageTutorial from "@/components/shared/PageTutorial";
 import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
-import { ROLES, Role, MOCK_USERS } from "@/lib/mock/admin";
+import { ROLES, Role } from "@/lib/mock/admin";
 
 export default function NewUserPage() {
   const router = useRouter();
@@ -25,10 +25,6 @@ export default function NewUserPage() {
       setError("Please enter a username.");
       return;
     }
-    if (MOCK_USERS.some((u) => u.username.toLowerCase() === username.trim().toLowerCase())) {
-      setError("Username already exists.");
-      return;
-    }
     if (!password || password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
@@ -40,31 +36,26 @@ export default function NewUserPage() {
 
     setSubmitting(true);
 
-    // ── MOCK SUBMIT ─────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 500));
-    setSubmitting(false);
-    alert(`[MOCK] User "${username}" created with role ${role}.\nA real save will redirect back to the user list.`);
-    router.push("/admin/users");
-
-    // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
     try {
-       const res = await fetch("/api/users", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ username, password, role }),
-       });
-       if (!res.ok) {
-         const data = await res.json();
-         setError(data.error || "Failed to create user."); // e.g. 409 "Username already exists"
-         return;
-       }
-     router.push("/admin/users");
-     } catch (e) {
-       console.error(e);
-       setError("Something went wrong while saving. Please try again.");
-     } finally {
-       setSubmitting(false);
-     }
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim(), password, role }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        // Duplicate usernames come back as 409 from the server, which is
+        // the only authoritative check (the client never sees the user list).
+        setError(data.message || data.error || "Failed to create user.");
+        return;
+      }
+      router.push("/admin/users");
+    } catch (e) {
+      console.error(e);
+      setError("Something went wrong while saving. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
