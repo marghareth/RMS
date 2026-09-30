@@ -15,7 +15,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const userId = parseInt(auth.session.user.id);
-  const role = (auth.session.user as any).role as string;
+  const role = auth.session.user.role;
 
   const saved = await prisma.dashboardPreference.findMany({ where: { user_id: userId } });
   const defaults = getRoleDefaults(role);
@@ -56,7 +56,7 @@ export const PATCH = withErrorHandling(async (req: NextRequest) => {
     details: `Updated dashboard widget preferences (${body.preferences.length} widget(s))`,
   });
 
-  const role = (auth.session.user as any).role as string;
+  const role = auth.session.user.role;
   const saved = await prisma.dashboardPreference.findMany({ where: { user_id: userId } });
   const defaults = getRoleDefaults(role);
   const preferences = { ...defaults };
@@ -87,7 +87,7 @@ export const DELETE = withErrorHandling(async (req: NextRequest) => {
     details: "Reset dashboard widget preferences to role defaults",
   });
 
-  const role = (auth.session.user as any).role as string;
+  const role = auth.session.user.role;
   const preferences = getRoleDefaults(role);
 
   return NextResponse.json({ preferences, defaults: preferences, hasCustomizations: false });

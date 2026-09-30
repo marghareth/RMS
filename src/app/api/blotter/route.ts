@@ -1,4 +1,5 @@
 // FILE: src/app/api/blotter/route.ts
+import type { Prisma, BlotterStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -30,9 +31,9 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   });
   const skip = (page - 1) * limit;
 
-  const where: any = {
+  const where: Prisma.BlotterCaseWhereInput = {
     AND: [
-      status ? { status } : {},
+      status ? { status: status as BlotterStatus } : {},
       escalated ? { escalated: escalated === "true" } : {},
       incident_type ? { incident_type } : {},
       date_from ? { incident_date: { gte: new Date(date_from) } } : {},

@@ -120,7 +120,7 @@ const mainNav: ModuleItem[] = [
       { label: "All Certificates", href: "/certificates", addHref: "/certificates/new", permission: "certificates:read" },
       { label: "Document Queue", href: "/document-queue", permission: "certificates:read" },
       { label: "Document Release", href: "/document-release", permission: "certificates:read" },
-      { label: "Barangay ID", href: "/barangay_id", addHref: "/barangay_id/new", permission: "barangay_id:read" },
+      { label: "Barangay ID", href: "/barangay-id", addHref: "/barangay-id/new", permission: "barangay_id:read" },
     ],
   },
   { type: "link", label: "Blotter", href: "/blotter", icon: ScrollText, addHref: "/blotter/new", permission: "blotter:read" },
@@ -322,7 +322,7 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const role = (session?.user as any)?.role ?? "";
+  const role = session?.user?.role ?? "";
   const barangayName = useBarangayName();
 
   const visibleMain = visibleOf(mainNav, role);

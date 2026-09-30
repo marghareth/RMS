@@ -6,18 +6,19 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Printer, Download, FileText, FileEdit, Pencil } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import {
-  MOCK_ACTIVE_CAPTAIN,
-  MOCK_BARANGAY_INFO,
   CertificateMock,
   residentFullName,
   formatISODate,
 } from "@/lib/mock/certificates";
 import { renderTemplate, CertificateTemplateMock } from "@/lib/mock/certificateTemplates";
+import { useBarangayInfo } from "@/lib/hooks/useBarangayInfo";
 
 export default function CertificatePreviewPage() {
   const router = useRouter();
   const params = useParams();
   const certId = Number(params.id);
+  // Real barangay + active captain from the database (never hardcoded).
+  const { barangay: BARANGAY, captain: CAPTAIN } = useBarangayInfo();
 
   const [certificate, setCertificate] = useState<CertificateMock | null>(null);
   const [certLoading, setCertLoading] = useState(true);
@@ -128,14 +129,14 @@ export default function CertificatePreviewPage() {
       full_name: name,
       address,
       purpose: certificate.purpose,
-      captain_name: MOCK_ACTIVE_CAPTAIN.name,
-      captain_position: MOCK_ACTIVE_CAPTAIN.position,
-      barangay_name: MOCK_BARANGAY_INFO.name,
-      city: MOCK_BARANGAY_INFO.city,
-      province: MOCK_BARANGAY_INFO.province,
+      captain_name: CAPTAIN.name,
+      captain_position: CAPTAIN.position,
+      barangay_name: BARANGAY.name,
+      city: BARANGAY.city,
+      province: BARANGAY.province,
       date_issued: formatISODate(certificate.issued_at) ?? "",
     };
-  }, [certificate]);
+  }, [certificate, BARANGAY, CAPTAIN]);
 
   const renderedTitle = template ? renderTemplate(template.title, mergedValues) : "";
   const renderedBody = template ? renderTemplate(template.body, mergedValues) : "";
@@ -358,11 +359,11 @@ export default function CertificatePreviewPage() {
             Republic of the Philippines
           </p>
           <p className="text-[11px] text-[#6B7280]">
-            {MOCK_BARANGAY_INFO.province}, {MOCK_BARANGAY_INFO.region}
+            {BARANGAY.province}, {BARANGAY.region}
           </p>
-          <p className="text-[11px] text-[#6B7280]">City of {MOCK_BARANGAY_INFO.city}</p>
+          <p className="text-[11px] text-[#6B7280]">City of {BARANGAY.city}</p>
           <p className="mt-2 text-xl font-black uppercase tracking-wide text-[#1F2937]">
-            Office of the {MOCK_BARANGAY_INFO.name}
+            Office of the {BARANGAY.name}
           </p>
         </div>
 
@@ -388,10 +389,10 @@ export default function CertificatePreviewPage() {
         <div className="mt-16 flex justify-end">
           <div className="text-center">
             <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">
-              {MOCK_ACTIVE_CAPTAIN.name}
+              {CAPTAIN.name}
             </p>
             <div className="mt-1 w-56 border-t border-[#1F2937] pt-1">
-              <p className="text-[11px] text-[#6B7280]">{MOCK_ACTIVE_CAPTAIN.position}</p>
+              <p className="text-[11px] text-[#6B7280]">{CAPTAIN.position}</p>
             </div>
           </div>
         </div>

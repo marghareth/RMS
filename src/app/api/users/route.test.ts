@@ -6,9 +6,12 @@ import { prisma } from '@/lib/db';
 import { logAudit } from '@/lib/audit';
 import bcrypt from 'bcryptjs';
 
-vi.mock('@/lib/db', () => ({
-  prisma: { user: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn() } },
-}));
+vi.mock('@/lib/db', () => {
+  const prisma: any = { user: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn() } };
+  // Interactive transaction: run the callback against the same mocked client.
+  prisma.$transaction = vi.fn(async (fn: (tx: unknown) => unknown) => fn(prisma));
+  return { prisma };
+});
 
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn() }));
 
@@ -67,8 +70,10 @@ describe('POST /api/users', () => {
     (prisma.user.create as any).mockResolvedValue({ id: 3, username: 'auditme', role: 'BHW' });
 
     await POST(makeReq({ username: 'auditme', password: 'longenough1', role: 'BHW' }));
+    // Second arg is the transaction client: the audit row commits with the user row.
     expect(logAudit).toHaveBeenCalledWith(
-      expect.objectContaining({ action: 'CREATE', table_affected: 'User', record_id: 3 })
+      expect.objectContaining({ action: 'CREATE', table_affected: 'User', record_id: 3 }),
+      expect.anything()
     );
   });
 

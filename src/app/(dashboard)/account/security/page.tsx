@@ -8,12 +8,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { ShieldCheck, ShieldOff, Copy, Check, AlertTriangle } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 
-type Status = { enabled: boolean; recommended: boolean; backupCodesRemaining: number };
+type Status = { enabled: boolean; recommended: boolean; enforced?: boolean; backupCodesRemaining: number };
 
 export default function SecuritySettingsPage() {
+  // `update()` makes the server re-read this account and re-issue the
+  // session cookie, so the middleware's "MFA required" gate lifts as soon
+  // as enrollment succeeds instead of on the next sign-in.
+  const { update: refreshSession } = useSession();
   const [status, setStatus] = useState<Status | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -89,6 +94,7 @@ export default function SecuritySettingsPage() {
     setBackupCodes(data.backupCodes);
     setEnrolling(false);
     await loadStatus();
+    await refreshSession();
   }
 
   async function submitDisable(e: React.FormEvent) {
@@ -116,6 +122,7 @@ export default function SecuritySettingsPage() {
     setDisablePassword("");
     setDisableToken("");
     await loadStatus();
+    await refreshSession();
   }
 
   function copyBackupCodes() {
@@ -131,6 +138,16 @@ export default function SecuritySettingsPage() {
         title="Security"
         subtitle="Manage two-factor authentication for your own account."
       />
+
+      {status?.enforced && (
+        <div className="mb-5 flex items-start gap-2 rounded-lg border border-[#FCD34D] bg-[#FFFBEB] px-4 py-3 text-[12px] text-[#92400E]">
+          <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+          <span>
+            <strong>Two-factor authentication is required for your role.</strong> Set it up below
+            to continue using the system — the rest of the app stays locked until you do.
+          </span>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-[13px] text-[#9CA3AF]">Loading…</p>

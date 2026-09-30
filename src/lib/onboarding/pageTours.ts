@@ -1984,7 +1984,7 @@ export const PAGE_TOURS: PageTour[] = [
   },
   {
     id: "barangay-id",
-    match: exact("/barangay_id"),
+    match: exact("/barangay-id"),
     label: "Barangay ID",
     steps: [
       {
@@ -2028,7 +2028,7 @@ export const PAGE_TOURS: PageTour[] = [
   },
   {
     id: "barangay-id-new",
-    match: exact("/barangay_id/new"),
+    match: exact("/barangay-id/new"),
     label: "Issue Barangay ID",
     steps: [
       {

@@ -1,4 +1,5 @@
 // FILE: src/app/api/financial/route.ts
+import type { Prisma, FinancialType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -20,9 +21,9 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   });
   const skip = (page - 1) * limit;
 
-  const where: any = {
+  const where: Prisma.FinancialRecordWhereInput = {
     AND: [
-      transaction_type ? { transaction_type } : {},
+      transaction_type ? { transaction_type: transaction_type as FinancialType } : {},
       date_from ? { transaction_date: { gte: new Date(date_from) } } : {},
       date_to ? { transaction_date: { lte: new Date(date_to) } } : {},
     ],

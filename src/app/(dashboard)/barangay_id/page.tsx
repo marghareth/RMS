@@ -1,4 +1,4 @@
-// FILE: src/app/(dashboard)/barangay_id/page.tsx
+// FILE: src/app/(dashboard)/barangay-id/page.tsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -84,7 +84,7 @@ export default function BarangayIdListPage() {
         actions={
           <button
             data-tour="page-barangay-id-add"
-            onClick={() => router.push("/barangay_id/new")}
+            onClick={() => router.push("/barangay-id/new")}
             className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
           >
             <Plus size={15} />
@@ -171,9 +171,9 @@ export default function BarangayIdListPage() {
                     Issued {formatISODate(selected.issued_date)} by {selected.issuer.username}
                   </p>
                 </div>
-                {/* Real PDF generation (disabled until API/DB is wired up):
-                    window.open(`/api/pdf/barangay-id/${selected.id}`, "_blank")
-                    — hits the not-yet-implemented /api/pdf/barangay-id/[id] route. */}
+                {/* A server-rendered PDF of this ID is available at
+                    /api/pdf/barangay-id/${selected.id}; the on-screen card is
+                    printed directly for now. */}
                 <button
                   onClick={() => window.print()}
                   className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] print:hidden"

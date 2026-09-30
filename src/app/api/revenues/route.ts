@@ -1,4 +1,5 @@
 // FILE: src/app/api/revenues/route.ts
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -16,7 +17,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   const date_to = searchParams.get("date_to");
   const search = searchParams.get("search") || "";
 
-  const where: any = {
+  const where: Prisma.RevenueWhereInput = {
     AND: [
       fund_source_id ? { fund_source_id: parseInt(fund_source_id) } : {},
       date_from ? { date: { gte: new Date(date_from) } } : {},

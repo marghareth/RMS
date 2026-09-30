@@ -4,7 +4,7 @@ import { createElement, type ReactElement } from "react";
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
-import { MOCK_ACTIVE_CAPTAIN, MOCK_BARANGAY_INFO } from "@/lib/mock/certificates";
+import { getBarangayContext } from "@/lib/barangay-info";
 import BarangayIdPDF from "@/lib/pdf/BarangayIdPDF";
 import { withErrorHandling } from "@/lib/api-handler";
 
@@ -70,6 +70,8 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
   // because they're actually solving a different problem.) The cast below
   // is safe: it doesn't change what's rendered, only what TS is asked to
   // check at this call site.
+  const { barangay, captain } = await getBarangayContext();
+
   const buffer = await renderToBuffer(
     createElement(BarangayIdPDF, {
       idNumber: barangayId.id_number,
@@ -81,11 +83,11 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
       civilStatus: resident.civil_status,
       issuedDateFormatted: formatShortDate(barangayId.issued_date),
       validUntilFormatted: formatShortDate(expiryDate(barangayId.issued_date)),
-      barangayName: MOCK_BARANGAY_INFO.name,
-      city: MOCK_BARANGAY_INFO.city,
-      province: MOCK_BARANGAY_INFO.province,
-      captainName: MOCK_ACTIVE_CAPTAIN.name,
-      captainPosition: MOCK_ACTIVE_CAPTAIN.position,
+      barangayName: barangay.name,
+      city: barangay.city,
+      province: barangay.province,
+      captainName: captain.name,
+      captainPosition: captain.position,
     }) as ReactElement<DocumentProps>
   );
 

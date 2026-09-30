@@ -1,3 +1,4 @@
+// FILE: src/app/api/notifications/route.ts
 // FILE PATH: src/app/api/notifications/route.ts
 // This is a NEW file — create it at this path.
 //
@@ -46,7 +47,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("dashboard:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const role = (auth.session.user as any)?.role as string | undefined;
+  const role = auth.session.user.role;
   const now = new Date();
   const in3Days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 

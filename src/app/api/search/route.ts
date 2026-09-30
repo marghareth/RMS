@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   const auth = await requireAuth();
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const role = (auth.session.user as any)?.role as string;
+  const role = auth.session.user.role;
   const canReadResidents = hasPermission(role, "residents:read");
   const canReadCertificates = hasPermission(role, "certificates:read");
   const canReadBlotter = hasPermission(role, "blotter:read");

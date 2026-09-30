@@ -40,6 +40,7 @@ import { prisma } from "./db";
 import bcrypt from "bcryptjs";
 import { verifyTotp, consumeBackupCode } from "./mfa";
 import { RateLimiter } from "./rate-limit";
+import { mfaSetupRequired } from "./mfa-policy";
 
 const loginLimiter = new RateLimiter({
   namespace: "login",
@@ -47,7 +48,12 @@ const loginLimiter = new RateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
 });
 
-const ROLES_REQUIRING_MFA = new Set(["ADMIN", "CAPTAIN"]);
+// How often (ms) a live session re-reads role / is_active / mfa_enabled from
+// the database. The JWT itself is only a cache of those values — see
+// `jwt` callback below and `getSession` in session.ts (which re-checks on
+// every API request, so this interval only bounds how stale the *page
+// guards in middleware* can be, not API authorization).
+const TOKEN_REFRESH_MS = 60 * 1000;
 
 // Computed once at module load, not per-request — bcrypt hashing is the
 // expensive part, so this just needs to exist, not be regenerated. It
@@ -145,34 +151,67 @@ export const authOptions: NextAuthOptions = {
           id: String(user.id),
           username: user.username,
           role: user.role,
-          mfaSetupRequired: ROLES_REQUIRING_MFA.has(user.role) && !user.mfa_enabled,
+          mfaSetupRequired: mfaSetupRequired(user.role, user.mfa_enabled),
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
-        token.username = (user as any).username;
-        token.role = (user as any).role;
-        token.mfaSetupRequired = (user as any).mfaSetupRequired;
+        token.username = user.username;
+        token.role = user.role;
+        token.mfaSetupRequired = user.mfaSetupRequired;
         // Only set on an actual sign-in (the `user` param is only passed
         // here at that point, never on a later token read/refresh), so the
         // client can tell "brand-new login" apart from "same session,
         // page reloaded" — used by the "always show tutorial on login"
         // onboarding preference in OnboardingProvider.tsx.
         token.loginAt = Date.now();
+        token.checkedAt = Date.now();
+        token.invalid = false;
+        return token;
+      }
+
+      // SECURITY: role, is_active and mfa_enabled used to be frozen into
+      // the JWT at sign-in and never looked at again, so demoting or
+      // deactivating a user did nothing until their token expired (30
+      // days by default). Re-read them periodically, and immediately when
+      // the client calls `useSession().update()` (done after MFA
+      // enrollment so the "you must enable MFA" gate lifts right away).
+      const stale = !token.checkedAt || Date.now() - token.checkedAt > TOKEN_REFRESH_MS;
+      if ((trigger === "update" || stale) && token.id) {
+        try {
+          const fresh = await prisma.user.findUnique({
+            where: { id: parseInt(token.id) },
+            select: { role: true, is_active: true, mfa_enabled: true, username: true },
+          });
+          if (!fresh || !fresh.is_active) {
+            token.invalid = true;
+          } else {
+            token.invalid = false;
+            token.role = fresh.role;
+            token.username = fresh.username;
+            token.mfaSetupRequired = mfaSetupRequired(fresh.role, fresh.mfa_enabled);
+          }
+          token.checkedAt = Date.now();
+        } catch (err) {
+          // DB hiccup: keep the existing token rather than logging everyone
+          // out. API routes re-verify against the DB on every request
+          // anyway (session.ts), so this fails safe for authorization.
+          console.error("[auth] token refresh failed:", err);
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).username = token.username;
-        (session.user as any).role = token.role;
-        (session.user as any).mfaSetupRequired = token.mfaSetupRequired;
-        (session.user as any).loginAt = token.loginAt;
+        session.user.id = token.id;
+        session.user.username = token.username;
+        session.user.role = token.role;
+        session.user.mfaSetupRequired = token.mfaSetupRequired;
+        session.user.loginAt = token.loginAt;
       }
       return session;
     },

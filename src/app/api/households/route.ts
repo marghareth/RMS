@@ -1,4 +1,5 @@
 // FILE: src/app/api/households/route.ts
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -25,7 +26,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   });
   const skip = (page - 1) * limit;
 
-  const where: any = purok_id ? { purok_id: parseInt(purok_id) } : {};
+  const where: Prisma.HouseholdWhereInput = purok_id ? { purok_id: parseInt(purok_id) } : {};
 
   const [households, total] = await Promise.all([
     prisma.household.findMany({

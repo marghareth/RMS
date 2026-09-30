@@ -1,4 +1,5 @@
 // FILE: src/app/api/officials/route.ts
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -12,7 +13,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
 
   const { searchParams } = new URL(req.url);
   const is_active = searchParams.get("is_active");
-  const where: any = is_active !== null ? { is_active: is_active === "true" } : {};
+  const where: Prisma.BrgyOfficialWhereInput = is_active !== null ? { is_active: is_active === "true" } : {};
 
   const officials = await prisma.brgyOfficial.findMany({
     where,

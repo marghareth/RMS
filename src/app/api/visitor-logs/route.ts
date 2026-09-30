@@ -1,4 +1,5 @@
 // FILE: src/app/api/visitor-logs/route.ts
+import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -21,7 +22,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   });
   const skip = (page - 1) * limit;
 
-  const where: any = {
+  const where: Prisma.VisitorLogWhereInput = {
     AND: [
       status === "active"       ? { time_out: null } : {},
       status === "checked_out"  ? { time_out: { not: null } } : {},

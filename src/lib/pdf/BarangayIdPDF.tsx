@@ -1,6 +1,6 @@
 // FILE: src/lib/pdf/BarangayIdPDF.tsx
 // Server-rendered, printable Barangay ID card, built with @react-pdf/renderer.
-// Mirrors the on-screen card in (dashboard)/barangay_id/page.tsx so the PDF
+// Mirrors the on-screen card in (dashboard)/barangay-id/page.tsx so the PDF
 // output matches what the user already previews in the app.
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { COLORS } from "./reportStyles";

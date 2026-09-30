@@ -32,17 +32,23 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   const password_hash = await bcrypt.hash(body.password, 10);
 
-  const user = await prisma.user.create({
-    data: { username: body.username, password_hash, role: body.role },
-    select: { id: true, username: true, role: true, is_active: true, created_at: true },
-  });
-
-  await logAudit({
-    user_id: parseInt(auth.session.user.id),
-    action: "CREATE",
-    table_affected: "User",
-    record_id: user.id,
-    details: `Created user: ${user.username} with role: ${user.role}`,
+  // User row + audit row commit together (see logAudit in src/lib/audit.ts).
+  const user = await prisma.$transaction(async (tx) => {
+    const created = await tx.user.create({
+      data: { username: body.username, password_hash, role: body.role },
+      select: { id: true, username: true, role: true, is_active: true, created_at: true },
+    });
+    await logAudit(
+      {
+        user_id: parseInt(auth.session.user.id),
+        action: "CREATE",
+        table_affected: "User",
+        record_id: created.id,
+        details: `Created user: ${created.username} with role: ${created.role}`,
+      },
+      tx
+    );
+    return created;
   });
 
   return NextResponse.json(user, { status: 201 });
