@@ -129,6 +129,7 @@ export default function CertificateDetailPage() {
           </p>
         </div>
         <button
+          data-tour="page-certificates-detail-preview"
           onClick={() => router.push(`/certificates/${certId}/preview`)}
           className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
         >
@@ -140,7 +141,7 @@ export default function CertificateDetailPage() {
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
         {/* ── Left: certificate details ── */}
         <div className="space-y-5 lg:col-span-2">
-          <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+          <div data-tour="page-certificates-detail-applicant" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
             <div className="mb-3 flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
                 <User size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
@@ -167,13 +168,13 @@ export default function CertificateDetailPage() {
             )}
           </div>
 
-          <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+          <div data-tour="page-certificates-detail-purpose" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
             <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Purpose</p>
             <p className="text-[13px] leading-relaxed text-[#374151] dark:text-[#D4D4D4]">{certificate.purpose}</p>
           </div>
 
           {/* Issuance history for this resident */}
-          <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+          <div data-tour="page-certificates-detail-history" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
             <div className="mb-3 flex items-center gap-2">
               <History size={14} className="text-[#6B7280] dark:text-[#A3A3A3]" />
               <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
@@ -208,7 +209,7 @@ export default function CertificateDetailPage() {
 
         {/* ── Right: issuance info ── */}
         <div className="lg:col-span-1">
-          <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+          <div data-tour="page-certificates-detail-issuance" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
             <p className="mb-3 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Issuance Info</p>
             <InfoRow icon={ShieldCheck} label="Issued By" value={certificate.issuer.username} />
             <InfoRow

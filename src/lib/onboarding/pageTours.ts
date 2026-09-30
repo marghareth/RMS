@@ -56,6 +56,16 @@ function equipmentDetail(pathname: string) {
   return /^\/equipment\/\d+$/.test(pathname);
 }
 
+/** Matches /certificates/<numeric id> — a single certificate's detail page (not /new, /templates or /preview). */
+function certificateDetail(pathname: string) {
+  return /^\/certificates\/\d+$/.test(pathname);
+}
+
+/** Matches /certificates/<numeric id>/preview. */
+function certificatePreview(pathname: string) {
+  return /^\/certificates\/\d+\/preview$/.test(pathname);
+}
+
 /** Matches /equipment/<numeric id>/edit. */
 function equipmentEdit(pathname: string) {
   return /^\/equipment\/\d+\/edit$/.test(pathname);
@@ -1741,6 +1751,300 @@ export const PAGE_TOURS: PageTour[] = [
         title: "Delete",
         body: "Removes this vaccination permanently, after you confirm. There's no Edit for vaccinations: if the vaccine or date was wrong, delete the record and add a new one.",
         waitMs: 6000,
+      },
+    ],
+  },
+
+  // ── Documents (certificates, document workflow, barangay ID) ───────
+  {
+    id: "certificates-new",
+    match: exact("/certificates/new"),
+    label: "Request Certificate",
+    steps: [
+      {
+        id: "certificates-new-applicant",
+        target: '[data-tour="page-certificates-new-applicant"]',
+        placement: "bottom",
+        title: "Who is it for?",
+        body: "Search for the resident by name. If they're not in the RBI yet, check Walk-in and type their name and address directly — the certificate is flagged so you remember to register them later.",
+        hint: "Try it: start typing a name.",
+      },
+      {
+        id: "certificates-new-type",
+        target: '[data-tour="page-certificates-new-type"]',
+        placement: "top",
+        title: "Type and purpose",
+        body: "Pick the certificate type and state the purpose, such as school enrollment. If the same type was issued to this resident in the last 30 days, a warning appears here and you'll need to confirm before filing.",
+      },
+      {
+        id: "certificates-new-save",
+        target: '[data-tour="page-certificates-new-save"]',
+        placement: "top",
+        title: "Submit the request",
+        body: "Submit Request checks residency and duplicates on the server, then opens the print preview so you can review it before it's released.",
+      },
+    ],
+  },
+  {
+    id: "certificates-detail",
+    match: certificateDetail,
+    label: "Certificate Details",
+    steps: [
+      {
+        id: "certificates-detail-preview",
+        target: '[data-tour="page-certificates-detail-preview"]',
+        placement: "left",
+        title: "Preview and print",
+        body: "Opens the print-ready document for this certificate, where you can also correct the printed name or address or download it as a PDF.",
+        waitMs: 6000,
+      },
+      {
+        id: "certificates-detail-applicant",
+        target: '[data-tour="page-certificates-detail-applicant"]',
+        placement: "right",
+        title: "The applicant",
+        body: "Shows the resident this was issued to, or the walk-in name and address if it wasn't linked to a resident record.",
+        waitMs: 6000,
+      },
+      {
+        id: "certificates-detail-purpose",
+        target: '[data-tour="page-certificates-detail-purpose"]',
+        placement: "right",
+        title: "Purpose",
+        body: "The reason given when the certificate was requested, exactly as the applicant stated it.",
+        waitMs: 6000,
+      },
+      {
+        id: "certificates-detail-history",
+        target: '[data-tour="page-certificates-detail-history"]',
+        placement: "right",
+        title: "Issuance history",
+        body: "Every other certificate this resident has been issued, newest first. Click one to open it.",
+        waitMs: 6000,
+      },
+      {
+        id: "certificates-detail-issuance",
+        target: '[data-tour="page-certificates-detail-issuance"]',
+        placement: "left",
+        title: "Issuance info",
+        body: "Who issued it, when, the certificate and queue numbers, and whether payment is pending, paid or waived.",
+        waitMs: 6000,
+      },
+    ],
+  },
+  {
+    id: "certificates-preview",
+    match: certificatePreview,
+    label: "Certificate Preview",
+    steps: [
+      {
+        id: "certificates-preview-toolbar",
+        target: '[data-tour="page-certificates-preview-toolbar"]',
+        placement: "bottom",
+        title: "Print or download",
+        body: "Print sends this page to your printer as-is. Download PDF generates a proper PDF file of the same document. Edit Template changes the wording for every certificate of this type going forward.",
+        waitMs: 6000,
+      },
+      {
+        id: "certificates-preview-override",
+        target: '[data-tour="page-certificates-preview-override"]',
+        placement: "bottom",
+        title: "Fix a typo on this one document",
+        body: "Correct Name / Address changes only what prints on this certificate. The resident's record and every other certificate stay exactly as they are.",
+        waitMs: 6000,
+      },
+      {
+        id: "certificates-preview-document",
+        target: '[data-tour="page-certificates-preview-document"]',
+        placement: "top",
+        title: "The document itself",
+        body: "This is exactly what will print, filled in from the certificate template with this applicant's details.",
+        waitMs: 6000,
+      },
+    ],
+  },
+  {
+    id: "certificates-templates",
+    match: exact("/certificates/templates"),
+    label: "Certificate Templates",
+    steps: [
+      {
+        id: "certificates-templates-list",
+        target: '[data-tour="page-certificates-templates-list"]',
+        placement: "right",
+        title: "Choose a certificate type",
+        body: "Each certificate type has its own wording. \"Edited by\" shows who last changed it; otherwise it's still using the default wording.",
+        hint: "Try it: click a different type.",
+      },
+      {
+        id: "certificates-templates-editor",
+        target: '[data-tour="page-certificates-templates-editor"]',
+        placement: "left",
+        title: "Edit the wording",
+        body: "Title, Body and Closing / Signatory Line make up the printed certificate. Reset to Default discards your changes and restores the original wording for this type.",
+      },
+      {
+        id: "certificates-templates-placeholders",
+        target: '[data-tour="page-certificates-templates-placeholders"]',
+        placement: "top",
+        title: "Insert a placeholder",
+        body: "Click into a field above, then click a placeholder here to drop it in. It's swapped for the real value — the applicant's name, the purpose, the date — when a certificate actually prints.",
+        hint: "Try it: click into a field, then click a placeholder.",
+      },
+      {
+        id: "certificates-templates-save",
+        target: '[data-tour="page-certificates-templates-save"]',
+        placement: "top",
+        title: "Save the template",
+        body: "Save Template becomes available once you've changed something. The live preview below always shows sample data, not a real certificate.",
+      },
+    ],
+  },
+  {
+    id: "document-queue",
+    match: exact("/document-queue"),
+    label: "Document Queue",
+    steps: [
+      {
+        id: "document-queue-search",
+        target: '[data-tour="page-document-queue-search"]',
+        placement: "bottom",
+        title: "Find a request",
+        body: "Search by queue number or applicant name.",
+      },
+      {
+        id: "document-queue-filters",
+        target: '[data-tour="page-document-queue-filters"]',
+        placement: "bottom",
+        title: "Filter the queue",
+        body: "Active combines Pending and Processing, which is what you'll use most. Switch to All to also see requests that are already Released or Cancelled.",
+      },
+      {
+        id: "document-queue-list",
+        target: '[data-tour="page-document-queue-list"]',
+        placement: "right",
+        title: "Pick a request",
+        body: "Click a request to load its full detail on the right.",
+        hint: "Try it: click a different request.",
+      },
+      {
+        id: "document-queue-detail",
+        target: '[data-tour="page-document-queue-detail"]',
+        placement: "left",
+        title: "The request",
+        body: "Applicant, purpose and when it was requested, plus any error from the last action you tried.",
+        waitMs: 6000,
+      },
+      {
+        id: "document-queue-payment",
+        target: '[data-tour="page-document-queue-payment"]',
+        placement: "top",
+        title: "Track payment",
+        body: "Mark a request Paid or Waived as needed. This is separate from moving the request through the queue.",
+        waitMs: 6000,
+      },
+      {
+        id: "document-queue-actions",
+        target: '[data-tour="page-document-queue-actions"]',
+        placement: "top",
+        title: "Move it forward",
+        body: "Start Processing moves a Pending request along. Mark as Released completes it and moves it to Document Release. Cancel Request stops it entirely.",
+        waitMs: 6000,
+      },
+    ],
+  },
+  {
+    id: "document-release",
+    match: exact("/document-release"),
+    label: "Document Release",
+    steps: [
+      {
+        id: "document-release-stats",
+        target: '[data-tour="page-document-release-stats"]',
+        placement: "bottom",
+        title: "Released documents at a glance",
+        body: "How many were handed out today, how many match your current search and date range, and how many were released before payment was settled.",
+      },
+      {
+        id: "document-release-filters",
+        target: '[data-tour="page-document-release-filters"]',
+        placement: "bottom",
+        title: "Search and date range",
+        body: "Search by control number or name, and narrow the list to a specific release date range.",
+      },
+      {
+        id: "document-release-table",
+        target: '[data-tour="page-document-release-table"]',
+        placement: "top",
+        title: "Released documents",
+        body: "Every document that has already been handed to an applicant. Click a row for full details, or use the print icon to reopen it for printing.",
+        waitMs: 6000,
+      },
+    ],
+  },
+  {
+    id: "barangay-id",
+    match: exact("/barangay_id"),
+    label: "Barangay ID",
+    steps: [
+      {
+        id: "barangay-id-add",
+        target: '[data-tour="page-barangay-id-add"]',
+        placement: "left",
+        title: "Issue a new ID",
+        body: "Each resident can hold only one barangay ID at a time.",
+      },
+      {
+        id: "barangay-id-stats",
+        target: '[data-tour="page-barangay-id-stats"]',
+        placement: "bottom",
+        title: "Issuance at a glance",
+        body: "Total issued, how many this month and this year, and how many have passed their 3-year validity.",
+      },
+      {
+        id: "barangay-id-search",
+        target: '[data-tour="page-barangay-id-search"]',
+        placement: "right",
+        title: "Find an ID",
+        body: "Search by ID number or the resident's name.",
+      },
+      {
+        id: "barangay-id-list",
+        target: '[data-tour="page-barangay-id-list"]',
+        placement: "right",
+        title: "Pick an ID",
+        body: "Click an entry to preview that resident's card on the right. Expired IDs are marked in the list.",
+        hint: "Try it: click a different ID.",
+      },
+      {
+        id: "barangay-id-card",
+        target: '[data-tour="page-barangay-id-card"]',
+        placement: "left",
+        title: "The ID card",
+        body: "A preview of exactly what the card looks like, with a Valid or Expired badge based on its 3-year validity. Print ID sends this preview to your printer.",
+        waitMs: 6000,
+      },
+    ],
+  },
+  {
+    id: "barangay-id-new",
+    match: exact("/barangay_id/new"),
+    label: "Issue Barangay ID",
+    steps: [
+      {
+        id: "barangay-id-new-resident",
+        target: '[data-tour="page-barangay-id-new-resident"]',
+        placement: "bottom",
+        title: "Choose the resident",
+        body: "Search and select the resident. Their name, sex, civil status, purok and address fill in automatically from their profile — nothing here is editable by hand.",
+        hint: "Try it: start typing a name.",
+      },
+      {
+        id: "barangay-id-new-save",
+        target: '[data-tour="page-barangay-id-new-save"]',
+        placement: "top",
+        title: "Issue the ID",
+        body: "Issue Barangay ID generates the ID number automatically. If this resident already has one, you'll get an error — there's no reissue option from this form yet.",
       },
     ],
   },

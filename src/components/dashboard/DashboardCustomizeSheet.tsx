@@ -10,6 +10,7 @@ import {
   type WidgetKey,
   type DashboardPreferenceMap,
 } from "@/lib/dashboard-defaults";
+import { useOnboarding } from "@/components/onboarding/OnboardingProvider";
 
 interface DashboardCustomizeSheetProps {
   open: boolean;
@@ -67,6 +68,7 @@ export default function DashboardCustomizeSheet({
   const [draft, setDraft] = useState<DashboardPreferenceMap>(preferences);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const { alwaysShowTour, setAlwaysShowTour } = useOnboarding();
 
   // Re-sync the draft whenever the panel is (re)opened with fresh preferences.
   const [syncedForOpen, setSyncedForOpen] = useState(false);
@@ -186,6 +188,24 @@ export default function DashboardCustomizeSheet({
                   label="Document Status Chart"
                   checked={draft.document_status_chart}
                   onChange={(v) => set("document_status_chart", v)}
+                />
+              </div>
+            </div>
+
+            {/* Guided Tour — unlike the two groups above, this applies the
+                moment it's toggled and isn't part of the Save/Cancel
+                flow, since it's an onboarding preference, not a widget
+                layout choice. */}
+            <div>
+              <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">
+                Guided Tour
+              </p>
+              <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4">
+                <ToggleRow
+                  label="Show tutorial every time I log in"
+                  description="Replays the welcome walkthrough and every page's guided tour again on your next login, instead of only once."
+                  checked={alwaysShowTour}
+                  onChange={setAlwaysShowTour}
                 />
               </div>
             </div>

@@ -123,7 +123,7 @@ export default function DocumentQueuePage() {
         {/* ── List ── */}
         <div className="lg:col-span-1">
           <div className="mb-3 flex items-center gap-2">
-            <div className="relative flex-1">
+            <div data-tour="page-document-queue-search" className="relative flex-1">
               <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
               <input
                 value={search}
@@ -133,7 +133,7 @@ export default function DocumentQueuePage() {
               />
             </div>
           </div>
-          <div className="mb-3 flex gap-1">
+          <div data-tour="page-document-queue-filters" className="mb-3 flex gap-1">
             {(["ACTIVE", "PENDING", "PROCESSING", "ALL"] as QueueFilter[]).map((f) => (
               <button
                 key={f}
@@ -147,7 +147,7 @@ export default function DocumentQueuePage() {
             ))}
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+          <div data-tour="page-document-queue-list" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
@@ -186,7 +186,7 @@ export default function DocumentQueuePage() {
 
         {/* ── Detail panel ── */}
         <div className="lg:col-span-2">
-          <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+          <div data-tour="page-document-queue-detail" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
             {!selected ? (
               <EmptyState icon={FileText} title="Select a request" description="Pick a request from the queue to review and process it." />
             ) : (
@@ -222,7 +222,7 @@ export default function DocumentQueuePage() {
 
                 {/* Payment toggle */}
                 {selected.status !== "RELEASED" && selected.status !== "CANCELLED" && (
-                  <div className="mb-5 flex items-center gap-2 rounded-xl bg-[#F9FAFB] dark:bg-[#171717] border border-[#F4F5F7] dark:border-[#262626] px-4 py-3">
+                  <div data-tour="page-document-queue-payment" className="mb-5 flex items-center gap-2 rounded-xl bg-[#F9FAFB] dark:bg-[#171717] border border-[#F4F5F7] dark:border-[#262626] px-4 py-3">
                     <Wallet size={14} className="text-[#6B7280] dark:text-[#A3A3A3]" />
                     <span className="text-[12px] font-semibold text-[#374151] dark:text-[#D4D4D4]">Payment Status</span>
                     <div className="ml-auto flex gap-1">
@@ -256,7 +256,7 @@ export default function DocumentQueuePage() {
 
                 {/* Workflow actions */}
                 {selected.status !== "RELEASED" && selected.status !== "CANCELLED" && (
-                  <div className="flex flex-wrap gap-2">
+                  <div data-tour="page-document-queue-actions" className="flex flex-wrap gap-2">
                     {selected.status === "PENDING" && (
                       <button
                         disabled={actionBusy}

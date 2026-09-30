@@ -104,7 +104,7 @@ export default function CertificateTemplatesPage() {
       </div>
 
       <div className="flex gap-5">
-        <div className="w-70 shrink-0 overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+        <div data-tour="page-certificates-templates-list" className="w-70 shrink-0 overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
           {CERTIFICATE_TYPES.map((t) => {
             const tpl = templates.find((x) => x.certificate_type === t.value);
             const active = selectedType === t.value;
@@ -238,7 +238,7 @@ function TemplateEditor({
 
   return (
     <>
-      <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+      <div data-tour="page-certificates-templates-editor" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
@@ -311,7 +311,7 @@ function TemplateEditor({
             />
           </div>
 
-          <div className="rounded-lg bg-[#F9FAFB] dark:bg-[#171717] px-3 py-2.5">
+          <div data-tour="page-certificates-templates-placeholders" className="rounded-lg bg-[#F9FAFB] dark:bg-[#171717] px-3 py-2.5">
             <div className="mb-1.5 flex items-center gap-1.5">
               <Info size={12} className="text-[#6B7280] dark:text-[#A3A3A3]" />
               <p className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
@@ -349,6 +349,7 @@ function TemplateEditor({
               </span>
             )}
             <button
+              data-tour="page-certificates-templates-save"
               onClick={() => onSave({ title: draftTitle, body: draftBody, closing_line: draftClosing })}
               disabled={saving || !isDirty}
               className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
