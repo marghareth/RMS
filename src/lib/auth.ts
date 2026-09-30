@@ -157,6 +157,12 @@ export const authOptions: NextAuthOptions = {
         token.username = (user as any).username;
         token.role = (user as any).role;
         token.mfaSetupRequired = (user as any).mfaSetupRequired;
+        // Only set on an actual sign-in (the `user` param is only passed
+        // here at that point, never on a later token read/refresh), so the
+        // client can tell "brand-new login" apart from "same session,
+        // page reloaded" — used by the "always show tutorial on login"
+        // onboarding preference in OnboardingProvider.tsx.
+        token.loginAt = Date.now();
       }
       return token;
     },
@@ -166,6 +172,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).username = token.username;
         (session.user as any).role = token.role;
         (session.user as any).mfaSetupRequired = token.mfaSetupRequired;
+        (session.user as any).loginAt = token.loginAt;
       }
       return session;
     },

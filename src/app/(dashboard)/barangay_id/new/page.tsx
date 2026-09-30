@@ -77,7 +77,7 @@ export default function NewBarangayIdPage() {
           <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Resident</p>
         </div>
 
-        <div className="space-y-4">
+        <div data-tour="page-barangay-id-new-resident" className="space-y-4">
           <ResidentPicker value={resident} onChange={setResident} placeholder="Search resident by name..." />
 
           {resident && (
@@ -115,7 +115,7 @@ export default function NewBarangayIdPage() {
 
           {error && <p className="rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-4 py-3 text-[12px] text-[#DC2626] dark:text-[#F87171]">{error}</p>}
 
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div data-tour="page-barangay-id-new-save" className="flex items-center justify-end gap-3 pt-2">
             <button
               onClick={() => router.push("/barangay_id")}
               className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"

@@ -10,6 +10,13 @@
 //      on the beginner prompt, or manually started a tour at least once).
 //      A user who said "no" gets neither kind automatically — but can
 //      still pull up either one manually via the "?" menu in Topbar.
+//   3. "Always show on login" — an opt-in preference (Dashboard →
+//      Customize Dashboard → Guided Tour) that replays the whole
+//      first-time experience above on every genuinely new sign-in: the
+//      beginner prompt reappears and every per-page tour is eligible to
+//      auto-launch again, exactly as if the decision/page-seen state had
+//      never been recorded. A plain page refresh of an existing session
+//      does NOT retrigger this — see the loginAt handling below.
 //
 // Actual rendering lives in BeginnerPromptModal.tsx and TourOverlay.tsx,
 // both of which read this context via useOnboarding().
@@ -53,6 +60,10 @@ interface OnboardingContextValue {
   next: () => void;
   prev: () => void;
   close: () => void;
+  /** "Always show tutorial on login" preference (Customize Dashboard → Guided Tour). */
+  alwaysShowTour: boolean;
+  /** Persists the preference above for the signed-in user. No-op if no one is signed in. */
+  setAlwaysShowTour: (value: boolean) => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
@@ -103,10 +114,79 @@ function writePageSeen(username: string, pageTourId: string) {
   }
 }
 
+// "Always show tutorial on login" preference, set from Customize Dashboard
+// → Guided Tour. When on, resetOnboardingProgress() below is run again at
+// the start of every new sign-in, so the user gets the full first-time
+// experience each time instead of just once ever.
+function alwaysShowKey(username: string) {
+  return `rms-onboarding-always-show:${username}`;
+}
+function readAlwaysShow(username: string): boolean {
+  try {
+    return window.localStorage.getItem(alwaysShowKey(username)) === "1";
+  } catch {
+    return false;
+  }
+}
+function writeAlwaysShow(username: string, value: boolean) {
+  try {
+    if (value) window.localStorage.setItem(alwaysShowKey(username), "1");
+    else window.localStorage.removeItem(alwaysShowKey(username));
+  } catch {
+    // non-fatal
+  }
+}
+
+// The loginAt timestamp (see src/lib/auth.ts) changes only when the user
+// actually signs in again — it stays the same across page refreshes and
+// client-side navigation within one session. Recording the last one we've
+// already processed here lets us tell "a genuinely new sign-in" apart from
+// "the same session, page reloaded", without which "always show on login"
+// would instead mean "always show on every page load".
+function lastLoginProcessedKey(username: string) {
+  return `rms-onboarding-last-login:${username}`;
+}
+function readLastLoginProcessed(username: string): string | null {
+  try {
+    return window.localStorage.getItem(lastLoginProcessedKey(username));
+  } catch {
+    return null;
+  }
+}
+function writeLastLoginProcessed(username: string, loginAt: string) {
+  try {
+    window.localStorage.setItem(lastLoginProcessedKey(username), loginAt);
+  } catch {
+    // non-fatal
+  }
+}
+
+// Clears this user's decision and every per-page "seen" flag, so the next
+// render sees them exactly as it would for a brand-new user: the beginner
+// prompt is offered again, and each page tour is free to auto-launch again
+// the first time its page is visited this session.
+function resetOnboardingProgress(username: string) {
+  try {
+    window.localStorage.removeItem(decisionKey(username));
+    const prefix = pageSeenKey(username, "");
+    const staleKeys: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key && key.startsWith(prefix)) staleKeys.push(key);
+    }
+    staleKeys.forEach((key) => window.localStorage.removeItem(key));
+  } catch {
+    // non-fatal — worst case, this login behaves like any other session
+  }
+}
+
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const username = (session?.user as { username?: string } | undefined)?.username;
+  // Set once per sign-in (not on every session read) — see the jwt callback
+  // in src/lib/auth.ts. Used below to detect a genuinely new login.
+  const loginAt = (session?.user as { loginAt?: number } | undefined)?.loginAt;
 
   const [isActive, setIsActive] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
@@ -137,6 +217,41 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       cancelled = true;
     };
   }, []);
+
+  // "Always show tutorial on login" preference. Reading localStorage is a
+  // plain synchronous computation, not a subscription to an external
+  // system, so it's computed fresh on every render rather than mirrored
+  // into state via an effect (which would just cause an extra render for
+  // no benefit). forceRerender exists only so that setAlwaysShowTour
+  // (below) has a way to make this component re-render after writing to
+  // localStorage, since that write doesn't itself trigger one.
+  const [, forceRerender] = useState(0);
+  const alwaysShowTour = username ? readAlwaysShow(username) : false;
+
+  const setAlwaysShowTour = useCallback(
+    (value: boolean) => {
+      if (!username) return;
+      writeAlwaysShow(username, value);
+      forceRerender((v) => v + 1);
+    },
+    [username]
+  );
+
+  // If a genuinely new sign-in just happened (loginAt changed since we
+  // last checked, not just a page refresh of the same session) and this
+  // user has "always show" on, replay onboarding from scratch. This is a
+  // legitimate effect — it's synchronizing local component state with an
+  // external system's (localStorage's) requested change in another
+  // external system (which tours have been "seen") — and it runs before
+  // the "ask once" and "auto-launch page tour" effects below so they see
+  // the freshly-cleared state on the very same render.
+  useEffect(() => {
+    if (!username || loginAt == null) return;
+    const marker = String(loginAt);
+    if (readLastLoginProcessed(username) === marker) return;
+    writeLastLoginProcessed(username, marker);
+    if (readAlwaysShow(username)) resetOnboardingProgress(username);
+  }, [username, loginAt]);
 
   // Ask once per user: the first time a signed-in user with no recorded
   // decision lands on /dashboard, and only while the sitewide setting
@@ -254,8 +369,14 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       next,
       prev,
       close,
+      alwaysShowTour,
+      setAlwaysShowTour,
     }),
-    [isActive, promptOpen, stepIndex, activeSteps, currentPageTour, start, startPageTour, answerYes, answerNo, next, prev, close]
+    [
+      isActive, promptOpen, stepIndex, activeSteps, currentPageTour,
+      start, startPageTour, answerYes, answerNo, next, prev, close,
+      alwaysShowTour, setAlwaysShowTour,
+    ]
   );
 
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;

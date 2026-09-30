@@ -230,7 +230,7 @@ export default function CertificatePreviewPage() {
   return (
     <div>
       {/* Toolbar — hidden on print */}
-      <div className="mb-5 flex items-center justify-between print:hidden">
+      <div data-tour="page-certificates-preview-toolbar" className="mb-5 flex items-center justify-between print:hidden">
         <button
           onClick={() => router.push(`/certificates/${certId}`)}
           className="flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
@@ -240,6 +240,7 @@ export default function CertificatePreviewPage() {
         </button>
         <div className="flex items-center gap-2">
           <button
+            data-tour="page-certificates-preview-override"
             onClick={openOverridePanel}
             className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-2.5 text-[13px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
           >
@@ -344,7 +345,7 @@ export default function CertificatePreviewPage() {
       )}
 
       {/* Printable document */}
-      <div className="mx-auto max-w-3xl rounded-xl border border-[#E9EAEC] bg-white p-12 shadow-sm print:border-none print:p-0 print:shadow-none">
+      <div data-tour="page-certificates-preview-document" className="mx-auto max-w-3xl rounded-xl border border-[#E9EAEC] bg-white p-12 shadow-sm print:border-none print:p-0 print:shadow-none">
         {/* Letterhead */}
         <div className="mb-8 flex flex-col items-center border-b-2 border-[#1F2937] pb-6 text-center">
           <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-[#3B82F6]">

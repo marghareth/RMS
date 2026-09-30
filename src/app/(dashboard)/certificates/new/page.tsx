@@ -152,7 +152,7 @@ export default function NewCertificatePage() {
 
       <div className="space-y-5">
         {/* Applicant */}
-        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+        <div data-tour="page-certificates-new-applicant" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
@@ -222,7 +222,7 @@ export default function NewCertificatePage() {
         </div>
 
         {/* Certificate details */}
-        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
+        <div data-tour="page-certificates-new-type" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           <div className="mb-4 flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F4F5F7] dark:bg-[#262626]">
               <FileText size={14} className="text-[#374151] dark:text-[#D4D4D4]" />
@@ -295,7 +295,7 @@ export default function NewCertificatePage() {
 
         {error && <p className="rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-4 py-3 text-[12px] text-[#DC2626] dark:text-[#F87171]">{error}</p>}
 
-        <div className="flex items-center justify-end gap-3 pb-8">
+        <div data-tour="page-certificates-new-save" className="flex items-center justify-end gap-3 pb-8">
           <button
             onClick={() => router.push("/certificates")}
             className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"

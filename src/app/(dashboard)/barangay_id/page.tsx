@@ -83,6 +83,7 @@ export default function BarangayIdListPage() {
         subtitle="Issue and manage resident barangay identification cards"
         actions={
           <button
+            data-tour="page-barangay-id-add"
             onClick={() => router.push("/barangay_id/new")}
             className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
           >
@@ -93,7 +94,7 @@ export default function BarangayIdListPage() {
       />
 
       {/* Stat cards */}
-      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div data-tour="page-barangay-id-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Issued" value={stats.total} sub="All-time records" icon={IdCard} color="blue" />
         <StatCard label="This Month" value={stats.thisMonth} sub="Issued this month" icon={CalendarDays} color="green" />
         <StatCard label="This Year" value={stats.thisYear} sub="Issued this year" icon={CalendarRange} color="amber" />
@@ -104,7 +105,7 @@ export default function BarangayIdListPage() {
         {/* ── Left: list panel ── */}
         <div className="flex w-85 shrink-0 flex-col overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
           <div className="border-b border-[#E9EAEC] dark:border-[#262626] px-4 pt-4 pb-3">
-            <div className="relative">
+            <div data-tour="page-barangay-id-search" className="relative">
               <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
               <input
                 value={search}
@@ -115,7 +116,7 @@ export default function BarangayIdListPage() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div data-tour="page-barangay-id-list" className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
@@ -162,7 +163,7 @@ export default function BarangayIdListPage() {
               />
             </div>
           ) : (
-            <div className="p-6">
+            <div data-tour="page-barangay-id-card" className="p-6">
               <div className="mb-5 flex items-center justify-between">
                 <div>
                   <p className="font-mono text-[13px] font-bold text-[#1F2937] dark:text-white">{selected.id_number}</p>

@@ -60,13 +60,13 @@ export default function DocumentReleasePage() {
         subtitle="Records of certificates and documents already released to applicants"
       />
 
-      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div data-tour="page-document-release-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Released Today" value={today} sub="Handed out today" icon={CheckCircle2} color="green" />
         <StatCard label="Total Released" value={items.length} sub="Matching current filters" icon={FileText} color="blue" />
         <StatCard label="Unpaid on Release" value={unpaidReleased} sub="Released without full payment" icon={CheckCircle2} color="amber" />
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div data-tour="page-document-release-filters" className="mb-4 flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-50">
           <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
           <input
@@ -91,7 +91,7 @@ export default function DocumentReleasePage() {
         />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
+      <div data-tour="page-document-release-table" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
