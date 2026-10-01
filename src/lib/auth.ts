@@ -41,6 +41,7 @@ import bcrypt from "bcryptjs";
 import { verifyTotp, consumeBackupCode } from "./mfa";
 import { RateLimiter } from "./rate-limit";
 import { mfaSetupRequired } from "./mfa-policy";
+import { describeDbError } from "./db-errors";
 
 const loginLimiter = new RateLimiter({
   namespace: "login",
@@ -200,7 +201,9 @@ export const authOptions: NextAuthOptions = {
           // DB hiccup: keep the existing token rather than logging everyone
           // out. API routes re-verify against the DB on every request
           // anyway (session.ts), so this fails safe for authorization.
-          console.error("[auth] token refresh failed:", err);
+          // warn, not error: this is handled, and console.error would pop
+          // Next's red dev overlay as if the app had crashed.
+          console.warn("[auth] token refresh skipped — database unreachable:", describeDbError(err));
         }
       }
       return token;

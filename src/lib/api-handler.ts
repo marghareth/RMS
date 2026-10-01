@@ -28,6 +28,18 @@ export function withErrorHandling(handler: Handler): Handler {
   };
 }
 
+// Prisma error codes meaning "couldn't talk to the database" rather than
+// "the query was wrong": P1001 can't reach server, P1002 reached but timed
+// out, P1008 operation timed out, P1017 server closed the connection,
+// P2024 connection-pool timeout.
+const DB_UNAVAILABLE_CODES = new Set(["P1001", "P1002", "P1008", "P1017", "P2024"]);
+
+/** True for connection-level Prisma failures (see DB_UNAVAILABLE_CODES). */
+export function isDatabaseUnavailable(err: unknown): boolean {
+  if (err instanceof Prisma.PrismaClientInitializationError) return true;
+  return err instanceof Prisma.PrismaClientKnownRequestError && DB_UNAVAILABLE_CODES.has(err.code);
+}
+
 function toErrorResponse(err: unknown, req: NextRequest): NextResponse {
   // ── Zod validation errors ────────────────────────────────────────────────
   if (err instanceof ZodError) {
@@ -41,6 +53,23 @@ function toErrorResponse(err: unknown, req: NextRequest): NextResponse {
         })),
       },
       { status: 400 }
+    );
+  }
+
+  // ── Database unreachable / timed out ─────────────────────────────────────
+  // Not the caller's fault and not a bug in the request: the server simply
+  // can't reach Postgres (paused Supabase project, network/firewall block,
+  // wrong DATABASE_URL, pool exhausted…). Say so with a 503 instead of a
+  // generic 500 so it's obvious what to check. The raw Prisma message
+  // (which includes the DB host) is logged server-side only.
+  if (isDatabaseUnavailable(err)) {
+    console.error(`[${req.method} ${req.nextUrl.pathname}] Database unavailable:`, (err as Error).message);
+    return NextResponse.json(
+      {
+        error: "DATABASE_UNAVAILABLE",
+        message: "The database is currently unreachable. Please try again in a moment.",
+      },
+      { status: 503 }
     );
   }
 

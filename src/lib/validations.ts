@@ -8,6 +8,16 @@
 // Throws a ZodError on failure, caught by withErrorHandling() in api-handler.ts.
 
 import { z } from "zod";
+import {
+  personName,
+  optionalPersonName,
+  nameSuffix,
+  birthdate,
+  phMobile,
+  phoneNumber,
+  philsysNumber,
+  zipCode,
+} from "./field-rules";
 
 // ─── SHARED PRIMITIVES ─────────────────────────────────────────────────────
 const id = z.coerce.number().int().positive();
@@ -103,11 +113,13 @@ export const sexEnum = z.enum(["MALE", "FEMALE"]);
 export const residentCreateSchema = z.object({
   household_id: optionalId,
   purok_id: optionalId,
-  fname: nonEmptyString.max(100),
-  lname: nonEmptyString.max(100),
-  mname: z.string().trim().max(100).optional().nullable(),
-  name_extension: z.string().trim().max(20).optional().nullable(),
-  birthdate: dateString,
+  // Names are trimmed, single-spaced and limited to letters/spaces/. ' -
+  // (see field-rules.ts); birthdate must be a real, plausible date.
+  fname: personName(),
+  lname: personName(),
+  mname: optionalPersonName().optional().nullable(),
+  name_extension: nameSuffix.optional().nullable(),
+  birthdate: birthdate,
   place_of_birth: z.string().trim().optional().nullable(),
   sex: sexEnum,
   civil_status: civilStatusEnum,
@@ -127,8 +139,8 @@ export const residentCreateSchema = z.object({
 
   // ── Contact (2.9) ──
   email: z.string().trim().email().optional().nullable().or(z.literal("")),
-  mobile: z.string().trim().optional().nullable(),
-  tel_no: z.string().trim().optional().nullable(),
+  mobile: phMobile.optional().nullable(),   // normalized to 09XXXXXXXXX
+  tel_no: phoneNumber.optional().nullable(),
 
   // ── Granular address (2.9) ──
   house_block_lot_no: z.string().trim().optional().nullable(),
@@ -138,14 +150,14 @@ export const residentCreateSchema = z.object({
   city_municipality: z.string().trim().optional().nullable(),
   province: z.string().trim().optional().nullable(),
   region: z.string().trim().optional().nullable(),
-  zip_code: z.string().trim().optional().nullable(),
+  zip_code: zipCode.optional().nullable(),
 
   // ── Identity (2.9) ──
-  philsys_card_no: z.string().trim().optional().nullable(),
+  philsys_card_no: philsysNumber.optional().nullable(), // stored as digits only
   gender: z.string().trim().optional().nullable(),
   residence_of_mother_upon_birth: z.string().trim().optional().nullable(),
   type_of_resident: z.string().trim().optional().nullable(),
-  mothers_maiden_name: z.string().trim().optional().nullable(),
+  mothers_maiden_name: optionalPersonName(200).optional().nullable(),
   ethnicity: z.string().trim().optional().nullable(),
   blood_type: z.string().trim().optional().nullable(),
   height_m: z.coerce.number().positive().optional().nullable(),

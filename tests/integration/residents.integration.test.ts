@@ -11,6 +11,11 @@ import { testDb, trackCleanup, cleanupCreatedRows, disconnectTestDb } from "./se
 import { createTestUser, createTestPurok, createTestHousehold, createTestResident } from "./setup/factories";
 import { authedAs, FORBIDDEN, UNAUTHORIZED } from "./setup/auth";
 
+// Names are validated as letters/spaces/. ' - only (src/lib/field-rules.ts), so
+// the old `Santos_${Date.now()}` unique-suffix trick would now be a 400.
+// Map the timestamp's digits to letters to keep names unique AND valid.
+const uniqueAlpha = () => Date.now().toString().replace(/\d/g, (d) => "abcdefghij"[Number(d)]);
+
 // `vi.mock` factories run before this file's own top-level imports are
 // initialized, so they can't safely close over a module-level `const`
 // (Vitest hoists the `vi.mock` call itself, not the bindings it
@@ -53,7 +58,7 @@ describe("Residents API (integration)", () => {
       method: "POST",
       body: JSON.stringify({
         fname: "Maria",
-        lname: `Santos_${Date.now()}`,
+        lname: `Santos${uniqueAlpha()}`,
         birthdate: "1995-05-05",
         sex: "FEMALE",
         civil_status: "SINGLE",
@@ -79,11 +84,67 @@ describe("Residents API (integration)", () => {
     expect(auditRow!.user_id).toBe(admin.id);
   });
 
+  it("normalizes messy names / mobile / PhilSys before storing them", async () => {
+    const admin = await createTestUser({ role: "ADMIN" });
+    requirePermission.mockResolvedValue(authedAs(admin, "ADMIN"));
+
+    const lname = `Normalized${uniqueAlpha()}`;
+    const req = new NextRequest("http://localhost/api/residents", {
+      method: "POST",
+      body: JSON.stringify({
+        fname: "  Maria   Clara ",
+        lname: `  ${lname} `,
+        birthdate: "1995-05-05",
+        sex: "FEMALE",
+        civil_status: "SINGLE",
+        mobile: "+63 917 123 4567",
+        philsys_card_no: "1234-5678-9012-3456",
+        zip_code: "6004",
+      }),
+    });
+
+    const res = await POST(req);
+    const body = await res.json();
+    expect(res.status).toBe(201);
+    trackCleanup(() => testDb.resident.delete({ where: { id: body.id } }).then(() => {}));
+
+    const inDb = await testDb.resident.findUnique({ where: { id: body.id } });
+    expect(inDb?.fname).toBe("Maria Clara");
+    expect(inDb?.lname).toBe(lname);
+    expect(inDb?.mobile).toBe("09171234567");
+    expect(inDb?.philsys_card_no).toBe("1234567890123456");
+  });
+
+  it("rejects a future birthdate and a malformed mobile with field-level issues (400)", async () => {
+    const admin = await createTestUser({ role: "ADMIN" });
+    requirePermission.mockResolvedValue(authedAs(admin, "ADMIN"));
+
+    const req = new NextRequest("http://localhost/api/residents", {
+      method: "POST",
+      body: JSON.stringify({
+        fname: "Juan",
+        lname: `Invalid${uniqueAlpha()}`,
+        birthdate: "2087-05-05",
+        sex: "MALE",
+        civil_status: "SINGLE",
+        mobile: "not-a-number",
+      }),
+    });
+
+    const res = await POST(req);
+    const body = await res.json();
+    expect(res.status).toBe(400);
+    expect(body.error).toBe("VALIDATION_ERROR");
+    const paths = body.issues.map((i: { path: string }) => i.path);
+    expect(paths).toContain("birthdate");
+    expect(paths).toContain("mobile");
+  });
+
   it("rejects creating a duplicate resident (same name + birthdate) with 409", async () => {
     const admin = await createTestUser({ role: "ADMIN" });
     requirePermission.mockResolvedValue(authedAs(admin, "ADMIN"));
 
-    const lname = `Reyes_${Date.now()}`;
+    const lname = `Reyes${uniqueAlpha()}`;
     const existing = await createTestResident({ fname: "Pedro", lname, birthdate: new Date("1988-02-02") });
 
     const req = new NextRequest("http://localhost/api/residents", {

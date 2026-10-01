@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
+import { apiErrorMessage } from "@/lib/api-error";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Purok { id: number; name: string }
@@ -100,10 +101,12 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
 }
 
 function TextInput({
-  label, value, onChange, placeholder, required, type = "text",
+  label, value, onChange, placeholder, required, type = "text", max,
 }: {
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; required?: boolean; type?: string;
+  /** For type="date": latest selectable date (YYYY-MM-DD). */
+  max?: string;
 }) {
   return (
     <div>
@@ -111,6 +114,7 @@ function TextInput({
       <input
         type={type}
         value={value}
+        max={max}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
         className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717]"
@@ -239,7 +243,12 @@ export default function EditResidentPage() {
           residency_start_date: form.residency_start_date || null,
         }),
       });
-      if (!res.ok) throw new Error("Failed to save changes");
+      if (!res.ok) {
+        // Show *which* field was rejected (e.g. "Birthdate: cannot be in the
+        // future") instead of a generic failure message.
+        const body = await res.json().catch(() => null);
+        throw new Error(apiErrorMessage(body, "Failed to save changes"));
+      }
 
       router.push(`/residents/${id}`);
     } catch (e: any) {
@@ -316,6 +325,7 @@ export default function EditResidentPage() {
               value={form.birthdate}
               onChange={v => set("birthdate", v)}
               type="date"
+              max={new Date().toLocaleDateString("en-CA")}
               required
             />
           </div>

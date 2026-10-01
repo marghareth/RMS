@@ -149,6 +149,46 @@ describe('validateImportRow', () => {
     expect(result.errors.some((e) => e.startsWith('birthdate:'))).toBe(true);
   });
 
+  it('normalizes messy names and the mobile number', () => {
+    const result = validateImportRow(
+      20,
+      { ...validRaw, fname: '  Maria   Clara ', lname: ' Dela   Cruz ', mobile: '+63 917 123 4567' },
+      emptyLookups()
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.data?.fname).toBe('Maria Clara');
+    expect(result.data?.lname).toBe('Dela Cruz');
+    expect(result.data?.mobile).toBe('09171234567');
+  });
+
+  it('rejects digits/symbols in names with a field-prefixed error', () => {
+    const result = validateImportRow(21, { ...validRaw, fname: 'Juan123' }, emptyLookups());
+    expect(result.data).toBeUndefined();
+    expect(result.errors.some((e) => e.startsWith('fname:'))).toBe(true);
+  });
+
+  it('rejects a future birthdate and one over 120 years ago', () => {
+    const future = validateImportRow(22, { ...validRaw, birthdate: '2087-05-05' }, emptyLookups());
+    expect(future.errors.some((e) => e.startsWith('birthdate:') && /future/.test(e))).toBe(true);
+
+    const ancient = validateImportRow(23, { ...validRaw, birthdate: '1850-01-01' }, emptyLookups());
+    expect(ancient.errors.some((e) => e.startsWith('birthdate:') && /120/.test(e))).toBe(true);
+  });
+
+  it('rejects a malformed mobile, and names the Excel dropped-zero case', () => {
+    const bad = validateImportRow(24, { ...validRaw, mobile: 'n/a' }, emptyLookups());
+    expect(bad.errors.some((e) => e.startsWith('mobile:'))).toBe(true);
+
+    const excel = validateImportRow(25, { ...validRaw, mobile: '9171234567' }, emptyLookups());
+    expect(excel.errors.some((e) => e.startsWith('mobile:') && /leading 0/.test(e))).toBe(true);
+  });
+
+  it('treats a blank mobile as no value', () => {
+    const result = validateImportRow(26, { ...validRaw, mobile: '' }, emptyLookups());
+    expect(result.errors).toEqual([]);
+    expect(result.data?.mobile).toBeNull();
+  });
+
   it('rejects a malformed email but allows an empty one', () => {
     const bad = validateImportRow(5, { ...validRaw, email: 'not-an-email' }, emptyLookups());
     expect(bad.errors.some((e) => e.startsWith('email:'))).toBe(true);
