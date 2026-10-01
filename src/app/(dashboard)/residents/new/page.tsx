@@ -4,6 +4,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { apiErrorMessage } from "@/lib/api-error";
+
+/** Today as YYYY-MM-DD in the browser's local time (used to block future birthdates). */
+const todayLocalISO = () => new Date().toLocaleDateString("en-CA");
 
 // ── TYPES ─────────────────────────────────────────────────────────────────────
 interface Purok { id: number; name: string }
@@ -77,7 +81,7 @@ function SelectField({
 
 // ── TEXT FIELD ────────────────────────────────────────────────────────────────
 function TextField({
-  label, value, onChange, placeholder, required, type = "text",
+  label, value, onChange, placeholder, required, type = "text", max,
 }: {
   label: string;
   value: string;
@@ -85,6 +89,8 @@ function TextField({
   placeholder?: string;
   required?: boolean;
   type?: string;
+  /** For type="date": latest selectable date (YYYY-MM-DD). */
+  max?: string;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -94,6 +100,7 @@ function TextField({
       <input
         type={type}
         value={value}
+        max={max}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
         className="text-[13px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] text-[#1F2937] dark:text-white"
@@ -350,7 +357,9 @@ export default function NewRBIPage() {
         if (!residentRes.ok) {
           const err = await residentRes.json().catch(() => ({}));
           // The API returns 409 + a helpful message for duplicate residents
-          throw new Error(err.message || err.error || `Failed to save ${m.fname} ${m.lname}.`);
+          throw new Error(
+            `${m.fname} ${m.lname}: ` + apiErrorMessage(err, "could not be saved.")
+          );
         }
       }
 
@@ -501,7 +510,7 @@ export default function NewRBIPage() {
                     { value: "IV",  label: "IV"  },
                   ]}
                 />
-                <TextField label="Date of Birth" value={form.birthdate} onChange={v => setField("birthdate", v)} type="date" required />
+                <TextField label="Date of Birth" value={form.birthdate} onChange={v => setField("birthdate", v)} type="date" max={todayLocalISO()} required />
                 <SelectField
                   label="Gender"
                   value={form.sex}

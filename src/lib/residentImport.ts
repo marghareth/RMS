@@ -11,6 +11,7 @@ import { z } from "zod";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { civilStatusEnum, sexEnum } from "@/lib/validations";
+import { personName, optionalPersonName, nameSuffix, birthdate, phMobile } from "@/lib/field-rules";
 
 // The columns a barangay's field census spreadsheet is expected to have.
 // Kept intentionally smaller than the full Resident model (which has 40+
@@ -98,11 +99,13 @@ export function parseImportFile(buffer: Buffer, filename: string): Record<string
 // purok_id/household_id by the caller via the lookup maps below — a CSV
 // author writing "Purok II" shouldn't need to know the internal id.
 const importRowSchema = z.object({
-  fname: z.string().trim().min(1, "First name is required").max(100),
-  lname: z.string().trim().min(1, "Last name is required").max(100),
-  mname: z.string().trim().max(100).optional(),
-  name_extension: z.string().trim().max(20).optional(),
-  birthdate: z.coerce.date({ error: "Invalid date — use YYYY-MM-DD" }),
+  // Same rules as the manual form (src/lib/field-rules.ts), so a row that
+  // would be rejected by "Add Resident" is rejected here too.
+  fname: personName({ requiredMessage: "First name is required" }),
+  lname: personName({ requiredMessage: "Last name is required" }),
+  mname: optionalPersonName().optional(),
+  name_extension: nameSuffix.optional(),
+  birthdate: birthdate,
   sex: sexEnum,
   civil_status: civilStatusEnum,
   purok_name: z.string().trim().optional(),
@@ -113,7 +116,7 @@ const importRowSchema = z.object({
   educational_attainment: z.string().trim().optional(),
   occupation: z.string().trim().optional(),
   income_bracket: z.string().trim().optional(),
-  mobile: z.string().trim().optional(),
+  mobile: phMobile.optional(), // normalized to 09XXXXXXXXX (null when blank)
   email: z.string().trim().email("Invalid email").optional().or(z.literal("")),
 });
 

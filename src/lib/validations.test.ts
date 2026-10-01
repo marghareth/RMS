@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import {
   userCreateSchema,
   residentCreateSchema,
+  residentUpdateSchema,
   certificateCreateSchema,
   blotterCreateSchema,
   fundSourceCreateSchema,
@@ -69,6 +70,47 @@ describe('residentCreateSchema', () => {
   it('rejects an invalid civil status', () => {
     const result = residentCreateSchema.safeParse({ ...base, civil_status: 'ENGAGED' });
     expect(result.success).toBe(false);
+  });
+
+  it('trims and collapses spacing in names', () => {
+    const r = residentCreateSchema.parse({ ...base, fname: '  Maria   Clara ', lname: ' Dela   Cruz ' });
+    expect(r.fname).toBe('Maria Clara');
+    expect(r.lname).toBe('Dela Cruz');
+  });
+
+  it('rejects names containing digits or symbols', () => {
+    expect(residentCreateSchema.safeParse({ ...base, fname: 'Juan2' }).success).toBe(false);
+    expect(residentCreateSchema.safeParse({ ...base, lname: 'Cruz@home' }).success).toBe(false);
+  });
+
+  it('rejects a future birthdate and one more than 120 years ago', () => {
+    expect(residentCreateSchema.safeParse({ ...base, birthdate: '2087-05-05' }).success).toBe(false);
+    expect(residentCreateSchema.safeParse({ ...base, birthdate: '1850-01-01' }).success).toBe(false);
+  });
+
+  it('normalizes a PH mobile to 09XXXXXXXXX and rejects malformed ones', () => {
+    expect(residentCreateSchema.parse({ ...base, mobile: '+639171234567' }).mobile).toBe('09171234567');
+    expect(residentCreateSchema.safeParse({ ...base, mobile: '12345' }).success).toBe(false);
+  });
+
+  it('validates PhilSys number and ZIP code, storing digits only', () => {
+    const ok = residentCreateSchema.parse({ ...base, philsys_card_no: '1234-5678-9012-3456', zip_code: '6004' });
+    expect(ok.philsys_card_no).toBe('1234567890123456');
+    expect(ok.zip_code).toBe('6004');
+    expect(residentCreateSchema.safeParse({ ...base, philsys_card_no: '123' }).success).toBe(false);
+    expect(residentCreateSchema.safeParse({ ...base, zip_code: '60040' }).success).toBe(false);
+  });
+
+  it('lets blank optional contact fields through as null', () => {
+    const r = residentCreateSchema.parse({ ...base, mobile: '', zip_code: '', philsys_card_no: '' });
+    expect(r.mobile).toBeNull();
+    expect(r.zip_code).toBeNull();
+    expect(r.philsys_card_no).toBeNull();
+  });
+
+  it('update schema only validates the fields actually sent (legacy data elsewhere is untouched)', () => {
+    expect(residentUpdateSchema.safeParse({ household_id: 5 }).success).toBe(true);
+    expect(residentUpdateSchema.safeParse({ mobile: 'bad' }).success).toBe(false);
   });
 
   it('allows an empty-string email (treated as "no email")', () => {

@@ -89,6 +89,34 @@ describe('withErrorHandling', () => {
     expect((await res.json()).error).toBe('DATABASE_ERROR');
   });
 
+  it('maps a Prisma initialization (cannot reach database) error to 503 DATABASE_UNAVAILABLE', async () => {
+    const err = new Prisma.PrismaClientInitializationError(
+      "Can't reach database server at `db.example.com:6543`",
+      '6.19.3'
+    );
+    const handler = withErrorHandling(async () => {
+      throw err;
+    });
+    const res = await handler(makeReq());
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body.error).toBe('DATABASE_UNAVAILABLE');
+    // The DB host must not leak to the client.
+    expect(JSON.stringify(body)).not.toContain('example.com');
+  });
+
+  it.each(['P1001', 'P1002', 'P1008', 'P1017', 'P2024'])(
+    'maps connection-level Prisma code %s to 503',
+    async (code) => {
+      const handler = withErrorHandling(async () => {
+        throw new Prisma.PrismaClientKnownRequestError('connection problem', { code, clientVersion: '6.19.3' });
+      });
+      const res = await handler(makeReq());
+      expect(res.status).toBe(503);
+      expect((await res.json()).error).toBe('DATABASE_UNAVAILABLE');
+    }
+  );
+
   it('maps a Prisma validation error to 400 VALIDATION_ERROR', async () => {
     const err = new Prisma.PrismaClientValidationError('Invalid `prisma.resident.create()` invocation', {
       clientVersion: '6.19.3',
