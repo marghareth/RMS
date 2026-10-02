@@ -583,6 +583,28 @@ export const residentImportCommitSchema = z.object({
     .array(z.record(z.string(), z.string()))
     .min(1, "No rows to import")
     .max(500, "At most 500 rows per import"),
+  // Zero-based positions in `rows` that the user explicitly confirmed despite a
+  // POSSIBLE duplicate warning (swapped names, one-letter typo, birthdate
+  // typo). A flagged row that is NOT listed here is skipped. Exact duplicates
+  // can't be confirmed — they are always skipped.
+  confirmed_rows: z.array(z.number().int().min(0)).max(500).optional(),
+});
+
+// POST /api/residents/duplicate-check — dry-run duplicate detection for a
+// batch of people (the household form's members) before anything is saved.
+export const residentDuplicateCheckSchema = z.object({
+  members: z
+    .array(
+      residentCreateSchema.pick({
+        fname: true,
+        lname: true,
+        mname: true,
+        name_extension: true,
+        birthdate: true,
+      })
+    )
+    .min(1, "No members to check")
+    .max(50, "At most 50 members per check"),
 });
 
 export const dashboardWidgetKeyEnum = z.enum([

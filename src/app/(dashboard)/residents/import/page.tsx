@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+import { describeMatch, type DuplicateMatchInfo } from "@/lib/duplicate-detection";
 
 interface PreviewRow {
   rowNumber: number;
@@ -24,8 +25,21 @@ interface PreviewRow {
     birthdate: string;
   };
   errors: string[];
+  /** Exact duplicate — cannot be imported. */
   isDuplicate: boolean;
+  /** Resembles an existing resident / earlier row — importable once the user confirms. */
+  possibleDuplicates?: DuplicateMatchInfo[];
 }
+
+// A row with no errors and not an exact duplicate, but that looks like
+// someone already on file. Not pre-selected; ticking it = the user's
+// explicit confirmation that it is a different person.
+const needsReview = (r: PreviewRow) =>
+  !!r.data && r.errors.length === 0 && !r.isDuplicate && (r.possibleDuplicates?.length ?? 0) > 0;
+
+// Clean row: safe to import without a second look.
+const isReady = (r: PreviewRow) =>
+  !!r.data && r.errors.length === 0 && !r.isDuplicate && !needsReview(r);
 
 type Step = "upload" | "preview" | "done";
 
@@ -61,14 +75,9 @@ export default function ResidentImportPage() {
         return;
       }
       setRows(data.rows);
-      // Pre-select every row that's valid with no errors and not a duplicate.
-      setSelected(
-        new Set(
-          (data.rows as PreviewRow[])
-            .filter((r) => r.data && r.errors.length === 0 && !r.isDuplicate)
-            .map((r) => r.rowNumber)
-        )
-      );
+      // Pre-select only clean rows. Possible duplicates stay unticked until
+      // the user decides they really are different people.
+      setSelected(new Set((data.rows as PreviewRow[]).filter(isReady).map((r) => r.rowNumber)));
       setStep("preview");
     } catch (e) {
       console.error(e);
@@ -91,11 +100,15 @@ export default function ResidentImportPage() {
     setCommitting(true);
     setCommitError("");
     try {
-      const selectedRows = rows.filter((r) => selected.has(r.rowNumber)).map((r) => r.raw);
+      const selectedPreviewRows = rows.filter((r) => selected.has(r.rowNumber));
+      // Positions (within the submitted list) of ticked rows that carry a
+      // possible-duplicate warning — the server only imports those when told
+      // the user confirmed them.
+      const confirmedRows = selectedPreviewRows.flatMap((r, i) => (needsReview(r) ? [i] : []));
       const res = await fetch("/api/residents/import/commit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rows: selectedRows }),
+        body: JSON.stringify({ rows: selectedPreviewRows.map((r) => r.raw), confirmed_rows: confirmedRows }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -121,8 +134,9 @@ export default function ResidentImportPage() {
     setCommitError("");
   }
 
-  const validCount = rows.filter((r) => r.data && r.errors.length === 0 && !r.isDuplicate).length;
-  const problemCount = rows.length - validCount;
+  const validCount = rows.filter(isReady).length;
+  const reviewCount = rows.filter(needsReview).length;
+  const problemCount = rows.length - validCount - reviewCount;
 
   return (
     <div>
@@ -217,10 +231,16 @@ export default function ResidentImportPage() {
               <CheckCircle2 size={13} />
               {validCount} ready to import
             </div>
-            {problemCount > 0 && (
+            {reviewCount > 0 && (
               <div className="flex items-center gap-1.5 rounded-full bg-[#FEF3C7] px-3 py-1.5 text-[12px] font-bold text-[#B45309]">
                 <AlertTriangle size={13} />
-                {problemCount} need attention
+                {reviewCount} possible duplicate{reviewCount === 1 ? "" : "s"} — review
+              </div>
+            )}
+            {problemCount > 0 && (
+              <div className="flex items-center gap-1.5 rounded-full bg-[#FEE2E2] px-3 py-1.5 text-[12px] font-bold text-[#B91C1C]">
+                <AlertTriangle size={13} />
+                {problemCount} can&apos;t be imported
               </div>
             )}
             <span className="text-[12px] text-[#9CA3AF]">{selected.size} selected</span>
@@ -263,6 +283,9 @@ export default function ResidentImportPage() {
               <tbody>
                 {rows.map((r) => {
                   const hasIssue = r.errors.length > 0 || r.isDuplicate;
+                  const review = needsReview(r);
+                  const first = r.possibleDuplicates?.[0];
+                  const more = (r.possibleDuplicates?.length ?? 0) - 1;
                   return (
                     <tr key={r.rowNumber} className="border-b border-[#F4F5F7] last:border-b-0">
                       <td className="px-4 py-3">
@@ -282,9 +305,20 @@ export default function ResidentImportPage() {
                       </td>
                       <td className="px-4 py-3">
                         {hasIssue ? (
-                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#B45309]">
+                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#B91C1C]">
                             <AlertTriangle size={12} />
                             {r.errors[0] ?? "Needs review"}
+                          </div>
+                        ) : review && first ? (
+                          <div className="text-[11px] font-semibold text-[#B45309]">
+                            <div className="flex items-center gap-1.5">
+                              <AlertTriangle size={12} />
+                              Possible duplicate — {first.label.toLowerCase()}
+                            </div>
+                            <div className="mt-0.5 pl-4.5 font-normal text-[#92400E]">
+                              Looks like {describeMatch(first)}
+                              {more > 0 ? ` (+${more} more)` : ""}. Tick the box to import anyway.
+                            </div>
                           </div>
                         ) : (
                           <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#15803D]">

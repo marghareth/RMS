@@ -98,7 +98,8 @@ describe('POST /api/residents/import/preview', () => {
     const res = await POST(makeFileReq('r.csv', VALID_ROW));
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.summary).toEqual({ total: 1, valid: 1, errors: 0 });
+    expect(body.summary).toEqual({ total: 1, valid: 1, errors: 0, duplicates: 0, possibleDuplicates: 0 });
+    expect(body.rows[0].possibleDuplicates).toEqual([]);
     expect(body.rows[0].data.fname).toBe('Juan');
   });
 
@@ -135,5 +136,72 @@ describe('POST /api/residents/import/preview', () => {
     // row 2 has an empty fname -> error too.
     expect(body.summary.valid).toBe(0);
     expect(body.summary.errors).toBe(2);
+  });
+
+  const HEADER = 'fname,lname,birthdate,sex,civil_status\n';
+  const existing = (over: Record<string, unknown> = {}) => ({
+    id: 42, fname: 'Juan', lname: 'Dela Cruz', mname: null, name_extension: null,
+    birthdate: new Date('1990-01-15'), ...over,
+  });
+
+  it('treats case / accent / punctuation variants of an existing resident as an exact duplicate', async () => {
+    (prisma.resident.findMany as any).mockResolvedValue([existing({ fname: 'José', lname: 'Dela-Cruz' })]);
+    const res = await POST(makeFileReq('r.csv', HEADER + 'JOSE,dela cruz,1990-01-15,MALE,SINGLE\n'));
+    const body = await res.json();
+    expect(body.rows[0].isDuplicate).toBe(true);
+    expect(body.summary.duplicates).toBe(1);
+  });
+
+  it('warns (but does not block) on swapped first/last name', async () => {
+    (prisma.resident.findMany as any).mockResolvedValue([existing()]);
+    const res = await POST(makeFileReq('r.csv', HEADER + 'Dela Cruz,Juan,1990-01-15,MALE,SINGLE\n'));
+    const body = await res.json();
+
+    const row = body.rows[0];
+    expect(row.isDuplicate).toBe(false);
+    expect(row.errors).toEqual([]);
+    expect(row.possibleDuplicates).toHaveLength(1);
+    expect(row.possibleDuplicates[0]).toMatchObject({ id: 42, level: 'POSSIBLE', reason: 'SWAPPED_NAMES' });
+    expect(body.summary).toMatchObject({ valid: 1, duplicates: 0, possibleDuplicates: 1 });
+  });
+
+  it('warns on a one-letter name typo against an existing resident', async () => {
+    (prisma.resident.findMany as any).mockResolvedValue([existing({ fname: 'John', lname: 'Cruz' })]);
+    const res = await POST(makeFileReq('r.csv', HEADER + 'Jhon,Cruz,1990-01-15,MALE,SINGLE\n'));
+    const body = await res.json();
+    expect(body.rows[0].possibleDuplicates[0].reason).toBe('NAME_TYPO');
+  });
+
+  it('warns on a likely birthdate typo (day/month swapped) against an existing resident', async () => {
+    (prisma.resident.findMany as any).mockResolvedValue([existing({ birthdate: new Date('2000-03-12') })]);
+    const res = await POST(makeFileReq('r.csv', HEADER + 'Juan,Dela Cruz,2000-12-03,MALE,SINGLE\n'));
+    const body = await res.json();
+    expect(body.rows[0].possibleDuplicates[0]).toMatchObject({ id: 42, reason: 'BIRTHDATE_TYPO' });
+  });
+
+  it('warns about a near-match to an EARLIER ROW of the same file, pointing at that row', async () => {
+    const csv = HEADER +
+      'John,Cruz,1990-01-15,MALE,SINGLE\n' +
+      'Jon,Cruz,1990-01-15,MALE,SINGLE\n';
+    const res = await POST(makeFileReq('r.csv', csv));
+    const body = await res.json();
+
+    expect(body.rows[0].possibleDuplicates).toEqual([]);
+    expect(body.rows[1].isDuplicate).toBe(false);
+    expect(body.rows[1].possibleDuplicates[0]).toMatchObject({ reason: 'NAME_TYPO', rowNumber: 1, id: null });
+  });
+
+  it('does not flag genuinely different people who merely share a birthdate', async () => {
+    (prisma.resident.findMany as any).mockResolvedValue([existing({ fname: 'Pedro', lname: 'Reyes' })]);
+    const res = await POST(makeFileReq('r.csv', VALID_ROW));
+    const body = await res.json();
+    expect(body.rows[0].possibleDuplicates).toEqual([]);
+    expect(body.rows[0].isDuplicate).toBe(false);
+  });
+
+  it('queries existing residents once for the whole file, not per row', async () => {
+    const csv = HEADER + 'Ana,Lopez,1991-01-01,FEMALE,SINGLE\nBen,Uy,1992-02-02,MALE,SINGLE\nCarl,Go,1993-03-03,MALE,SINGLE\n';
+    await POST(makeFileReq('r.csv', csv));
+    expect(prisma.resident.findMany).toHaveBeenCalledTimes(1);
   });
 });

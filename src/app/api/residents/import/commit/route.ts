@@ -20,12 +20,14 @@ import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { residentImportCommitSchema } from "@/lib/validations";
 import { validateImportRow, ImportLookups } from "@/lib/residentImport";
+import { DuplicateIndex, DUPLICATE_SELECT, describeMatch, toMatchInfo, type ResidentIdentity } from "@/lib/duplicate-detection";
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("residents:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const { rows: rawRows } = residentImportCommitSchema.parse(await req.json());
+  const { rows: rawRows, confirmed_rows } = residentImportCommitSchema.parse(await req.json());
+  const confirmed = new Set(confirmed_rows ?? []);
   const userId = parseInt(auth.session.user.id);
 
   const [puroks, households] = await Promise.all([
@@ -42,7 +44,18 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     ),
   };
 
+  // Duplicate detection (src/lib/duplicate-detection.ts) — the same rule as
+  // /preview and the manual form. Everyone is loaded once; each resident we
+  // create is added to the index, so a repeat later in the same batch is
+  // caught too (the old per-row findFirst only saw it because the earlier
+  // insert had already committed).
+  type Known = ResidentIdentity & { id?: number };
+  const index = new DuplicateIndex<Known>(
+    await prisma.resident.findMany({ select: DUPLICATE_SELECT })
+  );
+
   const created: number[] = [];
+  const confirmedDuplicates: number[] = []; // created ids saved despite a warning
   const skipped: { rowNumber: number; reason: string }[] = [];
 
   for (let i = 0; i < rawRows.length; i++) {
@@ -54,12 +67,18 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
     // Re-check duplicates at commit time too — the DB may have changed
     // since /preview ran (e.g. two staff importing overlapping files).
-    const existing = await prisma.resident.findFirst({
-      where: { fname: validated.data.fname, lname: validated.data.lname, birthdate: validated.data.birthdate },
-      select: { id: true },
-    });
-    if (existing) {
-      skipped.push({ rowNumber: validated.rowNumber, reason: `Matches existing resident (id ${existing.id})` });
+    const hits = index.find(validated.data);
+    const exact = hits.find((h) => h.level === "EXACT");
+    if (exact) {
+      skipped.push({ rowNumber: validated.rowNumber, reason: `Matches existing resident (id ${exact.record.id})` });
+      continue;
+    }
+    const possible = hits.filter((h) => h.level === "POSSIBLE");
+    if (possible.length > 0 && !confirmed.has(i)) {
+      skipped.push({
+        rowNumber: validated.rowNumber,
+        reason: `Possible duplicate of ${possible.map((h) => describeMatch(toMatchInfo(h))).join("; ")} — not confirmed`,
+      });
       continue;
     }
 
@@ -85,6 +104,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       },
     });
     created.push(resident.id);
+    if (possible.length > 0) confirmedDuplicates.push(resident.id);
+    index.add({ ...validated.data, id: resident.id });
   }
 
   if (created.length > 0) {
@@ -93,7 +114,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       action: "CREATE",
       table_affected: "Resident",
       record_id: created[0],
-      details: `Bulk import: created ${created.length} resident(s) (ids ${created.join(", ")})${skipped.length ? `, skipped ${skipped.length}` : ""}`,
+      details: `Bulk import: created ${created.length} resident(s) (ids ${created.join(", ")})${skipped.length ? `, skipped ${skipped.length}` : ""}${confirmedDuplicates.length ? `, ${confirmedDuplicates.length} saved after confirming a possible duplicate (ids ${confirmedDuplicates.join(", ")})` : ""}`,
     });
   }
 
