@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { apiErrorMessage } from "@/lib/api-error";
+import { describeMatch, type DuplicateMatchInfo } from "@/lib/duplicate-detection";
 
 /** Today as YYYY-MM-DD in the browser's local time (used to block future birthdates). */
 const todayLocalISO = () => new Date().toLocaleDateString("en-CA");
@@ -225,6 +226,10 @@ export default function NewRBIPage() {
   const [puroksError, setPuroksError] = useState("");
   const [submitting,  setSubmitting]  = useState(false);
   const [error,       setError]       = useState("");
+  // Lines describing members that look like someone already on file (or like
+  // each other), remembered together with the step/member list they were
+  // raised for so a warning goes stale (and hides) as soon as either changes.
+  const [dupWarning,  setDupWarning]  = useState<{ lines: string[]; forMembers: MemberDraft[]; forStep: number } | null>(null);
   const [editIdx,     setEditIdx]     = useState<number | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -236,6 +241,8 @@ export default function NewRBIPage() {
 
   // Step 2: Members
   const [members, setMembers] = useState<MemberDraft[]>([]);
+  const activeDupWarning =
+    dupWarning && dupWarning.forMembers === members && dupWarning.forStep === step ? dupWarning.lines : null;
   const [form,    setForm]    = useState({ ...EMPTY_MEMBER });
   const setField = (k: keyof typeof EMPTY_MEMBER, v: string) => setForm(p => ({ ...p, [k]: v }));
 
@@ -304,12 +311,71 @@ export default function NewRBIPage() {
   }
 
   // ── Final submit ─────────────────────────────────────────────────────────
-  async function handleFinish() {
+  async function handleFinish(confirmedPossible = false) {
     if (members.length === 0) { setError("Please add at least one household member."); return; }
     setSubmitting(true);
     setError("");
 
     try {
+      // 0. Duplicate pre-check — BEFORE anything is written. Checking only
+      // while saving each member used to leave an empty household behind
+      // when a later member turned out to be a duplicate.
+      const checkRes = await fetch("/api/residents/duplicate-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          members: members.map(m => ({
+            fname: m.fname,
+            lname: m.lname,
+            mname: m.mname || null,
+            name_extension: m.name_extension || null,
+            birthdate: m.birthdate,
+          })),
+        }),
+      });
+      if (!checkRes.ok) {
+        const body = await checkRes.json().catch(() => null);
+        throw new Error(apiErrorMessage(body, "Couldn't check for duplicate residents."));
+      }
+      const check = await checkRes.json() as {
+        results: {
+          index: number;
+          exact: DuplicateMatchInfo | null;
+          possible: DuplicateMatchInfo[];
+          batch: { with: number; level: "EXACT" | "POSSIBLE"; label: string }[];
+        }[];
+      };
+
+      const who = (i: number) => `${members[i].fname} ${members[i].lname}`;
+      const blocks: string[] = []; // exact duplicates: cannot be saved
+      const warns:  string[] = []; // lookalikes: user may confirm
+      for (const r of check.results) {
+        if (r.exact) {
+          blocks.push(`${who(r.index)} is already registered (${describeMatch(r.exact)}).`);
+        }
+        for (const b of r.batch) {
+          if (b.level === "EXACT") {
+            blocks.push(`${who(r.index)} is entered twice in this household (members ${b.with + 1} and ${r.index + 1}).`);
+          } else {
+            warns.push(`${who(r.index)} looks similar to ${who(b.with)} in this household — ${b.label.toLowerCase()}.`);
+          }
+        }
+        for (const p of r.possible) {
+          warns.push(`${who(r.index)} looks similar to ${describeMatch(p)} — ${p.label.toLowerCase()}.`);
+        }
+      }
+
+      if (blocks.length > 0) {
+        setDupWarning(null);
+        setError(blocks.join(" "));
+        return;
+      }
+      if (warns.length > 0 && !confirmedPossible) {
+        setDupWarning({ lines: warns, forMembers: members, forStep: step }); // wait for the user to confirm or go back
+        return;
+      }
+      setDupWarning(null);
+
       // 1. Create the household in the database
       const hhRes = await fetch("/api/households", {
         method: "POST",
@@ -351,6 +417,8 @@ export default function NewRBIPage() {
             sector:                 m.sector || null,
             purok_id:               Number(hh.purok_id),
             household_id:           household.id,
+            // The user saw the warning panel and said "different people".
+            ...(confirmedPossible ? { confirm_possible_duplicate: true } : {}),
           }),
         });
 
@@ -741,9 +809,37 @@ export default function NewRBIPage() {
 
             {error && <p className="text-red-500 dark:text-red-400 text-[12px] mt-4 text-center">{error}</p>}
 
+            {activeDupWarning && (
+              <div className="mt-4 rounded-xl border border-[#FCD34D] bg-[#FFFBEB] px-4 py-3 text-left text-[12px] text-[#92400E] dark:border-[#92400E] dark:bg-[#1F1A0B] dark:text-[#FCD34D]">
+                <p className="font-bold">
+                  Possible duplicate{activeDupWarning.length > 1 ? "s" : ""} — please check before saving:
+                </p>
+                <ul className="mt-1.5 list-disc space-y-0.5 pl-5">
+                  {activeDupWarning.map((line, i) => <li key={i}>{line}</li>)}
+                </ul>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDupWarning(null)}
+                    className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#374151] hover:bg-[#F9FAFB]"
+                  >
+                    Go back and review
+                  </button>
+                  <button
+                    type="button"
+                    disabled={submitting}
+                    onClick={() => handleFinish(true)}
+                    className="rounded-lg bg-[#D97706] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white hover:bg-[#B45309] disabled:opacity-50"
+                  >
+                    {submitting ? "Saving…" : "They are different people — save anyway"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-3 mt-6">
               <AmberBtn onClick={() => setStep(2)}>← Back</AmberBtn>
-              <BlueBtn onClick={handleFinish} disabled={submitting}>
+              <BlueBtn onClick={() => handleFinish()} disabled={submitting}>
                 {submitting ? "Saving…" : "Finish"}
               </BlueBtn>
             </div>

@@ -11,6 +11,7 @@ import { z } from "zod";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { civilStatusEnum, sexEnum } from "@/lib/validations";
+import type { DuplicateMatchInfo } from "@/lib/duplicate-detection";
 import { personName, optionalPersonName, nameSuffix, birthdate, phMobile } from "@/lib/field-rules";
 
 // The columns a barangay's field census spreadsheet is expected to have.
@@ -150,8 +151,19 @@ export interface ValidatedImportRow {
     email: string | null;
   };
   errors: string[];
-  /** true if this row's fname+lname+birthdate matches an existing resident OR an earlier row in the same file. */
+  /**
+   * true if this row is the SAME person (after name normalization) as an
+   * existing resident OR an earlier row in the file. Hard block: such a row
+   * can never be imported.
+   */
   isDuplicate: boolean;
+  /**
+   * Existing residents / earlier rows this one merely RESEMBLES (swapped
+   * names, one-letter typo, likely birthdate typo). A warning, not a block:
+   * the row is importable once the user explicitly confirms it. Filled in by
+   * the caller (needs the DB), like isDuplicate. See src/lib/duplicate-detection.ts.
+   */
+  possibleDuplicates: DuplicateMatchInfo[];
 }
 
 /**
@@ -172,7 +184,7 @@ export function validateImportRow(
     for (const issue of parsed.error.issues) {
       errors.push(`${issue.path.join(".")}: ${issue.message}`);
     }
-    return { rowNumber, raw, errors, isDuplicate: false };
+    return { rowNumber, raw, errors, isDuplicate: false, possibleDuplicates: [] };
   }
 
   const row = parsed.data;
@@ -202,7 +214,7 @@ export function validateImportRow(
   }
 
   if (errors.length > 0) {
-    return { rowNumber, raw, errors, isDuplicate: false };
+    return { rowNumber, raw, errors, isDuplicate: false, possibleDuplicates: [] };
   }
 
   return {
@@ -210,6 +222,7 @@ export function validateImportRow(
     raw,
     errors: [],
     isDuplicate: false, // set by the caller after checking against the DB + sibling rows
+    possibleDuplicates: [], // likewise
     data: {
       fname: row.fname,
       lname: row.lname,

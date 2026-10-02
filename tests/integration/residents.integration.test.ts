@@ -169,6 +169,72 @@ describe("Residents API (integration)", () => {
     expect(count).toBe(1);
   });
 
+  it("catches a case/accent/spacing variant of an existing resident as an exact duplicate (409)", async () => {
+    const admin = await createTestUser({ role: "ADMIN" });
+    requirePermission.mockResolvedValue(authedAs(admin, "ADMIN"));
+
+    const lname = `Villanueva${uniqueAlpha()}`;
+    const existing = await createTestResident({ fname: "Jose", lname, birthdate: new Date("1975-07-07") });
+
+    const req = new NextRequest("http://localhost/api/residents", {
+      method: "POST",
+      body: JSON.stringify({
+        fname: "  JOSÉ ",                 // different case + accent + spacing
+        lname: lname.toUpperCase(),
+        birthdate: "1975-07-07",
+        sex: "MALE",
+        civil_status: "SINGLE",
+      }),
+    });
+
+    const res = await POST(req);
+    const body = await res.json();
+    expect(res.status).toBe(409);
+    expect(body.error).toBe("DUPLICATE");
+    expect(body.existing.id).toBe(existing.id);
+  });
+
+  it("warns on a lookalike (swapped names), then saves it once the user confirms", async () => {
+    const admin = await createTestUser({ role: "ADMIN" });
+    requirePermission.mockResolvedValue(authedAs(admin, "ADMIN"));
+
+    const lname = `Magalong${uniqueAlpha()}`;
+    const existing = await createTestResident({ fname: "Carlo", lname, birthdate: new Date("1993-09-09") });
+
+    const payload = {
+      fname: lname,        // swapped: surname typed as first name
+      lname: "Carlo",
+      birthdate: "1993-09-09",
+      sex: "MALE",
+      civil_status: "SINGLE",
+    };
+
+    // 1) Without confirmation: warned, nothing saved.
+    const warned = await POST(new NextRequest("http://localhost/api/residents", { method: "POST", body: JSON.stringify(payload) }));
+    const warnedBody = await warned.json();
+    expect(warned.status).toBe(409);
+    expect(warnedBody.error).toBe("POSSIBLE_DUPLICATE");
+    expect(warnedBody.matches[0]).toMatchObject({ id: existing.id, reason: "SWAPPED_NAMES" });
+    expect(await testDb.resident.count({ where: { fname: lname, lname: "Carlo" } })).toBe(0);
+
+    // 2) With confirmation: saved, and the override is in the audit log.
+    const saved = await POST(
+      new NextRequest("http://localhost/api/residents", {
+        method: "POST",
+        body: JSON.stringify({ ...payload, confirm_possible_duplicate: true }),
+      })
+    );
+    const savedBody = await saved.json();
+    expect(saved.status).toBe(201);
+    trackCleanup(() => testDb.resident.delete({ where: { id: savedBody.id } }).then(() => {}));
+
+    const audit = await testDb.auditLog.findFirst({
+      where: { table_affected: "Resident", record_id: savedBody.id },
+      orderBy: { id: "desc" },
+    });
+    expect(audit?.details).toContain(`confirmed possible duplicate of #${existing.id}`);
+  });
+
   it("filters by search term against real rows in the database", async () => {
     const admin = await createTestUser({ role: "ADMIN" });
     requirePermission.mockResolvedValue(authedAs(admin, "ADMIN"));

@@ -11,6 +11,7 @@ import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { parseImportFile, validateImportRow, ImportParseError, ImportLookups } from "@/lib/residentImport";
+import { DuplicateIndex, DUPLICATE_SELECT, toMatchInfo, type ResidentIdentity } from "@/lib/duplicate-detection";
 
 const MAX_ROWS = 500;
 
@@ -58,59 +59,60 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   const validated = rawRows.map((raw, i) => validateImportRow(i + 1, raw, lookups));
 
   // ── Duplicate detection ──
-  // Against existing residents (same fname+lname+birthdate — same rule the
-  // regular "Add Resident" form uses), and against earlier rows in this
-  // same file, since a spreadsheet can itself contain accidental repeats.
+  // One shared rule (src/lib/duplicate-detection.ts), identical to the
+  // manual "Add Resident" form:
+  //   EXACT    same person after normalizing case/accents/punctuation/spacing
+  //            -> isDuplicate (hard block, row cannot be imported)
+  //   POSSIBLE swapped names, one-letter typo, likely birthdate typo
+  //            -> possibleDuplicates (warning; importable once confirmed)
+  // Each row is compared with existing residents AND with the rows above it
+  // in this file, since a spreadsheet can itself contain accidental repeats.
   //
-  // Existing-resident matches are checked with one batched query rather
-  // than one round-trip per row — with up to MAX_ROWS rows, N sequential
-  // queries would be both slow and (per the lesson from this project's
-  // seed script) risk exhausting a pooled connection limit if ever changed
-  // to run concurrently instead.
-  const rowsWithData = validated.filter((r) => r.data);
-  const existingMatches = rowsWithData.length
-    ? await prisma.resident.findMany({
-        where: {
-          OR: rowsWithData.map((r) => ({
-            fname: r.data!.fname,
-            lname: r.data!.lname,
-            birthdate: r.data!.birthdate,
-          })),
-        },
-        select: { id: true, fname: true, lname: true, birthdate: true },
-      })
+  // All residents are loaded once (slim columns) rather than one query per
+  // row: with up to MAX_ROWS rows that's one round-trip instead of hundreds,
+  // and — unlike the old per-row SQL equality — it is not case/accent
+  // sensitive, so near-matches aren't missed.
+  type Known = ResidentIdentity & { id?: number; rowNumber?: number };
+  const hasRows = validated.some((r) => r.data);
+  const existing: Known[] = hasRows
+    ? await prisma.resident.findMany({ select: DUPLICATE_SELECT })
     : [];
-  const existingKeyToId = new Map(
-    existingMatches.map((m: { id: number; fname: string; lname: string; birthdate: Date }) => [
-      `${m.fname.toLowerCase()}|${m.lname.toLowerCase()}|${m.birthdate.toISOString().slice(0, 10)}`,
-      m.id,
-    ])
-  );
+  const index = new DuplicateIndex<Known>(existing);
 
-  const seenInFile = new Set<string>();
   for (const row of validated) {
     if (!row.data) continue;
-    const key = `${row.data.fname.toLowerCase()}|${row.data.lname.toLowerCase()}|${row.data.birthdate.toISOString().slice(0, 10)}`;
 
-    if (seenInFile.has(key)) {
+    const hits = index.find(row.data);
+    const exact = hits.filter((h) => h.level === "EXACT");
+    if (exact.length > 0) {
+      // Prefer pointing at the stored resident over an earlier row.
+      const target = exact.find((h) => h.record.rowNumber == null) ?? exact[0];
       row.isDuplicate = true;
-      row.errors.push("Duplicate of an earlier row in this file");
-      continue;
+      row.errors.push(
+        target.record.rowNumber != null
+          ? "Duplicate of an earlier row in this file"
+          : `Matches an existing resident (id ${target.record.id})`
+      );
+      continue; // already represented in the index by the record it matched
     }
-    seenInFile.add(key);
 
-    const existingId = existingKeyToId.get(key);
-    if (existingId) {
-      row.isDuplicate = true;
-      row.errors.push(`Matches an existing resident (id ${existingId})`);
-    }
+    row.possibleDuplicates = hits.map(toMatchInfo);
+    index.add({ ...row.data, rowNumber: row.rowNumber });
   }
 
   const validCount = validated.filter((r) => r.data && r.errors.length === 0).length;
   const errorCount = validated.filter((r) => r.errors.length > 0).length;
+  const duplicateCount = validated.filter((r) => r.isDuplicate).length;
+  const possibleCount = validated.filter((r) => r.data && r.possibleDuplicates.length > 0).length;
 
   return NextResponse.json({
     rows: validated,
-    summary: { total: validated.length, valid: validCount, errors: errorCount },
+    summary: {
+      total: validated.length,
+      valid: validCount,
+      errors: errorCount,
+      duplicates: duplicateCount,          // exact — blocked
+      possibleDuplicates: possibleCount,   // need the user's confirmation
+    },
   });
 });
