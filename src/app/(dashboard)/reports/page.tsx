@@ -1,12 +1,12 @@
 // FILE: src/app/(dashboard)/reports/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Users, FileText, Shield, Wallet,
   Package, BookOpen,
-  ChevronRight, Download,
+  ChevronRight, Download, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
+import { fetchJson, runWithConcurrency } from "@/lib/fetch-json";
 
 const BLOTTER_STATUS_COLORS: Record<string, string> = {
   FILED: "#3E5C76",
@@ -33,25 +34,40 @@ function formatCurrency(n: number) {
   return `\u20B1${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
 
+/**
+ * A figure that couldn't be loaded is `null`, shown as an em dash. It must
+ * never be shown as 0: "0 residents" is a claim about the barangay, whereas
+ * "—" says "we don't know".
+ */
+const UNKNOWN = "\u2014";
+const fmtCount = (n: number | null) => (n === null ? UNKNOWN : n.toLocaleString());
+const fmtMoney = (n: number | null) => (n === null ? UNKNOWN : formatCurrency(n));
+/** Only trust real numbers from an API body; anything else is "unknown". */
+const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
+
 interface Summary {
-  totalResidents: number;
-  certificatesMonth: number;
-  activeBlotter: number;
-  totalEquipment: number;
-  seniorCitizens: number;
-  pwdCount: number;
-  fourPsCount: number;
-  monthlyIncome: number;
-  monthlyExpense: number;
+  totalResidents: number | null;
+  certificatesMonth: number | null;
+  activeBlotter: number | null;
+  totalEquipment: number | null;
+  seniorCitizens: number | null;
+  pwdCount: number | null;
+  fourPsCount: number | null;
+  monthlyIncome: number | null;
+  monthlyExpense: number | null;
 }
+
+/** A section of the overview whose data couldn't be loaded, and why. */
+interface LoadIssue { key: string; label: string; detail: string }
 
 interface PurokDatum { purok: string; count: number }
 interface CertDatum { name: string; value: number }
 interface BlotterDatum { name: string; value: number; color: string }
 
+// Everything starts unknown (null) and is filled in as each request succeeds.
 const EMPTY_SUMMARY: Summary = {
-  totalResidents: 0, certificatesMonth: 0, activeBlotter: 0, totalEquipment: 0,
-  seniorCitizens: 0, pwdCount: 0, fourPsCount: 0, monthlyIncome: 0, monthlyExpense: 0,
+  totalResidents: null, certificatesMonth: null, activeBlotter: null, totalEquipment: null,
+  seniorCitizens: null, pwdCount: null, fourPsCount: null, monthlyIncome: null, monthlyExpense: null,
 };
 
 const EXPORTABLE_REPORT_TYPES = ["certificates", "financial", "blotter", "inventory", "registries"] as const;
@@ -68,95 +84,141 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
+  const [issues, setIssues] = useState<LoadIssue[]>([]);
+
+  // Guards setState after the page is left while requests are still running.
+  const alive = useRef(true);
   useEffect(() => {
-    let cancelled = false;
-
-    const currentYear = String(now.getFullYear());
-    const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
-
-    async function load() {
-      const [dashboardRes, certsRes, blotterRes, financialRes, inventoryRes, registriesRes, puroksRes] =
-        await Promise.all([
-          fetch("/api/dashboard"),
-          fetch(`/api/reports?type=certificates&year=${currentYear}&month=${currentMonth}`),
-          fetch("/api/reports?type=blotter"),
-          fetch(`/api/reports?type=financial&year=${currentYear}&month=${currentMonth}`),
-          fetch("/api/reports?type=inventory"),
-          fetch("/api/reports?type=registries"),
-          fetch("/api/puroks"),
-        ]);
-
-      const [dashboard, certs, blotter, financial, inventory, registries, puroks] = await Promise.all([
-        dashboardRes.json(),
-        certsRes.json(),
-        blotterRes.json(),
-        financialRes.json(),
-        inventoryRes.json(),
-        registriesRes.json(),
-        puroksRes.json(),
-      ]);
-
-      if (cancelled) return;
-
-      const purokNameById = new Map<number, string>(puroks.map((p: { id: number; name: string }) => [p.id, p.name]));
-
-      const income = financial.totalIncome ?? 0;
-      const expense = financial.totalExpense ?? 0;
-
-      const seniorCount = registries.seniors?.total ?? 0;
-      const pwdCount = registries.pwd?.total ?? 0;
-      const fourPsCount = registries.fourPs?.total ?? 0;
-
-      setSummary({
-        totalResidents: dashboard.totalResidents ?? 0,
-        certificatesMonth: certs.totalThisMonth ?? 0,
-        activeBlotter: dashboard.activeCases ?? 0,
-        totalEquipment: inventory.total ?? 0,
-        seniorCitizens: seniorCount,
-        pwdCount,
-        fourPsCount,
-        monthlyIncome: income,
-        monthlyExpense: expense,
-      });
-
-      setPopulationByPurok(
-        (dashboard.residentsByPurok ?? [])
-          .map((p: { purok_id: number | null; _count: number }) => ({
-            purok: (p.purok_id != null ? purokNameById.get(p.purok_id) : null) ?? "Unassigned",
-            count: p._count,
-          }))
-          .sort((a: PurokDatum, b: PurokDatum) => a.purok.localeCompare(b.purok))
-      );
-
-      setCertByType(
-        (certs.byType ?? [])
-          .map((c: { type: string; count: number }) => ({
-            name: c.type,
-            value: c.count,
-          }))
-          .sort((a: CertDatum, b: CertDatum) => b.value - a.value)
-          .slice(0, 5)
-      );
-
-      setBlotterByStatus(
-        (["FILED", "ONGOING", "RESOLVED", "DISMISSED"] as const)
-          .map((status) => ({
-            name: BLOTTER_STATUS_LABELS[status],
-            value: blotter[status.toLowerCase() as "filed" | "ongoing" | "resolved" | "dismissed"] ?? 0,
-            color: BLOTTER_STATUS_COLORS[status],
-          }))
-          .filter((b) => b.value > 0)
-      );
-
-      setLoading(false);
-    }
-
-    load();
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    alive.current = true;
+    return () => { alive.current = false; };
   }, []);
 
-  const netBalance = summary.monthlyIncome - summary.monthlyExpense;
+  const load = useCallback(async () => {
+    const current = new Date();
+    const year = String(current.getFullYear());
+    const month = String(current.getMonth() + 1).padStart(2, "0");
+
+    setLoading(true);
+    setIssues([]);
+
+    // Population-by-purok needs both /api/dashboard (counts) and /api/puroks
+    // (names), which arrive independently — rebuild whenever either lands.
+    const ctx: { dashboard?: { residentsByPurok?: { purok_id: number | null; _count: number }[] }; puroks?: { id: number; name: string }[] } = {};
+    const rebuildPopulation = () => {
+      if (!ctx.dashboard) return;
+      const names = new Map<number, string>((ctx.puroks ?? []).map((p) => [p.id, p.name]));
+      setPopulationByPurok(
+        (ctx.dashboard.residentsByPurok ?? [])
+          .map((p) => ({
+            purok: p.purok_id == null ? "Unassigned" : names.get(p.purok_id) ?? `Purok #${p.purok_id}`,
+            count: p._count,
+          }))
+          .sort((a, b) => a.purok.localeCompare(b.purok))
+      );
+    };
+
+    // Each section is independent: its own request, its own success/failure.
+    // One failing endpoint leaves the other cards intact instead of zeroing everything.
+    const sections: { key: string; label: string; url: string; apply: (d: any) => void }[] = [
+      {
+        key: "dashboard", label: "Resident and blotter totals", url: "/api/dashboard",
+        apply: (d) => {
+          setSummary((p) => ({ ...p, totalResidents: num(d.totalResidents), activeBlotter: num(d.activeCases) }));
+          ctx.dashboard = d;
+          rebuildPopulation();
+        },
+      },
+      {
+        key: "puroks", label: "Purok names", url: "/api/puroks",
+        apply: (d) => {
+          ctx.puroks = Array.isArray(d) ? d : [];
+          rebuildPopulation();
+        },
+      },
+      {
+        key: "certificates", label: "Certificates", url: `/api/reports?type=certificates&year=${year}&month=${month}`,
+        apply: (d) => {
+          setSummary((p) => ({ ...p, certificatesMonth: num(d.totalThisMonth) }));
+          setCertByType(
+            (Array.isArray(d.byType) ? d.byType : [])
+              .map((c: { type: string; count: number }) => ({ name: c.type, value: c.count }))
+              .sort((a: CertDatum, b: CertDatum) => b.value - a.value)
+              .slice(0, 5)
+          );
+        },
+      },
+      {
+        key: "blotter", label: "Blotter", url: "/api/reports?type=blotter",
+        apply: (d) =>
+          setBlotterByStatus(
+            (["FILED", "ONGOING", "RESOLVED", "DISMISSED"] as const)
+              .map((status) => ({
+                name: BLOTTER_STATUS_LABELS[status],
+                value: num(d[status.toLowerCase()]) ?? 0,
+                color: BLOTTER_STATUS_COLORS[status],
+              }))
+              .filter((b) => b.value > 0)
+          ),
+      },
+      {
+        key: "financial", label: "Finance", url: `/api/reports?type=financial&year=${year}&month=${month}`,
+        apply: (d) => setSummary((p) => ({ ...p, monthlyIncome: num(d.totalIncome), monthlyExpense: num(d.totalExpense) })),
+      },
+      {
+        key: "inventory", label: "Inventory", url: "/api/reports?type=inventory",
+        apply: (d) => setSummary((p) => ({ ...p, totalEquipment: num(d.total) })),
+      },
+      {
+        key: "registries", label: "Special registries", url: "/api/reports?type=registries",
+        apply: (d) =>
+          setSummary((p) => ({
+            ...p,
+            seniorCitizens: num(d.seniors?.total),
+            pwdCount: num(d.pwd?.total),
+            fourPsCount: num(d.fourPs?.total),
+          })),
+      },
+    ];
+
+    // At most 3 requests at a time: every one of these runs several database
+    // queries, and firing all seven at once can exhaust a small connection
+    // pool (the symptom is timeouts/503s that used to surface as zeros).
+    await runWithConcurrency(
+      sections.map((sec) => async () => {
+        const result = await fetchJson(sec.url);
+        if (!alive.current) return;
+        if (result.ok) {
+          try {
+            sec.apply(result.data);
+          } catch (err) {
+            console.error(`[reports] could not read "${sec.key}" response:`, err);
+            setIssues((prev) => [...prev, { key: sec.key, label: sec.label, detail: "The response was not in the expected format." }]);
+          }
+        } else {
+          setIssues((prev) => [...prev, { key: sec.key, label: sec.label, detail: result.status ? `${result.detail} (HTTP ${result.status})` : result.detail }]);
+        }
+      }),
+      3
+    );
+
+    if (alive.current) setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load();
+  }, [load]);
+
+  const failed = new Set(issues.map((i) => i.key));
+
+  const netBalance =
+    summary.monthlyIncome === null || summary.monthlyExpense === null
+      ? null
+      : summary.monthlyIncome - summary.monthlyExpense;
+  const registered =
+    summary.seniorCitizens === null || summary.pwdCount === null || summary.fourPsCount === null
+      ? null
+      : summary.seniorCitizens + summary.pwdCount + summary.fourPsCount;
 
   function handleExportAll() {
     setExporting(true);
@@ -172,37 +234,37 @@ export default function ReportsPage() {
       key: "population", label: "Population Report",
       description: "Residents by purok, sex, age group & civil status",
       icon: Users, accent: "text-[#3E5C76] dark:text-[#8FB0CC]",
-      stat: `${summary.totalResidents.toLocaleString()} residents`,
+      stat: `${fmtCount(summary.totalResidents)} residents`,
     },
     {
       key: "certificates", label: "Certificate Report",
       description: "Issuance history by type, month & year",
       icon: FileText, accent: "text-[#0B6E4F] dark:text-[#34A37A]",
-      stat: `${summary.certificatesMonth} issued this month`,
+      stat: `${fmtCount(summary.certificatesMonth)} issued this month`,
     },
     {
       key: "blotter", label: "Blotter Report",
       description: "Case status, escalations & incident trends",
       icon: Shield, accent: "text-[#B45309] dark:text-[#FBBF24]",
-      stat: `${summary.activeBlotter} active cases`,
+      stat: `${fmtCount(summary.activeBlotter)} active cases`,
     },
     {
       key: "financial", label: "Financial Report",
       description: "Income vs. expense summary by period",
       icon: Wallet, accent: "text-[#6D4AFF] dark:text-[#A78BFA]",
-      stat: `${formatCurrency(netBalance)} net`,
+      stat: `${fmtMoney(netBalance)} net`,
     },
     {
       key: "inventory", label: "Inventory Report",
       description: "Equipment status, borrowings & year-end count",
       icon: Package, accent: "text-[#B3261E] dark:text-[#F87171]",
-      stat: `${summary.totalEquipment} total items`,
+      stat: `${fmtCount(summary.totalEquipment)} total items`,
     },
     {
       key: "registries", label: "Special Registries",
       description: "Senior citizens, PWD, and 4Ps per purok",
       icon: BookOpen, accent: "text-[#0E7490] dark:text-[#22D3EE]",
-      stat: `${summary.seniorCitizens + summary.pwdCount + summary.fourPsCount} registered`,
+      stat: `${fmtCount(registered)} registered`,
     },
   ];
 
@@ -224,11 +286,40 @@ export default function ReportsPage() {
         }
       />
 
+      {issues.length > 0 && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-xl border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-3 text-[12px] text-[#B91C1C] dark:border-[#7F1D1D] dark:bg-[#2A1212] dark:text-[#FCA5A5]"
+        >
+          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="font-bold">
+              Some figures couldn&apos;t be loaded. They are shown as &ldquo;{UNKNOWN}&rdquo; — not as 0.
+            </p>
+            <ul className="mt-1 list-disc space-y-0.5 pl-5">
+              {issues.map((i) => (
+                <li key={i.key}>
+                  <span className="font-semibold">{i.label}:</span> {i.detail}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <button
+            onClick={() => void load()}
+            disabled={loading}
+            className="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#FCA5A5] bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#B91C1C] transition hover:bg-[#FEE2E2] disabled:opacity-50 dark:border-[#7F1D1D] dark:bg-transparent dark:hover:bg-[#3B1212]"
+          >
+            <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+            {loading ? "Retrying…" : "Retry"}
+          </button>
+        </div>
+      )}
+
       <div data-tour="page-reports-stats" className="grid grid-cols-4 gap-3">
-        <StatCard label="Total Residents" value={summary.totalResidents.toLocaleString()} icon={Users} color="blue" />
-        <StatCard label="Certs This Month" value={summary.certificatesMonth} icon={FileText} color="green" />
-        <StatCard label="Active Blotter" value={summary.activeBlotter} icon={Shield} color="amber" />
-        <StatCard label="Net Balance" value={formatCurrency(netBalance)} icon={Wallet} color="purple" />
+        <StatCard label="Total Residents" value={fmtCount(summary.totalResidents)} icon={Users} color="blue" />
+        <StatCard label="Certs This Month" value={fmtCount(summary.certificatesMonth)} icon={FileText} color="green" />
+        <StatCard label="Active Blotter" value={fmtCount(summary.activeBlotter)} icon={Shield} color="amber" />
+        <StatCard label="Net Balance" value={fmtMoney(netBalance)} icon={Wallet} color="purple" />
       </div>
 
       <div>
@@ -249,7 +340,7 @@ export default function ReportsPage() {
             </button>
           </div>
           {!loading && populationByPurok.length === 0 ? (
-            <EmptyChartState />
+            <EmptyChartState failed={failed.has("dashboard")} />
           ) : (
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={populationByPurok} barSize={28}>
@@ -270,7 +361,7 @@ export default function ReportsPage() {
             </button>
           </div>
           {!loading && blotterByStatus.every(b => b.value === 0) ? (
-            <EmptyChartState />
+            <EmptyChartState failed={failed.has("blotter")} />
           ) : (
             <div className="flex items-center gap-4">
               <ResponsiveContainer width="55%" height={160}>
@@ -306,7 +397,7 @@ export default function ReportsPage() {
           </button>
         </div>
         {!loading && certByType.length === 0 ? (
-          <div className="px-5 py-6"><EmptyChartState /></div>
+          <div className="px-5 py-6"><EmptyChartState failed={failed.has("certificates")} /></div>
         ) : (
           <div className="grid grid-cols-5 divide-x divide-[#F4F5F7] dark:divide-[#262626]">
             {certByType.map(c => (
@@ -354,10 +445,10 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
-function EmptyChartState() {
+function EmptyChartState({ failed = false }: { failed?: boolean }) {
   return (
     <div className="flex h-40 items-center justify-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-      No data for this period yet.
+      {failed ? "Couldn\u2019t load this chart \u2014 see the message above." : "No data for this period yet."}
     </div>
   );
 }
