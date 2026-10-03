@@ -3,11 +3,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Search, SlidersHorizontal, ChevronRight,
-  Plus, X, Users, Mars, Venus,
+  Plus, X, Users, Mars, Venus, Upload,
 } from "lucide-react";
 import ResidentDetailSheet from "@/components/residents/ResidentDetailSheet";
+import { hasPermission } from "@/lib/permission";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Purok { id: number; name: string }
@@ -100,6 +102,11 @@ function FilterPanel({
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function ResidentsPage() {
+  // Bulk import writes residents, so only offer it to roles that may.
+  // (The API enforces residents:write regardless; this just avoids showing a
+  // button that would end in a 403.)
+  const { data: session } = useSession();
+  const canImport = !!session?.user?.role && hasPermission(session.user.role, "residents:write");
   const router = useRouter();
 
   const [residents,  setResidents]  = useState<Resident[]>([]);
@@ -162,14 +169,26 @@ export default function ResidentsPage() {
             {loading ? "Loading…" : `${residents.length} resident${residents.length !== 1 ? "s" : ""} on file`}
           </p>
         </div>
-        <button
-          data-tour="page-residents-add"
-          onClick={() => router.push("/residents/new")}
-          className="flex items-center gap-2 px-3.5 h-9 rounded bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[13px] font-medium transition"
-        >
-          <Plus size={15} strokeWidth={1.8} />
-          Register resident
-        </button>
+        <div className="flex items-center gap-2">
+          {canImport && (
+            <button
+              data-tour="page-residents-import"
+              onClick={() => router.push("/residents/import")}
+              className="flex items-center gap-2 px-3.5 h-9 rounded border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#111111] hover:bg-[#F9FAFB] dark:hover:bg-[#1A1A1A] text-[#374151] dark:text-[#E5E7EB] text-[13px] font-medium transition"
+            >
+              <Upload size={15} strokeWidth={1.8} />
+              Import
+            </button>
+          )}
+          <button
+            data-tour="page-residents-add"
+            onClick={() => router.push("/residents/new")}
+            className="flex items-center gap-2 px-3.5 h-9 rounded bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[13px] font-medium transition"
+          >
+            <Plus size={15} strokeWidth={1.8} />
+            Register resident
+          </button>
+        </div>
       </div>
 
       {/* ── Search + filter bar ── */}

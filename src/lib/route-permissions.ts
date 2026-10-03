@@ -35,6 +35,10 @@ export const ROUTE_PERMISSIONS: { prefix: string; permission: RoutePermission }[
   { prefix: "/visitors", permission: "visitors:read" },
 
   // ── RBI ──
+  // Registering and bulk-importing residents write data, so the pages need
+  // residents:write (longest prefix wins, so these beat "/residents" below).
+  { prefix: "/residents/new", permission: "residents:write" },
+  { prefix: "/residents/import", permission: "residents:write" },
   { prefix: "/residents", permission: "residents:read" },
   { prefix: "/households", permission: "households:read" },
   { prefix: "/deceased", permission: "deceased:read" },
