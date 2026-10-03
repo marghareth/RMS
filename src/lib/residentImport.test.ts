@@ -189,6 +189,55 @@ describe('validateImportRow', () => {
     expect(result.data?.mobile).toBeNull();
   });
 
+  describe('structured issues (error types for the import metrics)', () => {
+    const typesOf = (raw: Record<string, string>, lookups = emptyLookups()) =>
+      validateImportRow(40, raw, lookups).issues.map((i) => [i.field, i.type]);
+
+    it('records no issues for a clean row', () => {
+      expect(validateImportRow(40, validRaw, emptyLookups()).issues).toEqual([]);
+    });
+
+    it('MISSING_REQUIRED: a blank required column (names, birthdate, sex, civil status)', () => {
+      expect(typesOf({ ...validRaw, fname: '' })).toContainEqual(['fname', 'MISSING_REQUIRED']);
+      expect(typesOf({ ...validRaw, birthdate: '' })).toContainEqual(['birthdate', 'MISSING_REQUIRED']);
+      expect(typesOf({ ...validRaw, sex: '' })).toContainEqual(['sex', 'MISSING_REQUIRED']);
+      expect(typesOf({ ...validRaw, civil_status: '   ' })).toContainEqual(['civil_status', 'MISSING_REQUIRED']);
+    });
+
+    it('MISSING_REQUIRED also when the column is absent from the file entirely', () => {
+      const { lname, ...withoutLname } = validRaw;
+      expect(typesOf(withoutLname)).toContainEqual(['lname', 'MISSING_REQUIRED']);
+    });
+
+    it('INVALID_DATE: unparseable, future, or implausibly old birthdate', () => {
+      expect(typesOf({ ...validRaw, birthdate: 'soon' })).toContainEqual(['birthdate', 'INVALID_DATE']);
+      expect(typesOf({ ...validRaw, birthdate: '2087-05-05' })).toContainEqual(['birthdate', 'INVALID_DATE']);
+      expect(typesOf({ ...validRaw, birthdate: '1850-01-01' })).toContainEqual(['birthdate', 'INVALID_DATE']);
+    });
+
+    it('INVALID_OPTION: sex / civil status not in the allowed list', () => {
+      expect(typesOf({ ...validRaw, sex: 'M' })).toContainEqual(['sex', 'INVALID_OPTION']);
+      expect(typesOf({ ...validRaw, civil_status: 'COMPLICATED' })).toContainEqual(['civil_status', 'INVALID_OPTION']);
+    });
+
+    it('INVALID_FORMAT: bad name characters, mobile, or email', () => {
+      expect(typesOf({ ...validRaw, fname: 'Juan123' })).toContainEqual(['fname', 'INVALID_FORMAT']);
+      expect(typesOf({ ...validRaw, mobile: 'n/a' })).toContainEqual(['mobile', 'INVALID_FORMAT']);
+      expect(typesOf({ ...validRaw, email: 'not-an-email' })).toContainEqual(['email', 'INVALID_FORMAT']);
+    });
+
+    it('UNKNOWN_REFERENCE: a purok or household number that does not exist', () => {
+      expect(typesOf({ ...validRaw, purok_name: 'Purok Nowhere' })).toContainEqual(['purok_name', 'UNKNOWN_REFERENCE']);
+      expect(typesOf({ ...validRaw, household_no: 'HH-9999' })).toContainEqual(['household_no', 'UNKNOWN_REFERENCE']);
+    });
+
+    it('records every problem on a row, keeping `errors` and `issues` in step', () => {
+      const result = validateImportRow(41, { ...validRaw, fname: '', sex: 'M', mobile: 'n/a' }, emptyLookups());
+      expect(result.issues.map((i) => i.type).sort()).toEqual(['INVALID_FORMAT', 'INVALID_OPTION', 'MISSING_REQUIRED']);
+      expect(result.issues).toHaveLength(result.errors.length);
+    });
+  });
+
   it('rejects a malformed email but allows an empty one', () => {
     const bad = validateImportRow(5, { ...validRaw, email: 'not-an-email' }, emptyLookups());
     expect(bad.errors.some((e) => e.startsWith('email:'))).toBe(true);

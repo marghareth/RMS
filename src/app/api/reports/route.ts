@@ -33,6 +33,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { withErrorHandling } from "@/lib/api-handler";
+import { computeTurnaround } from "@/lib/turnaround";
 
 const MONTH_LABELS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
@@ -144,7 +145,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      const [totalThisYear, totalThisMonth, byTypeRaw, monthRows, recentRaw] = await Promise.all([
+      const [totalThisYear, totalThisMonth, byTypeRaw, monthRows, recentRaw, releasedRows, openAgg] = await Promise.all([
         prisma.certificate.count({ where: { issued_at: { gte: yearStart, lte: yearEnd } } }),
         prisma.certificate.count({ where: { issued_at: { gte: startOfMonth } } }),
         prisma.certificate.groupBy({
@@ -162,7 +163,32 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
           orderBy: { issued_at: "desc" },
           take: 10,
         }),
+        // Turnaround time (see src/lib/turnaround.ts): requests RELEASED in
+        // the selected period, so it lines up with the issuance counts above.
+        prisma.certificate.findMany({
+          where: { status: "RELEASED", issued_at: { gte: effectiveStart, lte: effectiveEnd } },
+          select: { certificate_type: true, requested_at: true, issued_at: true },
+        }),
+        // Snapshot of the current backlog (independent of the period filter).
+        prisma.certificate.aggregate({
+          where: { status: { in: ["PENDING", "PROCESSING"] } },
+          _count: true,
+          _min: { requested_at: true },
+        }),
       ]);
+
+      const turnaroundBase = computeTurnaround(releasedRows);
+      const turnaround = {
+        ...turnaroundBase,
+        byType: turnaroundBase.byType.map((t) => ({
+          ...t,
+          type: CERT_LABELS[t.type]?.label ?? titleCase(t.type),
+        })),
+        open: {
+          count: openAgg._count,
+          oldestWaitMs: openAgg._min.requested_at ? Date.now() - openAgg._min.requested_at.getTime() : null,
+        },
+      };
 
       const byType = byTypeRaw.map((t) => ({
         type: CERT_LABELS[t.certificate_type]?.label ?? titleCase(t.certificate_type),
@@ -186,7 +212,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
         issuer: c.issuer.username,
       }));
 
-      return NextResponse.json({ totalThisYear, totalThisMonth, byType, byMonth, recent });
+      return NextResponse.json({ totalThisYear, totalThisMonth, byType, byMonth, recent, turnaround });
     }
 
     // ─── BLOTTER ──────────────────────────────────────────────────────────

@@ -11,6 +11,7 @@ import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { parseImportFile, validateImportRow, ImportParseError, ImportLookups } from "@/lib/residentImport";
+import { summarizeImport } from "@/lib/importMetrics";
 import { DuplicateIndex, DUPLICATE_SELECT, toMatchInfo, type ResidentIdentity } from "@/lib/duplicate-detection";
 
 const MAX_ROWS = 500;
@@ -87,12 +88,17 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     if (exact.length > 0) {
       // Prefer pointing at the stored resident over an earlier row.
       const target = exact.find((h) => h.record.rowNumber == null) ?? exact[0];
+      const inFile = target.record.rowNumber != null;
+      const message = inFile
+        ? "Duplicate of an earlier row in this file"
+        : `Matches an existing resident (id ${target.record.id})`;
       row.isDuplicate = true;
-      row.errors.push(
-        target.record.rowNumber != null
-          ? "Duplicate of an earlier row in this file"
-          : `Matches an existing resident (id ${target.record.id})`
-      );
+      row.errors.push(message);
+      row.issues.push({
+        field: "", // whole-record problem, not tied to one column
+        type: inFile ? "DUPLICATE_IN_FILE" : "DUPLICATE_EXISTING",
+        message,
+      });
       continue; // already represented in the index by the record it matched
     }
 
@@ -100,19 +106,11 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     index.add({ ...row.data, rowNumber: row.rowNumber });
   }
 
-  const validCount = validated.filter((r) => r.data && r.errors.length === 0).length;
-  const errorCount = validated.filter((r) => r.errors.length > 0).length;
-  const duplicateCount = validated.filter((r) => r.isDuplicate).length;
-  const possibleCount = validated.filter((r) => r.data && r.possibleDuplicates.length > 0).length;
+  // Single source of truth for every count/rate (definitions in src/lib/importMetrics.ts).
+  const summary = summarizeImport(validated);
 
   return NextResponse.json({
     rows: validated,
-    summary: {
-      total: validated.length,
-      valid: validCount,
-      errors: errorCount,
-      duplicates: duplicateCount,          // exact — blocked
-      possibleDuplicates: possibleCount,   // need the user's confirmation
-    },
+    summary,
   });
 });

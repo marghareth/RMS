@@ -1,3 +1,4 @@
+// FILE: prisma/migrations/seed.ts
 // ─── SEED FILE ─────────────────────────────────────────────────────────────────
 // Run with:  npm run db:seed
 // Or:        npx tsx prisma/migrations/seed.ts
@@ -200,12 +201,23 @@ async function main() {
   // 20260806045219_add_12_new_features migration (document request
   // workflow) — generate both in the same deterministic per-seed-run
   // formats the real API uses ("CERT-YYYY-NNNNNN" and "Q-YYYY-NNNN").
+  // requested_at defaults to now(), but these certificates were "issued" days
+  // or months ago — left alone, every one would be released BEFORE it was
+  // requested and the turnaround-time report (/reports/certificates) would
+  // have nothing valid to measure. Give each a realistic request-to-release
+  // gap instead (minutes → a few days) so the demo data produces sensible
+  // average / minimum / maximum figures.
+  const REQUEST_TO_RELEASE_MINUTES = [25, 90, 180, 45, 1440, 60, 240, 2880, 30, 120, 720, 4320];
+
   for (const [i, c] of certData.entries()) {
     const year = c.issued_at.getFullYear();
     const certificate_no = `CERT-${year}-${String(i + 1).padStart(6, "0")}`;
     const queue_number = `Q-${year}-${String(i + 1).padStart(4, "0")}`;
+    const requested_at = new Date(
+      c.issued_at.getTime() - REQUEST_TO_RELEASE_MINUTES[i % REQUEST_TO_RELEASE_MINUTES.length] * 60_000
+    );
     await prisma.certificate.create({
-      data: { ...c, certificate_no, queue_number, status: "RELEASED", payment_status: "PAID" },
+      data: { ...c, certificate_no, queue_number, requested_at, status: "RELEASED", payment_status: "PAID" },
     });
   }
   console.log(`  ✅ ${certData.length} certificates created`);
