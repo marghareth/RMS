@@ -1,6 +1,6 @@
 // FILE: src/lib/route-permissions.test.ts
 import { describe, it, expect } from 'vitest';
-import { findRoutePermission } from './route-permissions';
+import { findRoutePermission, canAccessRoute } from './route-permissions';
 
 describe('findRoutePermission', () => {
   it('matches an exact prefix path', () => {
@@ -29,6 +29,23 @@ describe('findRoutePermission', () => {
       'revenues:read',
       'disbursements:read',
     ]);
+  });
+
+  it('requires residents:write for registering and importing residents, but only :read to browse', () => {
+    expect(findRoutePermission('/residents/import')).toBe('residents:write');
+    expect(findRoutePermission('/residents/new')).toBe('residents:write');
+    expect(findRoutePermission('/residents')).toBe('residents:read');
+    expect(findRoutePermission('/residents/42')).toBe('residents:read');
+  });
+
+  it('lets write roles reach the import page and keeps read-only roles out', () => {
+    for (const role of ['ADMIN', 'CAPTAIN', 'SECRETARY', 'ENCODER']) {
+      expect(canAccessRoute(role, '/residents/import')).toBe(true);
+    }
+    for (const role of ['KAGAWAD', 'BHW']) {
+      expect(canAccessRoute(role, '/residents/import')).toBe(false);
+      expect(canAccessRoute(role, '/residents')).toBe(true); // can still browse
+    }
   });
 
   it('distinguishes /finance/overview from other /finance/* routes', () => {
