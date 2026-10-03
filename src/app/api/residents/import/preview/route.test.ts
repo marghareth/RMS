@@ -98,7 +98,7 @@ describe('POST /api/residents/import/preview', () => {
     const res = await POST(makeFileReq('r.csv', VALID_ROW));
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.summary).toEqual({ total: 1, valid: 1, errors: 0, duplicates: 0, possibleDuplicates: 0 });
+    expect(body.summary).toMatchObject({ total: 1, valid: 1, ready: 1, errors: 0, invalid: 0, duplicates: 0, possibleDuplicates: 0, errorRate: 0 });
     expect(body.rows[0].possibleDuplicates).toEqual([]);
     expect(body.rows[0].data.fname).toBe('Juan');
   });
@@ -203,5 +203,68 @@ describe('POST /api/residents/import/preview', () => {
     const csv = HEADER + 'Ana,Lopez,1991-01-01,FEMALE,SINGLE\nBen,Uy,1992-02-02,MALE,SINGLE\nCarl,Go,1993-03-03,MALE,SINGLE\n';
     await POST(makeFileReq('r.csv', csv));
     expect(prisma.resident.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  describe('import error metrics', () => {
+    const H = 'fname,lname,birthdate,sex,civil_status,mobile\n';
+
+    it('reports separate counts, per-type and per-field breakdowns, and the error rate for a messy file', async () => {
+      (prisma.resident.findMany as any).mockResolvedValue([
+        { id: 42, fname: 'Maria', lname: 'Santos', mname: null, name_extension: null, birthdate: new Date('1985-01-20') },
+      ]);
+      const csv = H +
+        'Ana,Lopez,1991-01-01,FEMALE,SINGLE,09171234567\n' +   // 1 ready
+        'Ben,Uy,1992-02-02,MALE,SINGLE,\n' +                    // 2 ready
+        ',Reyes,1993-03-03,MALE,SINGLE,\n' +                    // 3 invalid: missing fname
+        'Carl,Go,2087-01-01,MALE,SINGLE,\n' +                   // 4 invalid: future birthdate
+        'Dan,Ng,1994-04-04,M,SINGLE,n/a\n' +                    // 5 invalid: bad sex + bad mobile
+        'Maria,Santos,1985-01-20,FEMALE,MARRIED,\n' +           // 6 duplicate of existing #42
+        'Ana,Lopez,1991-01-01,FEMALE,SINGLE,\n' +               // 7 duplicate of row 1
+        'Maira,Santos,1985-01-20,FEMALE,MARRIED,\n';            // 8 possible (typo of #42)
+
+      const res = await POST(makeFileReq('messy.csv', csv));
+      const { summary } = await res.json();
+
+      expect(summary).toMatchObject({
+        total: 8, ready: 2, invalid: 3, duplicates: 2, possibleDuplicates: 1,
+        errors: 5, valid: 3,
+        errorRate: 62.5,            // (3 + 2) / 8
+        validationErrorRate: 37.5,  // 3 / 8
+        duplicateRate: 25,          // 2 / 8
+        possibleDuplicateRate: 12.5,
+      });
+      // the four buckets partition the file
+      expect(summary.ready + summary.invalid + summary.duplicates + summary.possibleDuplicates).toBe(summary.total);
+
+      expect(summary.errorsByType).toMatchObject({
+        MISSING_REQUIRED: 1,
+        INVALID_DATE: 1,
+        INVALID_OPTION: 1,
+        INVALID_FORMAT: 1,
+        UNKNOWN_REFERENCE: 0,
+        DUPLICATE_EXISTING: 1,
+        DUPLICATE_IN_FILE: 1,
+      });
+      expect(summary.errorsByField).toMatchObject({ fname: 1, birthdate: 1, sex: 1, mobile: 1 });
+    });
+
+    it('includes structured issues on each row so the UI / error report can show types', async () => {
+      const res = await POST(makeFileReq('r.csv', H + ',Reyes,1993-03-03,MALE,SINGLE,\n'));
+      const { rows } = await res.json();
+      expect(rows[0].issues).toEqual([
+        expect.objectContaining({ field: 'fname', type: 'MISSING_REQUIRED' }),
+      ]);
+    });
+
+    it('tags duplicate rows with a whole-record issue (no field)', async () => {
+      (prisma.resident.findMany as any).mockResolvedValue([
+        { id: 42, fname: 'Maria', lname: 'Santos', mname: null, name_extension: null, birthdate: new Date('1985-01-20') },
+      ]);
+      const res = await POST(makeFileReq('r.csv', H + 'Maria,Santos,1985-01-20,FEMALE,MARRIED,\n'));
+      const { rows } = await res.json();
+      expect(rows[0].issues).toEqual([
+        expect.objectContaining({ field: '', type: 'DUPLICATE_EXISTING' }),
+      ]);
+    });
   });
 });

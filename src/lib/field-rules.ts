@@ -57,7 +57,9 @@ export function personName(opts: { requiredMessage?: string; max?: number } = {}
         .string()
         .min(1, requiredMessage)
         .max(max, `must be ${max} characters or fewer`)
-        .regex(NAME_PATTERN, NAME_MESSAGE)
+        // "" is already reported by min(1) above; don't ALSO fail the
+        // character check on it, or one blank cell yields two errors.
+        .refine((v) => v === "" || NAME_PATTERN.test(v), NAME_MESSAGE)
     );
 }
 

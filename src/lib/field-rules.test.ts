@@ -45,6 +45,12 @@ describe('personName', () => {
     expect(r.success).toBe(false);
     expect(r.error?.issues[0].message).toBe('First name is required');
   });
+  it('reports a blank name exactly once (not also as a bad-character error)', () => {
+    const r = personName({ requiredMessage: 'First name is required' }).safeParse('   ');
+    expect(r.success).toBe(false);
+    expect(r.error?.issues).toHaveLength(1);
+    expect(r.error?.issues[0].message).toBe('First name is required');
+  });
   it('rejects names over the max length', () => {
     expect(schema.safeParse('A'.repeat(101)).success).toBe(false);
   });

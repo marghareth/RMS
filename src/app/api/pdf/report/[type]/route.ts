@@ -11,6 +11,7 @@ import { requirePermission } from "@/lib/session";
 import GenericReportPDF, { StatItem, TableSection } from "@/lib/pdf/GenericReportPDF";
 import { getBarangayInfo } from "@/lib/barangay-info";
 import { withErrorHandling } from "@/lib/api-handler";
+import { computeTurnaround, formatDuration } from "@/lib/turnaround";
 
 // @react-pdf/renderer renders with a real Node canvas/font pipeline, which
 // isn't available on the Edge runtime — this route must run on Node.
@@ -66,7 +67,7 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
   switch (type) {
     case "certificates": {
       reportTitle = "Certificates Report";
-      const [total, byType, recent] = await Promise.all([
+      const [total, byType, recent, releasedRows] = await Promise.all([
         prisma.certificate.count({ where: hasDateFilter ? { issued_at: dateFilter } : {} }),
         prisma.certificate.groupBy({
           by: ["certificate_type"],
@@ -79,10 +80,26 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
           orderBy: { issued_at: "desc" },
           take: 50,
         }),
+        // Request-to-release time for everything RELEASED in the period (src/lib/turnaround.ts).
+        prisma.certificate.findMany({
+          where: { status: "RELEASED", ...(hasDateFilter ? { issued_at: dateFilter } : { issued_at: { not: null } }) },
+          select: { certificate_type: true, requested_at: true, issued_at: true },
+        }),
       ]);
+
+      const turnaround = computeTurnaround(releasedRows);
+      const timeRow = (label: string, st: typeof turnaround.overall) => [
+        label,
+        String(st.count),
+        formatDuration(st.averageMs),
+        formatDuration(st.medianMs),
+        formatDuration(st.minMs),
+        formatDuration(st.maxMs),
+      ];
 
       stats = [
         { label: "Total Issued", value: String(total) },
+        { label: "Avg. Turnaround", value: formatDuration(turnaround.overall.averageMs) },
         ...byType.slice(0, 3).map((t) => ({ label: t.certificate_type.replace(/_/g, " "), value: String(t._count) })),
       ];
       tables = [
@@ -90,6 +107,24 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
           title: "By Type",
           columns: [{ header: "Certificate Type" }, { header: "Count", align: "right" }],
           rows: byType.map((t) => [t.certificate_type.replace(/_/g, " "), String(t._count)]),
+        },
+        {
+          // Calendar time from the request being filed to it being released;
+          // requests not yet released, cancelled, or released before they were
+          // requested are not counted.
+          title: "Turnaround Time (request filed \u2192 released)",
+          columns: [
+            { header: "Certificate Type" },
+            { header: "Released", align: "right" },
+            { header: "Average", align: "right" },
+            { header: "Median", align: "right" },
+            { header: "Fastest", align: "right" },
+            { header: "Slowest", align: "right" },
+          ],
+          rows: [
+            timeRow("All certificates", turnaround.overall),
+            ...turnaround.byType.map((t) => timeRow(t.type.replace(/_/g, " "), t.stats)),
+          ],
         },
         {
           title: "Recent Issuances",

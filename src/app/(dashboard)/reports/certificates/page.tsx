@@ -3,12 +3,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, FileText, Download, CalendarRange, CalendarDays, Layers } from "lucide-react";
+import { ArrowLeft, FileText, Download, CalendarRange, CalendarDays, Layers, Timer, Gauge, Zap, Hourglass } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, LineChart, Line, CartesianGrid, Cell,
 } from "recharts";
 import StatCard from "@/components/shared/StatCard";
+import { formatDuration, type TurnaroundReport } from "@/lib/turnaround";
 
 interface CertificateTypeCount {
   type: string;
@@ -25,12 +26,19 @@ interface CertificateIssuance {
   issuer: string;
 }
 
+/** Request-to-release time, from GET /api/reports?type=certificates (see src/lib/turnaround.ts). */
+interface TurnaroundData extends TurnaroundReport {
+  /** Requests still PENDING / PROCESSING right now, regardless of the period filter. */
+  open: { count: number; oldestWaitMs: number | null };
+}
+
 interface CertificatesReportData {
   totalThisYear: number;
   totalThisMonth: number;
   byType: CertificateTypeCount[];
   byMonth: { month: string; count: number }[];
   recent: CertificateIssuance[];
+  turnaround?: TurnaroundData;
 }
 
 function fmtDate(iso: string) {
@@ -156,6 +164,87 @@ export default function CertificatesReportPage() {
             <StatCard label="This Month" value={data.totalThisMonth} icon={CalendarDays} color="green" />
             <StatCard label="Certificate Types" value={data.byType.length} icon={Layers} color="purple" />
           </div>
+
+          {data.turnaround && (
+            <div data-tour="page-reports-certificates-turnaround" className="mb-5">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white mb-3">
+                Processing Time
+                <span className="ml-2 font-normal normal-case tracking-normal text-[#9CA3AF] dark:text-[#A3A3A3]">
+                  from request filed to released
+                </span>
+              </p>
+
+              {data.turnaround.overall.count === 0 ? (
+                <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-5 py-6 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
+                  No requests were released in this period, so there is no processing time to report.
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-4 gap-4 mb-3">
+                    <StatCard
+                      label="Average"
+                      value={formatDuration(data.turnaround.overall.averageMs)}
+                      sub={`${data.turnaround.overall.count} released request${data.turnaround.overall.count === 1 ? "" : "s"}`}
+                      icon={Timer}
+                      color="blue"
+                    />
+                    <StatCard
+                      label="Median"
+                      value={formatDuration(data.turnaround.overall.medianMs)}
+                      sub="typical request"
+                      icon={Gauge}
+                      color="purple"
+                    />
+                    <StatCard
+                      label="Fastest"
+                      value={formatDuration(data.turnaround.overall.minMs)}
+                      icon={Zap}
+                      color="green"
+                    />
+                    <StatCard
+                      label="Slowest"
+                      value={formatDuration(data.turnaround.overall.maxMs)}
+                      sub={`90% done within ${formatDuration(data.turnaround.overall.p90Ms)}`}
+                      icon={Hourglass}
+                      color="amber"
+                    />
+                  </div>
+
+                  <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
+                    <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
+                      {["Certificate Type", "Released", "Average", "Median", "Fastest", "Slowest"].map((h, i) => (
+                        <span key={h} className={`text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide ${i > 0 ? "text-right" : ""}`}>{h}</span>
+                      ))}
+                    </div>
+                    {data.turnaround.byType.map((t, i) => (
+                      <div key={t.type} className={`grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 border-b border-[#F4F5F7] dark:border-[#262626] items-center ${i % 2 !== 0 ? "bg-[#FAFAFA] dark:bg-[#171717]" : ""}`}>
+                        <span className="text-[12px] font-semibold text-[#1B2430] dark:text-white">{t.type}</span>
+                        <span className="text-right text-[12px] tabular-nums text-[#6B7280] dark:text-[#A3A3A3]">{t.stats.count}</span>
+                        <span className="text-right text-[12px] tabular-nums font-semibold text-[#1B2430] dark:text-white">{formatDuration(t.stats.averageMs)}</span>
+                        <span className="text-right text-[12px] tabular-nums text-[#6B7280] dark:text-[#A3A3A3]">{formatDuration(t.stats.medianMs)}</span>
+                        <span className="text-right text-[12px] tabular-nums text-[#6B7280] dark:text-[#A3A3A3]">{formatDuration(t.stats.minMs)}</span>
+                        <span className="text-right text-[12px] tabular-nums text-[#6B7280] dark:text-[#A3A3A3]">{formatDuration(t.stats.maxMs)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <p className="mt-2 text-[10.5px] leading-relaxed text-[#9CA3AF] dark:text-[#A3A3A3]">
+                Calendar time from when the request was filed to when it was released (nights and weekends count).
+                Covers requests released in the selected period
+                {data.turnaround.withinOneDayPct !== null && <> — {data.turnaround.withinOneDayPct}% were released within 24 hours</>}.
+                Cancelled and not-yet-released requests are not counted
+                {data.turnaround.open.count > 0 && (
+                  <>; {data.turnaround.open.count} request{data.turnaround.open.count === 1 ? " is" : "s are"} still open
+                  {data.turnaround.open.oldestWaitMs !== null && <>, the oldest waiting {formatDuration(data.turnaround.open.oldestWaitMs)}</>}</>
+                )}.
+                {data.turnaround.anomalies > 0 && (
+                  <span className="text-[#B45309]"> {data.turnaround.anomalies} record{data.turnaround.anomalies === 1 ? " was" : "s were"} left out because the release time is earlier than the request time — check those records.</span>
+                )}
+              </p>
+            </div>
+          )}
 
           <div data-tour="page-reports-certificates-charts" className="grid grid-cols-2 gap-5 mb-5">
 

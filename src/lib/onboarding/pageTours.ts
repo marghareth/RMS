@@ -370,6 +370,14 @@ export const PAGE_TOURS: PageTour[] = [
         waitMs: 6000,
       },
       {
+        id: "reports-certificates-turnaround",
+        target: '[data-tour="page-reports-certificates-turnaround"]',
+        placement: "bottom",
+        title: "How fast are requests handled?",
+        body: "Average, median, fastest and slowest time from when a request is filed to when it is released, for the period you picked. The table breaks it down by certificate type. Requests that are cancelled or not yet released are not counted.",
+        waitMs: 6000,
+      },
+      {
         id: "reports-certificates-charts",
         target: '[data-tour="page-reports-certificates-charts"]',
         placement: "top",

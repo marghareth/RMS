@@ -15,6 +15,15 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import { describeMatch, type DuplicateMatchInfo } from "@/lib/duplicate-detection";
+import {
+  buildErrorReportCsv,
+  buildSummaryCsv,
+  IMPORT_ERROR_TYPES,
+  IMPORT_ERROR_TYPE_LABELS,
+  type ImportIssue,
+  type ImportSummary,
+} from "@/lib/importMetrics";
+import { RESIDENT_IMPORT_COLUMNS } from "@/lib/residentImportColumns";
 
 interface PreviewRow {
   rowNumber: number;
@@ -29,6 +38,21 @@ interface PreviewRow {
   isDuplicate: boolean;
   /** Resembles an existing resident / earlier row — importable once the user confirms. */
   possibleDuplicates?: DuplicateMatchInfo[];
+  /** Structured problems (field + error type) behind `errors`. */
+  issues?: ImportIssue[];
+}
+
+/** Saves text as a UTF-8 CSV (with BOM, so Excel shows accented names correctly). */
+function downloadCsv(filename: string, csv: string) {
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 // A row with no errors and not an exact duplicate, but that looks like
@@ -53,6 +77,9 @@ export default function ResidentImportPage() {
   const [uploading, setUploading] = useState(false);
 
   const [rows, setRows] = useState<PreviewRow[]>([]);
+  // Server-computed data-quality metrics for the uploaded file (definitions: src/lib/importMetrics.ts).
+  const [summary, setSummary] = useState<ImportSummary | null>(null);
+  const [fileName, setFileName] = useState("");
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [committing, setCommitting] = useState(false);
   const [commitResult, setCommitResult] = useState<{ created: number; skipped: { rowNumber: number; reason: string }[] } | null>(null);
@@ -75,6 +102,8 @@ export default function ResidentImportPage() {
         return;
       }
       setRows(data.rows);
+      setSummary(data.summary);
+      setFileName(file.name);
       // Pre-select only clean rows. Possible duplicates stay unticked until
       // the user decides they really are different people.
       setSelected(new Set((data.rows as PreviewRow[]).filter(isReady).map((r) => r.rowNumber)));
@@ -125,9 +154,26 @@ export default function ResidentImportPage() {
     }
   }
 
+  const reportBase = () =>
+    `${(fileName.replace(/\.[^.]+$/, "") || "import").replace(/[^\w.-]+/g, "_")}_${new Date().toISOString().slice(0, 10)}`;
+
+  function downloadErrorReport() {
+    downloadCsv(
+      `error-report_${reportBase()}.csv`,
+      buildErrorReportCsv(rows, RESIDENT_IMPORT_COLUMNS.map((c) => c.key))
+    );
+  }
+
+  function downloadSummary() {
+    if (!summary) return;
+    downloadCsv(`import-summary_${reportBase()}.csv`, buildSummaryCsv(summary, { fileName }));
+  }
+
   function startOver() {
     setStep("upload");
     setRows([]);
+    setSummary(null);
+    setFileName("");
     setSelected(new Set());
     setCommitResult(null);
     setUploadError("");
@@ -261,6 +307,57 @@ export default function ResidentImportPage() {
               </button>
             </div>
           </div>
+
+          {summary && (
+            <div className="mb-4 rounded-xl border border-[#E9EAEC] bg-white p-4">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#6B7280]">
+                    Data entry error rate
+                  </p>
+                  <p className="text-[28px] font-black leading-tight text-[#1F2937]">{summary.errorRate}%</p>
+                  <p className="text-[11px] text-[#6B7280]">
+                    {summary.errors} of {summary.total} row{summary.total === 1 ? "" : "s"} could not be entered
+                    automatically ({summary.invalid} invalid + {summary.duplicates} duplicate).
+                    {summary.possibleDuplicates > 0 &&
+                      ` ${summary.possibleDuplicates} more need a duplicate check (${summary.possibleDuplicateRate}%, not counted as errors).`}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={downloadErrorReport}
+                    disabled={summary.errors + summary.possibleDuplicates === 0}
+                    className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] bg-white px-3 py-2 text-[12px] font-bold text-[#374151] transition hover:bg-[#F4F5F7] disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Every row that needs attention, with what's wrong and the original values — fix it and re-upload"
+                  >
+                    <Download size={13} />
+                    Error report (CSV)
+                  </button>
+                  <button
+                    onClick={downloadSummary}
+                    className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] bg-white px-3 py-2 text-[12px] font-bold text-[#374151] transition hover:bg-[#F4F5F7]"
+                    title="Counts, rates and breakdown by error type and field"
+                  >
+                    <Download size={13} />
+                    Summary (CSV)
+                  </button>
+                </div>
+              </div>
+
+              {summary.errors > 0 && (
+                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[#F3F4F6] pt-3">
+                  {IMPORT_ERROR_TYPES.filter((t) => summary.errorsByType[t] > 0).map((t) => (
+                    <span
+                      key={t}
+                      className="rounded-full bg-[#FEE2E2] px-2.5 py-1 text-[11px] font-semibold text-[#B91C1C]"
+                    >
+                      {IMPORT_ERROR_TYPE_LABELS[t]}: {summary.errorsByType[t]}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {commitError && (
             <div className="mb-4 flex items-start gap-2 rounded-lg border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-3 text-[12px] text-[#B91C1C]">

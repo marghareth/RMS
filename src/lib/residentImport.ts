@@ -12,32 +12,13 @@ import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { civilStatusEnum, sexEnum } from "@/lib/validations";
 import type { DuplicateMatchInfo } from "@/lib/duplicate-detection";
+import type { ImportIssue, ImportErrorType } from "@/lib/importMetrics";
 import { personName, optionalPersonName, nameSuffix, birthdate, phMobile } from "@/lib/field-rules";
 
-// The columns a barangay's field census spreadsheet is expected to have.
-// Kept intentionally smaller than the full Resident model (which has 40+
-// fields) — this covers what's actually collected on a typical door-to-door
-// RBI form. Anything not listed here can still be filled in later through
-// the normal Edit Resident form.
-export const RESIDENT_IMPORT_COLUMNS = [
-  { key: "fname", label: "First Name", required: true },
-  { key: "lname", label: "Last Name", required: true },
-  { key: "mname", label: "Middle Name", required: false },
-  { key: "name_extension", label: "Suffix (Jr., Sr., III)", required: false },
-  { key: "birthdate", label: "Birthdate (YYYY-MM-DD)", required: true },
-  { key: "sex", label: "Sex (MALE/FEMALE)", required: true },
-  { key: "civil_status", label: "Civil Status (SINGLE/MARRIED/WIDOWED/SEPARATED/LIVE_IN)", required: true },
-  { key: "purok_name", label: "Purok", required: false },
-  { key: "household_no", label: "Household No.", required: false },
-  { key: "place_of_birth", label: "Place of Birth", required: false },
-  { key: "religion", label: "Religion", required: false },
-  { key: "employment_status", label: "Employment Status", required: false },
-  { key: "educational_attainment", label: "Educational Attainment", required: false },
-  { key: "occupation", label: "Occupation", required: false },
-  { key: "income_bracket", label: "Income Bracket", required: false },
-  { key: "mobile", label: "Mobile No.", required: false },
-  { key: "email", label: "Email", required: false },
-] as const;
+import { RESIDENT_IMPORT_COLUMNS } from "@/lib/residentImportColumns";
+
+// Re-exported so existing imports from "@/lib/residentImport" keep working.
+export { RESIDENT_IMPORT_COLUMNS };
 
 export type ResidentImportRow = Record<(typeof RESIDENT_IMPORT_COLUMNS)[number]["key"], string>;
 
@@ -152,6 +133,12 @@ export interface ValidatedImportRow {
   };
   errors: string[];
   /**
+   * The same problems as `errors`, structured (field + error type) so the
+   * preview can count them by type/field. `errors` stays the human-readable
+   * form shown in the UI; see src/lib/importMetrics.ts for the definitions.
+   */
+  issues: ImportIssue[];
+  /**
    * true if this row is the SAME person (after name normalization) as an
    * existing resident OR an earlier row in the file. Hard block: such a row
    * can never be imported.
@@ -166,6 +153,21 @@ export interface ValidatedImportRow {
   possibleDuplicates: DuplicateMatchInfo[];
 }
 
+const REQUIRED_FIELDS = new Set<string>(RESIDENT_IMPORT_COLUMNS.filter((c) => c.required).map((c) => c.key));
+
+/**
+ * Decides which ImportErrorType a schema failure is. Looks at what was
+ * actually in the cell rather than parsing message text, so rewording a
+ * validation message can never change the metrics.
+ */
+export function classifyFieldIssue(field: string, zodCode: string, rawValue: string | undefined): ImportErrorType {
+  const blank = rawValue == null || rawValue.trim() === "";
+  if (blank && REQUIRED_FIELDS.has(field)) return "MISSING_REQUIRED";
+  if (field === "birthdate") return "INVALID_DATE";
+  if (zodCode === "invalid_value") return "INVALID_OPTION"; // not one of the enum values
+  return "INVALID_FORMAT";
+}
+
 /**
  * Validates and normalizes one CSV row. Doesn't touch the database itself
  * (duplicate-checking against existing residents is the caller's job,
@@ -178,13 +180,16 @@ export function validateImportRow(
   lookups: ImportLookups
 ): ValidatedImportRow {
   const errors: string[] = [];
+  const issues: ImportIssue[] = [];
 
   const parsed = importRowSchema.safeParse(raw);
   if (!parsed.success) {
     for (const issue of parsed.error.issues) {
-      errors.push(`${issue.path.join(".")}: ${issue.message}`);
+      const field = issue.path.join(".");
+      errors.push(`${field}: ${issue.message}`);
+      issues.push({ field, type: classifyFieldIssue(field, issue.code, raw[field]), message: issue.message });
     }
-    return { rowNumber, raw, errors, isDuplicate: false, possibleDuplicates: [] };
+    return { rowNumber, raw, errors, issues, isDuplicate: false, possibleDuplicates: [] };
   }
 
   const row = parsed.data;
@@ -192,15 +197,20 @@ export function validateImportRow(
   let purok_id: number | null = null;
   if (row.purok_name) {
     const found = lookups.puroksByName.get(row.purok_name.toLowerCase());
-    if (!found) errors.push(`purok_name: "${row.purok_name}" doesn't match any existing purok`);
-    else purok_id = found;
+    if (!found) {
+      const message = `"${row.purok_name}" doesn't match any existing purok`;
+      errors.push(`purok_name: ${message}`);
+      issues.push({ field: "purok_name", type: "UNKNOWN_REFERENCE", message });
+    } else purok_id = found;
   }
 
   let household_id: number | null = null;
   if (row.household_no) {
     const found = lookups.householdsByNo.get(row.household_no.toLowerCase());
     if (!found) {
-      errors.push(`household_no: "${row.household_no}" doesn't match any existing household`);
+      const message = `"${row.household_no}" doesn't match any existing household`;
+      errors.push(`household_no: ${message}`);
+      issues.push({ field: "household_no", type: "UNKNOWN_REFERENCE", message });
     } else {
       household_id = found.id;
       // If both were given and disagree, the household's purok wins —
@@ -214,13 +224,14 @@ export function validateImportRow(
   }
 
   if (errors.length > 0) {
-    return { rowNumber, raw, errors, isDuplicate: false, possibleDuplicates: [] };
+    return { rowNumber, raw, errors, issues, isDuplicate: false, possibleDuplicates: [] };
   }
 
   return {
     rowNumber,
     raw,
     errors: [],
+    issues: [],
     isDuplicate: false, // set by the caller after checking against the DB + sibling rows
     possibleDuplicates: [], // likewise
     data: {
