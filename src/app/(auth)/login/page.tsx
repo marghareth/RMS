@@ -27,6 +27,14 @@ function BrandMark({ className = "h-6 w-6", fill = "#3B82F6" }: { className?: st
   );
 }
 
+// Never let a hung request leave the button on "Signing in..." forever.
+function withTimeout<T>(p: Promise<T>, ms = 20000): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, rej) => setTimeout(() => rej(new Error("TIMEOUT")), ms)),
+  ]);
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -48,18 +56,24 @@ export default function LoginPage() {
 
     let res;
     try {
-      res = await signIn("credentials", { username, password, redirect: false });
-    } catch {
-      // signIn() rejecting (network failure, blocked request, etc.) used to
-      // leave the button stuck on "Signing in..." forever since nothing
-      // downstream ever ran. Surface it as a normal error instead.
-      setError("Couldn't reach the server. Please check your connection and try again.");
+      res = await withTimeout(signIn("credentials", { username, password, redirect: false }));
+    } catch (err) {
+      // signIn() rejecting or timing out (network failure, server hung on the
+      // database, etc.) used to leave the button stuck on "Signing in..."
+      // forever. Surface it as a normal error instead.
+      setError(
+        err instanceof Error && err.message === "TIMEOUT"
+          ? "The server took too long to respond (20s). The database may be unreachable."
+          : "Couldn't reach the server. Please check your connection and try again."
+      );
       setLoading(false);
       return;
     }
 
     if (res?.ok) {
-      router.push("/dashboard");
+      // Hard navigation so the freshly-set session cookie is sent on the
+      // very next request (router.push can race it and bounce back to /login).
+      window.location.assign("/dashboard");
       return;
     }
 
@@ -69,7 +83,13 @@ export default function LoginPage() {
       return;
     }
 
-    setError("Invalid username or password.");
+    // "CredentialsSignin" is the normal wrong-password result; anything else
+    // (Configuration, a Prisma error…) is a server problem — show the code.
+    setError(
+      !res?.error || res.error === "CredentialsSignin"
+        ? "Invalid username or password."
+        : `Sign-in failed on the server (${res.error}). Check the deployment logs.`
+    );
     setLoading(false);
   }
 
