@@ -14,8 +14,39 @@ function monthsAgo(n: number) { const d = new Date(); d.setMonth(d.getMonth() - 
 function yearsAgo(n: number) { const d = new Date(); d.setFullYear(d.getFullYear() - n); return d; }
 function dob(age: number) { return yearsAgo(age); }
 
+// ─── SAFETY GUARD ─────────────────────────────────────────────────────────────
+// SECURITY: this file creates accounts with well-known passwords
+// (admin/admin123, …) and fake residents. Run against a real deployment's
+// database, that is a ready-made admin login for anyone who has read this
+// repo. Refuse unless the target is clearly a local dev database, or the
+// caller explicitly opts in with ALLOW_REMOTE_SEED=1 (e.g. a throwaway
+// staging DB). Passwords on accounts that already exist are never touched
+// (the upserts below use `update: {}`).
+function assertSafeToSeed() {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Refusing to seed: NODE_ENV is production. The seed creates accounts with default passwords.");
+  }
+  if (process.env.ALLOW_REMOTE_SEED === "1") return;
+
+  let host = "";
+  try {
+    host = new URL(process.env.DATABASE_URL ?? "").hostname;
+  } catch {
+    /* unparsable — treated as non-local below */
+  }
+  const isLocal = ["localhost", "127.0.0.1", "::1", "[::1]", "db", "postgres"].includes(host);
+  if (!isLocal) {
+    throw new Error(
+      `Refusing to seed non-local database host "${host || "(unknown)"}". ` +
+        "The seed creates accounts with default passwords (admin/admin123, …). " +
+        "If this really is a throwaway database, re-run with ALLOW_REMOTE_SEED=1."
+    );
+  }
+}
+
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 async function main() {
+  assertSafeToSeed();
   console.log("🌱 Seeding database...\n");
 
   // ── 1. USERS ────────────────────────────────────────────────────────────────

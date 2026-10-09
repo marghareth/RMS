@@ -46,6 +46,15 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
+  // Already enrolled: nothing to confirm. Without this, a session holder
+  // with one valid code could mint a fresh set of backup codes here.
+  if (user.mfa_enabled) {
+    return NextResponse.json(
+      { error: "MFA_ALREADY_ENABLED", message: "Two-factor authentication is already on." },
+      { status: 409 }
+    );
+  }
+
   if (!user.mfa_secret) {
     return NextResponse.json(
       { error: "SETUP_NOT_STARTED", message: "Call /api/account/mfa/setup first." },
