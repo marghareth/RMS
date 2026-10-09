@@ -20,7 +20,7 @@ import { requireAuth } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { mfaEnableSchema } from "@/lib/validations";
-import { verifyTotp, generateBackupCodes, hashBackupCodes } from "@/lib/mfa";
+import { matchTotpStep, generateBackupCodes, hashBackupCodes } from "@/lib/mfa";
 import { RateLimiter, tooManyRequestsResponse } from "@/lib/rate-limit";
 
 const mfaEnableLimiter = new RateLimiter({
@@ -30,7 +30,7 @@ const mfaEnableLimiter = new RateLimiter({
 });
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requireAuth();
+  const auth = await requireAuth({ allowDuringMfaSetup: true });
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const userId = parseInt(auth.session.user.id);
@@ -62,7 +62,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     );
   }
 
-  if (!verifyTotp(user.mfa_secret, token)) {
+  const step = matchTotpStep(user.mfa_secret, token);
+  if (step === null) {
     return NextResponse.json(
       { error: "INVALID_CODE", message: "That code didn't match. Check the time on your device and try again." },
       { status: 400 }
@@ -74,7 +75,9 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   await prisma.user.update({
     where: { id: userId },
-    data: { mfa_enabled: true, mfa_backup_codes: hashed },
+    // Record the confirming code's step so it can't then be reused to
+    // sign in (see matchTotpStep's replay check).
+    data: { mfa_enabled: true, mfa_backup_codes: hashed, mfa_last_step: step },
   });
 
   // A successful confirmation is the end of this flow — clear the budget

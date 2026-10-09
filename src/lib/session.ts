@@ -17,6 +17,7 @@ import { authOptions } from "./auth";
 import { prisma } from "./db";
 import { hasPermission } from "./permission";
 import { mfaSetupRequired, isMfaEnforcementOn } from "./mfa-policy";
+import { signedInBeforePasswordChange } from "./password-change";
 
 /**
  * How long a looked-up account is trusted before the next request re-reads
@@ -26,7 +27,13 @@ import { mfaSetupRequired, isMfaEnforcementOn } from "./mfa-policy";
  */
 const USER_CACHE_TTL_MS = 5_000;
 
-type CurrentUser = { role: string; username: string; is_active: boolean; mfa_enabled: boolean };
+type CurrentUser = {
+  role: string;
+  username: string;
+  is_active: boolean;
+  mfa_enabled: boolean;
+  password_changed_at: Date | null;
+};
 const userCache = new Map<number, { at: number; user: CurrentUser | null }>();
 
 /** Test helper / manual invalidation. */
@@ -40,7 +47,7 @@ async function loadCurrentUser(id: number): Promise<CurrentUser | null> {
 
   const user = await prisma.user.findUnique({
     where: { id },
-    select: { role: true, username: true, is_active: true, mfa_enabled: true },
+    select: { role: true, username: true, is_active: true, mfa_enabled: true, password_changed_at: true },
   });
   userCache.set(id, { at: Date.now(), user });
   return user;
@@ -53,6 +60,7 @@ async function revalidate(session: Session | null): Promise<Session | null> {
 
   const current = await loadCurrentUser(id);
   if (!current || !current.is_active) return null;
+  if (signedInBeforePasswordChange(session.user.loginAt, current.password_changed_at)) return null;
 
   session.user.role = current.role;
   session.user.username = current.username;
@@ -73,6 +81,7 @@ export async function getSession(req?: NextRequest) {
         username: token.username as string,
         role: token.role as string,
         mfaSetupRequired: token.mfaSetupRequired,
+        loginAt: token.loginAt,
       },
       expires: new Date((token.exp as number) * 1000).toISOString(),
     } as Session);
@@ -81,10 +90,21 @@ export async function getSession(req?: NextRequest) {
   return revalidate(await getServerSession(authOptions));
 }
 
-export async function requireAuth() {
+/**
+ * Signed in, any role. Like requirePermission, this also refuses an
+ * ADMIN/CAPTAIN who hasn't enrolled in MFA yet (previously it didn't, so
+ * routes using it — search, branding, barangay-info — relied on the
+ * middleware alone). The MFA enrollment endpoints themselves pass
+ * `{ allowDuringMfaSetup: true }`, since that's how the user gets out of
+ * this state.
+ */
+export async function requireAuth(options: { allowDuringMfaSetup?: boolean } = {}) {
   const session = await getSession();
   if (!session) {
     return { error: "Unauthorized", status: 401 };
+  }
+  if (!options.allowDuringMfaSetup && session.user.mfaSetupRequired && isMfaEnforcementOn()) {
+    return { error: "MFA_SETUP_REQUIRED", status: 403 };
   }
   return { session };
 }

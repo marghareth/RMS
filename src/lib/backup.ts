@@ -57,14 +57,24 @@ export async function runDatabaseBackup(): Promise<BackupResult> {
     // Plain-SQL format (-F p) rather than custom/compressed format: it's
     // restorable with nothing but `psql`, which matters for barangay IT
     // staff who may not have pg_restore on hand during an actual incident.
-    await execFileAsync("pg_dump", [databaseUrl, "-F", "p", "-f", tmpPath], {
+    //
+    // SECURITY FIX: the full DATABASE_URL (password included) used to be
+    // passed as a command-line argument. Node's execFile error message is
+    // "Command failed: pg_dump <args…>", so any pg_dump failure echoed the
+    // database password back to the browser in the BACKUP_FAILED
+    // response — and argv is visible to every local user via `ps`. The
+    // password now travels in PGPASSWORD (libpq reads it from the
+    // environment) and the URL passed on the command line has it removed.
+    const { url: safeUrl, password } = splitPassword(databaseUrl);
+    await execFileAsync("pg_dump", [safeUrl, "-F", "p", "-f", tmpPath], {
       // Dumps can legitimately take a while on a large resident database.
       timeout: 5 * 60 * 1000,
       maxBuffer: 1024 * 1024 * 64,
+      env: password ? { ...process.env, PGPASSWORD: password } : process.env,
     });
   } catch (err) {
     await fs.rm(tmpPath, { force: true });
-    const message = err instanceof Error ? err.message : String(err);
+    const message = redactCredentials(err instanceof Error ? err.message : String(err));
     if (message.includes("ENOENT")) {
       throw new BackupError(
         "pg_dump isn't installed on this server. Install the PostgreSQL client tools to enable backups."
@@ -77,6 +87,27 @@ export async function runDatabaseBackup(): Promise<BackupResult> {
   const stat = await fs.stat(finalPath);
 
   return { relativePath: filename, sizeBytes: stat.size };
+}
+
+/**
+ * Removes the password from a postgres:// URL so it can be passed on a
+ * command line. Returns the original string untouched if it isn't a
+ * parseable URL (pg_dump will report that itself).
+ */
+export function splitPassword(databaseUrl: string): { url: string; password: string | null } {
+  try {
+    const u = new URL(databaseUrl);
+    const password = u.password ? decodeURIComponent(u.password) : null;
+    u.password = "";
+    return { url: u.toString(), password };
+  } catch {
+    return { url: databaseUrl, password: null };
+  }
+}
+
+/** Masks `user:password@` in any connection URL that appears in `text`. */
+export function redactCredentials(text: string): string {
+  return text.replace(/(\b[a-z][a-z0-9+.-]*:\/\/[^:/@\s]*):[^@\s]*@/gi, "$1:***@");
 }
 
 /** Resolves a stored relative path back to an absolute path, guarding against path traversal. */

@@ -6,17 +6,15 @@
 // (login) or no limiting at all (verify, bulk actions).
 //
 // STORAGE: `RateLimitStore` is the one seam that matters for scaling.
-// `MemoryRateLimitStore` below keeps counts in a process-local Map, which
-// is fine for a single Node instance (typical for a barangay-scale
-// deployment) but — as flagged previously on the login limiter — does
-// NOT share state across multiple instances behind a load balancer. If
-// this app is ever deployed that way, write a second class implementing
-// `RateLimitStore` against Redis/Upstash (GET, INCR + PEXPIRE is the
-// whole implementation) and pass it into `new RateLimiter({ store })`
-// wherever a limiter is constructed. Nothing else in this file, or in any
-// of its callers, needs to change — that's the point of the interface.
+// The default is `PrismaRateLimitStore` (counts in the RateLimitBucket
+// table), because the app runs on Vercel, where a process-local Map is
+// neither shared between instances nor kept across cold starts.
+// `MemoryRateLimitStore` remains for tests and as the fallback when the
+// database is unreachable. To move to Redis/Upstash later, implement
+// `RateLimitStore` against it and pass it via `new RateLimiter({ store })`.
 
 import { NextResponse } from "next/server";
+import { prisma } from "./db";
 
 export interface RateLimitRecord {
   count: number;
@@ -61,10 +59,82 @@ export class MemoryRateLimitStore implements RateLimitStore {
   }
 }
 
+/**
+ * Postgres-backed store (the RateLimitBucket table). This is the default:
+ * the app is deployed on Vercel, where every serverless instance has its
+ * own memory and loses it on cold start, so the in-memory store above let
+ * an attacker get a fresh 5-attempt budget just by landing on another
+ * instance. Each increment is a single atomic upsert, so concurrent
+ * requests can't both read a stale count.
+ *
+ * If the database call itself fails (DB unreachable), it falls back to an
+ * in-memory store rather than throwing — the request that triggered it
+ * will almost certainly fail on its own DB access anyway, and a limiter
+ * outage shouldn't turn into a login outage.
+ */
+export class PrismaRateLimitStore implements RateLimitStore {
+  private fallback = new MemoryRateLimitStore();
+  private warned = false;
+
+  private onError(err: unknown) {
+    if (this.warned) return;
+    this.warned = true;
+    console.warn("[rate-limit] database store unavailable, using in-memory fallback:", (err as Error)?.message ?? err);
+  }
+
+  async peek(key: string, windowMs: number): Promise<RateLimitRecord | null> {
+    try {
+      const row = await prisma.rateLimitBucket.findUnique({ where: { key } });
+      if (!row) return null;
+      if (Date.now() - row.window_started_at.getTime() > windowMs) return null;
+      return { count: row.count, windowStartedAt: row.window_started_at.getTime() };
+    } catch (err) {
+      this.onError(err);
+      return this.fallback.peek(key, windowMs);
+    }
+  }
+
+  async increment(key: string, windowMs: number): Promise<RateLimitRecord> {
+    const now = new Date();
+    const cutoff = new Date(now.getTime() - windowMs);
+    try {
+      const rows = await prisma.$queryRaw<{ count: number; window_started_at: Date }[]>`
+        INSERT INTO "RateLimitBucket" ("key", "count", "window_started_at")
+        VALUES (${key}, 1, ${now})
+        ON CONFLICT ("key") DO UPDATE SET
+          "count" = CASE WHEN "RateLimitBucket"."window_started_at" < ${cutoff}
+                         THEN 1 ELSE "RateLimitBucket"."count" + 1 END,
+          "window_started_at" = CASE WHEN "RateLimitBucket"."window_started_at" < ${cutoff}
+                         THEN ${now} ELSE "RateLimitBucket"."window_started_at" END
+        RETURNING "count", "window_started_at"`;
+      // Opportunistic cleanup so one-off keys (random usernames/IPs) don't
+      // accumulate forever. Cheap, rare, and not awaited on the hot path.
+      if (Math.random() < 0.01) {
+        prisma.rateLimitBucket
+          .deleteMany({ where: { window_started_at: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) } } })
+          .catch(() => {});
+      }
+      return { count: Number(rows[0].count), windowStartedAt: new Date(rows[0].window_started_at).getTime() };
+    } catch (err) {
+      this.onError(err);
+      return this.fallback.increment(key, windowMs);
+    }
+  }
+
+  async reset(key: string): Promise<void> {
+    try {
+      await prisma.rateLimitBucket.deleteMany({ where: { key } });
+    } catch (err) {
+      this.onError(err);
+    }
+    await this.fallback.reset(key);
+  }
+}
+
 // One shared instance per process. Each named limiter below still keys
 // its own entries (see the `${namespace}:` prefix in RateLimiter), so
-// different limiters never collide with each other in this one map.
-const defaultStore = new MemoryRateLimitStore();
+// different limiters never collide with each other in this one store.
+const defaultStore: RateLimitStore = new PrismaRateLimitStore();
 
 export interface RateLimiterOptions {
   /** Distinguishes this limiter's keys from every other limiter sharing a store. */

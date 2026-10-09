@@ -2,7 +2,8 @@
 //
 // SECURITY: two layers here beyond a plain username/password check.
 //
-// 1. Login attempts are rate-limited (5 failures / 15 min per username)
+// 1. Login attempts are rate-limited (5 failures / 15 min per username+IP, with looser
+//    per-IP and per-username backstops — see LOGIN_WINDOW_MS below)
 //    via the shared limiter in src/lib/rate-limit.ts — see that file for
 //    why the storage layer is a swappable interface rather than a bare
 //    Map, which is what this used to be. Only real failures (bad
@@ -38,16 +39,54 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./db";
 import bcrypt from "bcryptjs";
-import { verifyTotp, consumeBackupCode } from "./mfa";
-import { RateLimiter } from "./rate-limit";
+import { matchTotpStep, consumeBackupCode } from "./mfa";
+import { RateLimiter, getClientIp } from "./rate-limit";
 import { mfaSetupRequired } from "./mfa-policy";
 import { describeDbError } from "./db-errors";
+import { signedInBeforePasswordChange } from "./password-change";
 
-const loginLimiter = new RateLimiter({
-  namespace: "login",
-  max: 5,
-  windowMs: 15 * 60 * 1000, // 15 minutes
-});
+// SECURITY FIX: login used to be limited by username alone, so anyone
+// could lock any account (including `admin`) out indefinitely by sending
+// five wrong passwords every 15 minutes — no knowledge needed beyond the
+// username. Now three limits apply, and a login is refused if any is hit:
+//   - username + IP: the tight one (5). An attacker exhausting it only
+//     locks *their own* IP out of that account, not the real user.
+//   - IP alone (50): stops one address spraying many usernames.
+//   - username alone (100): backstop against a brute force spread across
+//     many IPs. Much higher, so locking someone out this way takes 20×
+//     the effort it used to.
+// Only real failures count (see peek/penalize in rate-limit.ts).
+const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const loginPairLimiter = new RateLimiter({ namespace: "login", max: 5, windowMs: LOGIN_WINDOW_MS });
+const loginIpLimiter = new RateLimiter({ namespace: "login-ip", max: 50, windowMs: LOGIN_WINDOW_MS });
+const loginUserLimiter = new RateLimiter({ namespace: "login-user", max: 100, windowMs: LOGIN_WINDOW_MS });
+
+/** next-auth hands authorize() a plain headers object, not a Request. */
+function clientIpFrom(req: { headers?: Record<string, unknown> } | undefined): string {
+  const headers = new Headers();
+  for (const [k, v] of Object.entries(req?.headers ?? {})) {
+    if (typeof v === "string") headers.set(k, v);
+    else if (Array.isArray(v)) headers.set(k, v.join(", "));
+  }
+  return getClientIp(new Request("http://localhost", { headers }));
+}
+
+function loginLimitKeys(username: string, ip: string) {
+  return [
+    [loginPairLimiter, `${username}|${ip}`],
+    [loginIpLimiter, ip],
+    [loginUserLimiter, username],
+  ] as const;
+}
+
+async function loginBlocked(username: string, ip: string): Promise<boolean> {
+  const results = await Promise.all(loginLimitKeys(username, ip).map(([l, k]) => l.peek(k)));
+  return results.some((r) => !r.allowed);
+}
+
+async function penalizeLogin(username: string, ip: string): Promise<void> {
+  await Promise.all(loginLimitKeys(username, ip).map(([l, k]) => l.penalize(k)));
+}
 
 // How often (ms) a live session re-reads role / is_active / mfa_enabled from
 // the database. The JWT itself is only a cache of those values — see
@@ -68,6 +107,19 @@ const DUMMY_PASSWORD_HASH = bcrypt.hashSync(
   10
 );
 
+/**
+ * Records `step` as the account's last-used TOTP step, but only if it is
+ * newer than what's stored. Returns false when another request already
+ * claimed this (or a later) step — i.e. the code is being replayed.
+ */
+async function claimTotpStep(userId: number, step: number): Promise<boolean> {
+  const { count } = await prisma.user.updateMany({
+    where: { id: userId, OR: [{ mfa_last_step: null }, { mfa_last_step: { lt: step } }] },
+    data: { mfa_last_step: step },
+  });
+  return count === 1;
+}
+
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: { strategy: "jwt" },
@@ -82,16 +134,16 @@ export const authOptions: NextAuthOptions = {
         // has MFA enabled. Absent for every other sign-in.
         totp: { label: "Authentication code", type: "text" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.username || !credentials?.password) return null;
 
         const username = credentials.username;
 
         // Read-only gate: doesn't count as an attempt by itself, but
         // blocks entirely once too many *real* failures have already
-        // been recorded for this username.
-        const gate = await loginLimiter.peek(username);
-        if (!gate.allowed) return null;
+        // been recorded (see loginLimitKeys above).
+        const ip = clientIpFrom(req);
+        if (await loginBlocked(username, ip)) return null;
 
         const user = await prisma.user.findUnique({
           where: { username },
@@ -103,7 +155,7 @@ export const authOptions: NextAuthOptions = {
           // timing from that one — see note 3 at the top of this file.
           // The result is always false; it exists only to burn time.
           await bcrypt.compare(credentials.password, DUMMY_PASSWORD_HASH);
-          await loginLimiter.penalize(username);
+          await penalizeLogin(username, ip);
           return null;
         }
 
@@ -113,7 +165,7 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!passwordMatch) {
-          await loginLimiter.penalize(username);
+          await penalizeLogin(username, ip);
           return null;
         }
 
@@ -129,12 +181,16 @@ export const authOptions: NextAuthOptions = {
             throw new Error("MFA_REQUIRED");
           }
 
-          const validTotp = user.mfa_secret ? verifyTotp(user.mfa_secret, token) : false;
+          // Reject codes at or before the last accepted step (replay), and
+          // claim this step atomically so two concurrent logins can't both
+          // spend the same code.
+          const step = user.mfa_secret ? matchTotpStep(user.mfa_secret, token, user.mfa_last_step) : null;
+          const validTotp = step !== null && (await claimTotpStep(user.id, step));
 
           if (!validTotp) {
             const { valid, remaining } = await consumeBackupCode(token, user.mfa_backup_codes);
             if (!valid) {
-              await loginLimiter.penalize(username);
+              await penalizeLogin(username, ip);
               throw new Error("MFA_INVALID");
             }
             // Backup codes are single-use — persist the code's removal
@@ -146,7 +202,10 @@ export const authOptions: NextAuthOptions = {
           }
         }
 
-        await loginLimiter.reset(username);
+        // Only the pair counter is cleared: the per-IP and per-username
+        // counters may hold an attacker's failures, which one good login
+        // by the real user shouldn't wipe.
+        await loginPairLimiter.reset(`${username}|${ip}`);
 
         return {
           id: String(user.id),
@@ -186,9 +245,9 @@ export const authOptions: NextAuthOptions = {
         try {
           const fresh = await prisma.user.findUnique({
             where: { id: parseInt(token.id) },
-            select: { role: true, is_active: true, mfa_enabled: true, username: true },
+            select: { role: true, is_active: true, mfa_enabled: true, username: true, password_changed_at: true },
           });
-          if (!fresh || !fresh.is_active) {
+          if (!fresh || !fresh.is_active || signedInBeforePasswordChange(token.loginAt, fresh.password_changed_at)) {
             token.invalid = true;
           } else {
             token.invalid = false;

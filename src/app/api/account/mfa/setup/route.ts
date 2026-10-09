@@ -26,7 +26,7 @@ import { withErrorHandling } from "@/lib/api-handler";
 import { generateTotpSecret, buildOtpauthUrl } from "@/lib/mfa";
 
 export const POST = withErrorHandling(async () => {
-  const auth = await requireAuth();
+  const auth = await requireAuth({ allowDuringMfaSetup: true });
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const userId = parseInt(auth.session.user.id);
