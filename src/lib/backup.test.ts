@@ -45,3 +45,17 @@ describe('resolveBackupPath', () => {
     expect(resolved).toBe(path.resolve('/tmp/rms-backups-test', 'nested', 'backup.sql'));
   });
 });
+describe('splitPassword / redactCredentials', () => {
+  it('moves the password out of the connection URL', async () => {
+    const { splitPassword } = await import('./backup');
+    const { url, password } = splitPassword('postgresql://rms:s3cr%40t@db.example.com:6543/postgres?pgbouncer=true');
+    expect(password).toBe('s3cr@t');
+    expect(url).toBe('postgresql://rms@db.example.com:6543/postgres?pgbouncer=true');
+  });
+
+  it('masks credentials in an error message', async () => {
+    const { redactCredentials } = await import('./backup');
+    const msg = 'Command failed: pg_dump postgresql://rms:hunter2@db.example.com/postgres -F p';
+    expect(redactCredentials(msg)).toBe('Command failed: pg_dump postgresql://rms:***@db.example.com/postgres -F p');
+  });
+});
