@@ -110,32 +110,16 @@ function currentStep(forTime = Date.now()): number {
   return Math.floor(forTime / 1000 / TOTP_STEP_SECONDS);
 }
 
-/**
- * Checks a 6-digit code against `secret`, tolerating ±1 step of clock
- * drift, and returns the time step it matched (or null).
- *
- * Pass the account's `mfa_last_step` as `afterStep` and only steps strictly
- * after it are accepted — a code that has already been used once can't be
- * replayed during the rest of its ~90 s validity window. Callers that
- * accept a code must persist the returned step (see claimTotpStep in
- * src/lib/auth.ts).
- */
-export function matchTotpStep(secret: string, token: string, afterStep?: number | null): number | null {
+/** Verifies a 6-digit code against `secret`, tolerating ±1 step of clock drift. */
+export function verifyTotp(secret: string, token: string): boolean {
   const cleanToken = token.replace(/\s+/g, "");
-  if (!/^\d{6}$/.test(cleanToken)) return null;
+  if (!/^\d{6}$/.test(cleanToken)) return false;
 
   const step = currentStep();
   for (let errorWindow = -TOTP_WINDOW; errorWindow <= TOTP_WINDOW; errorWindow++) {
-    const candidate = step + errorWindow;
-    if (afterStep != null && candidate <= afterStep) continue;
-    if (hotp(secret, candidate) === cleanToken) return candidate;
+    if (hotp(secret, step + errorWindow) === cleanToken) return true;
   }
-  return null;
-}
-
-/** Verifies a 6-digit code against `secret`, tolerating ±1 step of clock drift. */
-export function verifyTotp(secret: string, token: string, afterStep?: number | null): boolean {
-  return matchTotpStep(secret, token, afterStep) !== null;
+  return false;
 }
 
 // ── Backup codes ──────────────────────────────────────────────────

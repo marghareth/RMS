@@ -91,9 +91,6 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   const data: Prisma.UserUpdateInput = { role: resolvedRole, is_active: resolvedIsActive };
   if (body.password) {
     data.password_hash = await bcrypt.hash(body.password, 10);
-    // Ends every session opened with the old password (see
-    // src/lib/password-change.ts).
-    data.password_changed_at = new Date();
   }
 
   const user = await prisma.$transaction(async (tx) => {
@@ -108,7 +105,7 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
         action: "UPDATE",
         table_affected: "User",
         record_id: id,
-        details: `Updated user ID: ${id}${body.password ? " (password changed)" : ""}`,
+        details: `Updated user ID: ${id}`,
       },
       tx
     );
