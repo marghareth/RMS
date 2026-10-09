@@ -1,14 +1,6 @@
 // FILE: src/lib/rate-limit.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getClientIp, PrismaRateLimitStore, RateLimiter } from './rate-limit';
-import { prisma } from './db';
-
-vi.mock('./db', () => ({
-  prisma: {
-    $queryRaw: vi.fn(),
-    rateLimitBucket: { findUnique: vi.fn(), deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
-  },
-}));
+import { describe, it, expect } from 'vitest';
+import { getClientIp } from './rate-limit';
 
 function reqWith(headers: Record<string, string>): Request {
   return new Request('https://example.com', { headers });
@@ -53,33 +45,5 @@ describe('getClientIp', () => {
 
   it('falls back to a constant when no proxy header is present at all', () => {
     expect(getClientIp(reqWith({}))).toBe('unknown');
-  });
-});
-
-describe('PrismaRateLimitStore', () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it('uses the count returned by the atomic upsert', async () => {
-    const started = new Date();
-    (prisma.$queryRaw as any).mockResolvedValue([{ count: 3, window_started_at: started }]);
-    const store = new PrismaRateLimitStore();
-    await expect(store.increment('login:admin', 60_000)).resolves.toEqual({ count: 3, windowStartedAt: started.getTime() });
-  });
-
-  it('ignores a stored window that has already expired', async () => {
-    (prisma.rateLimitBucket.findUnique as any).mockResolvedValue({ count: 9, window_started_at: new Date(Date.now() - 120_000) });
-    const store = new PrismaRateLimitStore();
-    await expect(store.peek('login:admin', 60_000)).resolves.toBeNull();
-  });
-
-  it('falls back to in-memory counting when the database is unreachable', async () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    (prisma.$queryRaw as any).mockRejectedValue(new Error('P1001'));
-    (prisma.rateLimitBucket.findUnique as any).mockRejectedValue(new Error('P1001'));
-    const limiter = new RateLimiter({ namespace: 't', max: 2, windowMs: 60_000, store: new PrismaRateLimitStore() });
-
-    expect((await limiter.penalize('k')).allowed).toBe(true);
-    expect((await limiter.penalize('k')).allowed).toBe(true);
-    expect((await limiter.peek('k')).allowed).toBe(false);
   });
 });

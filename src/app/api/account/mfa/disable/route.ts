@@ -36,7 +36,7 @@ const mfaDisableLimiter = new RateLimiter({
 });
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
-  const auth = await requireAuth({ allowDuringMfaSetup: true });
+  const auth = await requireAuth();
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const userId = parseInt(auth.session.user.id);
@@ -61,9 +61,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     return NextResponse.json({ error: "MFA_NOT_ENABLED" }, { status: 400 });
   }
 
-  // A code already used (e.g. for the sign-in that started this session)
-  // can't be replayed here.
-  const validTotp = user.mfa_secret ? verifyTotp(user.mfa_secret, token, user.mfa_last_step) : false;
+  const validTotp = user.mfa_secret ? verifyTotp(user.mfa_secret, token) : false;
   const validBackup = validTotp ? true : (await consumeBackupCode(token, user.mfa_backup_codes)).valid;
 
   if (!validTotp && !validBackup) {
@@ -72,7 +70,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   await prisma.user.update({
     where: { id: userId },
-    data: { mfa_enabled: false, mfa_secret: null, mfa_backup_codes: [], mfa_last_step: null },
+    data: { mfa_enabled: false, mfa_secret: null, mfa_backup_codes: [] },
   });
 
   // A successful disable is the end of this flow — clear the budget so

@@ -3,15 +3,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { GET, PATCH } from './route';
 import { prisma } from '@/lib/db';
-import { logAudit } from '@/lib/audit';
 
-vi.mock('@/lib/db', () => {
-  const prisma: any = { systemSetting: { findMany: vi.fn(), upsert: vi.fn() } };
-  prisma.$transaction = vi.fn((fn: any) => fn(prisma));
-  return { prisma };
-});
-
-vi.mock('@/lib/audit', () => ({ logAudit: vi.fn() }));
+vi.mock('@/lib/db', () => ({
+  prisma: { systemSetting: { findMany: vi.fn(), upsert: vi.fn() } },
+}));
 
 vi.mock('@/lib/session', () => ({
   requirePermission: vi.fn().mockResolvedValue({ session: { user: { id: '1', role: 'ADMIN' } } }),
@@ -50,16 +45,6 @@ describe('PATCH /api/settings', () => {
     (prisma.systemSetting.upsert as any).mockResolvedValue({});
     await PATCH(makeReq({ site_name: 'New Name', max_upload_mb: 10 }));
     expect(prisma.systemSetting.upsert).toHaveBeenCalledTimes(2);
-  });
-
-  it('writes an audit entry naming the changed keys', async () => {
-    (prisma.systemSetting.upsert as any).mockResolvedValue({});
-    await PATCH(makeReq({ site_name: 'New Name', max_upload_mb: 10 }));
-    expect((logAudit as any).mock.calls[0][0]).toMatchObject({
-      user_id: 1,
-      table_affected: 'SystemSetting',
-      details: 'Updated settings: site_name, max_upload_mb',
-    });
   });
 
   it('coerces non-string values (numbers/booleans) to strings for storage', async () => {

@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22  # concrete major: resolving "lts/*" fetches a manifest that fails when rate-limited
+          node-version: lts/*
           cache: 'npm'
 
       - name: Install dependencies

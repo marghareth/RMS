@@ -28,16 +28,6 @@ model User {
   mfa_enabled       Boolean  @default(false)
   mfa_secret        String?
   mfa_backup_codes  String[] @default([])
-  // Last TOTP time step (unix seconds / 30) accepted for this account.
-  // A code at or before this step is rejected, so a code that was seen
-  // once (shoulder-surfed, phished, logged) can't be replayed within its
-  // ~90 s validity window.
-  mfa_last_step     Int?
-
-  // Set whenever the password is changed. Sessions issued before this
-  // instant are rejected (see src/lib/session.ts and the jwt callback in
-  // src/lib/auth.ts), so a password reset actually ends a stolen session.
-  password_changed_at DateTime?
 
   certificates_issued  Certificate[]
   blotter_updates      BlotterUpdate[]
@@ -774,13 +764,4 @@ model DashboardPreference {
   user User @relation(fields: [user_id], references: [id])
 
   @@unique([user_id, widget_key])
-}
-
-// Shared rate-limit counters (see src/lib/rate-limit.ts). Kept in the
-// database rather than process memory so limits hold across serverless
-// instances and cold starts.
-model RateLimitBucket {
-  key               String   @id
-  count             Int
-  window_started_at DateTime
 }

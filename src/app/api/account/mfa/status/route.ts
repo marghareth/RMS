@@ -11,7 +11,7 @@ import { withErrorHandling } from "@/lib/api-handler";
 import { roleRequiresMfa, isMfaEnforcementOn } from "@/lib/mfa-policy";
 
 export const GET = withErrorHandling(async () => {
-  const auth = await requireAuth({ allowDuringMfaSetup: true });
+  const auth = await requireAuth();
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const userId = parseInt(auth.session.user.id);

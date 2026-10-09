@@ -15,18 +15,10 @@ import { summarizeImport } from "@/lib/importMetrics";
 import { DuplicateIndex, DUPLICATE_SELECT, toMatchInfo, type ResidentIdentity } from "@/lib/duplicate-detection";
 
 const MAX_ROWS = 500;
-// 500 resident rows is well under 1 MB as CSV or XLSX; 5 MB leaves ample
-// headroom. Checked before parsing so an oversized (or deliberately
-// crafted) spreadsheet never reaches the xlsx parser.
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
-const TOO_LARGE_MESSAGE = "This file is too large — the limit is 5 MB per import.";
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("residents:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
-
-  const declaredLength = Number(req.headers.get("content-length") ?? 0);
-  if (declaredLength > MAX_FILE_BYTES + 64 * 1024) throw new ApiError(413, "FILE_TOO_LARGE", TOO_LARGE_MESSAGE);
 
   const formData = await req.formData();
   const file = formData.get("file");
@@ -34,8 +26,6 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   if (!/\.(csv|xlsx?)$/i.test(file.name)) {
     throw new ApiError(400, "BAD_FILE_TYPE", "Only .csv and .xlsx files are supported.");
   }
-
-  if (file.size > MAX_FILE_BYTES) throw new ApiError(413, "FILE_TOO_LARGE", TOO_LARGE_MESSAGE);
 
   const buffer = Buffer.from(await file.arrayBuffer());
 
