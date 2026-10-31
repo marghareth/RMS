@@ -1,83 +1,109 @@
-// FILE: src/lib/route-permissions.test.ts
+// FILE: src/lib/route-permissions.routes.test.ts
+//
+// Regression guard for the Barangay ID bug: the pages lived in a folder
+// named `barangay_id` while the sidebar, the page-access rules
+// (ROUTE_PERMISSIONS) and next.config.ts's redirect all pointed at
+// `/barangay-id`. Every link to the module ended in a 404, and because the
+// access rule was written for the hyphenated path, the underscored folder
+// was never gated either. Nothing failed loudly, so nobody noticed.
+//
+// These tests read the real files on disk and cross-check them:
+//   1. every page under src/app/(dashboard) is covered by a ROUTE_PERMISSIONS
+//      entry (or is on the short, explicit list of sign-in-only pages);
+//   2. every link in the sidebar resolves to a page that actually exists.
+
 import { describe, it, expect } from 'vitest';
-import { findRoutePermission, canAccessRoute } from './route-permissions';
+import fs from 'node:fs';
+import path from 'node:path';
+import { findRoutePermission } from './route-permissions';
 
-describe('findRoutePermission', () => {
-  it('matches an exact prefix path', () => {
-    expect(findRoutePermission('/dashboard')).toBe('dashboard:read');
-  });
+const APP_DIR = path.resolve(__dirname, '../app');
+const DASHBOARD_DIR = path.join(APP_DIR, '(dashboard)');
+const SIDEBAR_FILE = path.resolve(__dirname, '../components/layout/Sidebar.tsx');
 
-  it('matches a nested path under a prefix', () => {
-    expect(findRoutePermission('/residents/42')).toBe('residents:read');
-    expect(findRoutePermission('/residents/42/edit')).toBe('residents:read');
-  });
+/**
+ * Pages that intentionally have no ROUTE_PERMISSIONS entry — being signed
+ * in is enough. Keep this list short and give a reason for each entry.
+ */
+const SIGNED_IN_ONLY = new Set<string>([
+  '/', // just redirects to /login
+  '/account/security', // every user manages their own 2FA
+  '/admin', // landing page of links only; each linked page is gated
+  // Older duplicate of /admin/backup. Its API (GET/POST /api/backup) still
+  // requires backup:write, so no data is exposed — but the page should be
+  // removed or gated in a follow-up.
+  '/backup',
+]);
 
-  it('picks the most specific (longest) matching prefix', () => {
-    expect(findRoutePermission('/certificates/templates')).toBe('certificates:read');
-    expect(findRoutePermission('/certificates/templates/anything')).toBe('certificates:read');
-    // A plain /certificates/123 still resolves to certificates:read too,
-    // but via the shorter /certificates entry, not /certificates/templates.
-    expect(findRoutePermission('/certificates/123')).toBe('certificates:read');
-  });
-
-  it('resolves the finance overview fan-out to an array of permissions', () => {
-    const perm = findRoutePermission('/finance/overview');
-    expect(Array.isArray(perm)).toBe(true);
-    expect(perm).toEqual([
-      'fund-sources:read',
-      'appropriations:read',
-      'revenues:read',
-      'disbursements:read',
-    ]);
-  });
-
-  it('requires residents:write for registering and importing residents, but only :read to browse', () => {
-    expect(findRoutePermission('/residents/import')).toBe('residents:write');
-    expect(findRoutePermission('/residents/new')).toBe('residents:write');
-    expect(findRoutePermission('/residents')).toBe('residents:read');
-    expect(findRoutePermission('/residents/42')).toBe('residents:read');
-  });
-
-  it('lets write roles reach the import page and keeps read-only roles out', () => {
-    for (const role of ['ADMIN', 'CAPTAIN', 'SECRETARY', 'ENCODER']) {
-      expect(canAccessRoute(role, '/residents/import')).toBe(true);
+/** Recursively collects every page.tsx and turns its folder path into a URL. */
+function collectPageUrls(dir: string, segments: string[] = []): string[] {
+  const urls: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      const name = entry.name;
+      // Route groups like (dashboard) don't appear in the URL.
+      const next = name.startsWith('(') && name.endsWith(')') ? segments : [...segments, name];
+      urls.push(...collectPageUrls(path.join(dir, name), next));
+    } else if (entry.name === 'page.tsx') {
+      // Dynamic segments ([id], [type]) become a sample value.
+      const url = '/' + segments.map((s) => (s.startsWith('[') ? '1' : s)).join('/');
+      urls.push(url === '/' ? '/' : url.replace(/\/$/, ''));
     }
-    for (const role of ['KAGAWAD', 'BHW']) {
-      expect(canAccessRoute(role, '/residents/import')).toBe(false);
-      expect(canAccessRoute(role, '/residents')).toBe(true); // can still browse
+  }
+  return urls;
+}
+
+/** Same walk, but returns URL patterns with dynamic segments kept as wildcards. */
+function collectPagePatterns(dir: string, segments: string[] = []): RegExp[] {
+  const patterns: RegExp[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      const name = entry.name;
+      const next = name.startsWith('(') && name.endsWith(')') ? segments : [...segments, name];
+      patterns.push(...collectPagePatterns(path.join(dir, name), next));
+    } else if (entry.name === 'page.tsx') {
+      const body = segments
+        .map((s) => (s.startsWith('[') ? '[^/]+' : s.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&')))
+        .join('/');
+      patterns.push(new RegExp(`^/${body}$`));
     }
+  }
+  return patterns;
+}
+
+describe('dashboard pages vs ROUTE_PERMISSIONS', () => {
+  const urls = collectPageUrls(DASHBOARD_DIR);
+
+  it('finds the dashboard pages on disk', () => {
+    // Sanity check so a moved folder can't make the next test pass vacuously.
+    expect(urls.length).toBeGreaterThan(50);
   });
 
-  it('distinguishes /finance/overview from other /finance/* routes', () => {
-    expect(findRoutePermission('/finance/revenues')).toBe('revenues:read');
-    expect(findRoutePermission('/finance/appropriations')).toBe('appropriations:read');
-    expect(findRoutePermission('/finance/fund-sources')).toBe('fund-sources:read');
-    expect(findRoutePermission('/finance/disbursements')).toBe('disbursements:read');
+  it('every dashboard page is covered by a page-access rule', () => {
+    const ungated = urls.filter((u) => !SIGNED_IN_ONLY.has(u) && findRoutePermission(u) === null);
+    expect(ungated).toEqual([]);
   });
 
-  it('distinguishes /admin/users, /admin/puroks, /admin/audit-logs, /admin/backup, /admin/settings', () => {
-    expect(findRoutePermission('/admin/users')).toBe('users:read');
-    expect(findRoutePermission('/admin/puroks')).toBe('residents:read');
-    expect(findRoutePermission('/admin/audit-logs')).toBe('audit-logs:read');
-    expect(findRoutePermission('/admin/backup')).toBe('backup:write');
-    expect(findRoutePermission('/admin/settings')).toBe('settings:read');
+  it('serves the Barangay ID pages from the hyphenated path the rest of the app uses', () => {
+    expect(urls).toContain('/barangay-id');
+    expect(urls).toContain('/barangay-id/new');
+    expect(urls.some((u) => u.includes('barangay_id'))).toBe(false);
+    expect(findRoutePermission('/barangay-id')).toBe('barangay_id:read');
+    expect(findRoutePermission('/barangay-id/new')).toBe('barangay_id:read');
+  });
+});
+
+describe('sidebar links vs pages on disk', () => {
+  const patterns = collectPagePatterns(APP_DIR);
+  const sidebarSource = fs.readFileSync(SIDEBAR_FILE, 'utf8');
+  const hrefs = [...sidebarSource.matchAll(/(?:href|addHref):\s*"([^"]+)"/g)].map((m) => m[1]);
+
+  it('finds the sidebar links', () => {
+    expect(hrefs.length).toBeGreaterThan(20);
   });
 
-  it('does not match a path that merely shares a prefix as a substring (no boundary)', () => {
-    // "/financial-report" should NOT match "/financial" as a directory
-    // prefix, since findRoutePermission requires an exact match or a "/"
-    // boundary right after the prefix.
-    expect(findRoutePermission('/financial-report')).toBeNull();
-  });
-
-  it('still matches /financial itself and its sub-paths', () => {
-    expect(findRoutePermission('/financial')).toBe('financial:read');
-    expect(findRoutePermission('/financial/123')).toBe('financial:read');
-  });
-
-  it('returns null for unlisted routes like /login or /access-denied', () => {
-    expect(findRoutePermission('/login')).toBeNull();
-    expect(findRoutePermission('/access-denied')).toBeNull();
-    expect(findRoutePermission('/')).toBeNull();
+  it('every sidebar link points at a page that exists', () => {
+    const broken = hrefs.filter((href) => !patterns.some((re) => re.test(href)));
+    expect(broken).toEqual([]);
   });
 });

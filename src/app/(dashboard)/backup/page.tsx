@@ -1,4 +1,4 @@
-// FILE: src/app/(dashboard)/admin/backup/page.tsx
+// FILE: src/app/(dashboard)/backup/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -17,15 +17,25 @@ interface BackupRecord {
   file_reference: string | null;
 }
 
+// GET /api/backup returns a bare array. An error (e.g. 403) comes back as an
+// object instead, which would crash `backups.map`, so treat it as a failure.
+async function fetchBackups(): Promise<BackupRecord[]> {
+  const res = await fetch("/api/backup");
+  const data = await res.json();
+  if (!res.ok || !Array.isArray(data)) throw new Error(data?.message || data?.error || `HTTP ${res.status}`);
+  return data;
+}
+
 export default function BackupPage() {
   const [backups, setBackups] = useState<BackupRecord[]>([]);
+  // Starts true, so the first load doesn't need to set it inside the effect.
   const [loading, setLoading] = useState(true);
 
+  // Used after a backup runs (from a click handler, not an effect).
   async function loadBackups() {
     setLoading(true);
     try {
-      const res = await fetch("/api/backup");
-      setBackups(await res.json()); // GET /api/backup returns a bare array
+      setBackups(await fetchBackups());
     } catch (e) {
       console.error(e);
     } finally {
@@ -33,8 +43,25 @@ export default function BackupPage() {
     }
   }
 
+  // LINT FIX (react-hooks/set-state-in-effect): this used to call
+  // loadBackups(), whose first line is a synchronous setLoading(true) inside
+  // the effect body. Now state is only set in the promise callbacks, after the
+  // fetch resolves, and `cancelled` stops a late response from updating the
+  // page after the user has left it.
   useEffect(() => {
-    loadBackups();
+    let cancelled = false;
+    fetchBackups()
+      .then((data) => {
+        if (!cancelled) setBackups(data);
+      })
+      .catch((e) => console.error(e))
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -50,14 +77,14 @@ export default function BackupPage() {
       const res = await fetch("/api/backup", { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || "Backup failed. Check that pg_dump is installed on the server.");
+        setError(data.message || "Backup failed. Check the backup storage settings (see the Backup tutorial).");
         return;
       }
       setConfirmOpen(false);
       await loadBackups(); // re-fetch so the list reflects real server state, including file size
     } catch (e) {
       console.error(e);
-      setError("Backup failed. Check that pg_dump is installed on the server.");
+      setError("Backup failed. Check the backup storage settings (see the Backup tutorial).");
     } finally {
       setTriggering(false);
     }
@@ -77,7 +104,7 @@ export default function BackupPage() {
           icon={Clock}
           color="green"
         />
-        <StatCard label="Status" value="Live Snapshots" sub="Each entry is a real, restorable pg_dump file" icon={ShieldCheck} color="amber" />
+        <StatCard label="Status" value="Live Snapshots" sub="Each entry is a real, restorable copy of the database" icon={ShieldCheck} color="amber" />
       </div>
 
       {/* Trigger backup */}
@@ -85,8 +112,8 @@ export default function BackupPage() {
         <div>
           <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Trigger Manual Backup</p>
           <p className="mt-1 max-w-lg text-[12px] text-[#9CA3AF]">
-            Runs a real database dump (pg_dump) and saves it to the server. Download it from the table below —
-            it can be restored with <code className="font-mono">psql</code> if needed.
+            Saves a full copy of the database to private backup storage (Supabase Storage when hosted on
+            Vercel). Download it from the table below and keep a copy somewhere safe.
           </p>
         </div>
         <button

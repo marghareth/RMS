@@ -12,6 +12,8 @@
     "db:seed": "npx tsx prisma/migrations/seed.ts",
     "db:studio": "npx prisma studio",
     "db:reset": "npx prisma db push --force-reset && npx tsx prisma/migrations/seed.ts",
+    "db:restore": "tsx scripts/restore-backup.ts",
+    "security:check-passwords": "tsx scripts/check-default-passwords.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration:migrate": "tsx scripts/test-db-migrate.ts",
