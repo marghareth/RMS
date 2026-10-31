@@ -201,8 +201,8 @@ export const ADMIN_TUTORIALS = {
       },
     ],
     tips: [
-      "This button needs a server that can run pg_dump and keep files on disk. On serverless hosting (e.g. Vercel) it is unavailable — use the scheduled backup workflow or your database provider's backups instead.",
-      "A backup can be restored with psql.",
+      "On Vercel, backups are saved to a private Supabase Storage bucket. This needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY set in Vercel and a private bucket named \"backups\".",
+      "On Vercel the files are .json.gz snapshots: restore one into an empty database with npm run db:restore. On a self-hosted server with pg_dump, backups are .sql files you restore with psql.",
     ],
   },
 

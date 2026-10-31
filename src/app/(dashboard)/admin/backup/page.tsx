@@ -67,14 +67,14 @@ export default function BackupPage() {
       const res = await fetch("/api/backup", { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || "Backup failed. Check that pg_dump is installed on the server.");
+        setError(data.message || "Backup failed. Check the backup storage settings (see the Backup tutorial).");
         return;
       }
       setConfirmOpen(false);
       await loadBackups(); // re-fetch so the list reflects real server state, including file size
     } catch (e) {
       console.error(e);
-      setError("Backup failed. Check that pg_dump is installed on the server.");
+      setError("Backup failed. Check the backup storage settings (see the Backup tutorial).");
     } finally {
       setTriggering(false);
     }
@@ -98,7 +98,7 @@ export default function BackupPage() {
           icon={Clock}
           color="green"
         />
-        <StatCard label="Status" value="Live Snapshots" sub="Each entry is a real, restorable pg_dump file" icon={ShieldCheck} color="amber" />
+        <StatCard label="Status" value="Live Snapshots" sub="Each entry is a real, restorable copy of the database" icon={ShieldCheck} color="amber" />
       </div>
 
       {/* Trigger backup */}
@@ -106,8 +106,8 @@ export default function BackupPage() {
         <div>
           <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">Trigger Manual Backup</p>
           <p className="mt-1 max-w-lg text-[12px] text-[#9CA3AF]">
-            Runs a real database dump (pg_dump) and saves it to the server. Download it from the table below —
-            it can be restored with <code className="font-mono">psql</code> if needed.
+            Saves a full copy of the database to private backup storage (Supabase Storage when hosted on
+            Vercel). Download it from the table below and keep a copy somewhere safe.
           </p>
         </div>
         <button
