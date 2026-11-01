@@ -10,6 +10,7 @@ import {
   AppropriationRecord, AppropriationCategory, AppropriationStatus, FundSourceMini,
 } from "@/lib/finance";
 import { readList } from "@/lib/fetch-json";
+import { useCan } from "@/lib/hooks/useCan";
 
 const STATUS_STYLES: Record<AppropriationStatus, string> = {
   PENDING: "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400",
@@ -20,6 +21,7 @@ const STATUS_STYLES: Record<AppropriationStatus, string> = {
 const EMPTY_FORM = { item_name: "", category: "PS" as AppropriationCategory, appropriated_amount: "", payee: "", fund_source_id: "" };
 
 export default function AppropriationsPage() {
+  const can = useCan();
   const [items, setItems] = useState<AppropriationRecord[]>([]);
   const [fundSources, setFundSources] = useState<FundSourceMini[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,14 +107,14 @@ export default function AppropriationsPage() {
           <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Appropriations</h1>
           <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">Budget items allocated across PS, MOOE, and Capital Outlay</p>
         </div>
-        <button
+        {can("appropriations:write") && (<button
           data-tour="page-appropriations-add"
           onClick={() => setShowForm((v) => !v)}
           className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
         >
           {showForm ? <X size={15} /> : <Plus size={15} />}
           {showForm ? "Cancel" : "New Appropriation"}
-        </button>
+        </button>)}
       </div>
 
       {showForm && (

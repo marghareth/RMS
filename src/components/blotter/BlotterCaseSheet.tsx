@@ -19,6 +19,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody,
 } from "@/components/ui/sheet";
 import { BlotterCaseMock, BlotterStatus, formatISODate } from "@/lib/mock/blotter";
+import { useCan } from "@/lib/hooks/useCan";
 
 function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string | null }) {
   return (
@@ -41,6 +42,7 @@ interface BlotterCaseSheetProps {
 }
 
 export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: BlotterCaseSheetProps) {
+  const can = useCan();
   const router = useRouter();
   const open = caseId !== null;
 
@@ -288,7 +290,7 @@ export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: Blotter
               </div>
 
               {/* Add update */}
-              <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
+              {can("blotter:write") && (<div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                 <p className="mb-3 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
                   Add Update
                 </p>
@@ -356,7 +358,7 @@ export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: Blotter
                     {submitting ? "Saving..." : "Save Update"}
                   </button>
                 </div>
-              </div>
+              </div>)}
             </SheetBody>
           </div>
         )}

@@ -6,6 +6,7 @@ import { HeartCrack, Search, SlidersHorizontal, ChevronRight, Plus, X } from "lu
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import DeceasedRecordSheet from "@/components/deceased/DeceasedRecordSheet";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
 interface DeceasedResident {
@@ -45,6 +46,7 @@ function formatDate(iso?: string | null): string {
 }
 
 export default function DeceasedRecordsListPage() {
+  const can = useCan();
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
@@ -95,13 +97,13 @@ export default function DeceasedRecordsListPage() {
         title="Deceased Records"
         subtitle="Record resident deaths for barangay record-keeping"
         actions={
-          <button
+          (can("deceased:write") && (<button
             onClick={() => setSelectedId("new")}
             className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             New Record
-          </button>
+          </button>))
         }
       />
 

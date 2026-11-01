@@ -9,6 +9,7 @@ import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { formatISODateTime } from "@/lib/mock/admin";
 import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
+import { useCan } from "@/lib/hooks/useCan";
 
 interface BackupRecord {
   id: number;
@@ -24,6 +25,7 @@ async function fetchBackups(): Promise<BackupRecord[]> {
 }
 
 export default function BackupPage() {
+  const can = useCan();
   const [backups, setBackups] = useState<BackupRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -110,13 +112,13 @@ export default function BackupPage() {
             Vercel). Download it from the table below and keep a copy somewhere safe.
           </p>
         </div>
-        <button
+        {can("backup:write") && (<button
           onClick={() => setConfirmOpen(true)}
           className="flex shrink-0 items-center gap-2 rounded-lg bg-(--brand) px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
         >
           <DatabaseBackup size={15} />
           Trigger Backup
-        </button>
+        </button>)}
       </div>
 
       {error && (

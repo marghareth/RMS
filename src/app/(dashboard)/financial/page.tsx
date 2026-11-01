@@ -20,6 +20,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import { FinancialRecordMock, formatCurrency, formatISODate } from "@/lib/mock/financial";
+import { useCan } from "@/lib/hooks/useCan";
 
 interface FilterState {
   transaction_type: string;
@@ -30,6 +31,7 @@ interface FilterState {
 const EMPTY_FILTERS: FilterState = { transaction_type: "", date_from: "", date_to: "" };
 
 export default function FinancialListPage() {
+  const can = useCan();
   const router = useRouter();
 
   const [search, setSearch] = useState("");
@@ -109,14 +111,14 @@ export default function FinancialListPage() {
               <BarChart3 size={15} />
               View Summary
             </button>
-            <button
+            {can("financial:write") && (<button
               data-tour="page-financial-add"
               onClick={() => router.push("/financial/new")}
               className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
             >
               <Plus size={15} />
               Add Transaction
-            </button>
+            </button>)}
           </div>
         }
       />

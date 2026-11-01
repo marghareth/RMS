@@ -9,6 +9,7 @@ import {
   fmtCurrency, fmtDate, DisbursementRecord, FundSourceMini, AppropriationRecord,
 } from "@/lib/finance";
 import { readList } from "@/lib/fetch-json";
+import { useCan } from "@/lib/hooks/useCan";
 
 const EMPTY_FORM = {
   payee: "", amount: "", date: new Date().toISOString().slice(0, 10),
@@ -16,6 +17,7 @@ const EMPTY_FORM = {
 };
 
 export default function DisbursementsPage() {
+  const can = useCan();
   const [items, setItems] = useState<DisbursementRecord[]>([]);
   const [fundSources, setFundSources] = useState<FundSourceMini[]>([]);
   const [appropriations, setAppropriations] = useState<AppropriationRecord[]>([]);
@@ -105,14 +107,14 @@ export default function DisbursementsPage() {
           <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Disbursements</h1>
           <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">Payments made against appropriations and fund sources</p>
         </div>
-        <button
+        {can("disbursements:write") && (<button
           data-tour="page-disbursements-add"
           onClick={() => setShowForm((v) => !v)}
           className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
         >
           {showForm ? <X size={15} /> : <Plus size={15} />}
           {showForm ? "Cancel" : "Record Disbursement"}
-        </button>
+        </button>)}
       </div>
 
       <div data-tour="page-disbursements-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -7,10 +7,12 @@ import EmptyState from "@/components/shared/EmptyState";
 import StatCard from "@/components/shared/StatCard";
 import { fmtCurrency, fmtDate, RevenueRecord, FundSourceMini } from "@/lib/finance";
 import { readList } from "@/lib/fetch-json";
+import { useCan } from "@/lib/hooks/useCan";
 
 const EMPTY_FORM = { source: "", amount: "", date: new Date().toISOString().slice(0, 10), category: "", fund_source_id: "", or_number: "" };
 
 export default function RevenueTrackingPage() {
+  const can = useCan();
   const [items, setItems] = useState<RevenueRecord[]>([]);
   const [fundSources, setFundSources] = useState<FundSourceMini[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,14 +97,14 @@ export default function RevenueTrackingPage() {
           <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Revenue Tracking</h1>
           <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">All collected revenue posted against the barangay&apos;s fund sources</p>
         </div>
-        <button
+        {can("revenues:write") && (<button
           data-tour="page-revenues-add"
           onClick={() => setShowForm((v) => !v)}
           className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
         >
           {showForm ? <X size={15} /> : <Plus size={15} />}
           {showForm ? "Cancel" : "Record Revenue"}
-        </button>
+        </button>)}
       </div>
 
       <div data-tour="page-revenues-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2">

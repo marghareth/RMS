@@ -1,4 +1,4 @@
-// src/components/households/HouseholdDetailSheet.tsx
+// FILE: src/components/households/HouseholdDetailSheet.tsx
 //
 // The household detail view — classification, members, migrants — as a
 // slide-over instead of a full page navigation. Content mirrors
@@ -39,6 +39,7 @@ import {
   formatCurrency,
 } from "@/lib/mock/households";
 import type { HouseholdMock, HouseholdMemberMock, MigrantMock } from "@/lib/mock/households";
+import { useCan } from "@/lib/hooks/useCan";
 
 const HOUSING_LABEL: Record<string, string> = { OWN: "Own", RENT: "Rent", SHARED: "Shared", INFORMAL: "Informal" };
 const WATER_LABEL: Record<string, string> = { INDIVIDUAL: "Individual", COMMUNAL: "Communal", WELL: "Well", OTHER: "Other" };
@@ -133,6 +134,7 @@ export default function HouseholdDetailSheet({ householdId, onClose, onDeleted }
 function HouseholdSheetContent({
   householdId, onClose, onDeleted,
 }: { householdId: number; onClose: () => void; onDeleted?: () => void }) {
+  const can = useCan();
   const router = useRouter();
 
   const [household, setHousehold] = useState<HouseholdMock | null>(null);
@@ -367,13 +369,13 @@ function HouseholdSheetContent({
             <p className="mt-0.5 truncate text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">{household.address}</p>
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <button
+            {can("households:write") && (<button
               onClick={() => router.push(`/households/${household.id}/edit`)}
               className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-(--brand-hover)"
             >
               <Pencil size={13} />
               Edit
-            </button>
+            </button>)}
             <button
               onClick={() => router.push(`/households/${household.id}`)}
               title="Open full page (also where to print)"
@@ -463,13 +465,13 @@ function HouseholdSheetContent({
                 <p className="mb-3 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                   Deleting a household does not delete its members&apos; resident records, but unlinks them.
                 </p>
-                <button
+                {can("households:delete") && (<button
                   onClick={() => setDeleteHouseholdConfirm(true)}
                   className="flex items-center gap-2 rounded-lg border border-[#FEE2E2] dark:border-red-500/20 px-4 py-2 text-[12px] font-bold text-[#DC2626] dark:text-[#F87171] transition hover:bg-[#FEE2E2] dark:hover:bg-red-500/20"
                 >
                   <Trash2 size={13} />
                   Delete Household
-                </button>
+                </button>)}
               </div>
             </div>
 
@@ -480,13 +482,13 @@ function HouseholdSheetContent({
                   <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
                     Household Members ({household.members.length})
                   </p>
-                  <button
+                  {can("households:write") && (<button
                     onClick={() => setShowAddMember((v) => !v)}
                     className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-(--brand-hover)"
                   >
                     <Plus size={13} />
                     Add Member
-                  </button>
+                  </button>)}
                 </div>
 
                 {showAddMember && (
@@ -555,21 +557,21 @@ function HouseholdSheetContent({
                             </p>
                           </div>
                           {!isHead && (
-                            <button
+                            (can("households:write") && (<button
                               onClick={() => handleSetHead(m)}
                               disabled={busy}
                               className="shrink-0 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-1.5 text-[11px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] disabled:opacity-50"
                             >
                               Set as Head
-                            </button>
+                            </button>))
                           )}
-                          <button
+                          {can("households:write") && (<button
                             onClick={() => setRemoveTarget(m)}
                             disabled={busy}
                             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#FEE2E2] dark:hover:bg-red-500/20 hover:text-[#DC2626] dark:hover:text-[#F87171] disabled:opacity-50"
                           >
                             <Trash2 size={14} />
-                          </button>
+                          </button>)}
                         </div>
                       );
                     })}
@@ -584,13 +586,13 @@ function HouseholdSheetContent({
                     Migrants ({household.migrants.length})
                   </p>
                   {migrantFormOpen === null && (
-                    <button
+                    (can("households:write") && (<button
                       onClick={openAddMigrant}
                       className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-(--brand-hover)"
                     >
                       <Plus size={13} />
                       Add Migrant
-                    </button>
+                    </button>))
                   )}
                 </div>
 
@@ -710,18 +712,18 @@ function HouseholdSheetContent({
                             </p>
                           </div>
                           <div className="flex shrink-0 items-center gap-1">
-                            <button
+                            {can("households:write") && (<button
                               onClick={() => openEditMigrant(m)}
                               className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                             >
                               <Pencil size={13} />
-                            </button>
-                            <button
+                            </button>)}
+                            {can("households:delete") && (<button
                               onClick={() => setMigrantDeleteTarget(m)}
                               className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#FEE2E2] dark:hover:bg-red-500/20 hover:text-[#DC2626] dark:hover:text-[#F87171]"
                             >
                               <Trash2 size={13} />
-                            </button>
+                            </button>)}
                           </div>
                         </div>
                       </div>

@@ -1,4 +1,4 @@
-// src/components/health/HealthRecordDetailSheet.tsx
+// FILE: src/components/health/HealthRecordDetailSheet.tsx
 //
 // The health record detail view, as a slide-over instead of a full page
 // navigation. Content mirrors (dashboard)/health/[id]/page.tsx (which
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/sheet";
 import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Resident {
@@ -78,6 +79,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }: HealthRecordDetailSheetProps) {
+  const can = useCan();
   const router = useRouter();
   const open = recordId !== null;
 
@@ -166,13 +168,13 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <button
+                {can("health:write") && (<button
                   onClick={() => router.push(`/health/${record.id}/edit`)}
                   title="Edit"
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                 >
                   <Pencil size={15} />
-                </button>
+                </button>)}
                 <button
                   onClick={() => router.push(`/health/${record.id}`)}
                   title="Open full page"
@@ -270,20 +272,20 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
                   <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                     <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Quick Actions</p>
                     <div className="space-y-2">
-                      <button
+                      {can("health:write") && (<button
                         onClick={() => router.push(`/health/new?resident_id=${record.resident_id}`)}
                         className="flex w-full items-center gap-2 rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                       >
                         <Heart size={13} className="text-red-500 dark:text-red-400" />
                         Add Another Record
-                      </button>
-                      <button
+                      </button>)}
+                      {can("health:write") && (<button
                         onClick={() => router.push(`/health/vaccinations/new?resident_id=${record.resident_id}`)}
                         className="flex w-full items-center gap-2 rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                       >
                         <CalendarDays size={13} className="text-(--brand-fg)" />
                         Add Vaccination
-                      </button>
+                      </button>)}
                     </div>
                   </div>
                 </div>
@@ -291,13 +293,13 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
             </SheetBody>
 
             <SheetFooter>
-              <button
+              {can("health:delete") && (<button
                 onClick={() => setConfirmOpen(true)}
                 disabled={deleting}
                 className="flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2 text-[12px] font-bold text-red-500 dark:text-red-400 transition hover:bg-red-50 disabled:opacity-50"
               >
                 <Trash2 size={13} /> Delete
-              </button>
+              </button>)}
             </SheetFooter>
           </div>
         )}

@@ -22,6 +22,7 @@ import {
   CertificateMock, certTypeLabel, residentFullName, formatISODateTime,
   PAYMENT_STATUS_LABELS, RequestStatus,
 } from "@/lib/mock/certificates";
+import { useCan } from "@/lib/hooks/useCan";
 
 function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string | null }) {
   return (
@@ -38,6 +39,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string
 type QueueFilter = "ACTIVE" | "PENDING" | "PROCESSING" | "ALL";
 
 export default function DocumentQueuePage() {
+  const can = useCan();
   const router = useRouter();
 
   const [items, setItems] = useState<CertificateMock[]>([]);
@@ -103,13 +105,13 @@ export default function DocumentQueuePage() {
         title="Document Queue"
         subtitle="Process pending certificate and document requests"
         actions={
-          <button
+          (can("certificates:write") && (<button
             onClick={() => router.push("/certificates/new")}
             className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             New Request
-          </button>
+          </button>))
         }
       />
 
@@ -227,7 +229,7 @@ export default function DocumentQueuePage() {
                     <span className="text-[12px] font-semibold text-[#374151] dark:text-[#D4D4D4]">Payment Status</span>
                     <div className="ml-auto flex gap-1">
                       {(["PENDING", "PAID", "WAIVED"] as const).map((ps) => (
-                        <button
+                        (can("certificates:write") && (<button
                           key={ps}
                           disabled={actionBusy}
                           onClick={async () => {
@@ -248,7 +250,7 @@ export default function DocumentQueuePage() {
                           }`}
                         >
                           {PAYMENT_STATUS_LABELS[ps]}
-                        </button>
+                        </button>))
                       ))}
                     </div>
                   </div>
@@ -258,31 +260,31 @@ export default function DocumentQueuePage() {
                 {selected.status !== "RELEASED" && selected.status !== "CANCELLED" && (
                   <div data-tour="page-document-queue-actions" className="flex flex-wrap gap-2">
                     {selected.status === "PENDING" && (
-                      <button
+                      (can("certificates:write") && (<button
                         disabled={actionBusy}
                         onClick={() => runAction("process", { status: "PROCESSING" })}
                         className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-50"
                       >
                         <PlayCircle size={14} />
                         Start Processing
-                      </button>
+                      </button>))
                     )}
-                    <button
+                    {can("certificates:write") && (<button
                       disabled={actionBusy}
                       onClick={() => runAction("process", { status: "RELEASED" })}
                       className="flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-green-700 disabled:opacity-50"
                     >
                       <CheckCircle2 size={14} />
                       Mark as Released
-                    </button>
-                    <button
+                    </button>)}
+                    {can("certificates:delete") && (<button
                       disabled={actionBusy}
                       onClick={() => runAction("cancel")}
                       className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold text-red-500 dark:text-red-400 transition hover:bg-red-50 disabled:opacity-50"
                     >
                       <XCircle size={14} />
                       Cancel Request
-                    </button>
+                    </button>)}
                   </div>
                 )}
               </div>

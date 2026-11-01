@@ -7,6 +7,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
 import IncidentTypesManager from "@/components/shared/IncidentTypesManager";
 import { GeneralSettings } from "@/lib/mock/admin";
+import { useCan } from "@/lib/hooks/useCan";
 
 const DEFAULT_SETTINGS: GeneralSettings = {
   barangay_name: "",
@@ -51,6 +52,7 @@ function Field({
 }
 
 export default function GeneralSettingsPage() {
+  const can = useCan();
   // GET /api/settings returns a flattened { [key]: value } object built
   // from all SystemSetting rows. Any keys not yet set fall back to
   // DEFAULT_SETTINGS so the form always has strings to bind to.
@@ -198,14 +200,14 @@ export default function GeneralSettingsPage() {
               Settings saved
             </span>
           )}
-          <button
+          {can("settings:write") && (<button
             onClick={handleSave}
             disabled={saving}
             className="flex items-center gap-2 rounded-lg bg-(--brand) px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-60"
           >
             <Save size={14} />
             {saving ? "Saving..." : "Save Settings"}
-          </button>
+          </button>)}
         </div>
       </div>
     </div>

@@ -32,6 +32,7 @@ import {
   termLabel,
 } from "@/lib/mock/officials";
 import { readList } from "@/lib/fetch-json";
+import { useCan } from "@/lib/hooks/useCan";
 
 function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string | null }) {
   return (
@@ -46,6 +47,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string
 }
 
 export default function OfficialsListPage() {
+  const can = useCan();
   const router = useRouter();
 
   const [officials, setOfficials] = useState<BrgyOfficialMock[]>([]);
@@ -139,14 +141,14 @@ export default function OfficialsListPage() {
         title="Barangay Officials"
         subtitle="Directory of elected and appointed officials"
         actions={
-          <button
+          (can("officials:write") && (<button
             data-tour="page-officials-add"
             onClick={() => router.push("/officials/new")}
             className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             Add Official
-          </button>
+          </button>))
         }
       />
 
@@ -261,27 +263,27 @@ export default function OfficialsListPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
+                  {can("officials:write") && (<button
                     onClick={() => setEditId(selected.id)}
                     className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                   >
                     <Pencil size={12} />
                     Edit
-                  </button>
-                  <button
+                  </button>)}
+                  {can("officials:write") && (<button
                     onClick={() => handleToggleActive(selected)}
                     disabled={busy}
                     className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] disabled:opacity-50"
                   >
                     <Power size={12} />
                     {selected.is_active ? "Deactivate" : "Activate"}
-                  </button>
-                  <button
+                  </button>)}
+                  {can("officials:delete") && (<button
                     onClick={() => setDeleteTarget(selected)}
                     className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#FEE2E2] dark:hover:bg-red-500/20 hover:text-[#DC2626] dark:hover:text-[#F87171]"
                   >
                     <Trash2 size={14} />
-                  </button>
+                  </button>)}
                 </div>
               </div>
 

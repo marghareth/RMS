@@ -6,6 +6,7 @@ import { MapPin, Plus, Pencil, Trash2, Check, X, Users, Home } from "lucide-reac
 import PageHeader from "@/components/shared/PageHeader";
 import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Purok {
@@ -16,6 +17,7 @@ interface Purok {
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function PuroksAdminPage() {
+  const can = useCan();
   const [puroks,  setPuroks]  = useState<Purok[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
@@ -167,7 +169,7 @@ export default function PuroksAdminPage() {
       />
 
       {/* Add new purok */}
-      <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#333333] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] p-4 mb-4 flex items-center gap-2">
+      {can("settings:write") && (<div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#333333] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] p-4 mb-4 flex items-center gap-2">
         <div className="relative flex-1">
           <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
           <input
@@ -186,7 +188,7 @@ export default function PuroksAdminPage() {
           <Plus size={14} />
           {adding ? "Adding…" : "Add Purok"}
         </button>
-      </div>
+      </div>)}
 
       {error && (
         <div className="mb-4 px-4 py-2.5 rounded-xl bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400 text-[12px] font-medium">
@@ -285,20 +287,20 @@ export default function PuroksAdminPage() {
                       </>
                     ) : (
                       <>
-                        <button
+                        {can("settings:write") && (<button
                           onClick={() => startEditing(p)}
                           className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
                           title="Rename"
                         >
                           <Pencil size={14} />
-                        </button>
-                        <button
+                        </button>)}
+                        {can("settings:delete") && (<button
                           onClick={() => { setDeleteTarget(p); setDeleteError(""); }}
                           className="w-8 h-8 flex items-center justify-center rounded-lg text-red-500 dark:text-red-400 hover:bg-red-50 transition"
                           title={inUse ? "Still assigned to residents or households" : "Delete"}
                         >
                           <Trash2 size={14} />
-                        </button>
+                        </button>)}
                       </>
                     )}
                   </div>

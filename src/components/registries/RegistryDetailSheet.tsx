@@ -1,4 +1,4 @@
-// src/components/registries/RegistryDetailSheet.tsx
+// FILE: src/components/registries/RegistryDetailSheet.tsx
 //
 // The registry entry detail view, as a slide-over instead of a full page
 // navigation — same content as (dashboard)/registries/*/[id]/page.tsx
@@ -18,6 +18,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody, SheetFooter,
 } from "@/components/ui/sheet";
 import EmptyState from "@/components/shared/EmptyState";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type RegistryType = "SENIOR_CITIZEN" | "PWD" | "FOUR_PS";
@@ -134,6 +135,7 @@ function SectionCard({
 export default function RegistryDetailSheet({
   entryId, title, icon: Icon, iconBg, listBase, onClose, onRemoved,
 }: RegistryDetailSheetProps) {
+  const can = useCan();
   const router = useRouter();
   const open = entryId !== null;
 
@@ -402,13 +404,13 @@ export default function RegistryDetailSheet({
             </SheetBody>
 
             <SheetFooter>
-              <button
+              {can("residents:delete") && (<button
                 onClick={handleDelete}
                 disabled={deleting}
                 className="flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2 text-[12px] font-bold text-red-500 dark:text-red-400 transition hover:bg-red-50 disabled:opacity-50"
               >
                 <Trash2 size={13} /> Remove
-              </button>
+              </button>)}
               <button
                 onClick={() => router.push(`/residents/${r.id}`)}
                 className="flex items-center gap-1.5 rounded-xl bg-(--brand) px-5 py-2 text-[12px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"

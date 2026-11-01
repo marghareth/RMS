@@ -27,6 +27,7 @@ import Link from "next/link";
 import StatusBadge from "@/components/shared/StatusBadge";
 import DashboardCustomizeSheet from "@/components/dashboard/DashboardCustomizeSheet";
 import { type DashboardPreferenceMap, type WidgetKey } from "@/lib/dashboard-defaults";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface BlotterCaseRow {
@@ -156,20 +157,31 @@ function LedgerStatStrip({ stats }: { stats: StatCell[] }) {
 }
 
 // ─── QUICK ACTIONS (toolbar) ───────────────────────────────────────────────────
+// Each action shows only for roles allowed to add that record (access policy,
+// Nov 2026 — see src/lib/permission.ts).
+// BUGFIX: "Log Visitor" pointed at /visitors/new, which doesn't exist (404).
+// Visitors are logged from the panel on the Visitor Log page.
 const QUICK_ACTIONS = [
-  { label: "New Resident", href: "/residents/new", icon: UserPlus },
-  { label: "New Certificate", href: "/certificates/new", icon: FilePlus2 },
-  { label: "File Blotter Case", href: "/blotter/new", icon: ScrollText },
-  { label: "Log Visitor", href: "/visitors/new", icon: LogIn },
+  { label: "New Resident", href: "/residents/new", icon: UserPlus, permission: "residents:write" },
+  { label: "New Certificate", href: "/certificates/new", icon: FilePlus2, permission: "certificates:write" },
+  { label: "File Blotter Case", href: "/blotter/new", icon: ScrollText, permission: "blotter:write" },
+  { label: "Log Visitor", href: "/visitors", icon: LogIn, permission: "visitors:write" },
 ];
 
 function QuickActionsPanel() {
+  const can = useCan();
+  const actions = QUICK_ACTIONS.filter((a) => can(a.permission));
   return (
     <div className="rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] px-6 py-5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
       <h2 className="text-[13px] font-bold text-[#1B2430] dark:text-white">Quick Actions</h2>
       <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Jump straight to a new entry</p>
+      {actions.length === 0 && (
+        <p className="mt-4 rounded-lg border border-dashed border-[#E9EAEC] px-3.5 py-3 text-[12px] text-[#6B7280] dark:border-[#262626] dark:text-[#A3A3A3]">
+          Your account can view records but not add them.
+        </p>
+      )}
       <div className="mt-4 flex flex-col gap-2">
-        {QUICK_ACTIONS.map((a) => {
+        {actions.map((a) => {
           const Icon = a.icon;
           return (
             <Link

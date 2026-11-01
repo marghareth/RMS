@@ -1,4 +1,4 @@
-// src/components/admin/UserEditSheet.tsx
+// FILE: src/components/admin/UserEditSheet.tsx
 //
 // The "Edit User" form, as a slide-over instead of a full page navigation.
 // Content mirrors (dashboard)/admin/users/[id]/edit/page.tsx (which still
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import EmptyState from "@/components/shared/EmptyState";
 import { UserMock, ROLES, Role } from "@/lib/mock/admin";
+import { useCan } from "@/lib/hooks/useCan";
 
 interface UserEditSheetProps {
   /** The user to edit, or null to keep the sheet closed. */
@@ -28,6 +29,7 @@ interface UserEditSheetProps {
 }
 
 export default function UserEditSheet({ userId, onClose, onSaved }: UserEditSheetProps) {
+  const can = useCan();
   const router = useRouter();
   const open = userId !== null;
 
@@ -131,13 +133,13 @@ export default function UserEditSheet({ userId, onClose, onSaved }: UserEditShee
                 <p className="mt-0.5 truncate text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">{original.username}</p>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <button
+                {can("users:write") && (<button
                   onClick={() => router.push(`/admin/users/${original.id}/edit`)}
                   title="Open full page"
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                 >
                   <ExternalLink size={15} />
-                </button>
+                </button>)}
                 <SheetClose />
               </div>
             </SheetHeader>

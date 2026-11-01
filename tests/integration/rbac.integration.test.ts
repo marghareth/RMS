@@ -21,7 +21,7 @@ import { NextRequest } from "next/server";
 import type { Role } from "@prisma/client";
 import { hasPermission } from "@/lib/permission";
 import { testDb, cleanupCreatedRows, disconnectTestDb } from "./setup/db";
-import { createTestUser } from "./setup/factories";
+import { createTestUser, createTestResident } from "./setup/factories";
 
 vi.mock("@/lib/db", async () => {
   const { testDb } = await import("./setup/db");
@@ -44,6 +44,7 @@ vi.mock("@/lib/session", () => ({
 
 import { POST as CREATE_BLOTTER, GET as LIST_BLOTTER } from "@/app/api/blotter/route";
 import { POST as CREATE_RESIDENT } from "@/app/api/residents/route";
+import { DELETE as ARCHIVE_RESIDENT } from "@/app/api/residents/[id]/route";
 
 function signInAs(user: { id: number }, role: Role) {
   currentUser = { id: user.id, role };
@@ -97,9 +98,31 @@ describe("Role-based access control (integration, real permission matrix)", () =
     expect(count).toBe(0);
   });
 
-  it("KAGAWAD can file a blotter case and it's genuinely persisted", async () => {
+  // Access policy (Nov 2026): Admin and Secretary change everything; Captain
+  // and Kagawad are view-only. The Kagawad used to be able to file cases.
+  it("KAGAWAD is view-only: can list blotter cases but cannot file one", async () => {
     const kagawad = await createTestUser({ role: "KAGAWAD" });
     signInAs(kagawad, "KAGAWAD");
+
+    expect((await LIST_BLOTTER(new NextRequest("http://localhost/api/blotter"))).status).toBe(200);
+
+    const req = new NextRequest("http://localhost/api/blotter", {
+      method: "POST",
+      body: JSON.stringify({
+        complainant_name: "Kagawad Should Not File",
+        respondent_name: "Test Respondent",
+        incident_narrative: "Property dispute",
+        incident_date: new Date().toISOString(),
+        incident_type: "Property",
+      }),
+    });
+    expect((await CREATE_BLOTTER(req)).status).toBe(403);
+    expect(await testDb.blotterCase.count({ where: { complainant_name: "Kagawad Should Not File" } })).toBe(0);
+  });
+
+  it("SECRETARY can file a blotter case and it's genuinely persisted", async () => {
+    const secretary = await createTestUser({ role: "SECRETARY" });
+    signInAs(secretary, "SECRETARY");
 
     const complainantName = `Test Complainant ${Date.now()}`;
     const req = new NextRequest("http://localhost/api/blotter", {
@@ -119,6 +142,22 @@ describe("Role-based access control (integration, real permission matrix)", () =
     const inDb = await testDb.blotterCase.findUnique({ where: { id: body.id } });
     expect(inDb).not.toBeNull();
     await testDb.blotterCase.delete({ where: { id: body.id } });
+  });
+
+  it("ENCODER can add residents but cannot archive (delete) one; SECRETARY can", async () => {
+    const resident = await createTestResident({ fname: "Archive", lname: `Target${Date.now()}` });
+    const ctx = { params: Promise.resolve({ id: String(resident.id) }) };
+    const del = () => new NextRequest(`http://localhost/api/residents/${resident.id}`, { method: "DELETE" });
+
+    const encoder = await createTestUser({ role: "ENCODER" });
+    signInAs(encoder, "ENCODER");
+    expect((await ARCHIVE_RESIDENT(del(), ctx)).status).toBe(403);
+    expect((await testDb.resident.findUnique({ where: { id: resident.id } }))?.is_archived).toBe(false);
+
+    const secretary = await createTestUser({ role: "SECRETARY" });
+    signInAs(secretary, "SECRETARY");
+    expect((await ARCHIVE_RESIDENT(del(), ctx)).status).toBe(200);
+    expect((await testDb.resident.findUnique({ where: { id: resident.id } }))?.is_archived).toBe(true);
   });
 
   it("BHW cannot create residents (read-only for that role)", async () => {

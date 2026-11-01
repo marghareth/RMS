@@ -1,4 +1,4 @@
-// src/components/equipment/EquipmentDetailSheet.tsx
+// FILE: src/components/equipment/EquipmentDetailSheet.tsx
 //
 // The equipment detail + borrow-history view, as a slide-over instead of a
 // full page navigation. Content mirrors (dashboard)/equipment/[id]/page.tsx
@@ -18,6 +18,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody,
 } from "@/components/ui/sheet";
 import EmptyState from "@/components/shared/EmptyState";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type EquipmentStatus = "SERVICEABLE" | "UNSERVICEABLE" | "MISSING";
@@ -105,6 +106,7 @@ function InfoRow({ icon: Icon, label, children }: { icon: LucideIcon; label: str
 }
 
 function BorrowRow({ b, onReturn }: { b: Borrowing; onReturn: (id: number) => void }) {
+  const can = useCan();
   const returned = !!b.actual_return;
   return (
     <div
@@ -132,12 +134,12 @@ function BorrowRow({ b, onReturn }: { b: Borrowing; onReturn: (id: number) => vo
           {b.recorder && <p className="mt-0.5 text-[10px] text-[#C4C9D4] dark:text-[#404040]">Recorded by: {b.recorder.username}</p>}
         </div>
         {!returned && (
-          <button
+          (can("equipment:write") && (<button
             onClick={() => onReturn(b.id)}
             className="shrink-0 rounded-lg bg-(--brand) px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-(--brand-hover)"
           >
             Return
-          </button>
+          </button>))
         )}
       </div>
     </div>
@@ -161,6 +163,7 @@ function Tab({ label, count, active, onClick }: { label: string; count: number; 
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function EquipmentDetailSheet({ equipmentId, onClose, onUpdated }: EquipmentDetailSheetProps) {
+  const can = useCan();
   const router = useRouter();
   const open = equipmentId !== null;
 
@@ -243,19 +246,19 @@ export default function EquipmentDetailSheet({ equipmentId, onClose, onUpdated }
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    <button
+                    {can("equipment:write") && (<button
                       onClick={() => router.push(`/equipment/borrow?equipment_id=${equipment.id}`)}
                       className="rounded-lg bg-[#F59E0B] px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-[#D97706] dark:hover:bg-[#F59E0B]"
                     >
                       Lend Out
-                    </button>
-                    <button
+                    </button>)}
+                    {can("equipment:write") && (<button
                       onClick={() => router.push(`/equipment/${equipment.id}/edit`)}
                       title="Edit"
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                     >
                       <Pencil size={15} />
-                    </button>
+                    </button>)}
                     <button
                       onClick={() => router.push(`/equipment/${equipment.id}`)}
                       title="Open full page"
@@ -349,12 +352,12 @@ export default function EquipmentDetailSheet({ equipmentId, onClose, onUpdated }
                             <div className="flex flex-col items-center justify-center gap-2 py-10">
                               <Clock size={26} className="text-[#D1D5DB] dark:text-[#525252]" />
                               <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No items currently borrowed</p>
-                              <button
+                              {can("equipment:write") && (<button
                                 onClick={() => router.push(`/equipment/borrow?equipment_id=${equipment.id}`)}
                                 className="mt-1 flex items-center gap-1 rounded-xl bg-[#F59E0B] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#D97706] dark:hover:bg-[#F59E0B]"
                               >
                                 <Plus size={12} /> Lend Out Now
-                              </button>
+                              </button>)}
                             </div>
                           ) : (
                             active.map((b) => <BorrowRow key={b.id} b={b} onReturn={handleReturn} />)

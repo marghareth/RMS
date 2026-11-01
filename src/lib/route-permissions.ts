@@ -24,7 +24,12 @@
 // /finance/overview).
 //
 // Matching is longest-prefix-wins (see `findRoutePermission`), so entry
-// order below does not affect correctness.
+// order below does not affect correctness. A `*` segment matches any one
+// path segment, e.g. "/residents/*/edit" covers /residents/42/edit.
+//
+// ACCESS POLICY (Nov 2026): every page that adds or edits a record needs
+// the module's :write permission, so a view-only role can't even open the
+// form (it's sent to /access-denied) — see the header of ./permission.ts.
 
 import { hasPermission } from "./permission";
 
@@ -39,7 +44,10 @@ export const ROUTE_PERMISSIONS: { prefix: string; permission: RoutePermission }[
   // residents:write (longest prefix wins, so these beat "/residents" below).
   { prefix: "/residents/new", permission: "residents:write" },
   { prefix: "/residents/import", permission: "residents:write" },
+  { prefix: "/residents/*/edit", permission: "residents:write" },
   { prefix: "/residents", permission: "residents:read" },
+  { prefix: "/households/new", permission: "households:write" },
+  { prefix: "/households/*/edit", permission: "households:write" },
   { prefix: "/households", permission: "households:read" },
   { prefix: "/deceased", permission: "deceased:read" },
 
@@ -47,21 +55,33 @@ export const ROUTE_PERMISSIONS: { prefix: string; permission: RoutePermission }[
   { prefix: "/registries", permission: "registries:read" },
 
   // ── Documents ──
+  { prefix: "/certificates/new", permission: "certificates:write" },
   { prefix: "/certificates/templates", permission: "certificates:read" },
   { prefix: "/certificates", permission: "certificates:read" },
   { prefix: "/document-queue", permission: "certificates:read" },
   { prefix: "/document-release", permission: "certificates:read" },
+  { prefix: "/barangay-id/new", permission: "barangay_id:write" },
   { prefix: "/barangay-id", permission: "barangay_id:read" },
 
+  { prefix: "/blotter/new", permission: "blotter:write" },
+  // /blotter/[id]/hearing only prints a notice, so it stays at :read.
   { prefix: "/blotter", permission: "blotter:read" },
 
   // ── Health ──
+  { prefix: "/health/new", permission: "health:write" },
+  { prefix: "/health/*/edit", permission: "health:write" },
+  { prefix: "/health/vaccinations/new", permission: "health:write" },
   { prefix: "/health", permission: "health:read" },
 
   // ── Inventory ──
+  { prefix: "/equipment/new", permission: "equipment:write" },
+  { prefix: "/equipment/*/edit", permission: "equipment:write" },
+  { prefix: "/equipment/borrow", permission: "equipment:write" },
+  { prefix: "/equipment/return", permission: "equipment:write" },
   { prefix: "/equipment", permission: "equipment:read" },
 
   // ── Legacy Financial module ──
+  { prefix: "/financial/new", permission: "financial:write" },
   { prefix: "/financial", permission: "financial:read" },
 
   // ── Finance suite (2.6) — overview fans out to all four endpoints ──
@@ -74,12 +94,17 @@ export const ROUTE_PERMISSIONS: { prefix: string; permission: RoutePermission }[
   { prefix: "/finance/fund-sources", permission: "fund-sources:read" },
   { prefix: "/finance/disbursements", permission: "disbursements:read" },
 
+  { prefix: "/meetings/new", permission: "meetings:write" },
   { prefix: "/meetings", permission: "meetings:read" },
   { prefix: "/calendar", permission: "calendar:read" },
+  { prefix: "/officials/new", permission: "officials:write" },
+  { prefix: "/officials/*/edit", permission: "officials:write" },
   { prefix: "/officials", permission: "officials:read" },
   { prefix: "/reports", permission: "reports:read" },
 
   // ── Admin ──
+  { prefix: "/admin/users/new", permission: "users:write" },
+  { prefix: "/admin/users/*/edit", permission: "users:write" },
   { prefix: "/admin/users", permission: "users:read" },
   // GET /api/puroks only requires residents:read — write actions are
   // separately gated behind settings:write inside the page itself.
@@ -103,9 +128,19 @@ export function findRoutePermission(pathname: string): RoutePermission | null {
   // correct even if entries are reordered later.
   const match = [...ROUTE_PERMISSIONS]
     .sort((a, b) => b.prefix.length - a.prefix.length)
-    .find((r) => pathname === r.prefix || pathname.startsWith(`${r.prefix}/`));
+    .find((r) => matchesPrefix(r.prefix, pathname));
 
   return match ? match.permission : null;
+}
+
+// Segment-wise prefix match. A "*" segment matches any one segment, so the
+// rule for residents' edit pages matches /residents/42/edit (and anything
+// below it) but not /residents/42 or /residents/42/editor.
+function matchesPrefix(prefix: string, pathname: string): boolean {
+  const want = prefix.split("/").filter(Boolean);
+  const got = pathname.split("/").filter(Boolean);
+  if (got.length < want.length) return false;
+  return want.every((seg, i) => seg === "*" || seg === got[i]);
 }
 
 /**

@@ -1,4 +1,4 @@
-// src/components/officials/OfficialEditSheet.tsx
+// FILE: src/components/officials/OfficialEditSheet.tsx
 //
 // The "Edit Official" form, as a slide-over instead of a full page
 // navigation. Content mirrors (dashboard)/officials/[id]/edit/page.tsx
@@ -18,6 +18,7 @@ import EmptyState from "@/components/shared/EmptyState";
 import {
   POSITIONS, PUROK_ASSIGNMENTS, BrgyOfficialMock, residentFullName,
 } from "@/lib/mock/officials";
+import { useCan } from "@/lib/hooks/useCan";
 
 interface OfficialEditSheetProps {
   /** The official to edit, or null to keep the sheet closed. */
@@ -28,6 +29,7 @@ interface OfficialEditSheetProps {
 }
 
 export default function OfficialEditSheet({ officialId, onClose, onSaved }: OfficialEditSheetProps) {
+  const can = useCan();
   const router = useRouter();
   const open = officialId !== null;
 
@@ -149,13 +151,13 @@ export default function OfficialEditSheet({ officialId, onClose, onSaved }: Offi
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <button
+                {can("officials:write") && (<button
                   onClick={() => router.push(`/officials/${original.id}/edit`)}
                   title="Open full page"
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                 >
                   <ExternalLink size={15} />
-                </button>
+                </button>)}
                 <SheetClose />
               </div>
             </SheetHeader>

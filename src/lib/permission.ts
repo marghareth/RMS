@@ -1,131 +1,126 @@
+// FILE: src/lib/permission.ts
+//
 // ─── ROLE-BASED PERMISSION MATRIX ─────────────────────────────────────────────
 // Maps every role to the permissions it holds.
-// Permission strings follow the pattern: "resource:action"
-// Actions: read | write | delete | admin
+// Permission strings follow the pattern "resource:action", where action is
+//   read    — view the module
+//   write   — add and edit records
+//   delete  — delete, archive or cancel records (separate from write, so being
+//             able to edit a module no longer means being able to delete in it)
+//
+// ACCESS POLICY (approved by the barangay, Nov 2026):
+//   ADMIN, SECRETARY  full access — add, edit, delete everything, plus user
+//                     accounts, system settings and database backups.
+//   ENCODER           add/edit residents, households, certificates, Barangay ID
+//                     and the visitor log; view the rest of its modules. No deleting.
+//   BHW               add/edit health records and vaccinations; view the rest of
+//                     its modules. No deleting.
+//   CAPTAIN, KAGAWAD  view only. The Captain can also view user accounts,
+//                     settings and the audit log (oversight).
+//
+// WHAT EACH ROLE CAN SEE is unchanged from before this policy: it only took
+// away editing. In particular the BHW still cannot see blotter cases,
+// certificates, finances, equipment or meetings, and the Encoder still cannot
+// see finances, meetings, officials or reports.
+// Everyone can still customise their OWN dashboard layout
+// (dashboard-preferences), which changes no barangay record.
+//
+// This module is the single source of truth for both the API
+// (requirePermission in src/lib/session.ts) and the screens (useCan in
+// src/lib/hooks/useCan.ts), and runs on the Edge runtime too (middleware), so
+// it must stay dependency-free.
 
-type Role = "ADMIN" | "CAPTAIN" | "SECRETARY" | "KAGAWAD" | "BHW" | "ENCODER";
+export type Role = "ADMIN" | "CAPTAIN" | "SECRETARY" | "KAGAWAD" | "BHW" | "ENCODER";
 
-const PERMISSIONS: Record<Role, string[]> = {
-  ADMIN: ["*"], // full access
+/** Read access to every operational module (not users, settings, audit log or backups).
+ *  Captain and Kagawad see all of these; BHW and Encoder see subsets below. */
+const VIEW_ALL = [
+  "dashboard:read",
+  "residents:read",
+  "households:read",
+  "deceased:read",
+  "registries:read",
+  "certificates:read",
+  "barangay_id:read",
+  "blotter:read",
+  "incident-types:read",
+  "health:read",
+  "equipment:read",
+  "assets:read",
+  "financial:read",
+  "fund-sources:read",
+  "appropriations:read",
+  "revenues:read",
+  "disbursements:read",
+  "meetings:read",
+  "calendar:read",
+  "officials:read",
+  "visitors:read",
+  "reports:read",
+] as const;
+
+/** Every user manages their own dashboard layout. */
+const OWN_DASHBOARD = ["dashboard-preferences:read", "dashboard-preferences:write"] as const;
+
+const PERMISSIONS: Record<Role, readonly string[]> = {
+  ADMIN: ["*"],
+  SECRETARY: ["*"],
 
   CAPTAIN: [
-    "dashboard:read",
-    "residents:read", "residents:write",
-    "households:read", "households:write",
-    "certificates:read", "certificates:write",
-    "blotter:read", "blotter:write",
-    "officials:read", "officials:write",
-    "registries:read", "registries:write",
-    "health:read", "health:write",
-    "financial:read", "financial:write",
-    "equipment:read", "equipment:write",
-    "assets:read", "assets:write",
-    "meetings:read", "meetings:write",
-    "reports:read",
-    "barangay_id:read", "barangay_id:write",
-    "settings:read", "settings:write",
+    ...VIEW_ALL,
+    ...OWN_DASHBOARD,
+    // Oversight: can look, not change.
     "users:read",
+    "settings:read",
     "audit-logs:read",
-    "visitors:read", "visitors:write",
-    "deceased:read", "deceased:write",
-    "calendar:read", "calendar:write",
-    "fund-sources:read", "fund-sources:write",
-    "appropriations:read", "appropriations:write",
-    "revenues:read", "revenues:write",
-    "disbursements:read", "disbursements:write",
-    "incident-types:read", "incident-types:write",
-    "dashboard-preferences:read", "dashboard-preferences:write",
   ],
 
-  SECRETARY: [
-    "dashboard:read",
-    "residents:read", "residents:write",
-    "households:read", "households:write",
-    "certificates:read", "certificates:write",
-    "blotter:read", "blotter:write",
-    "officials:read",
-    "registries:read", "registries:write",
-    "health:read",
-    "financial:read", "financial:write",
-    "equipment:read", "equipment:write",
-    "assets:read", "assets:write",
-    "meetings:read", "meetings:write",
-    "reports:read",
-    "barangay_id:read", "barangay_id:write",
-    "visitors:read", "visitors:write",
-    "deceased:read", "deceased:write",
-    "calendar:read", "calendar:write",
-    "fund-sources:read", "fund-sources:write",
-    "appropriations:read", "appropriations:write",
-    "revenues:read", "revenues:write",
-    "disbursements:read", "disbursements:write",
-    "incident-types:read",
-    "dashboard-preferences:read", "dashboard-preferences:write",
-  ],
-
-  KAGAWAD: [
-    "dashboard:read",
-    "residents:read",
-    "households:read",
-    "certificates:read",
-    "blotter:read", "blotter:write",
-    "officials:read",
-    "registries:read",
-    "health:read",
-    "financial:read",
-    "equipment:read",
-    "assets:read",
-    "meetings:read",
-    "reports:read",
-    "barangay_id:read",
-    "visitors:read",
-    "deceased:read",
-    "calendar:read", "calendar:write",
-    "fund-sources:read",
-    "appropriations:read",
-    "revenues:read",
-    "disbursements:read",
-    "incident-types:read",
-    "dashboard-preferences:read", "dashboard-preferences:write",
-  ],
+  KAGAWAD: [...VIEW_ALL, ...OWN_DASHBOARD],
 
   BHW: [
     "dashboard:read",
     "residents:read",
     "households:read",
-    "registries:read", "registries:write",
-    "health:read", "health:write",
-    "barangay_id:read",
-    "visitors:read", "visitors:write",
     "deceased:read",
+    "registries:read",
+    "health:read",
+    "barangay_id:read",
+    "visitors:read",
     "calendar:read",
-    "dashboard-preferences:read", "dashboard-preferences:write",
+    ...OWN_DASHBOARD,
+    "health:write",
   ],
 
   ENCODER: [
     "dashboard:read",
-    "residents:read", "residents:write",
-    "households:read", "households:write",
-    "certificates:read", "certificates:write",
-    "blotter:read",
+    "residents:read",
+    "households:read",
+    "deceased:read",
     "registries:read",
+    "certificates:read",
+    "barangay_id:read",
+    "blotter:read",
+    "incident-types:read",
     "health:read",
     "equipment:read",
     "assets:read",
-    "barangay_id:read", "barangay_id:write",
-    // Front-desk staff need Visitor Log daily — granted broadly per spec 2.1.
-    "visitors:read", "visitors:write",
-    "deceased:read", "deceased:write",
+    "visitors:read",
     "calendar:read",
-    "incident-types:read",
-    "dashboard-preferences:read", "dashboard-preferences:write",
+    ...OWN_DASHBOARD,
+    "residents:write",
+    "households:write",
+    "certificates:write",
+    "barangay_id:write",
+    "visitors:write",
   ],
 };
+
+export const ROLES = Object.keys(PERMISSIONS) as Role[];
 
 export function hasPermission(role: string, permission: string): boolean {
   const rolePerms = PERMISSIONS[role as Role];
   if (!rolePerms) return false;
-  // ADMIN wildcard
+  // Full-access wildcard
   if (rolePerms.includes("*")) return true;
   // Exact match
   if (rolePerms.includes(permission)) return true;
@@ -133,4 +128,12 @@ export function hasPermission(role: string, permission: string): boolean {
   const [resource] = permission.split(":");
   if (rolePerms.includes(`${resource}:*`)) return true;
   return false;
+}
+
+/** True when the role can only view (no add/edit/delete anywhere except its own dashboard). */
+export function isViewOnly(role: string): boolean {
+  const rolePerms = PERMISSIONS[role as Role];
+  if (!rolePerms) return true;
+  if (rolePerms.includes("*")) return false;
+  return !rolePerms.some((p) => !p.startsWith("dashboard-preferences:") && (p.endsWith(":write") || p.endsWith(":delete") || p.endsWith(":*")));
 }

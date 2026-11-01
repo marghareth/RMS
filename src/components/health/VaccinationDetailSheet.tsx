@@ -1,4 +1,4 @@
-// src/components/health/VaccinationDetailSheet.tsx
+// FILE: src/components/health/VaccinationDetailSheet.tsx
 //
 // The vaccination record detail view, as a slide-over instead of a full
 // page navigation. Content mirrors
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Vaccination {
@@ -59,6 +60,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function VaccinationDetailSheet({ vaccinationId, onClose, onDeleted }: VaccinationDetailSheetProps) {
+  const can = useCan();
   const router = useRouter();
   const open = vaccinationId !== null;
 
@@ -232,32 +234,32 @@ export default function VaccinationDetailSheet({ vaccinationId, onClose, onDelet
               <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                 <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Quick Actions</p>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <button
+                  {can("health:write") && (<button
                     onClick={() => router.push(`/health/vaccinations/new?resident_id=${vaccination.resident.id}`)}
                     className="flex w-full items-center gap-2 rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                   >
                     <Syringe size={13} className="text-(--brand-fg)" />
                     Add Another Vaccination
-                  </button>
-                  <button
+                  </button>)}
+                  {can("health:write") && (<button
                     onClick={() => router.push(`/health/new?resident_id=${vaccination.resident.id}`)}
                     className="flex w-full items-center gap-2 rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                   >
                     <Heart size={13} className="text-red-500 dark:text-red-400" />
                     Add Health Record
-                  </button>
+                  </button>)}
                 </div>
               </div>
             </SheetBody>
 
             <SheetFooter>
-              <button
+              {can("health:delete") && (<button
                 onClick={() => setConfirmOpen(true)}
                 disabled={deleting}
                 className="flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2 text-[12px] font-bold text-red-500 dark:text-red-400 transition hover:bg-red-50 disabled:opacity-50"
               >
                 <Trash2 size={13} /> Delete
-              </button>
+              </button>)}
             </SheetFooter>
           </div>
         )}

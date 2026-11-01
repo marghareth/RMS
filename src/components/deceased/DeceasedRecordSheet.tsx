@@ -19,6 +19,7 @@ import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPick
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody, SheetFooter,
 } from "@/components/ui/sheet";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
 interface DeceasedResident {
@@ -87,6 +88,7 @@ interface DeceasedRecordSheetProps {
 }
 
 export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: DeceasedRecordSheetProps) {
+  const can = useCan();
   const open = recordId !== null;
   const isNew = recordId === "new";
 
@@ -249,13 +251,13 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   {!isNew && !editing && (
-                    <button
+                    (can("deceased:write") && (<button
                       onClick={() => setEditing(true)}
                       title="Edit"
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                     >
                       <Pencil size={15} />
-                    </button>
+                    </button>))
                   )}
                   <SheetClose />
                 </div>
@@ -356,13 +358,13 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                 <SheetFooter>
                   <div className="flex w-full items-center justify-between gap-2">
                     {!isNew ? (
-                      <button
+                      (can("deceased:delete") && (<button
                         onClick={() => setConfirmDeleteOpen(true)}
                         className="flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-[12px] font-bold text-[#DC2626] dark:text-[#F87171] transition hover:bg-red-50"
                       >
                         <Trash2 size={14} />
                         Delete
-                      </button>
+                      </button>))
                     ) : <span />}
                     <div className="flex gap-2">
                       <button
