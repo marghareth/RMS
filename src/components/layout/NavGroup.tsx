@@ -66,8 +66,8 @@ export default function NavGroup({
         aria-expanded={open}
         className={`group flex w-full items-center gap-2.5 rounded-full px-3 py-2 text-[13px] transition-colors ${
           hasActiveChild
-            ? "bg-[#1F2937] font-medium text-white dark:bg-white dark:text-[#111111]"
-            : "font-normal text-[#4B5563] hover:bg-[#F4F5F7] hover:text-[#1F2937] dark:text-[#9CA3AF] dark:hover:bg-[#1F1F1F] dark:hover:text-white"
+            ? "bg-(--nav-active-bg) font-medium text-(--nav-text-strong)"
+            : "font-normal text-(--nav-text) hover:bg-(--nav-hover-bg) hover:text-(--nav-text-strong)"
         }`}
       >
         <Icon
@@ -75,8 +75,8 @@ export default function NavGroup({
           strokeWidth={1.9}
           className={`shrink-0 ${
             hasActiveChild
-              ? "text-white dark:text-[#111111]"
-              : "text-[#9CA3AF] group-hover:text-[#374151] dark:group-hover:text-[#D1D5DB]"
+              ? "text-(--nav-text-strong)"
+              : "text-(--nav-text-muted) group-hover:text-(--nav-text-strong)"
           }`}
         />
         <span className="flex-1 truncate text-left">{label}</span>
@@ -84,7 +84,7 @@ export default function NavGroup({
           size={14}
           strokeWidth={2.5}
           className={`shrink-0 transition-transform duration-200 ${
-            hasActiveChild ? "text-white/80 dark:text-[#111111]/70" : "text-[#9CA3AF]"
+            hasActiveChild ? "text-white/80" : "text-(--nav-text-muted)"
           } ${open ? "rotate-180" : ""}`}
         />
       </button>

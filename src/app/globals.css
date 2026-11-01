@@ -55,6 +55,21 @@
   --color-spine-2: #1b2029;
   --color-spine-text: #8891a3;
 
+  /* ── Sidebar navigation (navy) ─────────────────────────────────────────
+     Read by Sidebar.tsx, NavGroup.tsx and NavItem.tsx through
+     `bg-[var(--nav-*)]` / `text-[var(--nav-*)]`, so the sidebar switches
+     with the theme toggle without any `dark:` classes of its own. */
+  --nav-bg: #12296b;           /* panel */
+  --nav-border: #213d8a;       /* dividers */
+  --nav-text: #c9d3ef;         /* links */
+  --nav-text-strong: #ffffff;  /* active link, title, hover */
+  --nav-text-muted: #91a3d8;   /* icons, chevrons, subtitle */
+  --nav-hover-bg: #1b3584;     /* hovered link */
+  --nav-active-bg: #0b1c50;    /* current page — darker than the panel */
+  --nav-chip-bg: #1d3786;      /* small icon tile on sub-items */
+  --nav-chip-active-bg: #2e4fae;
+  --nav-logo: #8db4ff;
+
   color-scheme: light;
 }
 
@@ -91,6 +106,20 @@
   --color-spine: #0a0c11;
   --color-spine-2: #151923;
   --color-spine-text: #818a9c;
+
+  /* Sidebar in dark mode: a deeper, quieter navy so it doesn't glare next
+     to the near-black page, and the current page is LIGHTER than the panel
+     (in light mode it's darker) so it still stands out. */
+  --nav-bg: #0b1633;
+  --nav-border: #1a2850;
+  --nav-text: #a9b6d9;
+  --nav-text-strong: #ffffff;
+  --nav-text-muted: #7385b3;
+  --nav-hover-bg: #13214a;
+  --nav-active-bg: #1e346f;
+  --nav-chip-bg: #15244d;
+  --nav-chip-active-bg: #2a4590;
+  --nav-logo: #7aa7ff;
 
   color-scheme: dark;
 }
