@@ -65,7 +65,7 @@ function CustomTooltip({ active, payload, label }: any) {
 }
 
 const TYPE_BG: Record<string, string> = {
-  "Residency":             "bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400",
+  "Residency":             "bg-(--brand-tint-strong) dark:bg-(--brand-tint) text-(--brand-fg-strong) dark:text-(--brand-fg)",
   "Indigency":             "bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-400",
   "Clearance":             "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400",
   "Good Moral":            "bg-purple-100 dark:bg-purple-500/15 text-purple-700 dark:text-purple-400",
@@ -131,11 +131,11 @@ export default function CertificatesReportPage() {
           </div>
           <div data-tour="page-reports-certificates-controls" className="flex items-center gap-2">
             <select value={year} onChange={e => setYear(e.target.value)}
-              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
+              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-(--brand-line) bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
             <select value={month} onChange={e => setMonth(e.target.value)}
-              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
+              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-(--brand-line) bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
               <option value="">All Months</option>
               {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m, i) => (
                 <option key={m} value={String(i + 1).padStart(2, "0")}>{m}</option>
@@ -143,7 +143,7 @@ export default function CertificatesReportPage() {
             </select>
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] transition print:hidden"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-(--brand) text-white text-[12px] font-bold hover:bg-(--brand-hover) transition print:hidden"
             >
               <Download size={13} /> Export PDF
             </button>
@@ -155,7 +155,7 @@ export default function CertificatesReportPage() {
 
       {loading || !data ? (
         <div className="flex items-center justify-center py-24">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
         </div>
       ) : (
         <>
@@ -268,7 +268,7 @@ export default function CertificatesReportPage() {
                   <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Line type="monotone" dataKey="count" stroke="#3B82F6" strokeWidth={2.5} dot={{ r: 4, fill: "#3B82F6" }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="count" stroke="#2348B0" strokeWidth={2.5} dot={{ r: 4, fill: "#2348B0" }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
             </ChartCard>

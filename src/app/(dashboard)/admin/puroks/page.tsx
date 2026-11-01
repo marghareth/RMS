@@ -175,13 +175,13 @@ export default function PuroksAdminPage() {
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             placeholder="New purok name (e.g. Purok 5)"
-            className="w-full pl-9 pr-3 py-2.5 text-[13px] border border-[#E9EAEC] dark:border-[#333333] rounded-xl focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] text-[#1F2937] dark:text-white transition"
+            className="w-full pl-9 pr-3 py-2.5 text-[13px] border border-[#E9EAEC] dark:border-[#333333] rounded-xl focus:outline-none focus:border-(--brand-line) placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] text-[#1F2937] dark:text-white transition"
           />
         </div>
         <button
           onClick={handleAdd}
           disabled={adding || !newName.trim()}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] text-white text-[12px] font-bold transition shadow-sm disabled:opacity-50 shrink-0"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-(--brand) hover:bg-(--brand-hover) text-white text-[12px] font-bold transition shadow-sm disabled:opacity-50 shrink-0"
         >
           <Plus size={14} />
           {adding ? "Adding…" : "Add Purok"}
@@ -198,7 +198,7 @@ export default function PuroksAdminPage() {
       <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#333333] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-6 h-6 border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-(--brand-line) border-t-transparent rounded-full animate-spin" />
           </div>
         ) : puroks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -238,12 +238,12 @@ export default function PuroksAdminPage() {
                           if (e.key === "Enter") handleRename(p.id);
                           if (e.key === "Escape") cancelEditing();
                         }}
-                        className="w-full text-[13px] border border-[#3B82F6] dark:border-[#60A5FA] rounded-lg px-3 py-1.5 focus:outline-none text-[#1F2937] dark:text-white"
+                        className="w-full text-[13px] border border-(--brand-line) rounded-lg px-3 py-1.5 focus:outline-none text-[#1F2937] dark:text-white"
                       />
                     ) : (
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-[#EFF6FF] dark:bg-blue-500/15 flex items-center justify-center shrink-0">
-                          <MapPin size={14} className="text-[#3B82F6] dark:text-[#60A5FA]" />
+                        <div className="w-8 h-8 rounded-full bg-(--brand-tint) flex items-center justify-center shrink-0">
+                          <MapPin size={14} className="text-(--brand-fg)" />
                         </div>
                         <p className="text-[13px] font-bold text-[#1F2937] dark:text-white truncate">{p.name}</p>
                       </div>

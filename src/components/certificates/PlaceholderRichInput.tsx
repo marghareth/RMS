@@ -66,12 +66,12 @@ function chipHtml(token: string): string {
   return (
     `<span contenteditable="false" data-token="${token}" title="{{${token}}} — double-click to change, × to remove" ` +
     `class="inline-flex items-center gap-1 mx-0.5 align-baseline select-none rounded-md ` +
-    `bg-[#EBF3FF] dark:bg-blue-500/15 px-2 py-0.5 text-[12px] font-semibold ` +
-    `text-[#1D4ED8] dark:text-[#93C5FD] cursor-pointer">` +
+    `bg-(--brand-tint) px-2 py-0.5 text-[12px] font-semibold ` +
+    `text-(--brand-fg-strong) cursor-pointer">` +
     `${label}` +
     `<button type="button" data-chip-remove="1" aria-label="Remove ${label} placeholder" ` +
-    `class="ml-0.5 rounded-full px-1 leading-none text-[#1D4ED8]/60 hover:text-[#1D4ED8] ` +
-    `hover:bg-blue-500/10 dark:text-[#93C5FD]/60 dark:hover:text-[#93C5FD]">×</button>` +
+    `class="ml-0.5 rounded-full px-1 leading-none text-(--brand-fg-strong)/60 hover:text-(--brand-fg-strong) ` +
+    `hover:bg-(--brand-tint) dark:text-(--brand-fg-strong)/60 dark:hover:text-(--brand-fg-strong)">×</button>` +
     `</span>`
   );
 }
@@ -111,7 +111,7 @@ function openSwapMenu(chip: HTMLElement, onPick: (token: string) => void) {
       "class",
       "flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left text-[12px] " +
         (bareToken === currentToken
-          ? "bg-[#EBF3FF] dark:bg-blue-500/15 font-semibold text-[#1D4ED8] dark:text-[#93C5FD]"
+          ? "bg-(--brand-tint) font-semibold text-(--brand-fg-strong)"
           : "text-[#1F2937] dark:text-white hover:bg-[#F4F5F7] dark:hover:bg-[#262626]")
     );
     item.innerHTML =

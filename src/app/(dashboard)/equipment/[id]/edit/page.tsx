@@ -62,7 +62,7 @@ function TextInput({
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
-        className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717]"
+        className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717]"
       />
     </div>
   );
@@ -81,7 +81,7 @@ function SelectInput({
         <select
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full appearance-none text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white pr-8 bg-white dark:bg-[#171717] transition"
+          className="w-full appearance-none text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white pr-8 bg-white dark:bg-[#171717] transition"
         >
           <option value="">— Select —</option>
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -103,11 +103,11 @@ function StatusCard({
       type="button"
       onClick={onClick}
       className={`flex-1 text-left px-4 py-3 rounded-xl border-2 transition
-        ${selected ? "border-[#3B82F6] dark:border-[#60A5FA] bg-blue-50 dark:bg-blue-500/15" : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] hover:border-[#D1D5DB] dark:hover:border-[#404040]"}`}
+        ${selected ? "border-(--brand-line) bg-(--brand-tint)" : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] hover:border-[#D1D5DB] dark:hover:border-[#404040]"}`}
     >
       <div className="flex items-center gap-2 mb-0.5">
         <span className={`w-2.5 h-2.5 rounded-full ${dot}`} />
-        <span className={`text-[12px] font-bold uppercase tracking-wide ${selected ? "text-[#3B82F6] dark:text-[#60A5FA]" : "text-[#1F2937] dark:text-white"}`}>
+        <span className={`text-[12px] font-bold uppercase tracking-wide ${selected ? "text-(--brand-fg)" : "text-[#1F2937] dark:text-white"}`}>
           {label}
         </span>
       </div>
@@ -240,7 +240,7 @@ export default function EditEquipmentPage() {
                 min="1"
                 value={form.quantity}
                 onChange={e => set("quantity", e.target.value)}
-                className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white transition bg-white dark:bg-[#171717]"
+                className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white transition bg-white dark:bg-[#171717]"
               />
             </div>
             <SelectInput
@@ -331,7 +331,7 @@ export default function EditEquipmentPage() {
               onChange={e => set("description", e.target.value)}
               rows={3}
               placeholder="Additional notes about this item…"
-              className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717] resize-none"
+              className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717] resize-none"
             />
           </div>
 
@@ -364,7 +364,7 @@ export default function EditEquipmentPage() {
           <button
             onClick={handleSave}
             disabled={saving || !isValid}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-(--brand) hover:bg-(--brand-hover) disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
           >
             <Save size={14} />
             {saving ? "Saving…" : "Save Changes"}

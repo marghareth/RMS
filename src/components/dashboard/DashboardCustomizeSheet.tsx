@@ -37,7 +37,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={`flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors ${
-        checked ? "bg-[#3B82F6] justify-end" : "bg-[#E5E7EB] dark:bg-[#404040] justify-start"
+        checked ? "bg-(--brand) justify-end" : "bg-[#E5E7EB] dark:bg-[#404040] justify-start"
       }`}
     >
       {/* Knob stays white in both themes — it needs to contrast against
@@ -231,7 +231,7 @@ export default function DashboardCustomizeSheet({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="rounded-lg bg-[#3B82F6] px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
+            className="rounded-lg bg-(--brand) px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-60"
           >
             {saving ? "Saving..." : "Save Preferences"}
           </button>

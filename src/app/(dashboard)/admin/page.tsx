@@ -38,7 +38,7 @@ const SECTIONS = [
 ];
 
 const COLOR_MAP = {
-  blue: { bg: "bg-[#EBF3FF] dark:bg-blue-500/15", text: "text-[#1D4ED8] dark:text-[#93C5FD]" },
+  blue: { bg: "bg-(--brand-tint)", text: "text-(--brand-fg-strong)" },
   amber: { bg: "bg-[#FEF3C7] dark:bg-amber-500/15", text: "text-[#D97706] dark:text-[#FBBF24]" },
   green: { bg: "bg-[#D1FAE5] dark:bg-emerald-500/15", text: "text-[#059669] dark:text-[#34D399]" },
   purple: { bg: "bg-[#F3E8FF] dark:bg-violet-500/15", text: "text-[#7C3AED] dark:text-[#A78BFA]" },
@@ -62,7 +62,7 @@ export default function AdminHubPage() {
             <button
               key={s.href}
               onClick={() => router.push(s.href)}
-              className="flex items-center gap-4 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5 text-left transition hover:border-[#3B82F6] dark:hover:border-[#60A5FA] hover:shadow-sm"
+              className="flex items-center gap-4 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5 text-left transition hover:border-(--brand-line) hover:shadow-sm"
             >
               <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${colors.bg}`}>
                 <s.icon size={20} className={colors.text} />

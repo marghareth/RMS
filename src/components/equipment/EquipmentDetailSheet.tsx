@@ -134,7 +134,7 @@ function BorrowRow({ b, onReturn }: { b: Borrowing; onReturn: (id: number) => vo
         {!returned && (
           <button
             onClick={() => onReturn(b.id)}
-            className="shrink-0 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+            className="shrink-0 rounded-lg bg-(--brand) px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-(--brand-hover)"
           >
             Return
           </button>
@@ -149,10 +149,10 @@ function Tab({ label, count, active, onClick }: { label: string; count: number; 
     <button
       onClick={onClick}
       className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-[12px] font-bold transition
-        ${active ? "bg-[#3B82F6] text-white" : "text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"}`}
+        ${active ? "bg-(--brand) text-white" : "text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"}`}
     >
       {label}
-      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-blue-400 dark:bg-blue-500 text-white" : "bg-[#E9EAEC] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3]"}`}>
+      <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${active ? "bg-(--brand-line) dark:bg-(--brand) text-white" : "bg-[#E9EAEC] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3]"}`}>
         {count}
       </span>
     </button>
@@ -207,7 +207,7 @@ export default function EquipmentDetailSheet({ equipmentId, onClose, onUpdated }
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -325,7 +325,7 @@ export default function EquipmentDetailSheet({ equipmentId, onClose, onUpdated }
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-3 text-center">
-                          <p className={`text-[22px] font-black ${active.length > 0 ? "text-[#3B82F6] dark:text-[#60A5FA]" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>{active.length}</p>
+                          <p className={`text-[22px] font-black ${active.length > 0 ? "text-(--brand-fg)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>{active.length}</p>
                           <p className="mt-0.5 text-[10px] font-semibold uppercase text-[#9CA3AF] dark:text-[#A3A3A3]">Out</p>
                         </div>
                         <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-3 text-center">

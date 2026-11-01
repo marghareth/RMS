@@ -103,7 +103,7 @@ export default function BlotterHearingNoticePage() {
         </button>
         <button
           onClick={() => window.print()}
-          className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+          className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
         >
           <Printer size={14} /> Print Notice
         </button>

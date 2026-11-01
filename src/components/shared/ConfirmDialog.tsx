@@ -1,3 +1,4 @@
+// FILE: src/components/shared/ConfirmDialog.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -41,10 +42,10 @@ const VARIANT: Record<DialogVariant, {
     Icon:     AlertTriangle,
   },
   info: {
-    iconBg:   "bg-blue-50 dark:bg-blue-500/15",
-    iconColor:"text-[#3B82F6] dark:text-[#60A5FA]",
-    btnBg:    "bg-[#3B82F6]",
-    btnHover: "hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]",
+    iconBg:   "bg-(--brand-tint)",
+    iconColor:"text-(--brand-fg)",
+    btnBg:    "bg-(--brand)",
+    btnHover: "hover:bg-(--brand-hover)",
     Icon:     Info,
   },
   success: {

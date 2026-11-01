@@ -78,7 +78,7 @@ function SelectField({
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-3 pr-8 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+          className="w-full appearance-none rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-3 pr-8 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-(--brand-line)"
         >
           <option value="">SELECT</option>
           {options.map((o) => (
@@ -114,7 +114,7 @@ function TextField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-3 text-[13px] text-[#1F2937] dark:text-white outline-none placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+        className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-3 text-[13px] text-[#1F2937] dark:text-white outline-none placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] focus:border-(--brand-line)"
       />
     </div>
   );
@@ -204,7 +204,7 @@ export default function EditHouseholdPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
       </div>
     );
   }
@@ -218,7 +218,7 @@ export default function EditHouseholdPage() {
         action={
           <button
             onClick={() => router.push("/households")}
-            className="rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+            className="rounded-lg bg-(--brand) px-4 py-2 text-[12px] font-bold text-white transition hover:bg-(--brand-hover)"
           >
             Back to Households
           </button>
@@ -291,8 +291,8 @@ export default function EditHouseholdPage() {
         {/* General Information */}
         <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           <div className="mb-4 flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
-              <Home size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--brand-tint)">
+              <Home size={14} className="text-(--brand-fg-strong)" />
             </div>
             <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">General Information</p>
           </div>
@@ -377,7 +377,7 @@ export default function EditHouseholdPage() {
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
+            className="rounded-lg bg-(--brand) px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-60"
           >
             {submitting ? "Saving..." : "Save Changes"}
           </button>

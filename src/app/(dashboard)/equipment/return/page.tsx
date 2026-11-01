@@ -34,11 +34,11 @@ function ConditionOption({
       type="button"
       onClick={onClick}
       className={`flex-1 text-left px-4 py-3 rounded-xl border-2 transition
-        ${selected ? "border-[#3B82F6] dark:border-[#60A5FA] bg-blue-50 dark:bg-blue-500/15" : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] hover:border-[#D1D5DB] dark:hover:border-[#404040]"}`}
+        ${selected ? "border-(--brand-line) bg-(--brand-tint)" : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] hover:border-[#D1D5DB] dark:hover:border-[#404040]"}`}
     >
       <div className="flex items-center gap-2 mb-0.5">
-        <Icon size={13} className={selected ? "text-[#3B82F6] dark:text-[#60A5FA]" : color} />
-        <span className={`text-[12px] font-bold uppercase tracking-wide ${selected ? "text-[#3B82F6] dark:text-[#60A5FA]" : "text-[#1F2937] dark:text-white"}`}>
+        <Icon size={13} className={selected ? "text-(--brand-fg)" : color} />
+        <span className={`text-[12px] font-bold uppercase tracking-wide ${selected ? "text-(--brand-fg)" : "text-[#1F2937] dark:text-white"}`}>
           {label}
         </span>
       </div>
@@ -191,7 +191,7 @@ function ReturnEquipmentContent({ borrowingId }: { borrowingId: string }) {
         <div className="flex gap-3">
           <button
             onClick={() => router.push("/equipment")}
-            className="flex-1 py-3 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] text-white text-[13px] font-bold transition"
+            className="flex-1 py-3 rounded-xl bg-(--brand) hover:bg-(--brand-hover) text-white text-[13px] font-bold transition"
           >
             Back to Inventory
           </button>
@@ -229,7 +229,7 @@ function ReturnEquipmentContent({ borrowingId }: { borrowingId: string }) {
         <div data-tour="page-equipment-return-summary" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-(--brand) flex items-center justify-center">
                 <Package size={14} className="text-white" />
               </div>
               <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Borrow Record</p>
@@ -245,7 +245,7 @@ function ReturnEquipmentContent({ borrowingId }: { borrowingId: string }) {
               label="Equipment"
               value={
                 <span className="flex items-center gap-1.5">
-                  <Package size={12} className="text-[#3B82F6] dark:text-[#60A5FA]" />
+                  <Package size={12} className="text-(--brand-fg)" />
                   {borrowing.equipment.name}
                 </span>
               }
@@ -343,7 +343,7 @@ function ReturnEquipmentContent({ borrowingId }: { borrowingId: string }) {
                 onChange={e => setNotes(e.target.value)}
                 placeholder="Any additional remarks about the return..."
                 rows={3}
-                className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition resize-none bg-white dark:bg-[#171717]"
+                className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition resize-none bg-white dark:bg-[#171717]"
               />
             </div>
           </div>
@@ -367,7 +367,7 @@ function ReturnEquipmentContent({ borrowingId }: { borrowingId: string }) {
           <button
             onClick={handleReturn}
             disabled={saving || !returnCondition}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-(--brand) hover:bg-(--brand-hover) disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
           >
             <CheckCircle2 size={14} />
             {saving ? "Processing…" : "Confirm Return"}

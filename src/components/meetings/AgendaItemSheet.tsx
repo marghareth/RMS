@@ -96,7 +96,7 @@ export default function AgendaItemSheet({ open, meetingId, item, onClose, onSave
                 onChange={(e) => setTitle(e.target.value)}
                 autoFocus
                 placeholder="e.g. Review of Q3 budget utilization"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               />
             </div>
 
@@ -109,7 +109,7 @@ export default function AgendaItemSheet({ open, meetingId, item, onClose, onSave
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 placeholder="Brief context for this agenda item"
-                className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[12px] leading-relaxed outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[12px] leading-relaxed outline-none focus:border-(--brand-line)"
               />
             </div>
 
@@ -122,7 +122,7 @@ export default function AgendaItemSheet({ open, meetingId, item, onClose, onSave
                   type="number"
                   value={sortOrder}
                   onChange={(e) => setSortOrder(parseInt(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                 />
               </div>
               <div>
@@ -132,7 +132,7 @@ export default function AgendaItemSheet({ open, meetingId, item, onClose, onSave
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as AgendaItemStatus)}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                 >
                   {AGENDA_ITEM_STATUSES.map((s) => (
                     <option key={s.value} value={s.value}>
@@ -152,7 +152,7 @@ export default function AgendaItemSheet({ open, meetingId, item, onClose, onSave
                 onChange={(e) => setMinutes(e.target.value)}
                 rows={5}
                 placeholder="What was discussed or resolved for this item..."
-                className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-(--brand-line)"
               />
             </div>
 
@@ -170,7 +170,7 @@ export default function AgendaItemSheet({ open, meetingId, item, onClose, onSave
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="rounded-lg bg-[#3B82F6] px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
+            className="rounded-lg bg-(--brand) px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-60"
           >
             {submitting ? "Saving..." : isEdit ? "Update Item" : "Add Item"}
           </button>

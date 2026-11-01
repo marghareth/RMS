@@ -63,7 +63,7 @@ const TYPE_COLORS: Record<string, { bg: string; text: string; icon_bg: string }>
   Tuberculosis: { bg: "bg-orange-50", text: "text-orange-700 dark:text-orange-400", icon_bg: "bg-orange-500" },
   "Prenatal Checkup": { bg: "bg-pink-50", text: "text-pink-700 dark:text-pink-400", icon_bg: "bg-pink-500" },
   "Well-child Checkup": { bg: "bg-green-50 dark:bg-green-500/15", text: "text-green-700 dark:text-green-400", icon_bg: "bg-green-500 dark:bg-green-500" },
-  Asthma: { bg: "bg-blue-50 dark:bg-blue-500/15", text: "text-blue-700 dark:text-blue-400", icon_bg: "bg-blue-500 dark:bg-blue-500" },
+  Asthma: { bg: "bg-(--brand-tint)", text: "text-(--brand-fg-strong) dark:text-(--brand-fg)", icon_bg: "bg-(--brand)" },
   "Family Planning": { bg: "bg-purple-50 dark:bg-purple-500/15", text: "text-purple-700 dark:text-purple-400", icon_bg: "bg-purple-500" },
 };
 
@@ -142,7 +142,7 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -239,15 +239,15 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
                 <div className="space-y-4">
                   <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
                     <div className="flex items-center gap-3 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] px-4 py-3">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#3B82F6]">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--brand)">
                         <User size={13} className="text-white" />
                       </div>
                       <p className="text-[12px] font-bold text-[#1F2937] dark:text-white">Resident</p>
                     </div>
                     <div className="p-4">
                       <div className="mb-3 flex flex-col items-center pt-1 text-center">
-                        <div className="mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-[#EFF6FF] dark:bg-blue-500/15">
-                          <User size={24} className="text-[#3B82F6] dark:text-[#60A5FA]" />
+                        <div className="mb-2 flex h-14 w-14 items-center justify-center rounded-full bg-(--brand-tint)">
+                          <User size={24} className="text-(--brand-fg)" />
                         </div>
                         <p className="text-[14px] font-black text-[#1F2937] dark:text-white">
                           {record.resident.lname}, {record.resident.fname}
@@ -260,7 +260,7 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
                       <InfoRow label="Birthdate" value={fmtDate(record.resident.birthdate)} />
                       <button
                         onClick={() => router.push(`/residents/${record.resident_id}`)}
-                        className="mt-3 w-full rounded-xl bg-[#EFF6FF] dark:bg-blue-500/15 py-2 text-[12px] font-bold text-[#3B82F6] dark:text-[#60A5FA] transition hover:bg-blue-100"
+                        className="mt-3 w-full rounded-xl bg-(--brand-tint) py-2 text-[12px] font-bold text-(--brand-fg) transition hover:bg-(--brand-tint-strong)"
                       >
                         View Full Profile
                       </button>
@@ -281,7 +281,7 @@ export default function HealthRecordDetailSheet({ recordId, onClose, onDeleted }
                         onClick={() => router.push(`/health/vaccinations/new?resident_id=${record.resident_id}`)}
                         className="flex w-full items-center gap-2 rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5 text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                       >
-                        <CalendarDays size={13} className="text-[#3B82F6] dark:text-[#60A5FA]" />
+                        <CalendarDays size={13} className="text-(--brand-fg)" />
                         Add Vaccination
                       </button>
                     </div>

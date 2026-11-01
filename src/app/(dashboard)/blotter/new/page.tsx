@@ -152,8 +152,8 @@ export default function NewBlotterCasePage() {
         <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
-                <User size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--brand-tint)">
+                <User size={14} className="text-(--brand-fg-strong)" />
               </div>
               <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Complainant</p>
             </div>
@@ -165,7 +165,7 @@ export default function NewBlotterCasePage() {
                   setComplainantWalkIn(e.target.checked);
                   setComplainant(null);
                 }}
-                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-[#3B82F6] dark:text-[#60A5FA] focus:ring-[#3B82F6] dark:focus:ring-[#60A5FA]"
+                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-(--brand-fg) focus:ring-(--brand-line)"
               />
               Walk-in (not yet in RBI)
             </label>
@@ -181,7 +181,7 @@ export default function NewBlotterCasePage() {
                   value={complainantName}
                   onChange={(e) => setComplainantName(e.target.value)}
                   placeholder="Juan Dela Cruz"
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                 />
               </div>
               <div>
@@ -192,7 +192,7 @@ export default function NewBlotterCasePage() {
                   value={complainantContact}
                   onChange={(e) => setComplainantContact(e.target.value)}
                   placeholder="09XX-XXX-XXXX"
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                 />
               </div>
               <div>
@@ -203,7 +203,7 @@ export default function NewBlotterCasePage() {
                   value={complainantAddress}
                   onChange={(e) => setComplainantAddress(e.target.value)}
                   placeholder="Purok, Street"
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                 />
               </div>
             </div>
@@ -229,7 +229,7 @@ export default function NewBlotterCasePage() {
                   setRespondentWalkIn(e.target.checked);
                   setRespondent(null);
                 }}
-                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-[#3B82F6] dark:text-[#60A5FA] focus:ring-[#3B82F6] dark:focus:ring-[#60A5FA]"
+                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-(--brand-fg) focus:ring-(--brand-line)"
               />
               Not in RBI / unidentified
             </label>
@@ -244,7 +244,7 @@ export default function NewBlotterCasePage() {
                 value={respondentName}
                 onChange={(e) => setRespondentName(e.target.value)}
                 placeholder="Pedro Santos, or 'Unidentified individual'"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               />
             </div>
           ) : (
@@ -269,7 +269,7 @@ export default function NewBlotterCasePage() {
               <select
                 value={incidentType}
                 onChange={(e) => setIncidentType(e.target.value)}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line)"
               >
                 <option value="">Select incident type…</option>
                 {activeIncidentTypes.map((t) => (
@@ -292,7 +292,7 @@ export default function NewBlotterCasePage() {
                 onChange={(e) => setNarrative(e.target.value)}
                 rows={5}
                 placeholder="Describe the complaint in detail..."
-                className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               />
             </div>
 
@@ -305,7 +305,7 @@ export default function NewBlotterCasePage() {
                   type="date"
                   value={incidentDate}
                   onChange={(e) => setIncidentDate(e.target.value)}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                 />
               </div>
               <div>
@@ -316,15 +316,15 @@ export default function NewBlotterCasePage() {
                   type="date"
                   value={hearingDate}
                   onChange={(e) => setHearingDate(e.target.value)}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                 />
               </div>
             </div>
 
             {suggestedHearing && (
-              <div className="flex items-start gap-2 rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15 px-3 py-2.5">
-                <Info size={14} className="mt-0.5 shrink-0 text-[#1D4ED8] dark:text-[#93C5FD]" />
-                <p className="text-[11px] leading-relaxed text-[#1D4ED8] dark:text-[#93C5FD]">
+              <div className="flex items-start gap-2 rounded-lg bg-(--brand-tint) px-3 py-2.5">
+                <Info size={14} className="mt-0.5 shrink-0 text-(--brand-fg-strong)" />
+                <p className="text-[11px] leading-relaxed text-(--brand-fg-strong)">
                   Barangay rule: hearings should be scheduled within 3 working days of filing.
                   Based on the incident date, that would be around{" "}
                   <span className="font-semibold">
@@ -355,7 +355,7 @@ export default function NewBlotterCasePage() {
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
+            className="rounded-lg bg-(--brand) px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-60"
           >
             {submitting ? "Filing Case..." : "File Case"}
           </button>

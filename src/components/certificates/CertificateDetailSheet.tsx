@@ -120,7 +120,7 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -137,7 +137,7 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <SheetTitle>{certificate.certificate_no}</SheetTitle>
-                  <span className="inline-flex items-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
+                  <span className="inline-flex items-center rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong)">
                     {certTypeLabel(certificate.certificate_type)}
                   </span>
                   <StatusBadge status={certificate.status} />
@@ -156,7 +156,7 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
               <div className="flex shrink-0 items-center gap-1">
                 <button
                   onClick={() => router.push(`/certificates/${activeId}/preview`)}
-                  className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+                  className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-(--brand-hover)"
                 >
                   <Printer size={13} />
                   Preview / Print
@@ -178,8 +178,8 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
                 <div className="space-y-4 lg:col-span-2">
                   <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                     <div className="mb-3 flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
-                        <User size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--brand-tint)">
+                        <User size={14} className="text-(--brand-fg-strong)" />
                       </div>
                       <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Applicant</p>
                     </div>

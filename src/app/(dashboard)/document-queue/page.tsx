@@ -105,7 +105,7 @@ export default function DocumentQueuePage() {
         actions={
           <button
             onClick={() => router.push("/certificates/new")}
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+            className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             New Request
@@ -129,7 +129,7 @@ export default function DocumentQueuePage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search queue #, name…"
-                className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2 pl-8 pr-3 text-[12px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2 pl-8 pr-3 text-[12px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
               />
             </div>
           </div>
@@ -139,7 +139,7 @@ export default function DocumentQueuePage() {
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`flex-1 rounded-lg py-1.5 text-[9px] font-bold uppercase tracking-wide transition ${
-                  filter === f ? "bg-[#3B82F6] text-white" : "bg-[#F4F5F7] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#E5E7EB] dark:hover:bg-[#262626]"
+                  filter === f ? "bg-(--brand) text-white" : "bg-[#F4F5F7] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#E5E7EB] dark:hover:bg-[#262626]"
                 }`}
               >
                 {f === "ACTIVE" ? "Active" : f === "PENDING" ? "Pending" : f === "PROCESSING" ? "Processing" : "All"}
@@ -150,7 +150,7 @@ export default function DocumentQueuePage() {
           <div data-tour="page-document-queue-list" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
               </div>
             ) : items.length === 0 ? (
               <EmptyState icon={Inbox} title="Queue is empty" description="No requests match this filter right now." />
@@ -162,16 +162,16 @@ export default function DocumentQueuePage() {
                     <button
                       key={c.id}
                       onClick={() => setSelectedId(c.id)}
-                      className={`flex w-full items-center gap-3 px-4 py-3 text-left transition ${active ? "bg-[#3B82F6]" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"}`}
+                      className={`flex w-full items-center gap-3 px-4 py-3 text-left transition ${active ? "bg-(--brand)" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"}`}
                     >
-                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${active ? "bg-blue-400 dark:bg-blue-500" : "bg-[#F4F5F7] dark:bg-[#262626]"}`}>
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${active ? "bg-(--brand-line) dark:bg-(--brand)" : "bg-[#F4F5F7] dark:bg-[#262626]"}`}>
                         <FileText size={16} className={active ? "text-white" : "text-[#9CA3AF] dark:text-[#A3A3A3]"} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className={`truncate text-[13px] font-bold ${active ? "text-white" : "text-[#1F2937] dark:text-white"}`}>
                           {c.queue_number}
                         </p>
-                        <p className={`truncate text-[11px] ${active ? "text-blue-100 dark:text-blue-200" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
+                        <p className={`truncate text-[11px] ${active ? "text-(--brand-fg-strong)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
                           {c.resident ? residentFullName(c.resident) : c.manual_name} · {certTypeLabel(c.certificate_type)}
                         </p>
                       </div>
@@ -244,7 +244,7 @@ export default function DocumentQueuePage() {
                             }
                           }}
                           className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase transition ${
-                            selected.payment_status === ps ? "bg-[#3B82F6] text-white" : "bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
+                            selected.payment_status === ps ? "bg-(--brand) text-white" : "bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                           }`}
                         >
                           {PAYMENT_STATUS_LABELS[ps]}
@@ -261,7 +261,7 @@ export default function DocumentQueuePage() {
                       <button
                         disabled={actionBusy}
                         onClick={() => runAction("process", { status: "PROCESSING" })}
-                        className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+                        className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-50"
                       >
                         <PlayCircle size={14} />
                         Start Processing

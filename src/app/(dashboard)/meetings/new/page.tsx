@@ -81,7 +81,7 @@ export default function NewMeetingPage() {
               onClick={() => setMeetingType("SB_MEETING")}
               className={`flex items-center justify-center gap-2 rounded-xl border-2 py-3.5 text-[13px] font-bold uppercase tracking-wide transition ${
                 meetingType === "SB_MEETING"
-                  ? "border-[#3B82F6] dark:border-[#60A5FA] bg-[#EBF3FF] dark:bg-blue-500/15 text-[#1D4ED8] dark:text-[#93C5FD]"
+                  ? "border-(--brand-line) bg-(--brand-tint) text-(--brand-fg-strong)"
                   : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#9CA3AF] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
               }`}
             >
@@ -112,7 +112,7 @@ export default function NewMeetingPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Q3 Budget Review & Infrastructure Update"
-              className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+              className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
             />
           </div>
 
@@ -125,7 +125,7 @@ export default function NewMeetingPage() {
                 type="date"
                 value={meetingDate}
                 onChange={(e) => setMeetingDate(e.target.value)}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               />
             </div>
             <div>
@@ -136,7 +136,7 @@ export default function NewMeetingPage() {
                 type="time"
                 value={meetingTime}
                 onChange={(e) => setMeetingTime(e.target.value)}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               />
             </div>
           </div>
@@ -149,7 +149,7 @@ export default function NewMeetingPage() {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Barangay Hall Session Room"
-              className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+              className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
             />
           </div>
 
@@ -165,7 +165,7 @@ export default function NewMeetingPage() {
               onChange={(e) => setMinutes(e.target.value)}
               rows={8}
               placeholder="Attendance, agenda, resolutions, and other notes from the meeting..."
-              className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+              className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-(--brand-line)"
             />
             <p className="mt-1.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
               Minutes are stored as text. For structured, trackable topics, use Agenda Items on the meeting page instead.
@@ -185,7 +185,7 @@ export default function NewMeetingPage() {
               data-tour="page-meetings-new-save"
               onClick={handleSubmit}
               disabled={submitting}
-              className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
+              className="rounded-lg bg-(--brand) px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-60"
             >
               {submitting ? "Saving..." : "Save Meeting Record"}
             </button>

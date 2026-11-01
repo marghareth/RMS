@@ -94,7 +94,7 @@ export default function VisitorLogListPage() {
           <button
             data-tour="page-visitors-add"
             onClick={() => setSelectedId("new")}
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+            className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             New Visitor
@@ -117,13 +117,13 @@ export default function VisitorLogListPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search visitor name or purpose"
-            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
           />
         </div>
         <button
           onClick={() => setShowFilter((v) => !v)}
           className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
-            showFilter || activeFilterCount ? "bg-[#3B82F6] text-white" : "bg-white dark:bg-[#171717] text-[#6B7280] dark:text-[#A3A3A3] border border-[#E9EAEC] dark:border-[#262626] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
+            showFilter || activeFilterCount ? "bg-(--brand) text-white" : "bg-white dark:bg-[#171717] text-[#6B7280] dark:text-[#A3A3A3] border border-[#E9EAEC] dark:border-[#262626] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
           }`}
         >
           <SlidersHorizontal size={15} />
@@ -150,7 +150,7 @@ export default function VisitorLogListPage() {
               <select
                 value={filters.status}
                 onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[12px] outline-none focus:border-(--brand-line)"
               >
                 <option value="">All</option>
                 <option value="active">Active (checked in)</option>
@@ -167,7 +167,7 @@ export default function VisitorLogListPage() {
                   type="date"
                   value={filters.date_from}
                   onChange={(e) => setFilters((f) => ({ ...f, date_from: e.target.value }))}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-2 py-2 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-2 py-2 text-[12px] outline-none focus:border-(--brand-line)"
                 />
               </div>
               <div>
@@ -178,7 +178,7 @@ export default function VisitorLogListPage() {
                   type="date"
                   value={filters.date_to}
                   onChange={(e) => setFilters((f) => ({ ...f, date_to: e.target.value }))}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-2 py-2 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-2 py-2 text-[12px] outline-none focus:border-(--brand-line)"
                 />
               </div>
             </div>
@@ -192,7 +192,7 @@ export default function VisitorLogListPage() {
               </button>
               <button
                 onClick={() => setShowFilter(false)}
-                className="flex-1 rounded-lg bg-[#3B82F6] py-2 text-[12px] font-semibold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+                className="flex-1 rounded-lg bg-(--brand) py-2 text-[12px] font-semibold text-white transition hover:bg-(--brand-hover)"
               >
                 Apply
               </button>
@@ -205,7 +205,7 @@ export default function VisitorLogListPage() {
       <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
           </div>
         ) : logs.length === 0 ? (
           <EmptyState

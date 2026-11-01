@@ -202,13 +202,13 @@ export default function IncidentTypesManager() {
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             placeholder="New incident type (e.g. Vandalism)"
-            className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+            className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
           />
         </div>
         <button
           onClick={handleAdd}
           disabled={adding || !newName.trim()}
-          className="flex shrink-0 items-center gap-1.5 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+          className="flex shrink-0 items-center gap-1.5 rounded-lg bg-(--brand) px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-50"
         >
           <Plus size={14} />
           {adding ? "Adding…" : "Add"}
@@ -225,7 +225,7 @@ export default function IncidentTypesManager() {
       <div className="overflow-hidden rounded-lg border border-[#E9EAEC] dark:border-[#262626]">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
           </div>
         ) : types.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
@@ -263,7 +263,7 @@ export default function IncidentTypesManager() {
                           if (e.key === "Enter") handleRename(t.id);
                           if (e.key === "Escape") cancelEditing();
                         }}
-                        className="w-full rounded-lg border border-[#3B82F6] dark:border-[#60A5FA] px-2.5 py-1.5 text-[13px] text-[#1F2937] dark:text-white outline-none"
+                        className="w-full rounded-lg border border-(--brand-line) px-2.5 py-1.5 text-[13px] text-[#1F2937] dark:text-white outline-none"
                       />
                     ) : (
                       <p className={`truncate text-[13px] font-semibold ${t.is_active ? "text-[#1F2937] dark:text-white" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>

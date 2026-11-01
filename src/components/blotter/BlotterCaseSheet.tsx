@@ -171,7 +171,7 @@ export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: Blotter
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -212,8 +212,8 @@ export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: Blotter
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
                   <div className="mb-3 flex items-center gap-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
-                      <User size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--brand-tint)">
+                      <User size={14} className="text-(--brand-fg-strong)" />
                     </div>
                     <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Complainant</p>
                   </div>
@@ -264,7 +264,7 @@ export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: Blotter
                         {idx !== sortedUpdates.length - 1 && (
                           <span className="absolute left-1.75 top-4 h-full w-px bg-[#E9EAEC] dark:bg-[#262626]" />
                         )}
-                        <span className="relative z-10 mt-1 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-white dark:border-[#171717] bg-[#3B82F6] shadow-sm" />
+                        <span className="relative z-10 mt-1 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-white dark:border-[#171717] bg-(--brand) shadow-sm" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-2">
                             <p className="text-[12px] font-bold text-[#1F2937] dark:text-white">{u.updater_name}</p>
@@ -302,7 +302,7 @@ export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: Blotter
                       onChange={(e) => setNotes(e.target.value)}
                       rows={3}
                       placeholder="Describe what happened during this update / hearing..."
-                      className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                      className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
                     />
                   </div>
 
@@ -314,7 +314,7 @@ export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: Blotter
                       <select
                         value={newStatus}
                         onChange={(e) => setNewStatus(e.target.value as BlotterStatus | "")}
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line)"
                       >
                         <option value="">Keep current status</option>
                         <option value="FILED">Filed</option>
@@ -331,7 +331,7 @@ export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: Blotter
                         type="date"
                         value={hearingDate}
                         onChange={(e) => setHearingDate(e.target.value)}
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line)"
                       />
                     </div>
                   </div>
@@ -350,7 +350,7 @@ export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: Blotter
                   <button
                     onClick={handleAddUpdate}
                     disabled={submitting || !notes.trim()}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#3B82F6] py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-(--brand) py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-50"
                   >
                     <Send size={13} />
                     {submitting ? "Saving..." : "Save Update"}

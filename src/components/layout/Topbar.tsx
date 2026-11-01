@@ -46,7 +46,7 @@ interface NotificationItem {
 const SEVERITY_STYLES: Record<Severity, { icon: React.ElementType; iconColor: string; dot: string }> = {
   urgent:  { icon: AlertTriangle, iconColor: "text-red-500",   dot: "bg-red-500"   },
   warning: { icon: Clock,         iconColor: "text-amber-500", dot: "bg-amber-500" },
-  info:    { icon: Info,          iconColor: "text-blue-500",  dot: "bg-blue-500"  },
+  info:    { icon: Info,          iconColor: "text-(--brand-fg)",  dot: "bg-(--brand)"  },
 };
 
 function timeAgo(iso: string): string {
@@ -115,7 +115,7 @@ export default function Topbar({
 
   const hasUrgent  = notifications.some((n) => n.severity === "urgent");
   const hasWarning = notifications.some((n) => n.severity === "warning");
-  const badgeColor = hasUrgent ? "bg-red-500" : hasWarning ? "bg-amber-500" : "bg-[#3B82F6]";
+  const badgeColor = hasUrgent ? "bg-red-500" : hasWarning ? "bg-amber-500" : "bg-(--brand)";
 
   function handleNotifClick(link: string) {
     setNotifOpen(false);
@@ -143,7 +143,7 @@ export default function Topbar({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search..."
-            className="h-10 w-full rounded-lg border border-[#E9EAEC] bg-[#F4F5F7] pl-10 pr-4 text-[13px] text-[#1F2937] transition placeholder:text-[#9CA3AF] focus:border-[#3B82F6] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/15 dark:border-[#262626] dark:bg-[#171717] dark:text-white dark:focus:bg-[#171717]"
+            className="h-10 w-full rounded-lg border border-[#E9EAEC] bg-[#F4F5F7] pl-10 pr-4 text-[13px] text-[#1F2937] transition placeholder:text-[#9CA3AF] focus:border-(--brand-line) focus:bg-white focus:outline-none focus:ring-2 focus:ring-(--brand-line)/15 dark:border-[#262626] dark:bg-[#171717] dark:text-white dark:focus:bg-[#171717]"
           />
         </div>
       </div>
@@ -268,7 +268,7 @@ export default function Topbar({
             onClick={() => setMenuOpen((v) => !v)}
             className="flex items-center gap-2.5 rounded-lg px-1.5 py-1 transition-colors hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1F2937] text-[11px] font-bold text-white dark:bg-[#3B82F6]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1F2937] text-[11px] font-bold text-white dark:bg-(--brand)">
               {initial}
             </div>
             <div className="hidden text-left sm:block">

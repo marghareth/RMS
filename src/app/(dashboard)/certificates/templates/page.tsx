@@ -114,14 +114,14 @@ export default function CertificateTemplatesPage() {
                 onClick={() => selectType(t.value)}
                 disabled={!tpl}
                 className={`flex w-full items-center gap-3 border-b border-[#F4F5F7] dark:border-[#262626] px-4 py-3 text-left transition last:border-b-0 disabled:opacity-50 ${
-                  active ? "bg-[#3B82F6]" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
+                  active ? "bg-(--brand)" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
                 }`}
               >
                 <div className="min-w-0 flex-1">
                   <p className={`truncate text-[13px] font-bold ${active ? "text-white" : "text-[#1F2937] dark:text-white"}`}>
                     {t.label}
                   </p>
-                  <p className={`mt-0.5 truncate text-[11px] ${active ? "text-blue-100 dark:text-blue-200" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
+                  <p className={`mt-0.5 truncate text-[11px] ${active ? "text-(--brand-fg-strong)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
                     {loading ? "Loading…" : tpl?.updated_by ? `Edited by ${tpl.updated_by}` : "Default wording"}
                   </p>
                 </div>
@@ -241,8 +241,8 @@ function TemplateEditor({
       <div data-tour="page-certificates-templates-editor" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
-              <FileEdit size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--brand-tint)">
+              <FileEdit size={14} className="text-(--brand-fg-strong)" />
             </div>
             <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
               Editing: {CERTIFICATE_TYPES.find((t) => t.value === type)?.label}
@@ -271,8 +271,8 @@ function TemplateEditor({
               rows={1}
               multiline={false}
               placeholder="Enter certificate title…"
-              className={`w-full rounded-lg border px-3 py-2.5 text-[13px] font-semibold uppercase tracking-wide text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] ${
-                activeField === "title" ? "border-[#3B82F6] dark:border-[#60A5FA]" : "border-[#E9EAEC] dark:border-[#262626]"
+              className={`w-full rounded-lg border px-3 py-2.5 text-[13px] font-semibold uppercase tracking-wide text-[#1F2937] dark:text-white outline-none focus:border-(--brand-line) ${
+                activeField === "title" ? "border-(--brand-line)" : "border-[#E9EAEC] dark:border-[#262626]"
               }`}
             />
           </div>
@@ -288,8 +288,8 @@ function TemplateEditor({
               onFocus={() => setActiveField("body")}
               rows={6}
               placeholder="Write the certificate body here…"
-              className={`w-full rounded-lg border px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] ${
-                activeField === "body" ? "border-[#3B82F6] dark:border-[#60A5FA]" : "border-[#E9EAEC] dark:border-[#262626]"
+              className={`w-full rounded-lg border px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-(--brand-line) ${
+                activeField === "body" ? "border-(--brand-line)" : "border-[#E9EAEC] dark:border-[#262626]"
               }`}
             />
           </div>
@@ -305,8 +305,8 @@ function TemplateEditor({
               onFocus={() => setActiveField("closing")}
               rows={2}
               placeholder="Write the closing / signatory line here…"
-              className={`w-full rounded-lg border px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] ${
-                activeField === "closing" ? "border-[#3B82F6] dark:border-[#60A5FA]" : "border-[#E9EAEC] dark:border-[#262626]"
+              className={`w-full rounded-lg border px-3 py-2.5 text-[13px] leading-relaxed text-[#1F2937] dark:text-white outline-none focus:border-(--brand-line) ${
+                activeField === "closing" ? "border-(--brand-line)" : "border-[#E9EAEC] dark:border-[#262626]"
               }`}
             />
           </div>
@@ -330,10 +330,10 @@ function TemplateEditor({
                   type="button"
                   title={p.description}
                   onClick={() => insertPlaceholder(p.token)}
-                  className="group flex flex-col items-start rounded-md border border-transparent bg-white dark:bg-[#171717] px-2.5 py-1.5 text-left shadow-sm transition hover:border-[#3B82F6] hover:bg-[#EBF3FF] dark:hover:border-[#60A5FA] dark:hover:bg-blue-500/10"
+                  className="group flex flex-col items-start rounded-md border border-transparent bg-white dark:bg-[#171717] px-2.5 py-1.5 text-left shadow-sm transition hover:border-(--brand-line) hover:bg-(--brand-tint)"
                 >
                   <span className="text-[11px] font-semibold text-[#1F2937] dark:text-white">{p.label}</span>
-                  <span className="font-mono text-[9px] text-[#9CA3AF] dark:text-[#737373] group-hover:text-[#3B82F6] dark:group-hover:text-[#60A5FA]">
+                  <span className="font-mono text-[9px] text-[#9CA3AF] dark:text-[#737373] group-hover:text-(--brand-fg)">
                     {p.token}
                   </span>
                 </button>
@@ -352,7 +352,7 @@ function TemplateEditor({
               data-tour="page-certificates-templates-save"
               onClick={() => onSave({ title: draftTitle, body: draftBody, closing_line: draftClosing })}
               disabled={saving || !isDirty}
-              className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg bg-(--brand) px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-50"
             >
               <Save size={14} />
               {saving ? "Saving..." : "Save Template"}

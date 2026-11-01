@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/registries/pwd/[id]/page.tsx
 "use client";
 
 import { useParams } from "next/navigation";
@@ -11,8 +12,8 @@ export default function PwdDetailPage() {
       entryId={parseInt(id)}
       title="PWD"
       icon={Accessibility}
-      iconBg="bg-[#3B82F6]"
-      accentText="text-blue-700"
+      iconBg="bg-(--brand)"
+      accentText="text-(--brand-fg-strong)"
       listBase="/registries/pwd"
     />
   );

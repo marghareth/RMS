@@ -125,12 +125,12 @@ export default function InventoryReportPage() {
           </div>
           <div data-tour="page-reports-inventory-controls" className="flex items-center gap-2">
             <select value={year} onChange={e => setYear(e.target.value)}
-              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
+              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-(--brand-line) bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] transition print:hidden"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-(--brand) text-white text-[12px] font-bold hover:bg-(--brand-hover) transition print:hidden"
             >
               <Download size={13} /> Export PDF
             </button>
@@ -142,7 +142,7 @@ export default function InventoryReportPage() {
 
       {loading || !data ? (
         <div className="flex items-center justify-center py-24">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
         </div>
       ) : (
         <>

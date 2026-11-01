@@ -82,7 +82,7 @@ export default function FundSourceDetailSheet({ fundSourceId, onClose }: FundSou
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -97,8 +97,8 @@ export default function FundSourceDetailSheet({ fundSourceId, onClose }: FundSou
           <div className="flex h-full flex-col">
             <SheetHeader>
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/15">
-                  <Landmark size={16} className="text-blue-500 dark:text-blue-400" />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-(--brand-tint)">
+                  <Landmark size={16} className="text-(--brand-fg)" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">

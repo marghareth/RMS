@@ -131,7 +131,7 @@ export default function NewFinancialRecordPage() {
                   onClick={() => handleCategoryPick(c)}
                   className={`rounded-full border px-3 py-1.5 text-[11px] font-medium transition ${
                     category === c
-                      ? "border-[#3B82F6] dark:border-[#60A5FA] bg-[#EBF3FF] dark:bg-blue-500/15 text-[#1D4ED8] dark:text-[#93C5FD]"
+                      ? "border-(--brand-line) bg-(--brand-tint) text-(--brand-fg-strong)"
                       : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                   }`}
                 >
@@ -150,7 +150,7 @@ export default function NewFinancialRecordPage() {
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
               placeholder="e.g. Honoraria — Barangay Tanod (June 2026)"
-              className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+              className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
             />
           </div>
 
@@ -170,7 +170,7 @@ export default function NewFinancialRecordPage() {
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] py-2.5 pl-7 pr-3 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] py-2.5 pl-7 pr-3 text-[13px] outline-none focus:border-(--brand-line)"
                 />
               </div>
               {amount && !isNaN(parsedAmount) && parsedAmount > 0 && (
@@ -185,7 +185,7 @@ export default function NewFinancialRecordPage() {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               />
             </div>
           </div>

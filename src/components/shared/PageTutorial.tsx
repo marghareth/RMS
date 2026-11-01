@@ -43,7 +43,7 @@ export default function PageTutorial({ tutorial }: { tutorial: TutorialContent }
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:border-[#3B82F6] hover:text-[#3B82F6] dark:hover:border-[#60A5FA] dark:hover:text-[#60A5FA] print:hidden"
+        className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] transition hover:border-(--brand-line) hover:text-(--brand-fg) print:hidden"
       >
         <HelpCircle size={14} />
         How to use
@@ -72,8 +72,8 @@ export default function PageTutorial({ tutorial }: { tutorial: TutorialContent }
             </button>
 
             <div className="overflow-y-auto px-6 pb-6 pt-6">
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#EBF3FF] dark:bg-blue-500/15">
-                <HelpCircle size={20} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
+              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-(--brand-tint)">
+                <HelpCircle size={20} className="text-(--brand-fg-strong)" />
               </div>
               <h3
                 id="page-tutorial-title"
@@ -88,7 +88,7 @@ export default function PageTutorial({ tutorial }: { tutorial: TutorialContent }
               <ol className="space-y-4">
                 {tutorial.steps.map((step, i) => (
                   <li key={step.title} className="flex gap-3">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#3B82F6] text-[11px] font-bold text-white">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-(--brand) text-[11px] font-bold text-white">
                       {i + 1}
                     </span>
                     <div className="min-w-0">
@@ -124,7 +124,7 @@ export default function PageTutorial({ tutorial }: { tutorial: TutorialContent }
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="w-full rounded-xl bg-[#3B82F6] py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+                className="w-full rounded-xl bg-(--brand) py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
               >
                 Got it
               </button>

@@ -192,7 +192,7 @@ export default function CertificatesListPage() {
             <button
               data-tour="page-certificates-add"
               onClick={() => router.push("/certificates/new")}
-              className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
+              className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
             >
               <Plus size={15} />
               Issue Certificate
@@ -217,14 +217,14 @@ export default function CertificatesListPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search cert no., resident name, or purpose"
-            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#A3A3A3] focus:border-[#3B82F6]"
+            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#A3A3A3] focus:border-(--brand-line)"
           />
         </div>
         <button
           data-tour="page-certificates-filter"
           onClick={() => setShowFilter((v) => !v)}
           className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
-            showFilter || activeFilterCount ? "bg-[#3B82F6] text-white" : "border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
+            showFilter || activeFilterCount ? "bg-(--brand) text-white" : "border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
           }`}
         >
           <SlidersHorizontal size={15} />
@@ -251,7 +251,7 @@ export default function CertificatesListPage() {
               <select
                 value={filters.certificate_type}
                 onChange={(e) => setFilters((f) => ({ ...f, certificate_type: e.target.value }))}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[12px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[12px] text-[#1F2937] dark:text-white outline-none focus:border-(--brand-line)"
               >
                 <option value="">All Types</option>
                 {CERTIFICATE_TYPES.map((t) => (
@@ -271,7 +271,7 @@ export default function CertificatesListPage() {
                   type="date"
                   value={filters.date_from}
                   onChange={(e) => setFilters((f) => ({ ...f, date_from: e.target.value }))}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2 py-2 text-[12px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2 py-2 text-[12px] text-[#1F2937] dark:text-white outline-none focus:border-(--brand-line)"
                 />
               </div>
               <div>
@@ -282,7 +282,7 @@ export default function CertificatesListPage() {
                   type="date"
                   value={filters.date_to}
                   onChange={(e) => setFilters((f) => ({ ...f, date_to: e.target.value }))}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2 py-2 text-[12px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2 py-2 text-[12px] text-[#1F2937] dark:text-white outline-none focus:border-(--brand-line)"
                 />
               </div>
             </div>
@@ -292,7 +292,7 @@ export default function CertificatesListPage() {
                 type="checkbox"
                 checked={filters.flagged_only}
                 onChange={(e) => setFilters((f) => ({ ...f, flagged_only: e.target.checked }))}
-                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-[#3B82F6] focus:ring-[#3B82F6]"
+                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-(--brand-fg) focus:ring-(--brand-line)"
               />
               Walk-in / flagged only
             </label>
@@ -306,7 +306,7 @@ export default function CertificatesListPage() {
               </button>
               <button
                 onClick={() => setShowFilter(false)}
-                className="flex-1 rounded-lg bg-[#3B82F6] py-2 text-[12px] font-semibold text-white transition hover:bg-[#2563EB]"
+                className="flex-1 rounded-lg bg-(--brand) py-2 text-[12px] font-semibold text-white transition hover:bg-(--brand-hover)"
               >
                 Apply
               </button>
@@ -317,10 +317,10 @@ export default function CertificatesListPage() {
 
       {/* Certificates table */}
       {selectedIds.size > 0 && (
-        <div className="mb-3 flex items-center justify-between rounded-lg border border-[#BFDBFE] dark:border-[#3B5A85] bg-[#EFF6FF] dark:bg-[#14243F] px-4 py-2.5">
+        <div className="mb-3 flex items-center justify-between rounded-lg border border-(--brand-tint-strong) dark:border-[#3B5A85] bg-(--brand-tint) px-4 py-2.5">
           <div className="flex items-center gap-2">
-            <CheckCheck size={14} className="text-[#2563EB] dark:text-[#60A5FA]" />
-            <span className="text-[12px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
+            <CheckCheck size={14} className="text-(--brand-fg-strong) dark:text-(--brand-fg)" />
+            <span className="text-[12px] font-semibold text-(--brand-fg-strong)">
               {selectedIds.size} selected
             </span>
             <button onClick={clearSelection} className="text-[11px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] hover:text-[#374151] dark:hover:text-white">
@@ -332,7 +332,7 @@ export default function CertificatesListPage() {
             <button
               onClick={handleBulkPrint}
               disabled={bulkPrinting}
-              className="flex items-center gap-1.5 rounded-lg border border-[#BFDBFE] dark:border-[#3B5A85] bg-white dark:bg-[#171717] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#1D4ED8] dark:text-[#93C5FD] transition hover:bg-[#EFF6FF] dark:hover:bg-[#1F1F1F] disabled:opacity-60"
+              className="flex items-center gap-1.5 rounded-lg border border-(--brand-tint-strong) dark:border-[#3B5A85] bg-white dark:bg-[#171717] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-(--brand-fg-strong) transition hover:bg-(--brand-tint) dark:hover:bg-[#1F1F1F] disabled:opacity-60"
             >
               {bulkPrinting ? <Loader2 size={12} className="animate-spin" /> : <Printer size={12} />}
               Print Selected
@@ -340,7 +340,7 @@ export default function CertificatesListPage() {
             <button
               onClick={handleBulkRelease}
               disabled={bulkReleasing}
-              className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-[#2563EB] disabled:opacity-60"
+              className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-(--brand-hover) disabled:opacity-60"
             >
               {bulkReleasing ? <Loader2 size={12} className="animate-spin" /> : <CheckCheck size={12} />}
               Release Selected
@@ -352,7 +352,7 @@ export default function CertificatesListPage() {
       <div data-tour="page-certificates-table" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
@@ -401,7 +401,7 @@ export default function CertificatesListPage() {
                   </td>
                   <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937] dark:text-white">{c.certificate_no}</td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-[#EBF3FF] dark:bg-[#14243F] px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
+                    <span className="inline-flex items-center rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong)">
                       {certTypeLabel(c.certificate_type)}
                     </span>
                   </td>

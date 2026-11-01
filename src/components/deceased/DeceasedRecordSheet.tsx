@@ -227,7 +227,7 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
               <SheetBody>
                 {loading ? (
                   <div className="flex items-center justify-center py-24">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
                   </div>
                 ) : (
                   <EmptyState icon={HeartCrack} title="Record not found" description="This entry may have been deleted." />
@@ -285,7 +285,7 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                         type="date"
                         value={form.date_of_death}
                         onChange={(e) => setForm((f) => ({ ...f, date_of_death: e.target.value }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line)"
                       />
                     </div>
 
@@ -297,7 +297,7 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                         value={form.immediate_cause}
                         onChange={(e) => setForm((f) => ({ ...f, immediate_cause: e.target.value }))}
                         placeholder="e.g. Cardiac arrest"
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
                       />
                     </div>
 
@@ -309,7 +309,7 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                         value={form.underlying_cause}
                         onChange={(e) => setForm((f) => ({ ...f, underlying_cause: e.target.value }))}
                         placeholder="e.g. Diabetes mellitus"
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
                       />
                     </div>
 
@@ -375,7 +375,7 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                       <button
                         onClick={handleSave}
                         disabled={submitting || !canSave}
-                        className="rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+                        className="rounded-lg bg-(--brand) px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-50"
                       >
                         {submitting ? "Saving…" : isNew ? "Save Record" : "Save Changes"}
                       </button>

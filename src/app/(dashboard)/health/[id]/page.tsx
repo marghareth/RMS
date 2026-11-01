@@ -50,7 +50,7 @@ const TYPE_COLORS: Record<string, { bg: string; text: string; icon_bg: string }>
   "Tuberculosis":       { bg: "bg-orange-50", text: "text-orange-700 dark:text-orange-400", icon_bg: "bg-orange-500" },
   "Prenatal Checkup":   { bg: "bg-pink-50",   text: "text-pink-700 dark:text-pink-400",   icon_bg: "bg-pink-500"   },
   "Well-child Checkup": { bg: "bg-green-50 dark:bg-green-500/15",  text: "text-green-700 dark:text-green-400",  icon_bg: "bg-green-500 dark:bg-green-500"  },
-  "Asthma":             { bg: "bg-blue-50 dark:bg-blue-500/15",   text: "text-blue-700 dark:text-blue-400",   icon_bg: "bg-blue-500 dark:bg-blue-500"   },
+  "Asthma":             { bg: "bg-(--brand-tint)",   text: "text-(--brand-fg-strong) dark:text-(--brand-fg)",   icon_bg: "bg-(--brand)"   },
   "Family Planning":    { bg: "bg-purple-50 dark:bg-purple-500/15", text: "text-purple-700 dark:text-purple-400", icon_bg: "bg-purple-500" },
 };
 
@@ -222,7 +222,7 @@ function HealthRecordDetailContent({ id }: { id: string }) {
           {/* Resident card */}
           <div data-tour="page-health-detail-resident" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
             <div className="flex items-center gap-3 px-4 py-3 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-              <div className="w-7 h-7 rounded-lg bg-[#3B82F6] flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-(--brand) flex items-center justify-center">
                 <User size={13} className="text-white" />
               </div>
               <p className="text-[12px] font-bold text-[#1F2937] dark:text-white">Resident</p>
@@ -230,8 +230,8 @@ function HealthRecordDetailContent({ id }: { id: string }) {
             <div className="p-4">
               {/* Avatar */}
               <div className="flex flex-col items-center text-center mb-4 pt-1">
-                <div className="w-14 h-14 rounded-full bg-[#EFF6FF] dark:bg-blue-500/15 flex items-center justify-center mb-2">
-                  <User size={24} className="text-[#3B82F6] dark:text-[#60A5FA]" />
+                <div className="w-14 h-14 rounded-full bg-(--brand-tint) flex items-center justify-center mb-2">
+                  <User size={24} className="text-(--brand-fg)" />
                 </div>
                 <p className="text-[14px] font-black text-[#1F2937] dark:text-white">
                   {record.resident.lname}, {record.resident.fname}
@@ -248,7 +248,7 @@ function HealthRecordDetailContent({ id }: { id: string }) {
 
               <button
                 onClick={() => router.push(`/residents/${record.resident_id}`)}
-                className="w-full mt-4 py-2 rounded-xl bg-[#EFF6FF] dark:bg-blue-500/15 text-[#3B82F6] dark:text-[#60A5FA] text-[12px] font-bold hover:bg-blue-100 transition"
+                className="w-full mt-4 py-2 rounded-xl bg-(--brand-tint) text-(--brand-fg) text-[12px] font-bold hover:bg-(--brand-tint-strong) transition"
               >
                 View Full Profile
               </button>
@@ -270,7 +270,7 @@ function HealthRecordDetailContent({ id }: { id: string }) {
                 onClick={() => router.push(`/health/vaccinations/new?resident_id=${record.resident_id}`)}
                 className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
               >
-                <CalendarDays size={13} className="text-[#3B82F6] dark:text-[#60A5FA]" />
+                <CalendarDays size={13} className="text-(--brand-fg)" />
                 Add Vaccination
               </button>
             </div>

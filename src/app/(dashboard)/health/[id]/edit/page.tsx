@@ -23,7 +23,7 @@ const TYPE_COLORS: Record<string, string> = {
   "Prenatal Checkup":   "border-pink-200   bg-pink-50   text-pink-700 dark:text-pink-400",
   "Postnatal Checkup":  "border-pink-200   bg-pink-50   text-pink-700 dark:text-pink-400",
   "Well-child Checkup": "border-green-200  bg-green-50 dark:bg-green-500/15  text-green-700 dark:text-green-400",
-  "Asthma":             "border-blue-200   bg-blue-50 dark:bg-blue-500/15   text-blue-700 dark:text-blue-400",
+  "Asthma":             "border-(--brand-tint-strong)   bg-(--brand-tint)   text-(--brand-fg-strong) dark:text-(--brand-fg)",
   "Family Planning":    "border-purple-200 bg-purple-50 dark:bg-purple-500/15 text-purple-700 dark:text-purple-400",
 };
 
@@ -137,7 +137,7 @@ function EditHealthRecordContent({ id }: { id: string }) {
                     type="button"
                     onClick={() => set("record_type", type)}
                     className={`px-3 py-2.5 rounded-xl border-2 text-[11px] font-bold uppercase tracking-wide text-center transition
-                      ${selected ? "border-[#3B82F6] dark:border-[#60A5FA] bg-[#3B82F6] text-white shadow-sm" : `${base} hover:border-opacity-60`}`}
+                      ${selected ? "border-(--brand-line) bg-(--brand) text-white shadow-sm" : `${base} hover:border-opacity-60`}`}
                   >
                     {type}
                   </button>
@@ -164,7 +164,7 @@ function EditHealthRecordContent({ id }: { id: string }) {
               onChange={e => set("notes", e.target.value)}
               placeholder="Enter findings, medications, referrals, or any observations..."
               rows={5}
-              className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition resize-none bg-white dark:bg-[#171717]"
+              className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition resize-none bg-white dark:bg-[#171717]"
             />
             <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-1.5 text-right">{form.notes.length} characters</p>
           </div>
@@ -185,7 +185,7 @@ function EditHealthRecordContent({ id }: { id: string }) {
           <button
             onClick={handleSave}
             disabled={saving || !form.record_type}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-(--brand) hover:bg-(--brand-hover) disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
           >
             <Save size={14} />
             {saving ? "Saving…" : "Save Changes"}

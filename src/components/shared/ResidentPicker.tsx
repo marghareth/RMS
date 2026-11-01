@@ -149,7 +149,7 @@ export default function ResidentPicker({
           }}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
-          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA] disabled:bg-[#F4F5F7] dark:disabled:bg-[#1A1A1A]"
+          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line) disabled:bg-[#F4F5F7] dark:disabled:bg-[#1A1A1A]"
         />
       </div>
 
@@ -157,7 +157,7 @@ export default function ResidentPicker({
         <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] shadow-lg">
           {loading ? (
             <div className="flex items-center justify-center py-6">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
             </div>
           ) : results.length === 0 ? (
             <p className="px-3 py-4 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No residents found</p>

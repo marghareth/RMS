@@ -155,12 +155,12 @@ export default function RegistriesReportPage() {
           </div>
           <div data-tour="page-reports-registries-controls" className="flex items-center gap-2">
             <select value={year} onChange={e => setYear(e.target.value)}
-              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
+              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-(--brand-line) bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] transition print:hidden"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-(--brand) text-white text-[12px] font-bold hover:bg-(--brand-hover) transition print:hidden"
             >
               <Download size={13} /> Export PDF
             </button>
@@ -176,11 +176,11 @@ export default function RegistriesReportPage() {
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`relative rounded-xl border px-5 py-4 text-left transition
-                ${tab === t.key ? "border-[#3B82F6] bg-[#EFF6FF] dark:border-[#60A5FA] dark:bg-[#0B1D33]" : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] hover:border-[#D1D5DB] dark:hover:border-[#404040]"}`}
+                ${tab === t.key ? "border-(--brand-line) bg-(--brand-tint) dark:bg-[#0B1D33]" : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] hover:border-[#D1D5DB] dark:hover:border-[#404040]"}`}
             >
               <div className="flex items-center gap-2 mb-2">
-                <Icon size={14} className={tab === t.key ? "text-[#3B82F6] dark:text-[#60A5FA]" : "text-[#9CA3AF] dark:text-[#A3A3A3]"} />
-                <span className={`text-[11px] font-semibold ${tab === t.key ? "text-[#1D4ED8] dark:text-[#93C5FD]" : "text-[#6B7280] dark:text-[#A3A3A3]"}`}>{t.label}</span>
+                <Icon size={14} className={tab === t.key ? "text-(--brand-fg)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"} />
+                <span className={`text-[11px] font-semibold ${tab === t.key ? "text-(--brand-fg-strong)" : "text-[#6B7280] dark:text-[#A3A3A3]"}`}>{t.label}</span>
               </div>
               <p className="text-[28px] font-bold leading-none tabular-nums text-[#1B2430] dark:text-white">
                 {t.count}

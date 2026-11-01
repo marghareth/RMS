@@ -246,7 +246,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -270,7 +270,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                       </span>
                       <span
                         className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
-                          meeting.meeting_type === "SB_MEETING" ? "bg-[#EBF3FF] dark:bg-blue-500/15 text-[#1D4ED8] dark:text-[#93C5FD]" : "bg-[#D1FAE5] dark:bg-emerald-500/15 text-[#059669] dark:text-[#34D399]"
+                          meeting.meeting_type === "SB_MEETING" ? "bg-(--brand-tint) text-(--brand-fg-strong)" : "bg-[#D1FAE5] dark:bg-emerald-500/15 text-[#059669] dark:text-[#34D399]"
                         }`}
                       >
                         {meeting.meeting_type === "SB_MEETING" ? <Gavel size={10} /> : <Megaphone size={10} />}
@@ -307,7 +307,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                     </button>
                     <button
                       onClick={openAddAgendaItem}
-                      className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+                      className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-(--brand-hover)"
                     >
                       <Plus size={13} />
                       Add Item
@@ -337,7 +337,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                       <input
                         value={draft.title}
                         onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                       />
                     </div>
                     <div>
@@ -347,7 +347,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                       <select
                         value={draft.meeting_type}
                         onChange={(e) => setDraft((d) => ({ ...d, meeting_type: e.target.value as MeetingType }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                       >
                         <option value="SB_MEETING">SB Meeting</option>
                         <option value="BARANGAY_ASSEMBLY">Barangay Assembly</option>
@@ -360,7 +360,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                       <select
                         value={draft.status}
                         onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value as MeetingStatus }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                       >
                         {MEETING_STATUSES.map((s) => (
                           <option key={s.value} value={s.value}>{s.label}</option>
@@ -375,7 +375,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                         type="date"
                         value={draft.meeting_date}
                         onChange={(e) => setDraft((d) => ({ ...d, meeting_date: e.target.value }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                       />
                     </div>
                     <div>
@@ -386,7 +386,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                         type="time"
                         value={draft.meeting_time}
                         onChange={(e) => setDraft((d) => ({ ...d, meeting_time: e.target.value }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -396,7 +396,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                       <input
                         value={draft.location}
                         onChange={(e) => setDraft((d) => ({ ...d, location: e.target.value }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                       />
                     </div>
                   </div>
@@ -416,7 +416,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                     <button
                       onClick={handleSaveMeeting}
                       disabled={savingMeeting}
-                      className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
+                      className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-white transition hover:bg-(--brand-hover) disabled:opacity-60"
                     >
                       <Save size={12} />
                       {savingMeeting ? "Saving..." : "Save"}
@@ -442,7 +442,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                     <p className="mb-3 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No agenda items yet.</p>
                     <button
                       onClick={openAddAgendaItem}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-(--brand) px-4 py-2 text-[12px] font-bold text-white transition hover:bg-(--brand-hover)"
                     >
                       <Plus size={12} />
                       Add First Item
@@ -524,7 +524,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                           <button
                             onClick={handleSaveMinutes}
                             disabled={savingMinutes}
-                            className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
+                            className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-(--brand-hover) disabled:opacity-60"
                           >
                             <Save size={12} />
                             {savingMinutes ? "Saving..." : "Save"}
@@ -540,7 +540,7 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                         rows={14}
                         autoFocus
                         placeholder="Attendance, agenda, resolutions, and other notes from the meeting..."
-                        className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-(--brand-line)"
                       />
                     ) : meeting.minutes ? (
                       <p className="whitespace-pre-line font-mono text-[12px] leading-relaxed text-[#374151] dark:text-[#D4D4D4]">

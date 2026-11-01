@@ -141,7 +141,7 @@ export default function OfficialsListPage() {
           <button
             data-tour="page-officials-add"
             onClick={() => router.push("/officials/new")}
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+            className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             Add Official
@@ -172,7 +172,7 @@ export default function OfficialsListPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search official"
-                className="w-full rounded-xl border border-transparent bg-[#F4F5F7] dark:bg-[#262626] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:bg-white dark:focus:bg-[#171717]"
+                className="w-full rounded-xl border border-transparent bg-[#F4F5F7] dark:bg-[#262626] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line) focus:bg-white dark:focus:bg-[#171717]"
               />
             </div>
             <label data-tour="page-officials-active" className="flex items-center gap-2 text-[11px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
@@ -180,7 +180,7 @@ export default function OfficialsListPage() {
                 type="checkbox"
                 checked={activeOnly}
                 onChange={(e) => setActiveOnly(e.target.checked)}
-                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-[#3B82F6] dark:text-[#60A5FA] focus:ring-[#3B82F6] dark:focus:ring-[#60A5FA]"
+                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-(--brand-fg) focus:ring-(--brand-line)"
               />
               Active officials only
             </label>
@@ -189,7 +189,7 @@ export default function OfficialsListPage() {
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
               </div>
             ) : filtered.length === 0 ? (
               <p className="py-12 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No officials found</p>
@@ -201,14 +201,14 @@ export default function OfficialsListPage() {
                     key={o.id}
                     onClick={() => setSelectedId(o.id)}
                     className={`flex w-full items-center gap-3 border-b border-[#F4F5F7] dark:border-[#262626] px-4 py-3 text-left transition ${
-                      active ? "bg-[#3B82F6]" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
+                      active ? "bg-(--brand)" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
                     }`}
                   >
                     <div className="min-w-0 flex-1">
                       <p className={`truncate text-[13px] font-bold ${active ? "text-white" : "text-[#1F2937] dark:text-white"}`}>
                         {residentFullName(o.resident)}
                       </p>
-                      <p className={`mt-0.5 truncate text-[11px] ${active ? "text-blue-100" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
+                      <p className={`mt-0.5 truncate text-[11px] ${active ? "text-(--brand-fg-strong)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
                         {o.position}
                         {o.purok_assignment && o.purok_assignment !== "At-Large" && ` · ${o.purok_assignment}`}
                         {!o.is_active && " · Inactive"}
@@ -237,7 +237,7 @@ export default function OfficialsListPage() {
               {/* Header */}
               <div className="mb-5 flex items-start justify-between border-b border-[#E9EAEC] dark:border-[#262626] pb-5">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 text-xl font-black text-[#1D4ED8] dark:text-[#93C5FD]">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-(--brand-tint) text-xl font-black text-(--brand-fg-strong)">
                     {selected.resident.fname[0]}
                     {selected.resident.lname[0]}
                   </div>
@@ -246,7 +246,7 @@ export default function OfficialsListPage() {
                       {residentFullName(selected.resident)}
                     </h2>
                     <div className="mt-1 flex items-center gap-2">
-                      <span className="inline-flex items-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
+                      <span className="inline-flex items-center rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong)">
                         {selected.position}
                       </span>
                       <span

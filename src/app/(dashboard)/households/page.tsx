@@ -133,7 +133,7 @@ export default function HouseholdsListPage() {
             <button
               data-tour="page-households-add"
               onClick={() => router.push("/households/new")}
-              className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+              className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
             >
               <Plus size={15} />
               Add Household
@@ -158,13 +158,13 @@ export default function HouseholdsListPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search household no., address, or head name"
-            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
           />
         </div>
         <select
           value={purokFilter}
           onChange={(e) => setPurokFilter(e.target.value)}
-          className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+          className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line)"
         >
           <option value="">All Puroks</option>
           {puroks.map((p: { id: number; name: string }) => (
@@ -179,7 +179,7 @@ export default function HouseholdsListPage() {
       <div data-tour="page-households-table" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState
@@ -210,7 +210,7 @@ export default function HouseholdsListPage() {
                   <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937] dark:text-white">{h.household_no}</td>
                   <td className="px-4 py-3 text-[12px] text-[#374151] dark:text-[#D4D4D4]">{h.address}</td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
+                    <span className="inline-flex items-center rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong)">
                       {h.purok.name}
                     </span>
                   </td>

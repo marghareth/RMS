@@ -42,7 +42,7 @@ export default function FundSourceDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
       </div>
     );
   }
@@ -75,8 +75,8 @@ export default function FundSourceDetailPage() {
 
       <div data-tour="page-fund-source-detail-header" className="mb-5 flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/15">
-            <Landmark size={20} className="text-blue-500 dark:text-blue-400" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-(--brand-tint)">
+            <Landmark size={20} className="text-(--brand-fg)" />
           </div>
           <div>
             <div className="flex items-center gap-2">
