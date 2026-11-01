@@ -13,9 +13,10 @@ import {
   ChevronRight,
   Plus,
   X,
-  FileText,
   MapPin,
   ListChecks,
+  Clock,
+  FileWarning,
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
@@ -25,10 +26,8 @@ import MeetingDetailSheet from "@/components/meetings/MeetingDetailSheet";
 import {
   MeetingRecordMock,
   meetingTypeLabel,
-  formatISODate,
   formatISOTime,
   isUpcoming,
-  minutesPreview,
   MEETING_STATUSES,
 } from "@/lib/mock/meetings";
 
@@ -41,6 +40,80 @@ interface FilterState {
 }
 
 const EMPTY_FILTERS: FilterState = { meeting_type: "", status: "", location: "", date_from: "", date_to: "" };
+
+// ─── LIST LAYOUT HELPERS ──────────────────────────────────────────────────────
+// The list is split into "Upcoming" (soonest first) and "Past meetings"
+// (newest first, under a heading per month), so the next meeting is always at
+// the top instead of the one furthest in the future.
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function monthHeading(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+/** "Today", "Tomorrow", "In 5 days" — only for upcoming meetings. */
+function relativeDay(iso: string, now: Date) {
+  const startOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((startOf(new Date(iso)) - startOf(now)) / DAY_MS);
+  if (days <= 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days < 7) return `In ${days} days`;
+  if (days < 14) return "Next week";
+  return `In ${Math.round(days / 7)} weeks`;
+}
+
+/** Calendar-style date tile: month, day number, weekday. */
+function DateTile({ iso, highlight }: { iso: string; highlight: boolean }) {
+  const d = new Date(iso);
+  return (
+    <div
+      className={`flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl border ${
+        highlight
+          ? "border-(--brand) bg-(--brand) text-white"
+          : "border-[#E9EAEC] bg-[#F9FAFB] text-[#1F2937] dark:border-[#262626] dark:bg-[#1F1F1F] dark:text-white"
+      }`}
+      aria-hidden="true"
+    >
+      <span className={`text-[10px] font-bold uppercase tracking-wider ${highlight ? "text-white/80" : "text-[#6B7280] dark:text-[#A3A3A3]"}`}>
+        {d.toLocaleDateString("en-US", { month: "short" })}
+      </span>
+      <span className="text-[19px] font-bold leading-none tabular-nums">{d.getDate()}</span>
+      <span className={`mt-0.5 text-[9px] font-semibold uppercase ${highlight ? "text-white/80" : "text-[#9CA3AF] dark:text-[#737373]"}`}>
+        {d.toLocaleDateString("en-US", { weekday: "short" })}
+      </span>
+    </div>
+  );
+}
+
+/** Small colored label: SB Meeting (navy, gavel) or Barangay Assembly (green, megaphone). */
+function TypeLabel({ type }: { type: MeetingRecordMock["meeting_type"] }) {
+  const sb = type === "SB_MEETING";
+  const Icon = sb ? Gavel : Megaphone;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${
+        sb ? "bg-(--brand-tint) text-(--brand-fg-strong)" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
+      }`}
+    >
+      <Icon size={11} strokeWidth={2.25} />
+      {meetingTypeLabel(type)}
+    </span>
+  );
+}
+
+function SectionHeading({ label, count }: { label: string; count?: number }) {
+  return (
+    <div className="flex items-center gap-2 border-b border-[#F4F5F7] bg-[#F9FAFB] px-5 py-2 dark:border-[#262626] dark:bg-[#141414]">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7280] dark:text-[#A3A3A3]">{label}</span>
+      {count !== undefined && (
+        <span className="rounded-full bg-[#E9EAEC] px-1.5 text-[10px] font-bold tabular-nums text-[#6B7280] dark:bg-[#262626] dark:text-[#A3A3A3]">
+          {count}
+        </span>
+      )}
+    </div>
+  );
+}
 
 export default function AssemblyListPage() {
   const router = useRouter();
@@ -56,13 +129,17 @@ export default function AssemblyListPage() {
   const loadMeetings = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ limit: "50" });
+      // 100 is the most the API returns per request.
+      const params = new URLSearchParams({ limit: "100" });
       if (filters.meeting_type) params.set("meeting_type", filters.meeting_type);
       if (filters.status) params.set("status", filters.status);
       if (filters.location) params.set("location", filters.location);
       if (filters.date_from) params.set("date_from", filters.date_from);
       if (filters.date_to) params.set("date_to", filters.date_to);
-      if (search.trim()) params.set("title", search.trim());
+      // BUGFIX: the search box used to be sent as `title=`, so the server
+      // dropped every meeting whose TITLE didn't match before the page could
+      // search type, location and minutes as the placeholder promises.
+      // Searching now happens on the loaded list (below) only.
 
       const res = await fetch(`/api/meetings?${params}`);
       const data = await res.json();
@@ -72,7 +149,7 @@ export default function AssemblyListPage() {
     } finally {
       setLoading(false);
     }
-  }, [filters, search]);
+  }, [filters]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -91,6 +168,20 @@ export default function AssemblyListPage() {
       })
       .sort((a, b) => new Date(b.meeting_date).getTime() - new Date(a.meeting_date).getTime());
   }, [meetings, search]);
+
+  const { upcomingList, pastGroups } = useMemo(() => {
+    const upcomingList = filtered
+      .filter((m) => isUpcoming(m.meeting_date))
+      .sort((a, b) => new Date(a.meeting_date).getTime() - new Date(b.meeting_date).getTime());
+    const pastGroups: { heading: string; items: MeetingRecordMock[] }[] = [];
+    for (const m of filtered.filter((m) => !isUpcoming(m.meeting_date))) {
+      const heading = monthHeading(m.meeting_date);
+      const last = pastGroups[pastGroups.length - 1];
+      if (last && last.heading === heading) last.items.push(m);
+      else pastGroups.push({ heading, items: [m] });
+    }
+    return { upcomingList, pastGroups };
+  }, [filtered]);
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -269,76 +360,29 @@ export default function AssemblyListPage() {
             description="Try adjusting your search or filters, or create a new meeting record."
           />
         ) : (
-          filtered.map((m) => {
-            const upcoming = isUpcoming(m.meeting_date);
-            const preview = minutesPreview(m.minutes);
-            const agendaCount = m._count?.agenda_items ?? m.agenda_items?.length ?? 0;
-            return (
-              <button
-                key={m.id}
-                onClick={() => setSelectedId(m.id)}
-                className="flex w-full items-center gap-4 border-b border-[#F4F5F7] dark:border-[#262626] px-5 py-4 text-left transition last:border-b-0 hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
-              >
-                <div
-                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                    m.meeting_type === "SB_MEETING" ? "bg-(--brand-tint)" : "bg-[#D1FAE5] dark:bg-emerald-500/15"
-                  }`}
-                >
-                  {m.meeting_type === "SB_MEETING" ? (
-                    <Gavel size={18} className="text-(--brand-fg-strong)" />
-                  ) : (
-                    <Megaphone size={18} className="text-[#059669] dark:text-[#34D399]" />
-                  )}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-[13px] font-bold text-[#1F2937] dark:text-white">
-                      {m.title || meetingTypeLabel(m.meeting_type)}
-                    </p>
-                    <StatusBadge status={m.status} />
-                    {upcoming && m.status === "SCHEDULED" && (
-                      <span className="rounded-full bg-[#FEF3C7] dark:bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-[#D97706] dark:text-[#FBBF24]">
-                        Upcoming
-                      </span>
-                    )}
+          <>
+            {upcomingList.length > 0 && (
+              <section aria-label="Upcoming meetings">
+                <SectionHeading label="Upcoming" count={upcomingList.length} />
+                {upcomingList.map((m, i) => (
+                  <MeetingRow key={m.id} m={m} isNext={i === 0} onOpen={() => setSelectedId(m.id)} />
+                ))}
+              </section>
+            )}
+            {pastGroups.length > 0 && (
+              <section aria-label="Past meetings">
+                {upcomingList.length > 0 && <SectionHeading label="Past meetings" />}
+                {pastGroups.map((g) => (
+                  <div key={g.heading}>
+                    <div className="px-5 pb-1 pt-4 text-[12px] font-bold text-[#374151] dark:text-[#D4D4D4]">{g.heading}</div>
+                    {g.items.map((m) => (
+                      <MeetingRow key={m.id} m={m} isNext={false} onOpen={() => setSelectedId(m.id)} />
+                    ))}
                   </div>
-                  <p className="mt-0.5 flex items-center gap-3 truncate text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-                    <span>{meetingTypeLabel(m.meeting_type)}</span>
-                    {m.location && (
-                      <span className="flex items-center gap-1">
-                        <MapPin size={11} />
-                        {m.location}
-                      </span>
-                    )}
-                    {agendaCount > 0 && (
-                      <span className="flex items-center gap-1">
-                        <ListChecks size={11} />
-                        {agendaCount} item{agendaCount === 1 ? "" : "s"}
-                      </span>
-                    )}
-                  </p>
-                  {!m.title && (
-                    <p className="mt-0.5 truncate text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-                      {preview ?? "No minutes encoded yet"}
-                    </p>
-                  )}
-                </div>
-
-                <div className="shrink-0 text-right">
-                  <p className="text-[12px] font-semibold text-[#374151] dark:text-[#D4D4D4]">{formatISODate(m.meeting_date)}</p>
-                  <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{formatISOTime(m.meeting_date)}</p>
-                </div>
-
-                <div className="hidden shrink-0 items-center gap-1.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] sm:flex">
-                  <FileText size={12} />
-                  {m.recorder.username}
-                </div>
-
-                <ChevronRight size={16} className="shrink-0 text-[#D1D5DB] dark:text-[#525252]" />
-              </button>
-            );
-          })
+                ))}
+              </section>
+            )}
+          </>
         )}
       </div>
 
@@ -348,5 +392,65 @@ export default function AssemblyListPage() {
         onUpdated={loadMeetings}
       />
     </div>
+  );
+}
+
+// ─── ROW ──────────────────────────────────────────────────────────────────────
+// Fixed columns so every row lines up: date tile · title + details · status · chevron.
+function MeetingRow({ m, isNext, onOpen }: { m: MeetingRecordMock; isNext: boolean; onOpen: () => void }) {
+  const upcoming = isUpcoming(m.meeting_date);
+  const agendaCount = m._count?.agenda_items ?? m.agenda_items?.length ?? 0;
+  const cancelled = m.status === "CANCELLED";
+  const needsMinutes = !upcoming && m.status === "COMPLETED" && !m.minutes?.trim();
+  const title = m.title || meetingTypeLabel(m.meeting_type);
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="grid w-full grid-cols-[56px_minmax(0,1fr)_16px] items-center gap-x-4 gap-y-2 border-b border-[#F4F5F7] px-5 py-3.5 text-left transition last:border-b-0 hover:bg-[#F9FAFB] focus-visible:bg-[#F9FAFB] focus-visible:outline-none dark:border-[#262626] dark:hover:bg-[#1F1F1F] dark:focus-visible:bg-[#1F1F1F] sm:grid-cols-[56px_minmax(0,1fr)_120px_16px]"
+    >
+      <DateTile iso={m.meeting_date} highlight={isNext} />
+
+      <div className="min-w-0">
+        <p className={`truncate text-[13px] font-bold ${cancelled ? "text-[#9CA3AF] line-through dark:text-[#737373]" : "text-[#1F2937] dark:text-white"}`}>
+          {title}
+        </p>
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
+          <TypeLabel type={m.meeting_type} />
+          <span className="flex items-center gap-1 tabular-nums">
+            <Clock size={11} />
+            {formatISOTime(m.meeting_date)}
+            {upcoming && <span className="text-[#9CA3AF] dark:text-[#737373]">· {relativeDay(m.meeting_date, new Date())}</span>}
+          </span>
+          {m.location && (
+            <span className="flex min-w-0 items-center gap-1">
+              <MapPin size={11} className="shrink-0" />
+              <span className="truncate">{m.location}</span>
+            </span>
+          )}
+          <span className="flex items-center gap-1">
+            <ListChecks size={11} />
+            {agendaCount === 0 ? "No agenda" : `${agendaCount} agenda item${agendaCount === 1 ? "" : "s"}`}
+          </span>
+          {needsMinutes && (
+            <span className="flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400">
+              <FileWarning size={11} />
+              Minutes not encoded
+            </span>
+          )}
+        </div>
+        {/* On phones the status sits under the details instead of in its own column. */}
+        <div className="mt-2 sm:hidden">
+          <StatusBadge status={m.status} />
+        </div>
+      </div>
+
+      <div className="hidden justify-end sm:flex">
+        <StatusBadge status={m.status} />
+      </div>
+
+      <ChevronRight size={16} className="text-[#D1D5DB] dark:text-[#525252]" />
+    </button>
   );
 }

@@ -35,6 +35,7 @@ import {
   Activity, ShieldCheck,
 } from "lucide-react";
 import StatCard from "@/components/shared/StatCard";
+import HealthTypeBadge from "@/components/health/HealthTypeBadge";
 import VaccinationDetailSheet from "@/components/health/VaccinationDetailSheet";
 import HealthRecordDetailSheet from "@/components/health/HealthRecordDetailSheet";
 
@@ -83,24 +84,8 @@ function fmtDate(iso: string) {
 function fullName(r: Resident) { return `${r.lname}, ${r.fname}`; }
 
 // ─── RECORD TYPE BADGE ────────────────────────────────────────────────────────
-const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  "Hypertension":       { bg: "bg-red-100 dark:bg-red-500/15",    text: "text-red-700 dark:text-red-400"    },
-  "Diabetes":           { bg: "bg-amber-100 dark:bg-amber-500/15",  text: "text-amber-700 dark:text-amber-400"  },
-  "Tuberculosis":       { bg: "bg-orange-100", text: "text-orange-700" },
-  "Prenatal Checkup":   { bg: "bg-pink-100",   text: "text-pink-700"   },
-  "Well-child Checkup": { bg: "bg-green-100 dark:bg-green-500/15",  text: "text-green-700 dark:text-green-400"  },
-  "Asthma":             { bg: "bg-(--brand-tint-strong) dark:bg-(--brand-tint)",   text: "text-(--brand-fg-strong) dark:text-(--brand-fg)"   },
-  "Family Planning":    { bg: "bg-purple-100", text: "text-purple-700" },
-};
-
-function TypeBadge({ type }: { type: string }) {
-  const c = TYPE_COLORS[type] ?? { bg: "bg-gray-100", text: "text-gray-700" };
-  return (
-    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${c.bg} ${c.text}`}>
-      {type}
-    </span>
-  );
-}
+// Icon + soft pill per record type, styled like the status badges elsewhere —
+// see src/components/health/HealthTypeBadge.tsx.
 
 // ─── TAB BUTTON ───────────────────────────────────────────────────────────────
 function TabBtn({ label, count, active, onClick, icon: Icon }: {
@@ -265,7 +250,7 @@ export default function HealthPage() {
                   </div>
 
                   {/* Type */}
-                  <div><TypeBadge type={r.record_type} /></div>
+                  <div><HealthTypeBadge type={r.record_type} /></div>
 
                   {/* Notes */}
                   <p className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3] line-clamp-2">{r.notes ?? "—"}</p>

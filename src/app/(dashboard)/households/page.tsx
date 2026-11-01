@@ -10,6 +10,7 @@ import EmptyState from "@/components/shared/EmptyState";
 import { memberFullName, buildBimsCsv, downloadCsv } from "@/lib/mock/households";
 import type { PurokMock, HouseholdMock } from "@/lib/mock/households";
 import HouseholdDetailSheet from "@/components/households/HouseholdDetailSheet";
+import { fetchJson } from "@/lib/fetch-json";
 
 const HOUSING_LABEL: Record<string, string> = {
   OWN: "Own",
@@ -28,6 +29,7 @@ export default function HouseholdsListPage() {
   const [puroks, setPuroks] = useState<PurokMock[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -96,20 +98,34 @@ export default function HouseholdsListPage() {
   }, [households]);
 
   // Exports the FULL dataset (not just the current filtered/paginated page)
-  // so the BIMS submission is always complete — fetches fresh rather than
-  // relying on the `households` state, which is capped at limit=50 above.
+  // so the BIMS submission is always complete.
+  //
+  // BUGFIX: this asked for limit=1000 in one request, but the API allows at
+  // most 100 per page, so the request was rejected and the export silently
+  // downloaded a CSV with only the header row. It now reads every page of
+  // 100, and if any request fails it says so instead of saving a partial or
+  // empty file.
   async function handleExportCsv() {
     setExporting(true);
+    setExportError(null);
     try {
-      const params = new URLSearchParams({ limit: "1000" });
-      if (purokFilter) params.set("purok_id", purokFilter);
-      const res = await fetch(`/api/households?${params}`);
-      const data = await res.json();
-      const csv = buildBimsCsv(data.households ?? []);
+      const all: HouseholdMock[] = [];
+      const PAGE_SIZE = 100;
+      for (let page = 1; ; page++) {
+        const params = new URLSearchParams({ limit: String(PAGE_SIZE), page: String(page) });
+        if (purokFilter) params.set("purok_id", purokFilter);
+        const result = await fetchJson<{ households: HouseholdMock[]; total: number }>(`/api/households?${params}`);
+        if (!result.ok) throw new Error(result.detail);
+        const batch = result.data.households ?? [];
+        all.push(...batch);
+        if (batch.length < PAGE_SIZE || all.length >= (result.data.total ?? 0)) break;
+      }
+      const csv = buildBimsCsv(all);
       const today = new Date().toISOString().slice(0, 10);
       downloadCsv(`bims-households-${today}.csv`, csv);
     } catch (e) {
       console.error(e);
+      setExportError(e instanceof Error ? e.message : "Export failed.");
     } finally {
       setExporting(false);
     }
@@ -141,6 +157,12 @@ export default function HouseholdsListPage() {
           </div>
         }
       />
+
+      {exportError && (
+        <div role="alert" className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-400">
+          Couldn&apos;t export the BIMS CSV: {exportError} No file was saved.
+        </div>
+      )}
 
       {/* Stat cards */}
       <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

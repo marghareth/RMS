@@ -1,61 +1,69 @@
 // FILE: src/app/(dashboard)/financial/summary/page.tsx
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, TrendingUp, TrendingDown, Wallet, Printer } from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, Wallet, Printer, AlertTriangle } from "lucide-react";
 import StatCard from "@/components/shared/StatCard";
-import {
-  FinancialRecordMock,
-  formatCurrency,
-  groupByMonth,
-} from "@/lib/mock/financial";
+import { formatCurrency } from "@/lib/mock/financial";
+import { fetchJson } from "@/lib/fetch-json";
+import type { MonthTotal } from "@/lib/financial-summary";
 
+// What GET /api/financial?view=summary&year=Y returns.
+interface YearSummary {
+  year: number;
+  income: number;
+  expense: number;
+  balance: number;
+  months: MonthTotal[];
+  count: number;
+  years: number[];
+}
+
+// BUGFIX: this page used to download up to 500 individual records and add
+// them up in the browser — but the API only allows 100 per request, so the
+// request was rejected outright and the page showed ₱0.00 / "No
+// transactions" even when the year had plenty. The totals are now computed
+// by the API over every record in the year (view=summary), and a failed
+// request shows an error instead of zeros.
 export default function FinancialSummaryPage() {
   const router = useRouter();
 
   const [year, setYear] = useState(String(new Date().getFullYear()));
+  const [summary, setSummary] = useState<YearSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  // ── REAL DATA FETCH ───────────────────────────────────────────────────────
-  const [records, setRecords] = useState<FinancialRecordMock[]>([]);
+  // Show the spinner the moment the year (or a retry) changes, without
+  // setting state inside the effect body.
+  const requestKey = `${year}|${reloadKey}`;
+  const [loadedKey, setLoadedKey] = useState(requestKey);
+  if (requestKey !== loadedKey) {
+    setLoadedKey(requestKey);
+    setLoading(true);
+  }
+
   useEffect(() => {
     let cancelled = false;
-
-    async function loadRecords() {
-      const params = new URLSearchParams({
-        limit: "500",
-        date_from: `${year}-01-01`,
-        date_to: `${year}-12-31`,
-      });
-      const res = await fetch(`/api/financial?${params}`);
-      const data = await res.json();
-      if (!cancelled) setRecords(data.records ?? []);
-    }
-
-    loadRecords();
+    fetchJson<YearSummary>(`/api/financial?view=summary&year=${encodeURIComponent(year)}`).then((result) => {
+      if (cancelled) return;
+      if (result.ok) {
+        setSummary(result.data);
+        setError(null);
+      } else {
+        setError(result.detail);
+      }
+      setLoading(false);
+    });
     return () => { cancelled = true; };
-  }, [year]);
+  }, [year, reloadKey]);
 
-  const yearRecords = useMemo(
-    () => records.filter((r) => r.transaction_date.startsWith(year)),
-    [records, year]
-  );
-
-  const monthly = useMemo(() => groupByMonth(yearRecords), [yearRecords]);
-
-  const totals = useMemo(() => {
-    const income = yearRecords.filter((r) => r.transaction_type === "INCOME").reduce((s, r) => s + r.amount, 0);
-    const expense = yearRecords.filter((r) => r.transaction_type === "EXPENSE").reduce((s, r) => s + r.amount, 0);
-    return { income, expense, balance: income - expense };
-  }, [yearRecords]);
-
+  const monthly = summary?.months ?? [];
+  const totals = { income: summary?.income ?? 0, expense: summary?.expense ?? 0, balance: summary?.balance ?? 0 };
   const maxMonthAmount = Math.max(1, ...monthly.map((m) => Math.max(m.income, m.expense)));
-
-  const availableYears = useMemo(() => {
-    const years = new Set(records.map((r) => r.transaction_date.slice(0, 4)));
-    years.add(year); // always keep the selected year selectable, even with 0 records
-    return Array.from(years).sort((a, b) => Number(b) - Number(a));
-  }, [records, year]);
+  const availableYears = (summary?.years ?? [Number(year)]).map(String);
+  if (!availableYears.includes(year)) availableYears.unshift(year);
 
   return (
     <div>
@@ -128,7 +136,24 @@ export default function FinancialSummaryPage() {
           </div>
         </div>
 
-        {monthly.length === 0 ? (
+        {error ? (
+          <div role="alert" className="flex flex-col items-center gap-2 py-12 text-center">
+            <AlertTriangle size={24} className="text-amber-500 dark:text-amber-400" />
+            <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">Couldn&apos;t load the summary for {year}</p>
+            <p className="max-w-sm text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{error}</p>
+            <button
+              type="button"
+              onClick={() => setReloadKey((k) => k + 1)}
+              className="mt-1 rounded-lg border border-[#E9EAEC] px-3 py-1.5 text-[12px] font-bold text-[#374151] transition hover:bg-[#F4F5F7] dark:border-[#262626] dark:text-[#D4D4D4] dark:hover:bg-[#1F1F1F] print:hidden"
+            >
+              Try again
+            </button>
+          </div>
+        ) : loading && !summary ? (
+          <div className="flex justify-center py-12">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
+          </div>
+        ) : monthly.length === 0 ? (
           <p className="py-12 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No transactions recorded for {year}.</p>
         ) : (
           <div className="space-y-4">

@@ -8,6 +8,7 @@ import StatCard from "@/components/shared/StatCard";
 import {
   fmtCurrency, fmtDate, DisbursementRecord, FundSourceMini, AppropriationRecord,
 } from "@/lib/finance";
+import { readList } from "@/lib/fetch-json";
 
 const EMPTY_FORM = {
   payee: "", amount: "", date: new Date().toISOString().slice(0, 10),
@@ -42,9 +43,9 @@ export default function DisbursementsPage() {
         fetch("/api/fund-sources"),
         fetch("/api/appropriations"),
       ]);
-      setItems(await dbRes.json());
-      setFundSources(await fsRes.json());
-      setAppropriations(await apRes.json());
+      setItems(await readList(dbRes));
+      setFundSources(await readList(fsRes));
+      setAppropriations(await readList(apRes));
     } catch (e) {
       console.error(e);
     } finally {

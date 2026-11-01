@@ -11,6 +11,7 @@ import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import UserEditSheet from "@/components/admin/UserEditSheet";
 import { UserMock, roleLabel, formatISODate } from "@/lib/mock/admin";
+import { readList } from "@/lib/fetch-json";
 
 export default function UsersListPage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function UsersListPage() {
   // effect body. GET /api/users returns a bare array.
   useEffect(() => {
     fetch("/api/users")
-      .then((res) => res.json())
+      .then((res) => readList<UserMock>(res))
       .then((data) => setUsers(data))
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
@@ -35,7 +36,7 @@ export default function UsersListPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/users");
-      setUsers(await res.json());
+      setUsers(await readList<UserMock>(res));
     } catch (e) {
       console.error(e);
     } finally {

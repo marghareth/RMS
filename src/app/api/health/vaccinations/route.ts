@@ -40,7 +40,12 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
       where,
       skip,
       take: limit,
-      include: { resident: true, recorder: { select: { id: true, username: true } } },
+      // The list shows each resident's purok under their name — without it
+      // the page could only print "—".
+      include: {
+        resident: { include: { purok: { select: { id: true, name: true } } } },
+        recorder: { select: { id: true, username: true } },
+      },
       orderBy: { date_given: "desc" },
     }),
     prisma.vaccination.count({ where }),
@@ -62,7 +67,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       date_given: body.date_given,
       recorded_by: parseInt(auth.session.user.id),
     },
-    include: { resident: true },
+    include: { resident: { include: { purok: { select: { id: true, name: true } } } } },
   });
 
   await logAudit({

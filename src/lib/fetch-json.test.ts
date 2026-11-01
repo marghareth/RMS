@@ -117,3 +117,27 @@ describe('runWithConcurrency', () => {
     expect(ran).toEqual([1, 2, 3]);
   });
 });
+describe('readList', () => {
+  const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+
+  it('returns the list from a successful response', async () => {
+    const { readList } = await import('./fetch-json');
+    expect(await readList(json([{ id: 1 }, { id: 2 }]))).toEqual([{ id: 1 }, { id: 2 }]);
+  });
+
+  it("throws the server's message instead of returning an { error } object", async () => {
+    const { readList } = await import('./fetch-json');
+    await expect(readList(json({ error: 'Forbidden' }, 403))).rejects.toThrow('Forbidden');
+    await expect(readList(json({ error: 'DATABASE_UNAVAILABLE', message: 'The database is currently unreachable.' }, 503))).rejects.toThrow(/unreachable/);
+  });
+
+  it('throws when a successful response is not a list', async () => {
+    const { readList } = await import('./fetch-json');
+    await expect(readList(json({ items: [] }))).rejects.toThrow(/expected a list/);
+  });
+
+  it('throws on a non-JSON error page', async () => {
+    const { readList } = await import('./fetch-json');
+    await expect(readList(new Response('<html>oops</html>', { status: 500 }))).rejects.toThrow(/500/);
+  });
+});

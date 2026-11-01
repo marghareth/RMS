@@ -6,7 +6,7 @@ import { prisma } from '@/lib/db';
 import { logAudit } from '@/lib/audit';
 
 vi.mock('@/lib/db', () => ({
-  prisma: { financialRecord: { findMany: vi.fn(), count: vi.fn(), groupBy: vi.fn(), create: vi.fn() } },
+  prisma: { financialRecord: { findMany: vi.fn(), count: vi.fn(), groupBy: vi.fn(), create: vi.fn(), aggregate: vi.fn() } },
 }));
 
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn() }));
@@ -102,5 +102,64 @@ describe('POST /api/financial', () => {
     const res = await POST(makeReq({ transaction_type: 'TRANSFER', amount: 500, description: 'x', transaction_date: '2026-01-01' }));
     expect(res.status).toBe(400);
     expect(prisma.financialRecord.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('GET /api/financial date filters (Philippine time, whole days)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (prisma.financialRecord.findMany as any).mockResolvedValue([]);
+    (prisma.financialRecord.count as any).mockResolvedValue(0);
+    (prisma.financialRecord.groupBy as any).mockResolvedValue([]);
+  });
+
+  it('includes the whole of date_to and starts date_from at Manila midnight', async () => {
+    await GET(new NextRequest('http://localhost/api/financial?date_from=2026-01-01&date_to=2026-12-31'));
+    const where = (prisma.financialRecord.findMany as any).mock.calls[0][0].where;
+    expect(where.AND[1]).toEqual({ transaction_date: { gte: new Date('2025-12-31T16:00:00.000Z') } });
+    expect(where.AND[2]).toEqual({ transaction_date: { lt: new Date('2026-12-31T16:00:00.000Z') } });
+  });
+
+  it('400s on a malformed date instead of silently matching nothing', async () => {
+    const res = await GET(new NextRequest('http://localhost/api/financial?date_to=31/12/2026'));
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('GET /api/financial?view=summary', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('totals the whole year with no page cap and lists the years that have data', async () => {
+    const rows = Array.from({ length: 150 }, (_, i) => ({
+      transaction_type: i % 3 === 0 ? 'EXPENSE' : 'INCOME',
+      amount: decimal(1000),
+      transaction_date: new Date(Date.UTC(2026, i % 10, 12, 2)),
+    }));
+    (prisma.financialRecord.findMany as any).mockResolvedValue(rows);
+    (prisma.financialRecord.aggregate as any).mockResolvedValue({
+      _min: { transaction_date: new Date('2024-12-05T02:00:00Z') },
+      _max: { transaction_date: new Date('2026-10-28T02:00:00Z') },
+    });
+
+    const res = await GET(new NextRequest('http://localhost/api/financial?view=summary&year=2026'));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+
+    const args = (prisma.financialRecord.findMany as any).mock.calls[0][0];
+    expect(args.take).toBeUndefined(); // no page cap
+    expect(args.where.transaction_date).toEqual({ gte: new Date('2025-12-31T16:00:00.000Z'), lt: new Date('2026-12-31T16:00:00.000Z') });
+
+    expect(body.count).toBe(150);
+    expect(body.income).toBe(100000);
+    expect(body.expense).toBe(50000);
+    expect(body.balance).toBe(50000);
+    expect(body.months).toHaveLength(10);
+    expect(body.months[0].key).toBe('2026-10');
+    expect(body.years).toEqual(expect.arrayContaining([2026, 2025, 2024]));
+  });
+
+  it('400s on an invalid year', async () => {
+    const res = await GET(new NextRequest('http://localhost/api/financial?view=summary&year=abc'));
+    expect(res.status).toBe(400);
   });
 });

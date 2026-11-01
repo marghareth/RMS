@@ -15,6 +15,7 @@ import {
 } from "@/lib/mock/certificateTemplates";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import PlaceholderRichInput, { PlaceholderRichInputHandle } from "@/components/certificates/PlaceholderRichInput";
+import { readList } from "@/lib/fetch-json";
 
 export default function CertificateTemplatesPage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function CertificateTemplatesPage() {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     fetch("/api/certificate-templates")
-      .then((r) => r.json())
+      .then((r) => readList<CertificateTemplateMock>(r))
       .then(setTemplates)
       .catch(console.error)
       .finally(() => setLoading(false));
