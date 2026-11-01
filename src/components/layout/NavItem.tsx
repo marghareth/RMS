@@ -54,15 +54,15 @@ export default function NavItem({
           href={href}
           className={`flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] transition-colors ${
             active
-              ? "font-semibold text-[#1F2937] dark:text-white"
-              : "font-normal text-[#6B7280] hover:text-[#1F2937] dark:text-[#9CA3AF] dark:hover:text-white"
+              ? "font-semibold text-(--nav-text-strong)"
+              : "font-normal text-(--nav-text) hover:text-(--nav-text-strong)"
           }`}
         >
           <span
             className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${
               active
-                ? "bg-[#DCE9FF] text-[#3B82F6] dark:bg-[#14243F] dark:text-[#5B9BFA]"
-                : "bg-[#F4F5F7] text-[#9CA3AF] dark:bg-[#1F1F1F] dark:text-[#6B7280]"
+                ? "bg-(--nav-chip-active-bg) text-(--nav-text-strong)"
+                : "bg-(--nav-chip-bg) text-(--nav-text-muted)"
             }`}
           >
             <ChildIcon size={11} strokeWidth={2.1} />
@@ -74,7 +74,7 @@ export default function NavItem({
           <Link
             href={addHref}
             aria-label={addLabel ?? `Add ${label}`}
-            className="mr-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded opacity-0 text-[#9CA3AF] transition-opacity hover:bg-[#E9EAEC] hover:text-[#1F2937] group-hover/item:opacity-100 dark:hover:bg-[#1F1F1F] dark:hover:text-white"
+            className="mr-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded opacity-0 text-(--nav-text-muted) transition-opacity hover:bg-(--nav-hover-bg) hover:text-(--nav-text-strong) group-hover/item:opacity-100"
           >
             <Plus size={12} strokeWidth={2.5} />
           </Link>
@@ -89,15 +89,15 @@ export default function NavItem({
         href={href}
         className={`flex min-w-0 flex-1 items-center gap-2.5 rounded-full px-3 py-2 text-[13px] transition-colors ${
           active
-            ? "bg-[#1F2937] font-medium text-white dark:bg-white dark:text-[#111111]"
-            : "font-normal text-[#4B5563] hover:bg-[#F4F5F7] hover:text-[#1F2937] dark:text-[#9CA3AF] dark:hover:bg-[#1F1F1F] dark:hover:text-white"
+            ? "bg-(--nav-active-bg) font-medium text-(--nav-text-strong)"
+            : "font-normal text-(--nav-text) hover:bg-(--nav-hover-bg) hover:text-(--nav-text-strong)"
         }`}
       >
         {Icon && (
           <Icon
             size={16}
             strokeWidth={1.9}
-            className={`shrink-0 ${active ? "text-white dark:text-[#111111]" : "text-[#9CA3AF]"}`}
+            className={`shrink-0 ${active ? "text-(--nav-text-strong)" : "text-(--nav-text-muted)"}`}
           />
         )}
         <span className="truncate">{label}</span>
@@ -109,8 +109,8 @@ export default function NavItem({
           aria-label={addLabel ?? `Add ${label}`}
           className={`mr-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full opacity-0 transition-opacity group-hover/item:opacity-100 ${
             active
-              ? "text-white/70 hover:bg-white/15 hover:text-white dark:text-[#111111]/60 dark:hover:bg-black/10"
-              : "text-[#9CA3AF] hover:bg-[#E9EAEC] hover:text-[#1F2937] dark:hover:bg-[#1F1F1F] dark:hover:text-white"
+              ? "text-white/70 hover:bg-white/15 hover:text-white"
+              : "text-(--nav-text-muted) hover:bg-(--nav-hover-bg) hover:text-(--nav-text-strong)"
           }`}
         >
           <Plus size={12} strokeWidth={2.5} />

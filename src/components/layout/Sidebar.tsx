@@ -350,21 +350,21 @@ export default function Sidebar({
   return (
     <>
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col overflow-hidden border-r border-[#E9EAEC] bg-white transition-transform duration-200 ease-in-out dark:border-[#262626] dark:bg-[#111111] lg:static lg:inset-auto lg:translate-x-0 lg:transition-[width] ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col overflow-hidden border-r border-(--nav-border) bg-(--nav-bg) transition-transform duration-200 ease-in-out lg:static lg:inset-auto lg:translate-x-0 lg:transition-[width] ${
           collapsed ? "-translate-x-full lg:w-0 lg:border-r-0" : "translate-x-0 shadow-2xl lg:w-64 lg:shadow-none"
         } ${className}`}
       >
-        <div data-tour="sidebar-logo" className="flex h-15 shrink-0 items-center gap-2.5 border-b border-[#E9EAEC] px-4 dark:border-[#262626]">
-          <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 shrink-0">
-            <path d="M12 2.6 20.2 8v1.5H3.8V8L12 2.6Z" fill="#3B82F6" />
-            <rect x="5.4" y="10.6" width="2.3" height="7.4" fill="#3B82F6" />
-            <rect x="10.85" y="10.6" width="2.3" height="7.4" fill="#3B82F6" />
-            <rect x="16.3" y="10.6" width="2.3" height="7.4" fill="#3B82F6" />
-            <rect x="3.4" y="19.2" width="17.2" height="2.2" rx="1" fill="#3B82F6" />
+        <div data-tour="sidebar-logo" className="flex h-15 shrink-0 items-center gap-2.5 border-b border-(--nav-border) px-4">
+          <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 shrink-0 text-(--nav-logo)">
+            <path d="M12 2.6 20.2 8v1.5H3.8V8L12 2.6Z" fill="currentColor" />
+            <rect x="5.4" y="10.6" width="2.3" height="7.4" fill="currentColor" />
+            <rect x="10.85" y="10.6" width="2.3" height="7.4" fill="currentColor" />
+            <rect x="16.3" y="10.6" width="2.3" height="7.4" fill="currentColor" />
+            <rect x="3.4" y="19.2" width="17.2" height="2.2" rx="1" fill="currentColor" />
           </svg>
           <div className="min-w-0">
-            <b className="block truncate text-[13px] font-semibold text-[#1F2937] dark:text-white">Barangay RMS</b>
-            <small className="block truncate text-[10.5px] text-[#6B7280] dark:text-[#9CA3AF]">
+            <b className="block truncate text-[13px] font-semibold text-(--nav-text-strong)">Barangay RMS</b>
+            <small className="block truncate text-[10.5px] text-(--nav-text-muted)">
               {barangayName || "Records Management"}
             </small>
           </div>
@@ -375,7 +375,7 @@ export default function Sidebar({
         </nav>
 
         {visibleBottom.length > 0 && (
-          <div className="flex flex-col gap-0.5 border-t border-[#E9EAEC] px-3 py-3 dark:border-[#262626]">
+          <div className="flex flex-col gap-0.5 border-t border-(--nav-border) px-3 py-3">
             {visibleBottom.map(renderModule)}
           </div>
         )}
