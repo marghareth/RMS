@@ -339,7 +339,7 @@ function HouseholdSheetContent({
         <SheetBody>
           {loading ? (
             <div className="flex items-center justify-center py-24">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
             </div>
           ) : (
             <EmptyState
@@ -360,7 +360,7 @@ function HouseholdSheetContent({
           <div className="min-w-0">
             <div className="flex items-center gap-3">
               <SheetTitle>{household.household_no}</SheetTitle>
-              <span className="inline-flex items-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
+              <span className="inline-flex items-center rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong)">
                 {household.purok.name}
               </span>
             </div>
@@ -369,7 +369,7 @@ function HouseholdSheetContent({
           <div className="flex shrink-0 items-center gap-1">
             <button
               onClick={() => router.push(`/households/${household.id}/edit`)}
-              className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+              className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-(--brand-hover)"
             >
               <Pencil size={13} />
               Edit
@@ -482,7 +482,7 @@ function HouseholdSheetContent({
                   </p>
                   <button
                     onClick={() => setShowAddMember((v) => !v)}
-                    className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+                    className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-(--brand-hover)"
                   >
                     <Plus size={13} />
                     Add Member
@@ -497,7 +497,7 @@ function HouseholdSheetContent({
                       onChange={(e) => setMemberQuery(e.target.value)}
                       placeholder="Search unassigned residents by name..."
                       autoFocus
-                      className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                      className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] outline-none focus:border-(--brand-line)"
                     />
                     {memberQuery.trim() && (
                       <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] shadow-lg">
@@ -517,7 +517,7 @@ function HouseholdSheetContent({
                                   {r.sex} &middot; {calcAge(r.birthdate)} yrs old
                                 </p>
                               </div>
-                              <span className="text-[11px] font-semibold text-[#3B82F6] dark:text-[#60A5FA]">Add</span>
+                              <span className="text-[11px] font-semibold text-(--brand-fg)">Add</span>
                             </button>
                           ))
                         )}
@@ -586,7 +586,7 @@ function HouseholdSheetContent({
                   {migrantFormOpen === null && (
                     <button
                       onClick={openAddMigrant}
-                      className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+                      className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-(--brand-hover)"
                     >
                       <Plus size={13} />
                       Add Migrant
@@ -612,7 +612,7 @@ function HouseholdSheetContent({
                         <input
                           value={migrantForm.name}
                           onChange={(e) => setMigrantForm((f) => ({ ...f, name: e.target.value }))}
-                          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line)"
                         />
                       </div>
                       <div>
@@ -622,7 +622,7 @@ function HouseholdSheetContent({
                         <input
                           value={migrantForm.previous_location}
                           onChange={(e) => setMigrantForm((f) => ({ ...f, previous_location: e.target.value }))}
-                          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line)"
                         />
                       </div>
                       <div>
@@ -632,7 +632,7 @@ function HouseholdSheetContent({
                         <input
                           value={migrantForm.reason}
                           onChange={(e) => setMigrantForm((f) => ({ ...f, reason: e.target.value }))}
-                          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line)"
                         />
                       </div>
                       <div>
@@ -642,7 +642,7 @@ function HouseholdSheetContent({
                         <input
                           value={migrantForm.transferred_to}
                           onChange={(e) => setMigrantForm((f) => ({ ...f, transferred_to: e.target.value }))}
-                          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line)"
                         />
                       </div>
                       <div>
@@ -653,7 +653,7 @@ function HouseholdSheetContent({
                           value={migrantForm.duration_here}
                           onChange={(e) => setMigrantForm((f) => ({ ...f, duration_here: e.target.value }))}
                           placeholder="e.g. 2 years"
-                          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line)"
                         />
                       </div>
                       <label className="flex items-center gap-2 sm:col-span-2">
@@ -661,7 +661,7 @@ function HouseholdSheetContent({
                           type="checkbox"
                           checked={migrantForm.has_returned}
                           onChange={(e) => setMigrantForm((f) => ({ ...f, has_returned: e.target.checked }))}
-                          className="h-4 w-4 rounded border-[#E9EAEC] dark:border-[#262626] text-[#3B82F6] dark:text-[#60A5FA]"
+                          className="h-4 w-4 rounded border-[#E9EAEC] dark:border-[#262626] text-(--brand-fg)"
                         />
                         <span className="text-[12px] text-[#374151] dark:text-[#D4D4D4]">Has returned to previous location</span>
                       </label>
@@ -676,7 +676,7 @@ function HouseholdSheetContent({
                       <button
                         onClick={handleSaveMigrant}
                         disabled={migrantBusy || !migrantForm.name.trim()}
-                        className="rounded-lg bg-[#3B82F6] px-3 py-2 text-[11px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+                        className="rounded-lg bg-(--brand) px-3 py-2 text-[11px] font-bold text-white transition hover:bg-(--brand-hover) disabled:opacity-50"
                       >
                         {migrantBusy ? "Saving…" : "Save"}
                       </button>

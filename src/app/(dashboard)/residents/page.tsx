@@ -59,7 +59,7 @@ function FilterPanel({
         <div>
           <label className="text-[10.5px] font-medium text-[#9CA3AF] block mb-1">Sex</label>
           <select value={local.sex} onChange={e => set("sex", e.target.value)}
-            className="w-full text-[11px] border border-[#E9EAEC] dark:border-[#262626] rounded px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] bg-white dark:bg-[#111111]">
+            className="w-full text-[11px] border border-[#E9EAEC] dark:border-[#262626] rounded px-2 py-1.5 focus:outline-none focus:border-(--brand-line) bg-white dark:bg-[#111111]">
             <option value="">All</option>
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
@@ -68,7 +68,7 @@ function FilterPanel({
         <div>
           <label className="text-[10.5px] font-medium text-[#9CA3AF] block mb-1">Civil status</label>
           <select value={local.civil_status} onChange={e => set("civil_status", e.target.value)}
-            className="w-full text-[11px] border border-[#E9EAEC] dark:border-[#262626] rounded px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] bg-white dark:bg-[#111111]">
+            className="w-full text-[11px] border border-[#E9EAEC] dark:border-[#262626] rounded px-2 py-1.5 focus:outline-none focus:border-(--brand-line) bg-white dark:bg-[#111111]">
             <option value="">All</option>
             <option value="SINGLE">Single</option>
             <option value="MARRIED">Married</option>
@@ -80,7 +80,7 @@ function FilterPanel({
         <div>
           <label className="text-[10.5px] font-medium text-[#9CA3AF] block mb-1">Purok</label>
           <select value={local.purok_id} onChange={e => set("purok_id", e.target.value)}
-            className="w-full text-[11px] border border-[#E9EAEC] dark:border-[#262626] rounded px-2 py-1.5 focus:outline-none focus:border-[#3B82F6] bg-white dark:bg-[#111111]">
+            className="w-full text-[11px] border border-[#E9EAEC] dark:border-[#262626] rounded px-2 py-1.5 focus:outline-none focus:border-(--brand-line) bg-white dark:bg-[#111111]">
             <option value="">All Puroks</option>
             {puroks.map(p => <option key={p.id} value={String(p.id)}>{p.name}</option>)}
           </select>
@@ -92,7 +92,7 @@ function FilterPanel({
           Clear
         </button>
         <button onClick={() => { onChange(local); onClose(); }}
-          className="flex-1 text-[11px] py-1.5 rounded bg-[#3B82F6] text-white hover:bg-[#2563EB] transition font-medium">
+          className="flex-1 text-[11px] py-1.5 rounded bg-(--brand) text-white hover:bg-(--brand-hover) transition font-medium">
           Apply
         </button>
       </div>
@@ -183,7 +183,7 @@ export default function ResidentsPage() {
           <button
             data-tour="page-residents-add"
             onClick={() => router.push("/residents/new")}
-            className="flex items-center gap-2 px-3.5 h-9 rounded bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[13px] font-medium transition"
+            className="flex items-center gap-2 px-3.5 h-9 rounded bg-(--brand) hover:bg-(--brand-hover) text-white text-[13px] font-medium transition"
           >
             <Plus size={15} strokeWidth={1.8} />
             Register resident
@@ -200,7 +200,7 @@ export default function ResidentsPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Find a resident by name"
-              className="w-full pl-8 pr-3 h-9 text-[13px] bg-[#F4F5F7] dark:bg-[#1F1F1F] rounded border border-transparent focus:outline-none focus:border-[#3B82F6] focus:bg-white dark:focus:bg-[#111111] transition placeholder:text-[#9CA3AF] text-[#1F2937] dark:text-white"
+              className="w-full pl-8 pr-3 h-9 text-[13px] bg-[#F4F5F7] dark:bg-[#1F1F1F] rounded border border-transparent focus:outline-none focus:border-(--brand-line) focus:bg-white dark:focus:bg-[#111111] transition placeholder:text-[#9CA3AF] text-[#1F2937] dark:text-white"
             />
           </div>
           <button
@@ -208,7 +208,7 @@ export default function ResidentsPage() {
             onClick={() => setShowFilter(v => !v)}
             className={`h-9 w-9 flex items-center justify-center rounded transition shrink-0 relative border
               ${showFilter || activeFilters > 0
-                ? "bg-[#EBF3FF] border-[#3B82F6] text-[#3B82F6] dark:bg-[#14243F] dark:text-[#5B9BFA] dark:border-[#5B9BFA]"
+                ? "bg-(--brand-tint) border-(--brand-line) text-(--brand-fg)"
                 : "bg-white dark:bg-[#111111] border-[#E9EAEC] dark:border-[#262626] text-[#6B7280] dark:text-[#9CA3AF] hover:border-[#9CA3AF]"}`}
           >
             <SlidersHorizontal size={14} strokeWidth={1.8} />
@@ -236,7 +236,7 @@ export default function ResidentsPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-5 h-5 border-2 border-[#3B82F6] border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-(--brand-line) border-t-transparent rounded-full animate-spin" />
           </div>
         ) : residents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -278,7 +278,7 @@ export default function ResidentsPage() {
                         }`}
                       />
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-7 h-7 rounded-full bg-[#EBF3FF] dark:bg-[#14243F] flex items-center justify-center shrink-0 text-[11px] font-semibold text-[#3B82F6] dark:text-[#5B9BFA]">
+                        <div className="w-7 h-7 rounded-full bg-(--brand-tint) flex items-center justify-center shrink-0 text-[11px] font-semibold text-(--brand-fg)">
                           {r.fname[0]}{r.lname[0]}
                         </div>
                         <div className="min-w-0">
@@ -295,7 +295,7 @@ export default function ResidentsPage() {
                       <span
                         className={`inline-flex items-center gap-1.5 w-fit rounded-full px-2 h-5.25 text-[11px] font-medium ${
                           r.sex === "MALE"
-                            ? "bg-[#EBF3FF] text-[#3B82F6] dark:bg-[#14243F] dark:text-[#5B9BFA]"
+                            ? "bg-(--brand-tint) text-(--brand-fg)"
                             : "bg-pink-50 text-pink-700 dark:bg-pink-500/10 dark:text-pink-400"
                         }`}
                       >
@@ -318,7 +318,7 @@ export default function ResidentsPage() {
                         row never visually shifts when the pointer arrives */}
                     <td className="px-4 py-3">
                       <div className="flex justify-end">
-                        <ChevronRight size={16} strokeWidth={1.8} className="text-[#9CA3AF] dark:text-[#6B7280] group-hover:text-[#3B82F6] dark:group-hover:text-[#5B9BFA] transition-colors" />
+                        <ChevronRight size={16} strokeWidth={1.8} className="text-[#9CA3AF] dark:text-[#6B7280] group-hover:text-(--brand-fg) transition-colors" />
                       </div>
                     </td>
                   </tr>
@@ -333,7 +333,7 @@ export default function ResidentsPage() {
       <div className="fixed bottom-6 right-6 z-10 lg:hidden">
         <button
           onClick={() => router.push("/residents/new")}
-          className="w-12 h-12 rounded-full bg-[#3B82F6] hover:bg-[#2563EB] text-white flex items-center justify-center shadow-lg transition"
+          className="w-12 h-12 rounded-full bg-(--brand) hover:bg-(--brand-hover) text-white flex items-center justify-center shadow-lg transition"
         >
           <Plus size={20} />
         </button>

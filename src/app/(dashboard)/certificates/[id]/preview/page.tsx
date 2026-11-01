@@ -155,7 +155,7 @@ export default function CertificatePreviewPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
       </div>
     );
   }
@@ -169,7 +169,7 @@ export default function CertificatePreviewPage() {
         action={
           <button
             onClick={() => router.push("/certificates")}
-            className="rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+            className="rounded-lg bg-(--brand) px-4 py-2 text-[12px] font-bold text-white transition hover:bg-(--brand-hover)"
           >
             Back to Certificates
           </button>
@@ -264,7 +264,7 @@ export default function CertificatePreviewPage() {
           </button>
           <button
             onClick={handleDownloadPdf}
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+            className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Download size={14} />
             Download PDF
@@ -275,7 +275,7 @@ export default function CertificatePreviewPage() {
       {editingOverride && (
         <div className="mb-5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5 print:hidden">
           <div className="mb-1 flex items-center gap-2">
-            <Pencil size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
+            <Pencil size={14} className="text-(--brand-fg-strong)" />
             <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
               Correct This Document
             </p>
@@ -294,7 +294,7 @@ export default function CertificatePreviewPage() {
                 value={overrideNameDraft}
                 onChange={(e) => setOverrideNameDraft(e.target.value)}
                 placeholder={originalName}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-transparent px-3 py-2.5 text-[13px] uppercase text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-transparent px-3 py-2.5 text-[13px] uppercase text-[#1F2937] dark:text-white outline-none focus:border-(--brand-line)"
               />
             </div>
             <div>
@@ -305,7 +305,7 @@ export default function CertificatePreviewPage() {
                 value={overrideAddressDraft}
                 onChange={(e) => setOverrideAddressDraft(e.target.value)}
                 placeholder={originalAddress}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-transparent px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-transparent px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-(--brand-line)"
               />
             </div>
           </div>
@@ -323,7 +323,7 @@ export default function CertificatePreviewPage() {
             <button
               onClick={handleSaveOverride}
               disabled={savingOverride}
-              className="rounded-lg bg-[#3B82F6] px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+              className="rounded-lg bg-(--brand) px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-50"
             >
               {savingOverride ? "Saving..." : "Save Correction"}
             </button>
@@ -349,10 +349,10 @@ export default function CertificatePreviewPage() {
       <div data-tour="page-certificates-preview-document" className="mx-auto max-w-3xl rounded-xl border border-[#E9EAEC] bg-white p-12 shadow-sm print:border-none print:p-0 print:shadow-none">
         {/* Letterhead */}
         <div className="mb-8 flex flex-col items-center border-b-2 border-[#1F2937] pb-6 text-center">
-          <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-[#3B82F6]">
+          <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-(--brand)">
             <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8">
               <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" fill="white" />
-              <rect x="9" y="12" width="6" height="10" fill="#3B82F6" />
+              <rect x="9" y="12" width="6" height="10" fill="#2348B0" />
             </svg>
           </div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-[#6B7280]">

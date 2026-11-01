@@ -77,7 +77,7 @@ export default function FinancialSummaryPage() {
             data-tour="page-financial-summary-year"
             value={year}
             onChange={(e) => setYear(e.target.value)}
-            className="rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+            className="rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-(--brand-line)"
           >
             {availableYears.map((y) => (
               <option key={y} value={y}>

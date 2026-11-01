@@ -75,7 +75,7 @@ export default function CertificateDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
       </div>
     );
   }
@@ -89,7 +89,7 @@ export default function CertificateDetailPage() {
         action={
           <button
             onClick={() => router.push("/certificates")}
-            className="rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+            className="rounded-lg bg-(--brand) px-4 py-2 text-[12px] font-bold text-white transition hover:bg-(--brand-hover)"
           >
             Back to Certificates
           </button>
@@ -112,7 +112,7 @@ export default function CertificateDetailPage() {
           </button>
           <div className="flex items-center gap-3">
             <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">{certificate.certificate_no}</h1>
-            <span className="inline-flex items-center rounded-full bg-[#EBF3FF] dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] dark:text-[#93C5FD]">
+            <span className="inline-flex items-center rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong)">
               {certTypeLabel(certificate.certificate_type)}
             </span>
             <StatusBadge status={certificate.status} />
@@ -131,7 +131,7 @@ export default function CertificateDetailPage() {
         <button
           data-tour="page-certificates-detail-preview"
           onClick={() => router.push(`/certificates/${certId}/preview`)}
-          className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+          className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
         >
           <Printer size={14} />
           Preview / Print
@@ -143,8 +143,8 @@ export default function CertificateDetailPage() {
         <div className="space-y-5 lg:col-span-2">
           <div data-tour="page-certificates-detail-applicant" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
             <div className="mb-3 flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
-                <User size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--brand-tint)">
+                <User size={14} className="text-(--brand-fg-strong)" />
               </div>
               <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Applicant</p>
             </div>

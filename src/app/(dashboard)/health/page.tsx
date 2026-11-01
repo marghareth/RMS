@@ -89,7 +89,7 @@ const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   "Tuberculosis":       { bg: "bg-orange-100", text: "text-orange-700" },
   "Prenatal Checkup":   { bg: "bg-pink-100",   text: "text-pink-700"   },
   "Well-child Checkup": { bg: "bg-green-100 dark:bg-green-500/15",  text: "text-green-700 dark:text-green-400"  },
-  "Asthma":             { bg: "bg-blue-100 dark:bg-blue-500/15",   text: "text-blue-700 dark:text-blue-400"   },
+  "Asthma":             { bg: "bg-(--brand-tint-strong) dark:bg-(--brand-tint)",   text: "text-(--brand-fg-strong) dark:text-(--brand-fg)"   },
   "Family Planning":    { bg: "bg-purple-100", text: "text-purple-700" },
 };
 
@@ -110,12 +110,12 @@ function TabBtn({ label, count, active, onClick, icon: Icon }: {
     <button
       onClick={onClick}
       className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[12px] font-bold transition
-        ${active ? "bg-[#3B82F6] text-white shadow-sm" : "text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"}`}
+        ${active ? "bg-(--brand) text-white shadow-sm" : "text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"}`}
     >
       <Icon size={14} />
       {label}
       <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold
-        ${active ? "bg-blue-400 dark:bg-blue-500 text-white" : "bg-[#E9EAEC] text-[#6B7280] dark:text-[#A3A3A3]"}`}>
+        ${active ? "bg-(--brand-line) dark:bg-(--brand) text-white" : "bg-[#E9EAEC] text-[#6B7280] dark:text-[#A3A3A3]"}`}>
         {count}
       </span>
     </button>
@@ -196,7 +196,7 @@ export default function HealthPage() {
           </button>
           <button
             data-tour="page-health-add" onClick={() => router.push("/health/new")}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] text-white text-[13px] font-bold transition shadow-sm"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--brand) hover:bg-(--brand-hover) text-white text-[13px] font-bold transition shadow-sm"
           >
             <Plus size={14} />
             Add Health Record
@@ -227,7 +227,7 @@ export default function HealthPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search resident or type..."
-              className="w-full pl-9 pr-3 py-2 text-[12px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] text-[#1F2937] dark:text-white"
+              className="w-full pl-9 pr-3 py-2 text-[12px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl focus:outline-none focus:border-(--brand-line) placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] text-[#1F2937] dark:text-white"
             />
           </div>
         </div>
@@ -255,8 +255,8 @@ export default function HealthPage() {
                 >
                   {/* Resident */}
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 rounded-full bg-[#EFF6FF] dark:bg-blue-500/15 flex items-center justify-center shrink-0">
-                      <User size={12} className="text-[#3B82F6] dark:text-[#60A5FA]" />
+                    <div className="w-7 h-7 rounded-full bg-(--brand-tint) flex items-center justify-center shrink-0">
+                      <User size={12} className="text-(--brand-fg)" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[12px] font-bold text-[#1F2937] dark:text-white truncate">{fullName(r.resident)}</p>
@@ -280,7 +280,7 @@ export default function HealthPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedHealthRecordId(r.id)}
-                      className="flex items-center gap-1 text-[11px] font-bold text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] transition"
+                      className="flex items-center gap-1 text-[11px] font-bold text-(--brand-fg) hover:text-(--brand-fg-strong) transition"
                     >
                       View <ChevronRight size={12} />
                     </button>
@@ -314,8 +314,8 @@ export default function HealthPage() {
                 >
                   {/* Resident */}
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 rounded-full bg-[#EFF6FF] dark:bg-blue-500/15 flex items-center justify-center shrink-0">
-                      <User size={12} className="text-[#3B82F6] dark:text-[#60A5FA]" />
+                    <div className="w-7 h-7 rounded-full bg-(--brand-tint) flex items-center justify-center shrink-0">
+                      <User size={12} className="text-(--brand-fg)" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[12px] font-bold text-[#1F2937] dark:text-white truncate">{fullName(v.resident)}</p>
@@ -325,8 +325,8 @@ export default function HealthPage() {
 
                   {/* Vaccine */}
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-500/15 flex items-center justify-center shrink-0">
-                      <Syringe size={11} className="text-[#3B82F6] dark:text-[#60A5FA]" />
+                    <div className="w-6 h-6 rounded-lg bg-(--brand-tint) flex items-center justify-center shrink-0">
+                      <Syringe size={11} className="text-(--brand-fg)" />
                     </div>
                     <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white truncate">{v.vaccine_name}</p>
                   </div>
@@ -343,7 +343,7 @@ export default function HealthPage() {
                   {/* Action */}
                   <button
                     onClick={() => setSelectedVaccinationId(v.id)}
-                    className="flex items-center gap-1 text-[11px] font-bold text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] transition"
+                    className="flex items-center gap-1 text-[11px] font-bold text-(--brand-fg) hover:text-(--brand-fg-strong) transition"
                   >
                     View <ChevronRight size={12} />
                   </button>

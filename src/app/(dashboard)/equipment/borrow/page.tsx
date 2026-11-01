@@ -44,7 +44,7 @@ function SelectInput({
           value={value}
           onChange={e => onChange(e.target.value)}
           disabled={disabled}
-          className="w-full appearance-none text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white pr-8 bg-white dark:bg-[#171717] transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full appearance-none text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white pr-8 bg-white dark:bg-[#171717] transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value="">— Select —</option>
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -70,7 +70,7 @@ function TextInput({
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
         min={min}
-        className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717]"
+        className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717]"
       />
     </div>
   );
@@ -211,7 +211,7 @@ function BorrowEquipmentPageInner() {
         {/* ── Equipment selection card ── */}
         <div data-tour="page-equipment-borrow-equipment" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
           <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-            <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-(--brand) flex items-center justify-center">
               <Package size={14} className="text-white" />
             </div>
             <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Equipment</p>
@@ -227,9 +227,9 @@ function BorrowEquipmentPageInner() {
 
             {/* Equipment preview */}
             {selectedEquipment && (
-              <div className="mt-3 px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-500/15 border border-blue-100 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-white dark:bg-[#171717] border border-blue-200 flex items-center justify-center shrink-0">
-                  <Package size={16} className="text-[#3B82F6] dark:text-[#60A5FA]" />
+              <div className="mt-3 px-4 py-3 rounded-xl bg-(--brand-tint) border border-(--brand-tint-strong) flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-white dark:bg-[#171717] border border-(--brand-tint-strong) flex items-center justify-center shrink-0">
+                  <Package size={16} className="text-(--brand-fg)" />
                 </div>
                 <div>
                   <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">{selectedEquipment.name}</p>

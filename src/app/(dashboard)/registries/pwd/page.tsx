@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/registries/pwd/page.tsx
 "use client";
 
 import { Accessibility } from "lucide-react";
@@ -10,7 +11,7 @@ export default function PwdRegistryPage() {
       title="PWD Registry"
       subtitle="Persons with disability"
       icon={Accessibility}
-      iconBg="bg-[#3B82F6]"
+      iconBg="bg-(--brand)"
       addNote="Select a resident and specify their disability type to register them."
       detailBase="/registries/pwd"
     />

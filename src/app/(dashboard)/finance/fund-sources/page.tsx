@@ -82,7 +82,7 @@ export default function FundSourcesPage() {
         <button
           data-tour="page-fund-sources-add"
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+          className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
         >
           {showForm ? <X size={15} /> : <Plus size={15} />}
           {showForm ? "Cancel" : "New Fund Source"}
@@ -99,7 +99,7 @@ export default function FundSourcesPage() {
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="e.g. General Fund"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               />
             </div>
             <div>
@@ -108,7 +108,7 @@ export default function FundSourcesPage() {
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value })}
                 placeholder="e.g. GF-2026"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               />
             </div>
             <div>
@@ -118,7 +118,7 @@ export default function FundSourcesPage() {
                 value={form.original_balance}
                 onChange={(e) => setForm({ ...form, original_balance: e.target.value })}
                 placeholder="0.00"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               />
             </div>
             <div className="lg:col-span-4">
@@ -127,7 +127,7 @@ export default function FundSourcesPage() {
                 value={form.statutory_rule}
                 onChange={(e) => setForm({ ...form, statutory_rule: e.target.value })}
                 placeholder="e.g. 20% Development Fund per DILG-DBM JMC No. 2017-1"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               />
             </div>
           </div>
@@ -135,7 +135,7 @@ export default function FundSourcesPage() {
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="rounded-lg bg-[#3B82F6] px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+              className="rounded-lg bg-(--brand) px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-50"
             >
               {submitting ? "Saving…" : "Save Fund Source"}
             </button>
@@ -149,7 +149,7 @@ export default function FundSourcesPage() {
             key={s || "ALL"}
             onClick={() => setStatus(s)}
             className={`rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide transition ${
-              status === s ? "bg-[#3B82F6] text-white" : "bg-[#F4F5F7] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#E5E7EB] dark:hover:bg-[#262626]"
+              status === s ? "bg-(--brand) text-white" : "bg-[#F4F5F7] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#E5E7EB] dark:hover:bg-[#262626]"
             }`}
           >
             {s === "" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()}
@@ -159,7 +159,7 @@ export default function FundSourcesPage() {
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
         </div>
       ) : items.length === 0 ? (
         <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
@@ -183,8 +183,8 @@ export default function FundSourcesPage() {
             >
               {/* Fund Source */}
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-500/15">
-                  <Landmark size={15} className="text-blue-500 dark:text-blue-400" />
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-(--brand-tint)">
+                  <Landmark size={15} className="text-(--brand-fg)" />
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-[13px] font-bold text-[#1F2937] dark:text-white">{f.name}</p>

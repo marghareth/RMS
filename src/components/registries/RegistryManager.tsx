@@ -123,7 +123,7 @@ function AddModal({
                 value={disabilityType}
                 onChange={(e) => setDisabilityType(e.target.value)}
                 placeholder="e.g. Mobility, Visual, Hearing"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-(--brand-line)"
               />
             </div>
           )}
@@ -141,7 +141,7 @@ function AddModal({
           <button
             onClick={handleSubmit}
             disabled={submitting || !resident}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#3B82F6] py-2.5 text-[12px] font-bold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-(--brand) py-2.5 text-[12px] font-bold text-white transition hover:bg-(--brand-hover) disabled:opacity-50"
           >
             {submitting && <Loader2 size={14} className="animate-spin" />}
             Add
@@ -158,7 +158,7 @@ export default function RegistryManager({
   title,
   subtitle,
   icon: Icon,
-  iconBg = "bg-[#3B82F6]",
+  iconBg = "bg-(--brand)",
   addNote,
   minAge,
   detailBase,
@@ -234,13 +234,13 @@ export default function RegistryManager({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search resident"
-            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-[#F4F5F7] dark:bg-[#262626] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:bg-white dark:focus:bg-[#171717]"
+            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-[#F4F5F7] dark:bg-[#262626] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none focus:border-(--brand-line) focus:bg-white dark:focus:bg-[#171717]"
           />
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-10">
-            <Loader2 size={20} className="animate-spin text-[#3B82F6] dark:text-[#60A5FA]" />
+            <Loader2 size={20} className="animate-spin text-(--brand-fg)" />
           </div>
         ) : filteredEntries.length === 0 ? (
           <div className="rounded-xl border border-dashed border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] p-6 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
@@ -262,7 +262,7 @@ export default function RegistryManager({
                     {entry.resident.purok?.name ?? "No purok"} · {calcAge(entry.resident.birthdate)} yrs old
                   </p>
                 </div>
-                <div className="rounded-full bg-[#3B82F6]/10 dark:bg-[#3B82F6]/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[#3B82F6] dark:text-[#60A5FA]">
+                <div className="rounded-full bg-(--brand)/10 dark:bg-(--brand)/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-(--brand-fg)">
                   {title}
                 </div>
               </button>

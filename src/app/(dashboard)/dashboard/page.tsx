@@ -331,8 +331,8 @@ function PopulationOverviewPanel({ data }: { data: DashboardData }) {
         <p className="mt-0.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Registered, non-archived residents</p>
 
         <div className="mt-4 flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EBF3FF] dark:bg-[#0B1D33]">
-            <Users size={20} className="text-[#3B82F6] dark:text-[#60A5FA]" />
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-(--brand-tint) dark:bg-[#0B1D33]">
+            <Users size={20} className="text-(--brand-fg)" />
           </span>
           <div>
             <p className="text-[32px] font-bold leading-none tabular-nums text-[#1B2430] dark:text-white">{total.toLocaleString()}</p>

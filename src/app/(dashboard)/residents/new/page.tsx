@@ -67,7 +67,7 @@ function SelectField({
         <select
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full appearance-none text-[13px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] text-[#1F2937] dark:text-white pr-8"
+          className="w-full appearance-none text-[13px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-(--brand-line) text-[#1F2937] dark:text-white pr-8"
         >
           <option value="">SELECT</option>
           {options.map(o => (
@@ -104,7 +104,7 @@ function TextField({
         max={max}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
-        className="text-[13px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] text-[#1F2937] dark:text-white"
+        className="text-[13px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-(--brand-line) placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] text-[#1F2937] dark:text-white"
       />
     </div>
   );
@@ -147,13 +147,13 @@ function ConfirmMemberModal({
         <div className="flex justify-end gap-6 mt-8">
           <button
             onClick={onCancel}
-            className="text-[13px] font-bold text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] uppercase tracking-wide"
+            className="text-[13px] font-bold text-(--brand-fg) hover:text-(--brand-fg-strong) uppercase tracking-wide"
           >
             CANCEL
           </button>
           <button
             onClick={onSave}
-            className="text-[13px] font-bold text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] uppercase tracking-wide"
+            className="text-[13px] font-bold text-(--brand-fg) hover:text-(--brand-fg-strong) uppercase tracking-wide"
           >
             SAVE
           </button>
@@ -182,7 +182,7 @@ function BlueBtn({ children, onClick, disabled }: { children: React.ReactNode; o
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex-1 py-3.5 rounded-full bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50 text-white font-bold text-[14px] uppercase tracking-wide transition"
+      className="flex-1 py-3.5 rounded-full bg-(--brand) hover:bg-(--brand-hover) disabled:opacity-50 text-white font-bold text-[14px] uppercase tracking-wide transition"
     >
       {children}
     </button>
@@ -202,13 +202,13 @@ function StepBar({ step }: { step: number }) {
           <div key={label} className="flex items-center gap-2">
             <div className={`flex items-center gap-2 ${active ? "opacity-100" : "opacity-40"}`}>
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold
-                ${done || active ? "bg-[#3B82F6] text-white" : "bg-[#E9EAEC] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3]"}`}>
+                ${done || active ? "bg-(--brand) text-white" : "bg-[#E9EAEC] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3]"}`}>
                 {idx}
               </div>
               <span className="text-[12px] font-semibold text-[#1F2937] dark:text-white hidden sm:block">{label}</span>
             </div>
             {i < steps.length - 1 && (
-              <div className={`w-8 h-0.5 ${step > idx ? "bg-[#3B82F6]" : "bg-[#E9EAEC] dark:bg-[#262626]"}`} />
+              <div className={`w-8 h-0.5 ${step > idx ? "bg-(--brand)" : "bg-[#E9EAEC] dark:bg-[#262626]"}`} />
             )}
           </div>
         );
@@ -444,7 +444,7 @@ export default function NewRBIPage() {
     <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0A0A0A]">
 
       {/* Top bar */}
-      <div className="bg-[#3B82F6] px-6 py-4 flex items-center gap-3">
+      <div className="bg-(--brand) px-6 py-4 flex items-center gap-3">
         <button onClick={() => step > 1 ? setStep(s => s - 1) : router.push("/residents")}>
           <ArrowLeft size={20} className="text-white" />
         </button>
@@ -552,7 +552,7 @@ export default function NewRBIPage() {
               <h2 className="text-[15px] font-black text-[#1F2937] dark:text-white uppercase tracking-widest">
                 House Member Information
               </h2>
-              <span className="text-[12px] font-bold text-[#3B82F6] dark:text-[#60A5FA] uppercase">
+              <span className="text-[12px] font-bold text-(--brand-fg) uppercase">
                 No. of Household Member: {members.length}
               </span>
             </div>
@@ -685,7 +685,7 @@ export default function NewRBIPage() {
                 </button>
                 <button
                   onClick={handleAddClick}
-                  className="px-8 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] text-white text-[13px] font-bold transition"
+                  className="px-8 py-2.5 rounded-xl bg-(--brand) hover:bg-(--brand-hover) text-white text-[13px] font-bold transition"
                 >
                   {editIdx !== null ? "UPDATE" : "ADD"}
                 </button>
@@ -714,7 +714,7 @@ export default function NewRBIPage() {
                     <div className="flex gap-2 shrink-0">
                       <button
                         onClick={() => handleEditMember(i)}
-                        className="w-7 h-7 rounded-full bg-[#3B82F6] text-white flex items-center justify-center hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] transition"
+                        className="w-7 h-7 rounded-full bg-(--brand) text-white flex items-center justify-center hover:bg-(--brand-hover) transition"
                       >
                         <Pencil size={12} />
                       </button>
@@ -790,7 +790,7 @@ export default function NewRBIPage() {
                       <div className="flex gap-2 ml-3 shrink-0">
                         <button
                           onClick={() => { setStep(2); handleEditMember(i); }}
-                          className="w-7 h-7 rounded-full bg-[#3B82F6] text-white flex items-center justify-center hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] transition"
+                          className="w-7 h-7 rounded-full bg-(--brand) text-white flex items-center justify-center hover:bg-(--brand-hover) transition"
                         >
                           <Pencil size={12} />
                         </button>

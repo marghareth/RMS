@@ -12,7 +12,7 @@ import {
 
 const STATUS_STYLES: Record<AppropriationStatus, string> = {
   PENDING: "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400",
-  APPROVED: "bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400",
+  APPROVED: "bg-(--brand-tint) text-(--brand-fg)",
   COMPLETED: "bg-green-50 dark:bg-green-500/15 text-green-600 dark:text-green-400",
 };
 
@@ -107,7 +107,7 @@ export default function AppropriationsPage() {
         <button
           data-tour="page-appropriations-add"
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+          className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
         >
           {showForm ? <X size={15} /> : <Plus size={15} />}
           {showForm ? "Cancel" : "New Appropriation"}
@@ -124,7 +124,7 @@ export default function AppropriationsPage() {
                 value={form.item_name}
                 onChange={(e) => setForm({ ...form, item_name: e.target.value })}
                 placeholder="e.g. Office Supplies FY2026"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               />
             </div>
             <div>
@@ -132,7 +132,7 @@ export default function AppropriationsPage() {
               <select
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value as AppropriationCategory })}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               >
                 {(["PS", "MOOE", "CO"] as const).map((c) => (
                   <option key={c} value={c}>{c} — {APPROPRIATION_CATEGORY_LABELS[c]}</option>
@@ -146,7 +146,7 @@ export default function AppropriationsPage() {
                 value={form.appropriated_amount}
                 onChange={(e) => setForm({ ...form, appropriated_amount: e.target.value })}
                 placeholder="0.00"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               />
             </div>
             <div>
@@ -154,7 +154,7 @@ export default function AppropriationsPage() {
               <select
                 value={form.fund_source_id}
                 onChange={(e) => setForm({ ...form, fund_source_id: e.target.value })}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               >
                 <option value="">— None —</option>
                 {fundSources.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
@@ -165,7 +165,7 @@ export default function AppropriationsPage() {
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="rounded-lg bg-[#3B82F6] px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+              className="rounded-lg bg-(--brand) px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-50"
             >
               {submitting ? "Saving…" : "Save Appropriation"}
             </button>
@@ -180,14 +180,14 @@ export default function AppropriationsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search item name"
-            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] outline-none focus:border-(--brand-line)"
           />
         </div>
-        <select data-tour="page-appropriations-filters" value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]">
+        <select data-tour="page-appropriations-filters" value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)">
           <option value="">All Categories</option>
           {(["PS", "MOOE", "CO"] as const).map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]">
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)">
           <option value="">All Statuses</option>
           {(["PENDING", "APPROVED", "COMPLETED"] as const).map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
@@ -196,7 +196,7 @@ export default function AppropriationsPage() {
       <div data-tour="page-appropriations-table" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
           </div>
         ) : items.length === 0 ? (
           <EmptyState icon={ClipboardList} title="No appropriations found" description="Try adjusting your filters, or add a new appropriation." />

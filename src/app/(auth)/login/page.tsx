@@ -15,7 +15,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 // resets any state/DOM it owns. This one is stateless today, but the
 // lint rule (react-hooks/static-components) flags the pattern itself
 // since it silently breaks the moment the component gains state.
-function BrandMark({ className = "h-6 w-6", fill = "#3B82F6" }: { className?: string; fill?: string }) {
+function BrandMark({ className = "h-6 w-6", fill = "#2348B0" }: { className?: string; fill?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className}>
       <path d="M12 2.6 20.2 8v1.5H3.8V8L12 2.6Z" fill={fill} />
@@ -123,7 +123,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen bg-white dark:bg-[#0A0A0A]">
       {/* ── Brand panel — hidden below lg, matches the sidebar's blue accent ── */}
-      <div className="relative hidden w-[44%] shrink-0 overflow-hidden bg-linear-to-br from-[#3B82F6] via-[#2563EB] to-[#12151C] lg:flex lg:flex-col lg:justify-between lg:p-10">
+      <div className="relative hidden w-[44%] shrink-0 overflow-hidden bg-linear-to-br from-(--brand) via-(--brand-hover) to-[#12151C] lg:flex lg:flex-col lg:justify-between lg:p-10">
         {/* decorative glow — same blue family as the gradient, no new hues */}
         <div className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-[#12151C]/50 blur-3xl" />
@@ -171,7 +171,7 @@ export default function LoginPage() {
                   onChange={(e) => setUsername(e.target.value)}
                   autoComplete="username"
                   required
-                  className="w-full rounded-lg border border-[#E9EAEC] bg-white px-4 py-3 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] transition focus:border-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/20 dark:border-[#262626] dark:bg-[#171717] dark:text-white dark:placeholder:text-[#6B7280]"
+                  className="w-full rounded-lg border border-[#E9EAEC] bg-white px-4 py-3 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] transition focus:border-(--brand-line) focus:outline-none focus:ring-2 focus:ring-(--brand-line)/20 dark:border-[#262626] dark:bg-[#171717] dark:text-white dark:placeholder:text-[#6B7280]"
                 />
 
                 <div className="relative">
@@ -182,7 +182,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                     required
-                    className="w-full rounded-lg border border-[#E9EAEC] bg-white px-4 py-3 pr-11 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] transition focus:border-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/20 dark:border-[#262626] dark:bg-[#171717] dark:text-white dark:placeholder:text-[#6B7280]"
+                    className="w-full rounded-lg border border-[#E9EAEC] bg-white px-4 py-3 pr-11 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] transition focus:border-(--brand-line) focus:outline-none focus:ring-2 focus:ring-(--brand-line)/20 dark:border-[#262626] dark:bg-[#171717] dark:text-white dark:placeholder:text-[#6B7280]"
                   />
                   <button
                     type="button"
@@ -199,7 +199,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-[#3B82F6] py-3 text-sm font-semibold text-white transition hover:bg-[#2563EB] disabled:opacity-70"
+                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-(--brand) py-3 text-sm font-semibold text-white transition hover:bg-(--brand-hover) disabled:opacity-70"
                 >
                   {loading ? (
                     <>
@@ -220,7 +220,7 @@ export default function LoginPage() {
                   autoComplete="one-time-code"
                   autoFocus
                   required
-                  className="w-full rounded-lg border border-[#E9EAEC] bg-white px-4 py-3 text-center text-lg tracking-widest text-[#1F2937] placeholder:text-sm placeholder:tracking-normal placeholder:text-[#9CA3AF] transition focus:border-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/20 dark:border-[#262626] dark:bg-[#171717] dark:text-white dark:placeholder:text-[#6B7280]"
+                  className="w-full rounded-lg border border-[#E9EAEC] bg-white px-4 py-3 text-center text-lg tracking-widest text-[#1F2937] placeholder:text-sm placeholder:tracking-normal placeholder:text-[#9CA3AF] transition focus:border-(--brand-line) focus:outline-none focus:ring-2 focus:ring-(--brand-line)/20 dark:border-[#262626] dark:bg-[#171717] dark:text-white dark:placeholder:text-[#6B7280]"
                 />
 
                 {error && <p className="text-xs text-[#A32A25] dark:text-[#E0716C]">{error}</p>}
@@ -228,7 +228,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-[#3B82F6] py-3 text-sm font-semibold text-white transition hover:bg-[#2563EB] disabled:opacity-70"
+                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-(--brand) py-3 text-sm font-semibold text-white transition hover:bg-(--brand-hover) disabled:opacity-70"
                 >
                   {loading ? (
                     <>

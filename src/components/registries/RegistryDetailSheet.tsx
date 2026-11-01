@@ -98,7 +98,7 @@ function rbiId(id: number) {
 
 const REGISTRY_CFG: Record<RegistryType, { label: string; bg: string; border: string; text: string }> = {
   SENIOR_CITIZEN: { label: "Senior Citizen", bg: "bg-amber-50 dark:bg-amber-500/15", border: "border-amber-100", text: "text-amber-700 dark:text-amber-400" },
-  PWD: { label: "PWD", bg: "bg-blue-50 dark:bg-blue-500/15", border: "border-blue-100", text: "text-blue-700 dark:text-blue-400" },
+  PWD: { label: "PWD", bg: "bg-(--brand-tint)", border: "border-(--brand-tint-strong)", text: "text-(--brand-fg-strong) dark:text-(--brand-fg)" },
   FOUR_PS: { label: "4Ps Beneficiary", bg: "bg-green-50 dark:bg-green-500/15", border: "border-green-100", text: "text-green-700 dark:text-green-400" },
 };
 
@@ -196,7 +196,7 @@ export default function RegistryDetailSheet({
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -282,7 +282,7 @@ export default function RegistryDetailSheet({
                   full-width and letting the user scroll is easier to read
                   than fitting things side by side. */}
               <div className="flex flex-col gap-4">
-                  <SectionCard title="Personal Information" icon={User} iconBg="bg-[#3B82F6]">
+                  <SectionCard title="Personal Information" icon={User} iconBg="bg-(--brand)">
                     <InfoRow label="RBI ID" value={rbiId(r.id)} />
                     <InfoRow label="Date of Birth" value={fmtDate(r.birthdate)} />
                     <InfoRow label="Place of Birth" value={r.place_of_birth} />
@@ -320,7 +320,7 @@ export default function RegistryDetailSheet({
                     {r.household && (
                       <button
                         onClick={() => router.push(`/households/${r.household!.id}`)}
-                        className="mt-1 text-[11px] font-bold text-[#3B82F6] dark:text-[#60A5FA] transition hover:text-[#1D4ED8] dark:hover:text-[#93C5FD]"
+                        className="mt-1 text-[11px] font-bold text-(--brand-fg) transition hover:text-(--brand-fg-strong)"
                       >
                         View Household Members →
                       </button>
@@ -341,7 +341,7 @@ export default function RegistryDetailSheet({
                           </div>
                         ))}
                         {r.certificates.length > 4 && (
-                          <p className="pt-1 text-[10px] text-[#3B82F6] dark:text-[#60A5FA]">+{r.certificates.length - 4} more</p>
+                          <p className="pt-1 text-[10px] text-(--brand-fg)">+{r.certificates.length - 4} more</p>
                         )}
                       </div>
                     )}
@@ -375,13 +375,13 @@ export default function RegistryDetailSheet({
                           </div>
                         ))}
                         {r.health_records.length > 5 && (
-                          <p className="pt-1 text-[10px] text-[#3B82F6] dark:text-[#60A5FA]">+{r.health_records.length - 5} more</p>
+                          <p className="pt-1 text-[10px] text-(--brand-fg)">+{r.health_records.length - 5} more</p>
                         )}
                       </div>
                     )}
                   </SectionCard>
 
-                  <SectionCard title={`Vaccinations (${r.vaccinations.length})`} icon={Syringe} iconBg="bg-[#3B82F6]">
+                  <SectionCard title={`Vaccinations (${r.vaccinations.length})`} icon={Syringe} iconBg="bg-(--brand)">
                     {r.vaccinations.length === 0 ? (
                       <p className="py-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">No vaccination records</p>
                     ) : (
@@ -393,7 +393,7 @@ export default function RegistryDetailSheet({
                           </div>
                         ))}
                         {r.vaccinations.length > 5 && (
-                          <p className="pt-1 text-[10px] text-[#3B82F6] dark:text-[#60A5FA]">+{r.vaccinations.length - 5} more</p>
+                          <p className="pt-1 text-[10px] text-(--brand-fg)">+{r.vaccinations.length - 5} more</p>
                         )}
                       </div>
                     )}
@@ -411,7 +411,7 @@ export default function RegistryDetailSheet({
               </button>
               <button
                 onClick={() => router.push(`/residents/${r.id}`)}
-                className="flex items-center gap-1.5 rounded-xl bg-[#3B82F6] px-5 py-2 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+                className="flex items-center gap-1.5 rounded-xl bg-(--brand) px-5 py-2 text-[12px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
               >
                 <User size={13} /> View Full RBI Profile
               </button>

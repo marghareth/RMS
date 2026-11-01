@@ -112,7 +112,7 @@ export default function BackupPage() {
         </div>
         <button
           onClick={() => setConfirmOpen(true)}
-          className="flex shrink-0 items-center gap-2 rounded-lg bg-[#3B82F6] px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB]"
+          className="flex shrink-0 items-center gap-2 rounded-lg bg-(--brand) px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
         >
           <DatabaseBackup size={15} />
           Trigger Backup
@@ -130,7 +130,7 @@ export default function BackupPage() {
       <div className="overflow-hidden rounded-xl border border-[#E9EAEC] bg-white">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
           </div>
         ) : backups.length === 0 ? (
           <EmptyState icon={DatabaseBackup} title="No backups yet" description="Trigger your first manual backup above." />
@@ -159,7 +159,7 @@ export default function BackupPage() {
                     {b.file_reference && (
                       <a
                         href={`/api/backup/${b.id}/download`}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#3B82F6] hover:text-[#2563EB]"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-(--brand-fg) hover:text-(--brand-fg-strong)"
                       >
                         <Download size={12} />
                         Download

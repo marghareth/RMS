@@ -192,7 +192,7 @@ function Row({ label, value }: { label: string; value?: string | number | null }
 
 function Badge({ label, color = "blue" }: { label: string; color?: "blue" | "green" | "amber" | "red" }) {
   const cls = {
-    blue:  "bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400",
+    blue:  "bg-(--brand-tint-strong) dark:bg-(--brand-tint) text-(--brand-fg-strong) dark:text-(--brand-fg)",
     green: "bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-400",
     amber: "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400",
     red:   "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400",
@@ -410,7 +410,7 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
             <SheetBody>
               {loading ? (
                 <div className="flex items-center justify-center py-24">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
                 </div>
               ) : (
                 <EmptyState
@@ -433,7 +433,7 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
                 {resident.is_deceased && <Badge label="Deceased" color="red" />}
                 <button
                   onClick={() => router.push(`/residents/${resident.id}/edit`)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] transition"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-(--brand) text-white text-[12px] font-bold hover:bg-(--brand-hover) transition"
                 >
                   <Pencil size={13} /> Edit
                 </button>
@@ -535,7 +535,7 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
                     assistanceFormOpen === null && (
                       <button
                         onClick={openAddAssistance}
-                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#2563EB] dark:hover:text-[#60A5FA]"
+                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-(--brand-fg) hover:text-(--brand-fg-strong) dark:hover:text-(--brand-fg)"
                       >
                         <Plus size={12} /> Add Program
                       </button>
@@ -548,20 +548,20 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
                         value={assistanceForm.program_name}
                         onChange={(e) => setAssistanceForm((f) => ({ ...f, program_name: e.target.value }))}
                         placeholder="Program name (e.g. 4Ps)"
-                        className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-(--brand-line)"
                       />
                       <div className="grid grid-cols-2 gap-2">
                         <input
                           type="date"
                           value={assistanceForm.date_enrolled}
                           onChange={(e) => setAssistanceForm((f) => ({ ...f, date_enrolled: e.target.value }))}
-                          className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                          className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-(--brand-line)"
                         />
                         <input
                           value={assistanceForm.notes}
                           onChange={(e) => setAssistanceForm((f) => ({ ...f, notes: e.target.value }))}
                           placeholder="Notes (optional)"
-                          className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                          className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-(--brand-line)"
                         />
                       </div>
                       <div className="flex justify-end gap-2">
@@ -571,7 +571,7 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
                         <button
                           onClick={handleSaveAssistance}
                           disabled={assistanceBusy || !assistanceForm.program_name.trim()}
-                          className="rounded-md bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+                          className="rounded-md bg-(--brand) px-3 py-1.5 text-[11px] font-bold text-white hover:bg-(--brand-hover) disabled:opacity-50"
                         >
                           {assistanceBusy ? "Saving…" : "Save"}
                         </button>
@@ -612,7 +612,7 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
                     !addingSector && availableSectorTypes.length > 0 && (
                       <button
                         onClick={() => setAddingSector(true)}
-                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#2563EB] dark:hover:text-[#60A5FA]"
+                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-(--brand-fg) hover:text-(--brand-fg-strong) dark:hover:text-(--brand-fg)"
                       >
                         <Plus size={12} /> Add Tag
                       </button>
@@ -624,7 +624,7 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
                       <select
                         value={newSector}
                         onChange={(e) => setNewSector(e.target.value)}
-                        className="flex-1 rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                        className="flex-1 rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-(--brand-line)"
                       >
                         <option value="">Select sector...</option>
                         {availableSectorTypes.map((t) => (
@@ -634,7 +634,7 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
                       <button
                         onClick={handleAddSector}
                         disabled={!newSector || sectorBusy}
-                        className="rounded-md bg-[#3B82F6] px-3 py-1.5 text-[11px] font-bold text-white hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+                        className="rounded-md bg-(--brand) px-3 py-1.5 text-[11px] font-bold text-white hover:bg-(--brand-hover) disabled:opacity-50"
                       >
                         Add
                       </button>
@@ -650,10 +650,10 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
                       {resident.sectors.map((s) => (
                         <span
                           key={s.id}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-semibold text-blue-700 dark:text-blue-400"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong) dark:text-(--brand-fg)"
                         >
                           {SECTOR_TYPE_LABEL[s.sector_type] ?? s.sector_type}
-                          <button onClick={() => handleRemoveSector(s.id)} disabled={sectorBusy} className="hover:text-blue-900 dark:hover:text-blue-200">
+                          <button onClick={() => handleRemoveSector(s.id)} disabled={sectorBusy} className="hover:text-(--brand-fg-strong)">
                             <X size={11} />
                           </button>
                         </span>
@@ -695,7 +695,7 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
                     <div className="mt-2">
                       <button
                         onClick={() => router.push(`/households/${resident.household!.id}`)}
-                        className="text-[11px] font-bold text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] uppercase tracking-wide"
+                        className="text-[11px] font-bold text-(--brand-fg) hover:text-(--brand-fg-strong) uppercase tracking-wide"
                       >
                         View All Household Members ({resident.household.members?.length ?? 0})
                       </button>

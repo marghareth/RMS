@@ -1,3 +1,4 @@
+// FILE: src/app/(dashboard)/blotter/page.tsx
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
@@ -112,7 +113,7 @@ export default function BlotterListPage() {
           <button
             data-tour="page-blotter-add"
             onClick={() => router.push("/blotter/new")}
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+            className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             File New Case
@@ -136,13 +137,13 @@ export default function BlotterListPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search case no., complainant, or respondent"
-            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
           />
         </div>
         <button
           onClick={() => setShowFilter((v) => !v)}
           className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
-            showFilter || activeFilterCount ? "bg-[#3B82F6] text-white" : "bg-white dark:bg-[#171717] text-[#6B7280] dark:text-[#A3A3A3] border border-[#E9EAEC] dark:border-[#262626] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
+            showFilter || activeFilterCount ? "bg-(--brand) text-white" : "bg-white dark:bg-[#171717] text-[#6B7280] dark:text-[#A3A3A3] border border-[#E9EAEC] dark:border-[#262626] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
           }`}
         >
           <SlidersHorizontal size={15} />
@@ -169,7 +170,7 @@ export default function BlotterListPage() {
               <select
                 value={filters.status}
                 onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[12px] outline-none focus:border-(--brand-line)"
               >
                 <option value="">All</option>
                 <option value="FILED">Filed</option>
@@ -188,7 +189,7 @@ export default function BlotterListPage() {
                   type="date"
                   value={filters.date_from}
                   onChange={(e) => setFilters((f) => ({ ...f, date_from: e.target.value }))}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-2 py-2 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-2 py-2 text-[12px] outline-none focus:border-(--brand-line)"
                 />
               </div>
               <div>
@@ -199,7 +200,7 @@ export default function BlotterListPage() {
                   type="date"
                   value={filters.date_to}
                   onChange={(e) => setFilters((f) => ({ ...f, date_to: e.target.value }))}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-2 py-2 text-[12px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-2 py-2 text-[12px] outline-none focus:border-(--brand-line)"
                 />
               </div>
             </div>
@@ -209,7 +210,7 @@ export default function BlotterListPage() {
                 type="checkbox"
                 checked={filters.escalated}
                 onChange={(e) => setFilters((f) => ({ ...f, escalated: e.target.checked }))}
-                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-[#3B82F6] dark:text-[#60A5FA] focus:ring-[#3B82F6] dark:focus:ring-[#60A5FA]"
+                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-(--brand-fg) focus:ring-(--brand-line)"
               />
               Escalated cases only
             </label>
@@ -223,7 +224,7 @@ export default function BlotterListPage() {
               </button>
               <button
                 onClick={() => setShowFilter(false)}
-                className="flex-1 rounded-lg bg-[#3B82F6] py-2 text-[12px] font-semibold text-white transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+                className="flex-1 rounded-lg bg-(--brand) py-2 text-[12px] font-semibold text-white transition hover:bg-(--brand-hover)"
               >
                 Apply
               </button>
@@ -236,7 +237,7 @@ export default function BlotterListPage() {
       <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
           </div>
         ) : filtered.length === 0 ? (
           <EmptyState

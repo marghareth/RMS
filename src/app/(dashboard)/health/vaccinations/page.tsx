@@ -54,8 +54,8 @@ function VaccinePicker({ value, onChange }: { value: string; onChange: (v: strin
                   onClick={() => onChange(v)}
                   className={`px-3 py-2 rounded-xl border-2 text-[11px] font-bold transition
                     ${selected
-                      ? "border-[#3B82F6] dark:border-[#60A5FA] bg-[#3B82F6] text-white shadow-sm"
-                      : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#6B7280] dark:text-[#A3A3A3] hover:border-[#3B82F6] dark:hover:border-[#60A5FA] hover:text-[#3B82F6] dark:hover:text-[#93C5FD]"}`}
+                      ? "border-(--brand-line) bg-(--brand) text-white shadow-sm"
+                      : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] text-[#6B7280] dark:text-[#A3A3A3] hover:border-(--brand-line) hover:text-(--brand-fg) dark:hover:text-(--brand-fg-strong)"}`}
                 >
                   {v}
                 </button>
@@ -177,7 +177,7 @@ function NewVaccinationPageInner() {
              bounds. overflow-hidden would clip it off after ~1 row. */}
         <div data-tour="page-health-vaccination-new-resident" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626]">
           <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] rounded-t-xl">
-            <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-(--brand) flex items-center justify-center">
               <User size={14} className="text-white" />
             </div>
             <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Resident</p>
@@ -198,7 +198,7 @@ function NewVaccinationPageInner() {
         {/* ── Vaccine picker card ── */}
         <div data-tour="page-health-vaccination-new-vaccine" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
           <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-            <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-(--brand) flex items-center justify-center">
               <Syringe size={14} className="text-white" />
             </div>
             <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Vaccine</p>
@@ -217,7 +217,7 @@ function NewVaccinationPageInner() {
                   value={form.custom_vaccine}
                   onChange={e => set("custom_vaccine", e.target.value)}
                   placeholder="Enter vaccine name..."
-                  className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] bg-white dark:bg-[#171717]"
+                  className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] bg-white dark:bg-[#171717]"
                 />
               </div>
             )}
@@ -239,17 +239,17 @@ function NewVaccinationPageInner() {
               value={form.date_given}
               max={new Date().toISOString().split("T")[0]}
               onChange={e => set("date_given", e.target.value)}
-              className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white bg-white dark:bg-[#171717]"
+              className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white bg-white dark:bg-[#171717]"
             />
           </div>
         </div>
 
         {/* Summary preview */}
         {isValid && (
-          <div className="px-5 py-4 rounded-xl bg-[#EFF6FF] dark:bg-blue-500/15 border border-blue-100">
+          <div className="px-5 py-4 rounded-xl bg-(--brand-tint) border border-(--brand-tint-strong)">
             <p className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide mb-2">Summary</p>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#3B82F6] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-full bg-(--brand) flex items-center justify-center shrink-0">
                 <Syringe size={15} className="text-white" />
               </div>
               <div>
@@ -279,7 +279,7 @@ function NewVaccinationPageInner() {
           <button
             onClick={handleSave}
             disabled={saving || !isValid}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-(--brand) hover:bg-(--brand-hover) disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
           >
             <Save size={14} />
             {saving ? "Saving…" : "Save Vaccination"}

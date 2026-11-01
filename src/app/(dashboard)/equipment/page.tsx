@@ -170,7 +170,7 @@ export default function EquipmentPage() {
           <button
             data-tour="page-equipment-add"
             onClick={() => router.push("/equipment/new")}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] text-white text-[13px] font-bold transition shadow-sm"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--brand) hover:bg-(--brand-hover) text-white text-[13px] font-bold transition shadow-sm"
           >
             <Plus size={15} />
             Add Equipment
@@ -200,7 +200,7 @@ export default function EquipmentPage() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search equipment..."
-                className="w-full pl-9 pr-3 py-2.5 text-[13px] bg-[#F4F5F7] dark:bg-[#262626] text-[#1F2937] dark:text-white rounded-xl border border-transparent focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:bg-white dark:focus:bg-[#171717] transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373]"
+                className="w-full pl-9 pr-3 py-2.5 text-[13px] bg-[#F4F5F7] dark:bg-[#262626] text-[#1F2937] dark:text-white rounded-xl border border-transparent focus:outline-none focus:border-(--brand-line) focus:bg-white dark:focus:bg-[#171717] transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373]"
               />
             </div>
             {/* Status filter tabs */}
@@ -211,7 +211,7 @@ export default function EquipmentPage() {
                   onClick={() => setFilterStatus(s)}
                   className={`flex-1 text-[9px] font-bold py-1.5 rounded-lg uppercase tracking-wide transition
                     ${filterStatus === s
-                      ? "bg-[#3B82F6] text-white"
+                      ? "bg-(--brand) text-white"
                       : "bg-[#F4F5F7] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#E5E7EB] dark:hover:bg-[#333333]"}`}
                 >
                   {s === "ALL" ? "All" : s === "SERVICEABLE" ? "OK" : s === "UNSERVICEABLE" ? "Broken" : "Missing"}
@@ -222,7 +222,7 @@ export default function EquipmentPage() {
               <select
                 value={filterType}
                 onChange={e => setFilterType(e.target.value)}
-                className="w-full text-[12px] bg-[#F4F5F7] dark:bg-[#262626] text-[#1F2937] dark:text-white rounded-xl border border-transparent focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:bg-white dark:focus:bg-[#171717] transition px-3 py-2"
+                className="w-full text-[12px] bg-[#F4F5F7] dark:bg-[#262626] text-[#1F2937] dark:text-white rounded-xl border border-transparent focus:outline-none focus:border-(--brand-line) focus:bg-white dark:focus:bg-[#171717] transition px-3 py-2"
               >
                 <option value="">All Types</option>
                 {assetTypes.map(t => <option key={t} value={t}>{t}</option>)}
@@ -234,7 +234,7 @@ export default function EquipmentPage() {
           <div data-tour="page-equipment-list" className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
               </div>
             ) : equipment.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-2">
@@ -251,11 +251,11 @@ export default function EquipmentPage() {
                     key={eq.id}
                     onClick={() => setSelectedId(eq.id)}
                     className={`w-full text-left px-4 py-3 flex items-center gap-3 border-b border-[#F4F5F7] dark:border-[#262626] transition
-                      ${active ? "bg-[#3B82F6]" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"}`}
+                      ${active ? "bg-(--brand)" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"}`}
                   >
                     {/* Thumbnail */}
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden
-                      ${active ? "bg-blue-400 dark:bg-blue-500" : "bg-[#F4F5F7] dark:bg-[#262626]"}`}>
+                      ${active ? "bg-(--brand-line) dark:bg-(--brand)" : "bg-[#F4F5F7] dark:bg-[#262626]"}`}>
                       {eq.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element -- inventory photos are user-supplied external URLs, not build-time assets
                         <img src={eq.image_url} alt="" className="h-full w-full object-cover" />
@@ -267,7 +267,7 @@ export default function EquipmentPage() {
                       <p className={`text-[13px] font-bold truncate ${active ? "text-white" : "text-[#1F2937] dark:text-white"}`}>
                         {eq.name}
                       </p>
-                      <p className={`text-[11px] mt-0.5 ${active ? "text-blue-100 dark:text-blue-200" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
+                      <p className={`text-[11px] mt-0.5 ${active ? "text-(--brand-fg-strong)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
                         {eq.asset_type && `${eq.asset_type} · `}Qty: {eq.quantity}
                         {out > 0 && ` · ${out} borrowed`}
                         {overdue && " · ⚠ overdue"}
@@ -284,7 +284,7 @@ export default function EquipmentPage() {
           <div className="p-3 border-t border-[#F4F5F7] dark:border-[#262626]">
             <button
               onClick={() => router.push("/equipment/borrow")}
-              className="w-full py-2 rounded-xl text-[12px] font-bold text-[#3B82F6] dark:text-[#60A5FA] bg-blue-50 dark:bg-blue-500/15 hover:bg-blue-100 dark:hover:bg-blue-500/25 transition flex items-center justify-center gap-1.5"
+              className="w-full py-2 rounded-xl text-[12px] font-bold text-(--brand-fg) bg-(--brand-tint) hover:bg-(--brand-tint-strong) dark:hover:bg-(--brand-tint) transition flex items-center justify-center gap-1.5"
             >
               <Clock size={13} />
               View All Borrowed Items
@@ -321,7 +321,7 @@ export default function EquipmentPage() {
                 </button>
                 <button
                   onClick={() => setDetailSheetId(selected.id)}
-                  className="px-3 py-1.5 rounded-lg bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] transition"
+                  className="px-3 py-1.5 rounded-lg bg-(--brand) text-white text-[12px] font-bold hover:bg-(--brand-hover) transition"
                 >
                   Full Details
                 </button>
@@ -341,7 +341,7 @@ export default function EquipmentPage() {
                     ? new Date(selected.date_acquired).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
                     : "—"}
                 </span>],
-                ["Currently Out",  <span key="o" className={`text-[13px] font-bold ${activeBorrowings(selected).length > 0 ? "text-[#3B82F6] dark:text-[#60A5FA]" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
+                ["Currently Out",  <span key="o" className={`text-[13px] font-bold ${activeBorrowings(selected).length > 0 ? "text-(--brand-fg)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
                   {activeBorrowings(selected).length} unit(s)
                 </span>],
                 ["Overdue",        <span key="ov" className={`text-[13px] font-bold ${hasOverdue(selected) ? "text-red-500 dark:text-red-400" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
@@ -418,7 +418,7 @@ export default function EquipmentPage() {
                 </p>
                 <button
                   onClick={() => router.push(`/equipment/borrow?equipment_id=${selected.id}`)}
-                  className="flex items-center gap-1 text-[11px] font-bold text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] transition"
+                  className="flex items-center gap-1 text-[11px] font-bold text-(--brand-fg) hover:text-(--brand-fg-strong) transition"
                 >
                   <Plus size={12} />
                   Lend out
@@ -453,7 +453,7 @@ export default function EquipmentPage() {
                         )}
                         <button
                           onClick={() => router.push(`/equipment/return?borrowing_id=${b.id}`)}
-                          className="text-[11px] font-bold text-[#3B82F6] dark:text-[#60A5FA] hover:text-[#1D4ED8] dark:hover:text-[#93C5FD] transition uppercase tracking-wide"
+                          className="text-[11px] font-bold text-(--brand-fg) hover:text-(--brand-fg-strong) transition uppercase tracking-wide"
                         >
                           Return
                         </button>

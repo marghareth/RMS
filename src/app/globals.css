@@ -15,9 +15,9 @@
 
 :root {
   --font-inter: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  --color-primary: #3b82f6;
-  --color-primary-hover: #2563eb;
-  --color-primary-tint: #ebf3ff;
+  --color-primary: #2348b0;
+  --color-primary-hover: #1a3a8f;
+  --color-primary-tint: #ebf0fb;
   --color-page-bg: #f4f5f7;
   --color-sidebar: #ffffff;
   --color-card: #ffffff;
@@ -38,9 +38,9 @@
      the ones actually read by components today; the new --color-spine-*
      and --color-flag-* tokens below are new, for the Sidebar rewrite. */
   --color-ink: #1b2430;
-  --color-seal: #3b82f6;
-  --color-seal-hover: #2563eb;
-  --color-seal-tint: #ebf3ff;
+  --color-seal: #2348b0;
+  --color-seal-hover: #1a3a8f;
+  --color-seal-tint: #ebf0fb;
   --color-hairline: #e1e3e8;
 
   /* Status accents used sparingly — pending/needs-review and urgent/overdue,
@@ -54,6 +54,25 @@
   --color-spine: #12151c;
   --color-spine-2: #1b2029;
   --color-spine-text: #8891a3;
+
+  /* ── Brand blue (navy, matches the sidebar) ───────────────────────────
+     Every blue in the app points at one of these, picked by ROLE so each
+     stays readable in both themes:
+       --brand            solid fills: primary buttons, active tabs, chart series
+       --brand-hover      hover/pressed state of those fills
+       --brand-fg         blue text and icons on normal surfaces (links, values)
+       --brand-fg-strong  stronger blue text, e.g. on a tint background
+       --brand-line       borders, focus outlines and rings
+       --brand-tint       soft blue backgrounds (badges, icon tiles)
+       --brand-tint-strong  slightly deeper tint / tint borders
+     Light text on --brand is 8:1; --brand-fg on white is 8:1 (WCAG AA = 4.5). */
+  --brand: #2348b0;
+  --brand-hover: #1a3a8f;
+  --brand-fg: #2348b0;
+  --brand-fg-strong: #1a3a8f;
+  --brand-line: #2348b0;
+  --brand-tint: #ebf0fb;
+  --brand-tint-strong: #d9e2f7;
 
   /* ── Sidebar navigation (navy) ─────────────────────────────────────────
      Read by Sidebar.tsx, NavGroup.tsx and NavItem.tsx through
@@ -81,9 +100,9 @@
    affected by this block and need their own `dark:` classes added
    separately. */
 .dark {
-  --color-primary: #3b82f6;
-  --color-primary-hover: #60a5fa;
-  --color-primary-tint: #1a1a1a;
+  --color-primary: #3358c9;
+  --color-primary-hover: #4166d6;
+  --color-primary-tint: #16224a;
   --color-page-bg: #0A0A0A;
   --color-sidebar: #111111;
   --color-card: #171717;
@@ -93,9 +112,9 @@
   --color-text-light: #6b7280;
 
   --color-ink: #e5e7eb;
-  --color-seal: #5b9bfa;
-  --color-seal-hover: #7cadfb;
-  --color-seal-tint: #14243f;
+  --color-seal: #8da6ea;
+  --color-seal-hover: #b2c3f0;
+  --color-seal-tint: #16224a;
   --color-hairline: #282d3a;
 
   --color-flag: #d9a441;
@@ -106,6 +125,17 @@
   --color-spine: #0a0c11;
   --color-spine-2: #151923;
   --color-spine-text: #818a9c;
+
+  /* Brand blue in dark mode: fills a step brighter than in light mode so
+     buttons don't sink into the near-black page; text and lines much
+     lighter so they stay readable on dark cards (7.5:1 on #171717). */
+  --brand: #3358c9;
+  --brand-hover: #4166d6;
+  --brand-fg: #8da6ea;
+  --brand-fg-strong: #b2c3f0;
+  --brand-line: #6f8cdb;
+  --brand-tint: #16224a;
+  --brand-tint-strong: #1e2e5e;
 
   /* Sidebar in dark mode: a deeper, quieter navy so it doesn't glare next
      to the near-black page, and the current page is LIGHTER than the panel

@@ -125,7 +125,7 @@ function BorrowRow({ b, onReturn }: { b: Borrowing; onReturn: (id: number) => vo
         {!returned && (
           <button
             onClick={() => onReturn(b.id)}
-            className="shrink-0 px-3 py-1.5 rounded-lg bg-[#3B82F6] text-white text-[11px] font-bold hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] transition"
+            className="shrink-0 px-3 py-1.5 rounded-lg bg-(--brand) text-white text-[11px] font-bold hover:bg-(--brand-hover) transition"
           >
             Return
           </button>
@@ -141,11 +141,11 @@ function Tab({ label, count, active, onClick }: { label: string; count: number; 
     <button
       onClick={onClick}
       className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-bold transition
-        ${active ? "bg-[#3B82F6] text-white" : "text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"}`}
+        ${active ? "bg-(--brand) text-white" : "text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"}`}
     >
       {label}
       <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold
-        ${active ? "bg-blue-400 dark:bg-blue-500 text-white" : "bg-[#E9EAEC] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3]"}`}>
+        ${active ? "bg-(--brand-line) dark:bg-(--brand) text-white" : "bg-[#E9EAEC] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3]"}`}>
         {count}
       </span>
     </button>
@@ -177,7 +177,7 @@ export default function EquipmentDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
       </div>
     );
   }
@@ -311,7 +311,7 @@ export default function EquipmentDetailPage() {
           {/* Quick stats */}
           <div data-tour="page-equipment-detail-stats" className="grid grid-cols-2 gap-3">
             <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] px-4 py-3 text-center">
-              <p className={`text-[22px] font-black ${active.length > 0 ? "text-[#3B82F6] dark:text-[#60A5FA]" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
+              <p className={`text-[22px] font-black ${active.length > 0 ? "text-(--brand-fg)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
                 {active.length}
               </p>
               <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] uppercase font-semibold mt-0.5">Out</p>

@@ -1,3 +1,4 @@
+// FILE: src/app/(auth)/access-denied/page.tsx
 import Link from "next/link";
 
 export default function AccessDeniedPage() {
@@ -10,7 +11,7 @@ export default function AccessDeniedPage() {
         </p>
         <Link
           href="/"
-          className="mt-6 inline-flex rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-white transition hover:bg-[#2563EB]"
+          className="mt-6 inline-flex rounded-lg bg-(--brand) px-4 py-2 text-[12px] font-bold uppercase tracking-wide text-white transition hover:bg-(--brand-hover)"
         >
           Go to Dashboard
         </Link>

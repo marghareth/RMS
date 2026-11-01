@@ -85,7 +85,7 @@ export default function BarangayIdListPage() {
           <button
             data-tour="page-barangay-id-add"
             onClick={() => router.push("/barangay-id/new")}
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+            className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             Issue New ID
@@ -111,7 +111,7 @@ export default function BarangayIdListPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search ID number or name"
-                className="w-full rounded-xl border border-transparent bg-[#F4F5F7] dark:bg-[#262626] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:bg-white dark:focus:bg-[#171717]"
+                className="w-full rounded-xl border border-transparent bg-[#F4F5F7] dark:bg-[#262626] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line) focus:bg-white dark:focus:bg-[#171717]"
               />
             </div>
           </div>
@@ -119,7 +119,7 @@ export default function BarangayIdListPage() {
           <div data-tour="page-barangay-id-list" className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
               </div>
             ) : filtered.length === 0 ? (
               <p className="py-12 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No barangay IDs found</p>
@@ -132,14 +132,14 @@ export default function BarangayIdListPage() {
                     key={i.id}
                     onClick={() => setSelectedId(i.id)}
                     className={`flex w-full items-center gap-3 border-b border-[#F4F5F7] dark:border-[#262626] px-4 py-3 text-left transition ${
-                      active ? "bg-[#3B82F6]" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
+                      active ? "bg-(--brand)" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
                     }`}
                   >
                     <div className="min-w-0 flex-1">
                       <p className={`truncate text-[13px] font-bold ${active ? "text-white" : "text-[#1F2937] dark:text-white"}`}>
                         {residentFullName(i.resident)}
                       </p>
-                      <p className={`mt-0.5 truncate font-mono text-[11px] ${active ? "text-blue-100 dark:text-blue-200" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
+                      <p className={`mt-0.5 truncate font-mono text-[11px] ${active ? "text-(--brand-fg-strong)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
                         {i.id_number}
                         {expired && " · Expired"}
                       </p>
@@ -176,7 +176,7 @@ export default function BarangayIdListPage() {
                     printed directly for now. */}
                 <button
                   onClick={() => window.print()}
-                  className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] print:hidden"
+                  className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover) print:hidden"
                 >
                   <Printer size={14} />
                   Print ID
@@ -186,10 +186,10 @@ export default function BarangayIdListPage() {
               {/* ── ID CARD VISUAL ── */}
               <div className="mx-auto max-w-md overflow-hidden rounded-2xl border border-[#E9EAEC] dark:border-[#262626] shadow-md">
                 {/* Header */}
-                <div className="flex items-center gap-3 bg-[#3B82F6] px-5 py-4">
+                <div className="flex items-center gap-3 bg-(--brand) px-5 py-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white dark:bg-[#171717]">
                     <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
-                      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" fill="#3B82F6" />
+                      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" fill="#2348B0" />
                     </svg>
                   </div>
                   <div className="min-w-0 text-white">

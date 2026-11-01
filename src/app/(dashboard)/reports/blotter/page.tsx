@@ -33,7 +33,7 @@ interface BlotterReportData {
 }
 
 const STATUS_CFG: Record<string, { bg: string; text: string; dot: string }> = {
-  FILED:     { bg: "bg-blue-100 dark:bg-blue-500/15",  text: "text-blue-700 dark:text-blue-400",  dot: "bg-blue-500 dark:bg-blue-500"  },
+  FILED:     { bg: "bg-(--brand-tint-strong) dark:bg-(--brand-tint)",  text: "text-(--brand-fg-strong) dark:text-(--brand-fg)",  dot: "bg-(--brand)"  },
   ONGOING:   { bg: "bg-amber-100 dark:bg-amber-500/15", text: "text-amber-700 dark:text-amber-400", dot: "bg-amber-500 dark:bg-amber-500" },
   RESOLVED:  { bg: "bg-green-100 dark:bg-green-500/15", text: "text-green-700 dark:text-green-400", dot: "bg-green-500 dark:bg-green-500" },
   DISMISSED: { bg: "bg-gray-100 dark:bg-white/10",  text: "text-gray-600 dark:text-[#A3A3A3]",  dot: "bg-gray-400 dark:bg-[#737373]"  },
@@ -124,11 +124,11 @@ export default function BlotterReportPage() {
           </div>
           <div data-tour="page-reports-blotter-controls" className="flex items-center gap-2">
             <select value={year} onChange={e => setYear(e.target.value)}
-              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
+              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-(--brand-line) bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
             <select value={month} onChange={e => setMonth(e.target.value)}
-              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
+              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-(--brand-line) bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
               <option value="">All Months</option>
               {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m, i) => (
                 <option key={m} value={String(i + 1).padStart(2, "0")}>{m}</option>
@@ -136,7 +136,7 @@ export default function BlotterReportPage() {
             </select>
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#3B82F6] text-white text-[12px] font-bold hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] transition print:hidden"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-(--brand) text-white text-[12px] font-bold hover:bg-(--brand-hover) transition print:hidden"
             >
               <Download size={13} /> Export PDF
             </button>
@@ -148,7 +148,7 @@ export default function BlotterReportPage() {
 
       {loading || !data ? (
         <div className="flex items-center justify-center py-24">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
         </div>
       ) : (
         <>

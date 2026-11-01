@@ -1,7 +1,8 @@
+// FILE: src/components/shared/StatCard.tsx
 import { LucideIcon } from "lucide-react";
 
 // ALIGNED WITH DASHBOARD: this used to render a big colored icon-badge
-// square (bg-blue-50/bg-amber-50/etc, per the `color` prop) — a visibly
+// square (bg-(--brand-tint)/bg-amber-50/etc, per the `color` prop) — a visibly
 // different card language from the Dashboard's own KPI cards
 // (LedgerStatStrip in src/app/(dashboard)/dashboard/page.tsx), which use
 // no icon at all: just a muted uppercase label, a small icon top-right,

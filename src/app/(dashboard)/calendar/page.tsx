@@ -31,7 +31,7 @@ const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const EVENT_TYPE_PRESETS = ["Meeting", "Holiday", "Deadline", "Assembly", "Announcement"];
 
 const EVENT_TYPE_STYLES: Record<string, string> = {
-  Meeting: "bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400",
+  Meeting: "bg-(--brand-tint) text-(--brand-fg)",
   Holiday: "bg-green-50 dark:bg-green-500/15 text-green-600 dark:text-green-400",
   Deadline: "bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400",
   Assembly: "bg-purple-50 text-purple-600",
@@ -284,7 +284,7 @@ export default function CalendarPage() {
           <button
             data-tour="page-calendar-add"
             onClick={() => openAddSheet()}
-            className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+            className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             Add Event
@@ -349,14 +349,14 @@ export default function CalendarPage() {
                   onClick={() => setSelectedDate(day)}
                   className={`flex aspect-square flex-col items-center justify-start gap-1 rounded-lg border pt-1.5 transition ${
                     isSelected
-                      ? "border-[#3B82F6] dark:border-[#60A5FA] bg-[#EFF6FF] dark:bg-blue-500/15"
+                      ? "border-(--brand-line) bg-(--brand-tint)"
                       : "border-transparent hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                   }`}
                 >
                   <span
                     className={`flex h-6 w-6 items-center justify-center rounded-full text-[12px] ${
                       isToday
-                        ? "bg-[#3B82F6] font-bold text-white"
+                        ? "bg-(--brand) font-bold text-white"
                         : inMonth
                         ? isSelected ? "font-bold text-[#1F2937] dark:text-white" : "text-[#1F2937] dark:text-white"
                         : "text-[#D1D5DB] dark:text-[#525252]"
@@ -367,7 +367,7 @@ export default function CalendarPage() {
                   <div className="flex h-1.5 items-center gap-0.5">
                     {dayEvents.length > 0 &&
                       Array.from({ length: Math.min(dayEvents.length, 3) }).map((_, i) => (
-                        <span key={i} className="h-1.5 w-1.5 rounded-full bg-[#3B82F6]" />
+                        <span key={i} className="h-1.5 w-1.5 rounded-full bg-(--brand)" />
                       ))}
                   </div>
                 </button>
@@ -392,7 +392,7 @@ export default function CalendarPage() {
               action={
                 <button
                   onClick={() => openAddSheet(selectedDate)}
-                  className="flex items-center gap-2 rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6]"
+                  className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2 text-[12px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
                 >
                   <Plus size={14} />
                   Add Event
@@ -462,7 +462,7 @@ export default function CalendarPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Barangay Assembly"
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
                 />
               </div>
 
@@ -475,7 +475,7 @@ export default function CalendarPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   placeholder="Optional details…"
-                  className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
                 />
               </div>
 
@@ -487,7 +487,7 @@ export default function CalendarPage() {
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line)"
                 />
               </div>
 
@@ -498,7 +498,7 @@ export default function CalendarPage() {
                 <select
                   value={eventTypeSelect}
                   onChange={(e) => setEventTypeSelect(e.target.value)}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line)"
                 >
                   <option value="">None</option>
                   {EVENT_TYPE_PRESETS.map((t) => (
@@ -511,7 +511,7 @@ export default function CalendarPage() {
                     value={eventTypeOther}
                     onChange={(e) => setEventTypeOther(e.target.value)}
                     placeholder="Specify event type"
-                    className="mt-2 w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                    className="mt-2 w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
                   />
                 )}
               </div>
@@ -527,7 +527,7 @@ export default function CalendarPage() {
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+              className="rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-50"
             >
               {submitting ? "Saving…" : editingEvent ? "Save Changes" : "Add Event"}
             </button>

@@ -155,8 +155,8 @@ export default function NewCertificatePage() {
         <div data-tour="page-certificates-new-applicant" className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15">
-                <User size={14} className="text-[#1D4ED8] dark:text-[#93C5FD]" />
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--brand-tint)">
+                <User size={14} className="text-(--brand-fg-strong)" />
               </div>
               <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Applicant</p>
             </div>
@@ -168,7 +168,7 @@ export default function NewCertificatePage() {
                   setWalkIn(e.target.checked);
                   setResident(null);
                 }}
-                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-[#3B82F6] dark:text-[#60A5FA] focus:ring-[#3B82F6] dark:focus:ring-[#60A5FA]"
+                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-(--brand-fg) focus:ring-(--brand-line)"
               />
               Walk-in (not yet in RBI)
             </label>
@@ -184,7 +184,7 @@ export default function NewCertificatePage() {
                   value={manualName}
                   onChange={(e) => setManualName(e.target.value)}
                   placeholder="Juan Dela Cruz"
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                 />
               </div>
               <div>
@@ -195,7 +195,7 @@ export default function NewCertificatePage() {
                   value={manualAddress}
                   onChange={(e) => setManualAddress(e.target.value)}
                   placeholder="Purok, Street"
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                 />
               </div>
               <div className="flex items-start gap-2 rounded-lg bg-[#FEF3C7] dark:bg-amber-500/15 px-3 py-2.5">
@@ -238,7 +238,7 @@ export default function NewCertificatePage() {
               <select
                 value={certType}
                 onChange={(e) => setCertType(e.target.value as CertificateType)}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               >
                 <option value="">Select certificate type</option>
                 {CERTIFICATE_TYPES.map((t) => (
@@ -258,7 +258,7 @@ export default function NewCertificatePage() {
                 onChange={(e) => setPurpose(e.target.value)}
                 rows={3}
                 placeholder="e.g. Requirement for school enrollment"
-                className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+                className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
               />
             </div>
 
@@ -273,9 +273,9 @@ export default function NewCertificatePage() {
               </div>
             )}
 
-            <div className="flex items-start gap-2 rounded-lg bg-[#EBF3FF] dark:bg-blue-500/15 px-3 py-2.5">
-              <Info size={14} className="mt-0.5 shrink-0 text-[#1D4ED8] dark:text-[#93C5FD]" />
-              <p className="text-[11px] leading-relaxed text-[#1D4ED8] dark:text-[#93C5FD]">
+            <div className="flex items-start gap-2 rounded-lg bg-(--brand-tint) px-3 py-2.5">
+              <Info size={14} className="mt-0.5 shrink-0 text-(--brand-fg-strong)" />
+              <p className="text-[11px] leading-relaxed text-(--brand-fg-strong)">
                 {captain.name ? (
                   <>
                     This certificate will be signed by <span className="font-semibold">{captain.name}</span>, the active{" "}
@@ -305,7 +305,7 @@ export default function NewCertificatePage() {
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="rounded-lg bg-[#3B82F6] px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-60"
+            className="rounded-lg bg-(--brand) px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-60"
           >
             {submitting ? "Submitting..." : "Submit Request"}
           </button>

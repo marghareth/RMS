@@ -61,7 +61,7 @@ const TYPE_COLORS: Record<string, string> = {
   "Prenatal Checkup":   "border-pink-200   bg-pink-50   text-pink-700 dark:text-pink-400   hover:border-pink-400",
   "Postnatal Checkup":  "border-pink-200   bg-pink-50   text-pink-700 dark:text-pink-400   hover:border-pink-400",
   "Well-child Checkup": "border-green-200  bg-green-50 dark:bg-green-500/15  text-green-700 dark:text-green-400  hover:border-green-400",
-  "Asthma":             "border-blue-200   bg-blue-50 dark:bg-blue-500/15   text-blue-700 dark:text-blue-400   hover:border-blue-400",
+  "Asthma":             "border-(--brand-tint-strong)   bg-(--brand-tint)   text-(--brand-fg-strong) dark:text-(--brand-fg)   hover:border-(--brand-line)",
   "Family Planning":    "border-purple-200 bg-purple-50 dark:bg-purple-500/15 text-purple-700 dark:text-purple-400 hover:border-purple-400",
 };
 
@@ -77,7 +77,7 @@ function RecordTypeGrid({ value, onChange }: { value: string; onChange: (v: stri
             type="button"
             onClick={() => onChange(type)}
             className={`px-3 py-2.5 rounded-xl border-2 text-[11px] font-bold uppercase tracking-wide text-center transition
-              ${selected ? "border-[#3B82F6] dark:border-[#60A5FA] bg-[#3B82F6] text-white shadow-sm" : base}`}
+              ${selected ? "border-(--brand-line) bg-(--brand) text-white shadow-sm" : base}`}
           >
             {type}
           </button>
@@ -154,7 +154,7 @@ export default function NewHealthRecordPage() {
              bounds. overflow-hidden would clip it off after ~1 row. */}
         <div data-tour="page-health-new-resident" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626]">
           <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] rounded-t-xl">
-            <div className="w-8 h-8 rounded-lg bg-[#3B82F6] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-(--brand) flex items-center justify-center">
               <User size={14} className="text-white" />
             </div>
             <p className="text-[13px] font-bold text-[#1F2937] dark:text-white">Resident</p>
@@ -190,7 +190,7 @@ export default function NewHealthRecordPage() {
                   value={form.record_type === "Other" ? "" : form.record_type}
                   onChange={e => set("record_type", e.target.value)}
                   placeholder="Enter specific condition or checkup type..."
-                  className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] bg-white dark:bg-[#171717]"
+                  className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] bg-white dark:bg-[#171717]"
                 />
               </div>
             )}
@@ -214,7 +214,7 @@ export default function NewHealthRecordPage() {
               onChange={e => set("notes", e.target.value)}
               placeholder="Enter findings, recommendations, medications, referrals, or any relevant observations..."
               rows={4}
-              className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-[#3B82F6] dark:focus:border-[#60A5FA] focus:ring-2 focus:ring-blue-50 text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition resize-none bg-white dark:bg-[#171717]"
+              className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition resize-none bg-white dark:bg-[#171717]"
             />
             <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-1.5 text-right">{form.notes.length} characters</p>
           </div>
@@ -255,7 +255,7 @@ export default function NewHealthRecordPage() {
           <button
             onClick={handleSave}
             disabled={saving || !isValid}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#3B82F6] hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-(--brand) hover:bg-(--brand-hover) disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
           >
             <Save size={14} />
             {saving ? "Saving…" : "Save Health Record"}

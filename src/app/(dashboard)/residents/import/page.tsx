@@ -209,7 +209,7 @@ export default function ResidentImportPage() {
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- this points to an API download route, not a Next.js page */}
             <a
               href="/api/residents/import/template"
-              className="flex shrink-0 items-center gap-1.5 text-[11px] font-bold text-[#3B82F6] hover:text-[#2563EB]"
+              className="flex shrink-0 items-center gap-1.5 text-[11px] font-bold text-(--brand-fg) hover:text-(--brand-fg-strong)"
             >
               <Download size={12} />
               Download Template
@@ -230,7 +230,7 @@ export default function ResidentImportPage() {
             }}
             onClick={() => fileInputRef.current?.click()}
             className={`flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed px-8 py-14 text-center transition ${
-              dragOver ? "border-[#3B82F6] bg-[#EFF6FF]" : "border-[#E9EAEC] bg-white hover:bg-[#F9FAFB]"
+              dragOver ? "border-(--brand-line) bg-(--brand-tint)" : "border-[#E9EAEC] bg-white hover:bg-[#F9FAFB]"
             }`}
           >
             <input
@@ -245,13 +245,13 @@ export default function ResidentImportPage() {
             />
             {uploading ? (
               <>
-                <Loader2 size={32} className="animate-spin text-[#3B82F6]" />
+                <Loader2 size={32} className="animate-spin text-(--brand-fg)" />
                 <p className="text-[13px] font-semibold text-[#374151]">Processing file...</p>
               </>
             ) : (
               <>
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EFF6FF]">
-                  <Upload size={20} className="text-[#3B82F6]" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-(--brand-tint)">
+                  <Upload size={20} className="text-(--brand-fg)" />
                 </div>
                 <div>
                   <p className="text-[13px] font-bold text-[#1F2937]">Drop your file here, or click to browse</p>
@@ -300,7 +300,7 @@ export default function ResidentImportPage() {
               <button
                 onClick={handleCommit}
                 disabled={committing || selected.size === 0}
-                className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#2563EB] disabled:opacity-60"
+                className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-4 py-2 text-[12px] font-bold text-white transition hover:bg-(--brand-hover) disabled:opacity-60"
               >
                 {committing ? <Loader2 size={13} className="animate-spin" /> : <Users size={13} />}
                 Import {selected.size} Resident{selected.size === 1 ? "" : "s"}
@@ -467,7 +467,7 @@ export default function ResidentImportPage() {
             </button>
             <button
               onClick={() => router.push("/residents")}
-              className="flex items-center gap-1.5 rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[12px] font-bold text-white transition hover:bg-[#2563EB]"
+              className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-4 py-2.5 text-[12px] font-bold text-white transition hover:bg-(--brand-hover)"
             >
               <Users size={13} />
               View Residents

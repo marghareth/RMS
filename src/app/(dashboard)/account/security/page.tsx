@@ -217,7 +217,7 @@ export default function SecuritySettingsPage() {
               placeholder="123456"
               inputMode="numeric"
               maxLength={6}
-              className="w-40 rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[15px] tracking-widest text-[#1F2937] outline-none focus:border-[#3B82F6] dark:border-[#333333] dark:bg-[#111111] dark:text-white"
+              className="w-40 rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[15px] tracking-widest text-[#1F2937] outline-none focus:border-(--brand-line) dark:border-[#333333] dark:bg-[#111111] dark:text-white"
             />
             {error && <p className="text-[12px] text-red-500">{error}</p>}
             <div className="flex gap-2">
@@ -276,14 +276,14 @@ export default function SecuritySettingsPage() {
                     value={disablePassword}
                     onChange={(e) => setDisablePassword(e.target.value)}
                     required
-                    className="rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none focus:border-[#3B82F6] dark:border-[#333333] dark:bg-[#111111] dark:text-white"
+                    className="rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none focus:border-(--brand-line) dark:border-[#333333] dark:bg-[#111111] dark:text-white"
                   />
                   <input
                     placeholder="6-digit code or backup code"
                     value={disableToken}
                     onChange={(e) => setDisableToken(e.target.value)}
                     required
-                    className="rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none focus:border-[#3B82F6] dark:border-[#333333] dark:bg-[#111111] dark:text-white"
+                    className="rounded-lg border border-[#E9EAEC] px-3 py-2.5 text-[13px] text-[#1F2937] outline-none focus:border-(--brand-line) dark:border-[#333333] dark:bg-[#111111] dark:text-white"
                   />
                   {error && <p className="text-[12px] text-red-500">{error}</p>}
                   <div className="flex gap-2">
