@@ -9,6 +9,7 @@ import {
   APPROPRIATION_CATEGORY_LABELS, APPROPRIATION_CATEGORY_COLORS,
   AppropriationRecord, AppropriationCategory, AppropriationStatus, FundSourceMini,
 } from "@/lib/finance";
+import { readList } from "@/lib/fetch-json";
 
 const STATUS_STYLES: Record<AppropriationStatus, string> = {
   PENDING: "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400",
@@ -42,8 +43,8 @@ export default function AppropriationsPage() {
         fetch(`/api/appropriations?${params}`),
         fetch("/api/fund-sources"),
       ]);
-      setItems(await apRes.json());
-      setFundSources(await fsRes.json());
+      setItems(await readList(apRes));
+      setFundSources(await readList(fsRes));
     } catch (e) {
       console.error(e);
     } finally {

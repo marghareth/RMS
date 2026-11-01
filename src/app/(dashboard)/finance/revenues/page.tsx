@@ -6,6 +6,7 @@ import { TrendingUp, Plus, X, Search } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import StatCard from "@/components/shared/StatCard";
 import { fmtCurrency, fmtDate, RevenueRecord, FundSourceMini } from "@/lib/finance";
+import { readList } from "@/lib/fetch-json";
 
 const EMPTY_FORM = { source: "", amount: "", date: new Date().toISOString().slice(0, 10), category: "", fund_source_id: "", or_number: "" };
 
@@ -35,8 +36,8 @@ export default function RevenueTrackingPage() {
         fetch(`/api/revenues?${params}`),
         fetch("/api/fund-sources"),
       ]);
-      setItems(await rvRes.json());
-      setFundSources(await fsRes.json());
+      setItems(await readList(rvRes));
+      setFundSources(await readList(fsRes));
     } catch (e) {
       console.error(e);
     } finally {

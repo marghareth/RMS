@@ -31,6 +31,7 @@ import {
   formatISODate,
   termLabel,
 } from "@/lib/mock/officials";
+import { readList } from "@/lib/fetch-json";
 
 function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string | null }) {
   return (
@@ -58,7 +59,7 @@ export default function OfficialsListPage() {
         const params = new URLSearchParams();
         if (activeOnly) params.set("is_active", "true");
         const res = await fetch(`/api/officials?${params}`);
-        setOfficials(await res.json()); // GET /api/officials returns a bare array
+        setOfficials(await readList(res)); // GET /api/officials returns a bare array
       } catch (e) {
         console.error(e);
       } finally {

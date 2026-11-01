@@ -6,6 +6,7 @@ import { Landmark, Plus, X, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import FundSourceDetailSheet from "@/components/finance/FundSourceDetailSheet";
 import { fmtCurrency, FundSourceRecord } from "@/lib/finance";
+import { readList } from "@/lib/fetch-json";
 
 const EMPTY_FORM = { name: "", code: "", statutory_rule: "", original_balance: "" };
 
@@ -26,7 +27,7 @@ export default function FundSourcesPage() {
       const params = new URLSearchParams();
       if (status) params.set("status", status);
       const res = await fetch(`/api/fund-sources?${params}`);
-      setItems(await res.json());
+      setItems(await readList(res));
     } catch (e) {
       console.error(e);
     } finally {

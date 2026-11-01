@@ -1,17 +1,73 @@
 // FILE: src/app/api/financial/route.ts
+//
+// GET  /api/financial                      — paged list (+ income/expense totals for the filter)
+// GET  /api/financial?view=summary&year=Y  — year totals and per-month totals for the
+//                                            Financial Summary page, over ALL records
+//                                            (no 100-record page cap), plus the years
+//                                            that have data, for its year picker
+// POST /api/financial                      — add a record
+//
+// date_from / date_to (YYYY-MM-DD) are whole days in Philippine time — see
+// src/lib/financial-summary.ts for why the old UTC parsing dropped records.
 import type { Prisma, FinancialType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
-import { withErrorHandling } from "@/lib/api-handler";
+import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { financialCreateSchema, paginationSchema } from "@/lib/validations";
+import {
+  manilaCurrentYear,
+  manilaDayStart,
+  manilaNextDayStart,
+  manilaYearMonth,
+  manilaYearRange,
+  summarizeLedger,
+} from "@/lib/financial-summary";
+
+/** Year totals + monthly breakdown for one Manila calendar year. */
+async function yearSummary(yearParam: string | null) {
+  const year = yearParam === null || yearParam === "" ? manilaCurrentYear() : Number(yearParam);
+  if (!Number.isInteger(year) || year < 1900 || year > 9999) {
+    throw new ApiError(400, "INVALID_YEAR", "year must be a four-digit year, e.g. 2026.");
+  }
+
+  const [rows, span] = await Promise.all([
+    prisma.financialRecord.findMany({
+      where: { transaction_date: manilaYearRange(year) },
+      select: { transaction_type: true, amount: true, transaction_date: true },
+    }),
+    prisma.financialRecord.aggregate({ _min: { transaction_date: true }, _max: { transaction_date: true } }),
+  ]);
+
+  // Every year from the oldest record to the newest, plus the requested and
+  // current year, so the picker always offers something sensible.
+  const years = new Set<number>([year, manilaCurrentYear()]);
+  if (span._min.transaction_date && span._max.transaction_date) {
+    const first = manilaYearMonth(span._min.transaction_date).year;
+    const last = manilaYearMonth(span._max.transaction_date).year;
+    for (let y = first; y <= last; y++) years.add(y);
+  }
+
+  return { year, ...summarizeLedger(rows), count: rows.length, years: [...years].sort((a, b) => b - a) };
+}
+
+/** YYYY-MM-DD → a whole-day bound in Manila; anything else is a 400. */
+function dayBound(value: string, which: "from" | "to"): Date {
+  const d = which === "from" ? manilaDayStart(value) : manilaNextDayStart(value);
+  if (!d) throw new ApiError(400, "INVALID_DATE", `date_${which} must be a date in YYYY-MM-DD form.`);
+  return d;
+}
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("financial:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);
+  if (searchParams.get("view") === "summary") {
+    return NextResponse.json(await yearSummary(searchParams.get("year")));
+  }
+
   const transaction_type = searchParams.get("transaction_type");
   const date_from = searchParams.get("date_from");
   const date_to = searchParams.get("date_to");
@@ -24,8 +80,9 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   const where: Prisma.FinancialRecordWhereInput = {
     AND: [
       transaction_type ? { transaction_type: transaction_type as FinancialType } : {},
-      date_from ? { transaction_date: { gte: new Date(date_from) } } : {},
-      date_to ? { transaction_date: { lte: new Date(date_to) } } : {},
+      date_from ? { transaction_date: { gte: dayBound(date_from, "from") } } : {},
+      // `lt` the start of the next day, so all of date_to is included.
+      date_to ? { transaction_date: { lt: dayBound(date_to, "to") } } : {},
     ],
   };
 

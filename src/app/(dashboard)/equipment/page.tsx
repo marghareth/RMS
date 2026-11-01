@@ -10,6 +10,7 @@ import {
 import EquipmentDetailSheet from "@/components/equipment/EquipmentDetailSheet";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
+import { fetchJson } from "@/lib/fetch-json";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type EquipmentStatus = "SERVICEABLE" | "UNSERVICEABLE" | "MISSING";
@@ -92,6 +93,18 @@ function StatusBadge({ status }: { status: EquipmentStatus }) {
 }
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+// BUGFIX: the page used to store whatever /api/equipment returned. On any
+// failure — 401/403 (signed out, no permission, 2FA setup required), 503
+// (database unreachable) — that's an { error } object, not a list, and the
+// next render crashed on `equipment.map is not a function`. Now a failure is
+// reported as a message and the list stays empty.
+async function loadEquipment(params: URLSearchParams): Promise<{ items: Equipment[]; error: string | null }> {
+  const result = await fetchJson<Equipment[]>(`/api/equipment?${params}`);
+  if (!result.ok) return { items: [], error: result.detail };
+  if (!Array.isArray(result.data)) return { items: [], error: "The server sent an unexpected response." };
+  return { items: result.data, error: null };
+}
+
 export default function EquipmentPage() {
   const router = useRouter();
 
@@ -102,6 +115,9 @@ export default function EquipmentPage() {
   const [detailSheetId, setDetailSheetId] = useState<number | null>(null);
 
   const [equipment, setEquipment] = useState<Equipment[]>([]);
+  // Why the list couldn't load (no permission, signed out, database down…).
+  // Shown in place of the list instead of crashing the page.
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [loading,   setLoading]   = useState(true);
 
   // Reset to a "loading" state the instant search/filterStatus change,
@@ -122,11 +138,12 @@ export default function EquipmentPage() {
     if (search)                          params.set("search", search);
     if (filterStatus !== "ALL")          params.set("status", filterStatus);
     if (filterType)                      params.set("asset_type", filterType);
-    fetch(`/api/equipment?${params}`)
-      .then(r => r.json())
-      .then(data => { if (!cancelled) setEquipment(data); })
-      .catch(console.error)
-      .finally(() => { if (!cancelled) setLoading(false); });
+    loadEquipment(params).then((result) => {
+      if (cancelled) return;
+      setEquipment(result.items);
+      setLoadError(result.error);
+      setLoading(false);
+    });
     return () => { cancelled = true; };
   }, [search, filterStatus, filterType]);
 
@@ -137,10 +154,10 @@ export default function EquipmentPage() {
     if (search)                 params.set("search", search);
     if (filterStatus !== "ALL") params.set("status", filterStatus);
     if (filterType)              params.set("asset_type", filterType);
-    fetch(`/api/equipment?${params}`)
-      .then(r => r.json())
-      .then(setEquipment)
-      .catch(console.error);
+    loadEquipment(params).then((result) => {
+      setEquipment(result.items);
+      setLoadError(result.error);
+    });
   }
 
   // Distinct asset types across the currently-loaded list, for the Type
@@ -235,6 +252,19 @@ export default function EquipmentPage() {
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
+              </div>
+            ) : loadError ? (
+              <div role="alert" className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
+                <AlertTriangle size={28} className="text-amber-500 dark:text-amber-400" />
+                <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">Couldn&apos;t load equipment</p>
+                <p className="max-w-xs text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{loadError}</p>
+                <button
+                  type="button"
+                  onClick={reloadEquipment}
+                  className="mt-1 rounded-lg border border-[#E9EAEC] px-3 py-1.5 text-[12px] font-bold text-[#374151] transition hover:bg-[#F4F5F7] dark:border-[#262626] dark:text-[#D4D4D4] dark:hover:bg-[#1F1F1F]"
+                >
+                  Try again
+                </button>
               </div>
             ) : equipment.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-2">

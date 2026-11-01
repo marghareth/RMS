@@ -109,3 +109,29 @@ export async function runWithConcurrency<T>(tasks: (() => Promise<T>)[], limit: 
   if (failed) throw firstError;
   return results;
 }
+/**
+ * For pages that load a list with `fetch` and put it straight into state.
+ *
+ * BUGFIX: those pages did `setItems(await res.json())`. When the request
+ * failed (401/403/503…), the body is an `{ error }` object, not a list, and
+ * the next render crashed with "items.map is not a function". This returns
+ * the list when the request succeeded and the body really is an array;
+ * otherwise it throws an Error with the server's message, so the page's
+ * existing try/catch handles it and the old list stays on screen.
+ */
+export async function readList<T = unknown>(res: Response): Promise<T[]> {
+  if (res.redirected && /\/login/.test(res.url)) {
+    throw new Error("Your session has expired — please sign in again.");
+  }
+  let body: unknown = null;
+  try {
+    body = await res.json();
+  } catch {
+    /* body wasn't JSON */
+  }
+  if (!res.ok) {
+    throw new Error(apiErrorMessage(body as Parameters<typeof apiErrorMessage>[0], `Request failed (${res.status})`));
+  }
+  if (!Array.isArray(body)) throw new Error("The server sent an unexpected response (expected a list).");
+  return body as T[];
+}
