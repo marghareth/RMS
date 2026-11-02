@@ -30,6 +30,7 @@ import {
   isUpcoming,
   MEETING_STATUSES,
 } from "@/lib/mock/meetings";
+import { useCan } from "@/lib/hooks/useCan";
 
 interface FilterState {
   meeting_type: string;
@@ -116,6 +117,7 @@ function SectionHeading({ label, count }: { label: string; count?: number }) {
 }
 
 export default function AssemblyListPage() {
+  const can = useCan();
   const router = useRouter();
 
   const [search, setSearch] = useState("");
@@ -205,14 +207,14 @@ export default function AssemblyListPage() {
         title="Assembly / Meeting Records"
         subtitle="SB meetings and barangay assemblies, with agenda items and minutes"
         actions={
-          <button
+          (can("meetings:write") && (<button
             data-tour="page-meetings-add"
             onClick={() => router.push("/meetings/new")}
             className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             New Meeting
-          </button>
+          </button>))
         }
       />
 

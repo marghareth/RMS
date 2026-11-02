@@ -12,8 +12,10 @@ import {
 } from "@/lib/mock/certificates";
 import { renderTemplate, CertificateTemplateMock } from "@/lib/mock/certificateTemplates";
 import { useBarangayInfo } from "@/lib/hooks/useBarangayInfo";
+import { useCan } from "@/lib/hooks/useCan";
 
 export default function CertificatePreviewPage() {
+  const can = useCan();
   const router = useRouter();
   const params = useParams();
   const certId = Number(params.id);
@@ -240,14 +242,14 @@ export default function CertificatePreviewPage() {
           Back to Certificate
         </button>
         <div className="flex items-center gap-2">
-          <button
+          {can("certificates:write") && (<button
             data-tour="page-certificates-preview-override"
             onClick={openOverridePanel}
             className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-2.5 text-[13px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
           >
             <Pencil size={14} />
             Correct Name / Address
-          </button>
+          </button>)}
           <button
             onClick={() => router.push("/certificates/templates")}
             className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-2.5 text-[13px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
@@ -336,12 +338,12 @@ export default function CertificatePreviewPage() {
           <p className="text-[12px] font-semibold text-amber-800 dark:text-amber-300">
             This certificate prints a corrected name/address that differs from the resident&apos;s record.
           </p>
-          <button
+          {can("certificates:write") && (<button
             onClick={openOverridePanel}
             className="text-[12px] font-bold text-amber-800 dark:text-amber-300 underline"
           >
             Edit
-          </button>
+          </button>)}
         </div>
       )}
 

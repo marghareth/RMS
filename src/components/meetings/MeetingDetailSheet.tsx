@@ -1,4 +1,4 @@
-// src/components/meetings/MeetingDetailSheet.tsx
+// FILE: src/components/meetings/MeetingDetailSheet.tsx
 //
 // The meeting detail view — inline meeting/minutes editing, agenda items —
 // as a slide-over instead of a full page navigation. Content mirrors
@@ -44,6 +44,7 @@ import {
   isUpcoming,
   MEETING_STATUSES,
 } from "@/lib/mock/meetings";
+import { useCan } from "@/lib/hooks/useCan";
 
 interface MeetingDetailSheetProps {
   /** The meeting to show, or null to keep the sheet closed. */
@@ -54,6 +55,7 @@ interface MeetingDetailSheetProps {
 }
 
 export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: MeetingDetailSheetProps) {
+  const can = useCan();
   const router = useRouter();
   const open = meetingId !== null;
 
@@ -298,20 +300,20 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
               <div className="flex shrink-0 items-center gap-1">
                 {!editingMeeting && (
                   <>
-                    <button
+                    {can("meetings:write") && (<button
                       onClick={startEditMeeting}
                       className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-1.5 text-[12px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                     >
                       <Pencil size={13} />
                       Edit
-                    </button>
-                    <button
+                    </button>)}
+                    {can("meetings:write") && (<button
                       onClick={openAddAgendaItem}
                       className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-(--brand-hover)"
                     >
                       <Plus size={13} />
                       Add Item
-                    </button>
+                    </button>)}
                   </>
                 )}
                 <button
@@ -440,13 +442,13 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                 {agendaItems.length === 0 ? (
                   <div className="py-8 text-center">
                     <p className="mb-3 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No agenda items yet.</p>
-                    <button
+                    {can("meetings:write") && (<button
                       onClick={openAddAgendaItem}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-(--brand) px-4 py-2 text-[12px] font-bold text-white transition hover:bg-(--brand-hover)"
                     >
                       <Plus size={12} />
                       Add First Item
-                    </button>
+                    </button>)}
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -474,20 +476,20 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                             </td>
                             <td className="py-3">
                               <div className="flex items-center justify-end gap-1">
-                                <button
+                                {can("meetings:write") && (<button
                                   onClick={() => openEditAgendaItem(item)}
                                   title="Edit"
                                   className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                                 >
                                   <Pencil size={13} />
-                                </button>
-                                <button
+                                </button>)}
+                                {can("meetings:delete") && (<button
                                   onClick={() => setDeleteTarget(item)}
                                   title="Delete"
                                   className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#FEE2E2] dark:hover:bg-red-500/20 hover:text-[#DC2626] dark:hover:text-[#F87171]"
                                 >
                                   <Trash2 size={13} />
-                                </button>
+                                </button>)}
                               </div>
                             </td>
                           </tr>
@@ -505,13 +507,13 @@ export default function MeetingDetailSheet({ meetingId, onClose, onUpdated }: Me
                     <div className="mb-3 flex items-center justify-between">
                       <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Minutes</p>
                       {!editingMinutes ? (
-                        <button
+                        (can("meetings:write") && (<button
                           onClick={startEditMinutes}
                           className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                         >
                           <Pencil size={12} />
                           {meeting.minutes ? "Edit" : "Add Minutes"}
-                        </button>
+                        </button>))
                       ) : (
                         <div className="flex items-center gap-2">
                           <button

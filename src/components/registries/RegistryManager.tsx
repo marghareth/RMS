@@ -1,4 +1,4 @@
-// src/components/registries/RegistryManager.tsx
+// FILE: src/components/registries/RegistryManager.tsx
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -6,6 +6,7 @@ import type { LucideIcon } from "lucide-react";
 import { Plus, Search, X, Loader2 } from "lucide-react";
 import ResidentPicker, { type PickedResident } from "@/components/shared/ResidentPicker";
 import RegistryDetailSheet from "@/components/registries/RegistryDetailSheet";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type RegistryType = "FOUR_PS" | "PWD" | "SENIOR_CITIZEN";
@@ -163,6 +164,7 @@ export default function RegistryManager({
   minAge,
   detailBase,
 }: RegistryManagerProps) {
+  const can = useCan();
   const [search, setSearch] = useState("");
   const [entries, setEntries] = useState<RegistryEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -218,12 +220,12 @@ export default function RegistryManager({
             </div>
             {addNote && <p className="mt-3 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{addNote}</p>}
           </div>
-          <button
+          {can("registries:write") && (<button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[12px] font-semibold text-[#1F2937] dark:text-white hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
           >
             <Plus size={14} /> Add
-          </button>
+          </button>)}
         </div>
       </div>
 

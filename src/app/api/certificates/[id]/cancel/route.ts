@@ -11,7 +11,7 @@ const cancelSchema = z.object({
 });
 
 export const POST = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("certificates:write", req);
+  const auth = await requirePermission("certificates:delete", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;

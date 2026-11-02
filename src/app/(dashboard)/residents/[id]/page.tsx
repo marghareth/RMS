@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Pencil, Archive, Plus, X, Trash2 } from "lucide-react";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ── TYPES ─────────────────────────────────────────────────────────────────────
 interface Purok     { id: number; name: string }
@@ -179,6 +180,7 @@ function Badge({ label, color = "blue" }: { label: string; color?: "blue" | "gre
 
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function ResidentDetailPage() {
+  const can = useCan();
   const router    = useRouter();
   const { id }    = useParams<{ id: string }>();
 
@@ -385,20 +387,20 @@ export default function ResidentDetailPage() {
         <div className="flex gap-2">
           {resident.is_archived && <Badge label="Archived" color="red" />}
           {resident.is_deceased && <Badge label="Deceased" color="red" />}
-          <button
+          {can("residents:write") && (<button
             onClick={() => router.push(`/residents/${id}/edit`)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-(--brand) text-white text-[12px] font-bold hover:bg-(--brand-hover) transition"
           >
             <Pencil size={13} /> Edit
-          </button>
+          </button>)}
           {!resident.is_archived && (
-            <button
+            (can("residents:delete") && (<button
               onClick={() => setConfirmOpen(true)}
               disabled={archiving}
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-red-200 text-red-500 dark:text-red-400 text-[12px] font-bold hover:bg-red-50 transition"
             >
               <Archive size={13} /> Archive
-            </button>
+            </button>))
           )}
         </div>
       </div>
@@ -475,12 +477,12 @@ export default function ResidentDetailPage() {
           title={`Beneficiary Info (${resident.government_assistance.length})`}
           action={
             assistanceFormOpen === null && (
-              <button
+              (can("residents:write") && (<button
                 onClick={openAddAssistance}
                 className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-(--brand-fg) hover:text-(--brand-fg-strong) dark:hover:text-(--brand-fg)"
               >
                 <Plus size={12} /> Add Program
-              </button>
+              </button>))
             )
           }
         >
@@ -534,12 +536,12 @@ export default function ResidentDetailPage() {
                     </p>
                   </div>
                   <div className="flex shrink-0 gap-1">
-                    <button onClick={() => openEditAssistance(a)} className="flex h-6 w-6 items-center justify-center rounded text-[#9CA3AF] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white">
+                    {can("residents:write") && (<button onClick={() => openEditAssistance(a)} className="flex h-6 w-6 items-center justify-center rounded text-[#9CA3AF] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white">
                       <Pencil size={11} />
-                    </button>
-                    <button onClick={() => setAssistanceDeleteTarget(a)} className="flex h-6 w-6 items-center justify-center rounded text-[#9CA3AF] dark:text-[#A3A3A3] hover:bg-red-50 hover:text-red-600">
+                    </button>)}
+                    {can("residents:delete") && (<button onClick={() => setAssistanceDeleteTarget(a)} className="flex h-6 w-6 items-center justify-center rounded text-[#9CA3AF] dark:text-[#A3A3A3] hover:bg-red-50 hover:text-red-600">
                       <Trash2 size={11} />
-                    </button>
+                    </button>)}
                   </div>
                 </div>
               ))}
@@ -552,12 +554,12 @@ export default function ResidentDetailPage() {
           title="Sectoral Affiliations"
           action={
             !addingSector && availableSectorTypes.length > 0 && (
-              <button
+              (can("residents:write") && (<button
                 onClick={() => setAddingSector(true)}
                 className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-(--brand-fg) hover:text-(--brand-fg-strong) dark:hover:text-(--brand-fg)"
               >
                 <Plus size={12} /> Add Tag
-              </button>
+              </button>))
             )
           }
         >
@@ -595,9 +597,9 @@ export default function ResidentDetailPage() {
                   className="inline-flex items-center gap-1.5 rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong) dark:text-(--brand-fg)"
                 >
                   {SECTOR_TYPE_LABEL[s.sector_type] ?? s.sector_type}
-                  <button onClick={() => handleRemoveSector(s.id)} disabled={sectorBusy} className="hover:text-(--brand-fg-strong)">
+                  {can("residents:delete") && (<button onClick={() => handleRemoveSector(s.id)} disabled={sectorBusy} className="hover:text-(--brand-fg-strong)">
                     <X size={11} />
-                  </button>
+                  </button>)}
                 </span>
               ))}
             </div>

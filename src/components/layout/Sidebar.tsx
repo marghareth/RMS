@@ -53,6 +53,7 @@ import type { LucideIcon } from "lucide-react";
 import NavItem from "./NavItem";
 import NavGroup from "./NavGroup";
 import { hasPermission } from "@/lib/permission";
+import { canAccessRoute } from "@/lib/route-permissions";
 
 type Child = {
   label: string;
@@ -229,12 +230,20 @@ function isAllowed(role: string, permission: string | string[]): boolean {
   return hasPermission(role, permission);
 }
 
+// The "+" shortcut next to a link opens that module's add form. Show it only
+// if the role may open that form — checked with the same page rules the
+// middleware enforces (src/lib/route-permissions.ts), so a view-only role
+// never sees a "+" that would only lead to /access-denied.
+function withAllowedAdd<T extends { addHref?: string }>(item: T, role: string): T {
+  return item.addHref && !canAccessRoute(role, item.addHref) ? { ...item, addHref: undefined } : item;
+}
+
 function visibleOf(items: ModuleItem[], role: string): ModuleItem[] {
   return items
     .map((item) =>
       item.type === "group"
-        ? { ...item, children: item.children.filter((c) => isAllowed(role, c.permission)) }
-        : item
+        ? { ...item, children: item.children.filter((c) => isAllowed(role, c.permission)).map((c) => withAllowedAdd(c, role)) }
+        : withAllowedAdd(item, role)
     )
     .filter((item) => (item.type === "group" ? item.children.length > 0 : isAllowed(role, item.permission)));
 }

@@ -11,6 +11,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Tag, Plus, Pencil, Trash2, Check, X, ScrollText, Ban, CheckCircle2 } from "lucide-react";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import { useCan } from "@/lib/hooks/useCan";
 
 interface IncidentType {
   id: number;
@@ -20,6 +21,7 @@ interface IncidentType {
 }
 
 export default function IncidentTypesManager() {
+  const can = useCan();
   const [types, setTypes] = useState<IncidentType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -194,7 +196,7 @@ export default function IncidentTypesManager() {
       </p>
 
       {/* Add new incident type */}
-      <div className="mb-4 flex items-center gap-2">
+      {can("incident-types:write") && (<div className="mb-4 flex items-center gap-2">
         <div className="relative flex-1">
           <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
           <input
@@ -213,7 +215,7 @@ export default function IncidentTypesManager() {
           <Plus size={14} />
           {adding ? "Adding…" : "Add"}
         </button>
-      </div>
+      </div>)}
 
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-500/15 px-4 py-2.5 text-[12px] font-medium text-red-600 dark:text-red-400">
@@ -316,27 +318,27 @@ export default function IncidentTypesManager() {
                       </>
                     ) : (
                       <>
-                        <button
+                        {can("incident-types:write") && (<button
                           onClick={() => handleToggleActive(t)}
                           className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                           title={t.is_active ? "Deactivate" : "Activate"}
                         >
                           {t.is_active ? <Ban size={14} /> : <CheckCircle2 size={14} />}
-                        </button>
-                        <button
+                        </button>)}
+                        {can("incident-types:write") && (<button
                           onClick={() => startEditing(t)}
                           className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                           title="Rename"
                         >
                           <Pencil size={14} />
-                        </button>
-                        <button
+                        </button>)}
+                        {can("incident-types:delete") && (<button
                           onClick={() => { setDeleteTarget(t); setDeleteError(""); }}
                           className="flex h-8 w-8 items-center justify-center rounded-lg text-red-500 dark:text-red-400 transition hover:bg-red-50"
                           title={inUse ? "Still assigned to blotter cases" : "Delete"}
                         >
                           <Trash2 size={14} />
-                        </button>
+                        </button>)}
                       </>
                     )}
                   </div>

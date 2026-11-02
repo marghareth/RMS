@@ -21,6 +21,7 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import BlotterCaseSheet from "@/components/blotter/BlotterCaseSheet";
 import { BlotterCaseMock, BlotterStatus, formatISODate } from "@/lib/mock/blotter";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ── FILTER STATE ─────────────────────────────────────────────────────────────
 interface FilterState {
@@ -33,6 +34,7 @@ interface FilterState {
 const EMPTY_FILTERS: FilterState = { status: "", escalated: false, date_from: "", date_to: "" };
 
 export default function BlotterListPage() {
+  const can = useCan();
   const router = useRouter();
 
   // ── MOCK DATA STATE ──────────────────────────────────────────────────────
@@ -110,14 +112,14 @@ export default function BlotterListPage() {
         title="Blotter / Incident Log"
         subtitle="File complaints, track hearings, and manage case statuses"
         actions={
-          <button
+          (can("blotter:write") && (<button
             data-tour="page-blotter-add"
             onClick={() => router.push("/blotter/new")}
             className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             File New Case
-          </button>
+          </button>))
         }
       />
 

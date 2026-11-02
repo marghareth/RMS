@@ -29,6 +29,7 @@ import {
   BlotterUpdateMock,
   formatISODate,
 } from "@/lib/mock/blotter";
+import { useCan } from "@/lib/hooks/useCan";
 
 interface IncidentType {
   id: number;
@@ -49,6 +50,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string
 }
 
 export default function BlotterCaseDetailPage() {
+  const can = useCan();
   const router = useRouter();
   const params = useParams();
   const caseId = Number(params.id);
@@ -300,7 +302,7 @@ export default function BlotterCaseDetailPage() {
         </div>
 
         {/* ── Right column: add update form ── */}
-        <div className="lg:col-span-1">
+        {can("blotter:write") && (<div className="lg:col-span-1">
           <div className="sticky top-5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
             <p className="mb-3 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
               Add Update
@@ -393,7 +395,7 @@ export default function BlotterCaseDetailPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>)}
       </div>
     </div>
   );

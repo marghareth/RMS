@@ -7,10 +7,12 @@ import EmptyState from "@/components/shared/EmptyState";
 import FundSourceDetailSheet from "@/components/finance/FundSourceDetailSheet";
 import { fmtCurrency, FundSourceRecord } from "@/lib/finance";
 import { readList } from "@/lib/fetch-json";
+import { useCan } from "@/lib/hooks/useCan";
 
 const EMPTY_FORM = { name: "", code: "", statutory_rule: "", original_balance: "" };
 
 export default function FundSourcesPage() {
+  const can = useCan();
   const [items, setItems] = useState<FundSourceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
@@ -80,14 +82,14 @@ export default function FundSourcesPage() {
             {items.length} source(s) · Combined balance {fmtCurrency(totalBalance)}
           </p>
         </div>
-        <button
+        {can("fund-sources:write") && (<button
           data-tour="page-fund-sources-add"
           onClick={() => setShowForm((v) => !v)}
           className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
         >
           {showForm ? <X size={15} /> : <Plus size={15} />}
           {showForm ? "Cancel" : "New Fund Source"}
-        </button>
+        </button>)}
       </div>
 
       {showForm && (

@@ -1,4 +1,4 @@
-// FILE: src/app/api/residents/[id]/route.ts
+// FILE: src/app/api/registries/[id]/route.ts
 import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
@@ -101,7 +101,7 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
 });
 
 export const DELETE = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("residents:write", req);
+  const auth = await requirePermission("residents:delete", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;

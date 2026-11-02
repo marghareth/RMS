@@ -12,6 +12,7 @@ import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody, SheetFooter,
 } from "@/components/ui/sheet";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface CalendarEventItem {
@@ -78,6 +79,7 @@ function formatFullLabel(d: Date) {
 }
 
 export default function CalendarPage() {
+  const can = useCan();
   const [viewDate, setViewDate] = useState(() => utcDate(today().getUTCFullYear(), today().getUTCMonth(), 1));
   const [selectedDate, setSelectedDate] = useState<Date>(() => today());
 
@@ -281,14 +283,14 @@ export default function CalendarPage() {
         title="Calendar"
         subtitle="Barangay events, meetings, and important dates"
         actions={
-          <button
+          (can("calendar:write") && (<button
             data-tour="page-calendar-add"
             onClick={() => openAddSheet()}
             className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             Add Event
-          </button>
+          </button>))
         }
       />
 
@@ -390,13 +392,13 @@ export default function CalendarPage() {
               icon={CalendarDays}
               title="No events on this day."
               action={
-                <button
+                (can("calendar:write") && (<button
                   onClick={() => openAddSheet(selectedDate)}
                   className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2 text-[12px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
                 >
                   <Plus size={14} />
                   Add Event
-                </button>
+                </button>))
               }
             />
           ) : (
@@ -406,20 +408,20 @@ export default function CalendarPage() {
                   <div className="mb-1.5 flex items-start justify-between gap-2">
                     <p className="text-[13px] font-semibold text-[#1F2937] dark:text-white">{ev.title}</p>
                     <div className="flex shrink-0 items-center gap-0.5">
-                      <button
+                      {can("calendar:write") && (<button
                         onClick={() => openEditSheet(ev)}
                         className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                         title="Edit"
                       >
                         <Pencil size={13} />
-                      </button>
-                      <button
+                      </button>)}
+                      {can("calendar:delete") && (<button
                         onClick={() => { setDeleteTarget(ev); setDeleteError(""); }}
                         className="flex h-7 w-7 items-center justify-center rounded-lg text-red-500 dark:text-red-400 transition hover:bg-red-50"
                         title="Delete"
                       >
                         <Trash2 size={13} />
-                      </button>
+                      </button>)}
                     </div>
                   </div>
                   {ev.event_type && <div className="mb-1.5"><EventTypeBadge type={ev.event_type} /></div>}

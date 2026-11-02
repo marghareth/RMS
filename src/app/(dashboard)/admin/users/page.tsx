@@ -12,8 +12,10 @@ import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import UserEditSheet from "@/components/admin/UserEditSheet";
 import { UserMock, roleLabel, formatISODate } from "@/lib/mock/admin";
 import { readList } from "@/lib/fetch-json";
+import { useCan } from "@/lib/hooks/useCan";
 
 export default function UsersListPage() {
+  const can = useCan();
   const router = useRouter();
 
   const [users, setUsers] = useState<UserMock[]>([]);
@@ -99,13 +101,13 @@ export default function UsersListPage() {
         subtitle="Accounts with access to this system"
         tutorial={ADMIN_TUTORIALS.users}
         actions={
-          <button
+          (can("users:write") && (<button
             onClick={() => router.push("/admin/users/new")}
             className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             Add User
-          </button>
+          </button>))
         }
       />
 
@@ -168,14 +170,14 @@ export default function UsersListPage() {
                   <td className="px-4 py-3 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">{formatISODate(u.created_at)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
-                      <button
+                      {can("users:write") && (<button
                         onClick={() => setEditId(u.id)}
                         className="flex w-20 items-center justify-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#333333] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                       >
                         <Pencil size={11} />
                         Edit
-                      </button>
-                      <button
+                      </button>)}
+                      {can("users:delete") && (<button
                         onClick={() => setDeactivateTarget(u)}
                         className={`flex w-30.5 items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide transition ${
                           u.is_active
@@ -185,7 +187,7 @@ export default function UsersListPage() {
                       >
                         <Power size={11} />
                         {u.is_active ? "Deactivate" : "Activate"}
-                      </button>
+                      </button>)}
                     </div>
                   </td>
                 </tr>

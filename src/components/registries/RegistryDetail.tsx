@@ -1,4 +1,4 @@
-// src/components/registries/RegistryDetail.tsx
+// FILE: src/components/registries/RegistryDetail.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,6 +10,7 @@ import {
   CalendarDays, MapPin,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type RegistryType = "SENIOR_CITIZEN" | "PWD" | "FOUR_PS";
@@ -130,6 +131,7 @@ const REGISTRY_CFG: Record<RegistryType, { label: string; bg: string; border: st
 export default function RegistryDetail({
   entryId, title, icon: Icon, iconBg, accentText, listBase,
 }: RegistryDetailProps) {
+  const can = useCan();
   const router = useRouter();
   const [entry, setEntry] = useState<RegistryEntry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -213,13 +215,13 @@ export default function RegistryDetail({
           >
             <User size={13} /> View RBI Profile
           </button>
-          <button
+          {can("residents:delete") && (<button
             onClick={handleDelete}
             disabled={deleting}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-red-200 text-red-500 dark:text-red-400 text-[12px] font-bold hover:bg-red-50 transition disabled:opacity-50"
           >
             <Trash2 size={13} /> Remove
-          </button>
+          </button>)}
         </div>
       </div>
 

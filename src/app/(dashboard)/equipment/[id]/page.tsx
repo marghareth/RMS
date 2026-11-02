@@ -8,6 +8,7 @@ import {
   CheckCircle2, AlertTriangle, XCircle,
   CalendarDays, Hash, Layers, Wrench,
 } from "lucide-react";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type EquipmentStatus = "SERVICEABLE" | "UNSERVICEABLE" | "MISSING";
@@ -90,6 +91,7 @@ function InfoRow({ icon: Icon, label, children }: { icon: any; label: string; ch
 
 // ─── BORROW ROW ───────────────────────────────────────────────────────────────
 function BorrowRow({ b, onReturn }: { b: Borrowing; onReturn: (id: number) => void }) {
+  const can = useCan();
   const returned = !!b.actual_return;
   return (
     <div className={`rounded-xl border px-4 py-3 ${
@@ -123,12 +125,12 @@ function BorrowRow({ b, onReturn }: { b: Borrowing; onReturn: (id: number) => vo
           )}
         </div>
         {!returned && (
-          <button
+          (can("equipment:write") && (<button
             onClick={() => onReturn(b.id)}
             className="shrink-0 px-3 py-1.5 rounded-lg bg-(--brand) text-white text-[11px] font-bold hover:bg-(--brand-hover) transition"
           >
             Return
-          </button>
+          </button>))
         )}
       </div>
     </div>
@@ -154,6 +156,7 @@ function Tab({ label, count, active, onClick }: { label: string; count: number; 
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function EquipmentDetailPage() {
+  const can = useCan();
   const router = useRouter();
   const params = useParams<{ id: string }>();
 
@@ -219,18 +222,18 @@ export default function EquipmentDetailPage() {
           </div>
         </div>
         <div data-tour="page-equipment-detail-actions" className="flex gap-2">
-          <button
+          {can("equipment:write") && (<button
             onClick={() => router.push(`/equipment/borrow?equipment_id=${equipment.id}`)}
             className="px-4 py-2 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] dark:hover:bg-[#F59E0B] text-white text-[12px] font-bold transition"
           >
             Lend Out
-          </button>
-          <button
+          </button>)}
+          {can("equipment:write") && (<button
             onClick={() => router.push(`/equipment/${equipment.id}/edit`)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
           >
             <Pencil size={13} /> Edit
-          </button>
+          </button>)}
         </div>
       </div>
 
@@ -344,12 +347,12 @@ export default function EquipmentDetailPage() {
                 <div className="flex flex-col items-center justify-center py-12 gap-2">
                   <Clock size={28} className="text-[#D1D5DB] dark:text-[#525252]" />
                   <p className="text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">No items currently borrowed</p>
-                  <button
+                  {can("equipment:write") && (<button
                     onClick={() => router.push(`/equipment/borrow?equipment_id=${equipment.id}`)}
                     className="mt-2 px-4 py-2 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] dark:hover:bg-[#F59E0B] text-white text-[12px] font-bold transition"
                   >
                     Lend Out Now
-                  </button>
+                  </button>)}
                 </div>
               ) : (
                 active.map(b => <BorrowRow key={b.id} b={b} onReturn={handleReturn} />)

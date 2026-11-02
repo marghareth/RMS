@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Syringe, User, CalendarDays, Trash2, Heart } from "lucide-react";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Vaccination {
@@ -42,6 +43,7 @@ export default function VaccinationDetailPage() {
 }
 
 function VaccinationDetailContent({ id }: { id: string }) {
+  const can = useCan();
   const router = useRouter();
 
   const [vaccination, setVaccination] = useState<Vaccination | null>(null);
@@ -115,13 +117,13 @@ function VaccinationDetailContent({ id }: { id: string }) {
             </div>
           </div>
         </div>
-        <button
+        {can("health:delete") && (<button
           data-tour="page-health-vaccination-detail-delete" onClick={() => setConfirmOpen(true)}
           disabled={deleting}
           className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-red-200 text-red-500 dark:text-red-400 text-[12px] font-bold hover:bg-red-50 transition disabled:opacity-50"
         >
           <Trash2 size={13} /> Delete
-        </button>
+        </button>)}
       </div>
 
       {deleteError && (
@@ -203,20 +205,20 @@ function VaccinationDetailContent({ id }: { id: string }) {
           <div data-tour="page-health-vaccination-detail-quick" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-4">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white mb-3">Quick Actions</p>
             <div className="space-y-2">
-              <button
+              {can("health:write") && (<button
                 onClick={() => router.push(`/health/vaccinations/new?resident_id=${vaccination.resident.id}`)}
                 className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
               >
                 <Syringe size={13} className="text-(--brand-fg)" />
                 Add Another Vaccination
-              </button>
-              <button
+              </button>)}
+              {can("health:write") && (<button
                 onClick={() => router.push(`/health/new?resident_id=${vaccination.resident.id}`)}
                 className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
               >
                 <Heart size={13} className="text-red-500 dark:text-red-400" />
                 Add Health Record
-              </button>
+              </button>)}
             </div>
           </div>
         </div>

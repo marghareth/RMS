@@ -31,6 +31,7 @@ import {
   formatISODate,
   certDisplayDate,
 } from "@/lib/mock/certificates";
+import { useCan } from "@/lib/hooks/useCan";
 
 interface FilterState {
   certificate_type: string;
@@ -42,6 +43,7 @@ interface FilterState {
 const EMPTY_FILTERS: FilterState = { certificate_type: "", date_from: "", date_to: "", flagged_only: false };
 
 export default function CertificatesListPage() {
+  const can = useCan();
   const router = useRouter();
 
   // ── MOCK DATA STATE ──────────────────────────────────────────────────────
@@ -189,14 +191,14 @@ export default function CertificatesListPage() {
               <FileEdit size={15} />
               Manage Templates
             </button>
-            <button
+            {can("certificates:write") && (<button
               data-tour="page-certificates-add"
               onClick={() => router.push("/certificates/new")}
               className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
             >
               <Plus size={15} />
               Issue Certificate
-            </button>
+            </button>)}
           </div>
         }
       />
@@ -337,14 +339,14 @@ export default function CertificatesListPage() {
               {bulkPrinting ? <Loader2 size={12} className="animate-spin" /> : <Printer size={12} />}
               Print Selected
             </button>
-            <button
+            {can("certificates:write") && (<button
               onClick={handleBulkRelease}
               disabled={bulkReleasing}
               className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-(--brand-hover) disabled:opacity-60"
             >
               {bulkReleasing ? <Loader2 size={12} className="animate-spin" /> : <CheckCheck size={12} />}
               Release Selected
-            </button>
+            </button>)}
           </div>
         </div>
       )}

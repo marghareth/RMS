@@ -11,6 +11,7 @@ import { memberFullName, buildBimsCsv, downloadCsv } from "@/lib/mock/households
 import type { PurokMock, HouseholdMock } from "@/lib/mock/households";
 import HouseholdDetailSheet from "@/components/households/HouseholdDetailSheet";
 import { fetchJson } from "@/lib/fetch-json";
+import { useCan } from "@/lib/hooks/useCan";
 
 const HOUSING_LABEL: Record<string, string> = {
   OWN: "Own",
@@ -20,6 +21,7 @@ const HOUSING_LABEL: Record<string, string> = {
 };
 
 export default function HouseholdsListPage() {
+  const can = useCan();
   const router = useRouter();
 
   const [search, setSearch] = useState("");
@@ -146,14 +148,14 @@ export default function HouseholdsListPage() {
               <Download size={14} />
               {exporting ? "Exporting..." : "Export CSV (BIMS)"}
             </button>
-            <button
+            {can("households:write") && (<button
               data-tour="page-households-add"
               onClick={() => router.push("/households/new")}
               className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
             >
               <Plus size={15} />
               Add Household
-            </button>
+            </button>)}
           </div>
         }
       />

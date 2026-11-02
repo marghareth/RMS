@@ -15,8 +15,10 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { ArrowLeft, Syringe, Save, User, CalendarDays } from "lucide-react";
 import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPicker";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface VaccinationForm { resident_id: string; vaccine_name: string; custom_vaccine: string; date_given: string }
@@ -92,6 +94,7 @@ export default function NewVaccinationPage() {
 }
 
 function NewVaccinationPageInner() {
+  const can = useCan();
   const router       = useRouter();
   const searchParams = useSearchParams();
   const preResidentId = searchParams.get("resident_id");
@@ -156,6 +159,12 @@ function NewVaccinationPageInner() {
 
   return (
     <div className="max-w-2xl mx-auto">
+      {!can("health:write") && (
+        <div role="note" className="mb-4 rounded-lg border border-[#E9EAEC] bg-[#F9FAFB] px-4 py-3 text-[12px] text-[#6B7280] dark:border-[#262626] dark:bg-[#171717] dark:text-[#A3A3A3]">
+          This form adds a vaccination record, which your account can&apos;t do. To see vaccination records, open{" "}
+          <Link href="/health" className="font-semibold text-(--brand-fg) underline-offset-2 hover:underline">Health → Vaccinations tab</Link>.
+        </div>
+      )}
 
       {/* ── Page header ── */}
       <div className="flex items-center gap-3 mb-6">
@@ -276,14 +285,14 @@ function NewVaccinationPageInner() {
           <button onClick={() => router.push("/health")} className="flex-1 py-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[13px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-white transition">
             Cancel
           </button>
-          <button
+          {can("health:write") && (<button
             onClick={handleSave}
             disabled={saving || !isValid}
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-(--brand) hover:bg-(--brand-hover) disabled:opacity-50 text-white text-[13px] font-bold transition shadow-sm"
           >
             <Save size={14} />
             {saving ? "Saving…" : "Save Vaccination"}
-          </button>
+          </button>)}
         </div>
       </div>
     </div>

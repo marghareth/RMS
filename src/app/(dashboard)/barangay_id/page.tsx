@@ -26,8 +26,10 @@ import {
   isExpired,
 } from "@/lib/mock/barangayId";
 import { useBarangayInfo } from "@/lib/hooks/useBarangayInfo";
+import { useCan } from "@/lib/hooks/useCan";
 
 export default function BarangayIdListPage() {
+  const can = useCan();
   const router = useRouter();
   const { barangay } = useBarangayInfo();
 
@@ -82,14 +84,14 @@ export default function BarangayIdListPage() {
         title="Barangay ID"
         subtitle="Issue and manage resident barangay identification cards"
         actions={
-          <button
+          (can("barangay_id:write") && (<button
             data-tour="page-barangay-id-add"
             onClick={() => router.push("/barangay-id/new")}
             className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             Issue New ID
-          </button>
+          </button>))
         }
       />
 

@@ -10,6 +10,7 @@ import StatCard from "@/components/shared/StatCard";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import VisitorLogSheet from "@/components/visitors/VisitorLogSheet";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
 interface VisitorLog {
@@ -38,6 +39,7 @@ function formatTime(iso?: string | null): string {
 }
 
 export default function VisitorLogListPage() {
+  const can = useCan();
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
@@ -91,14 +93,14 @@ export default function VisitorLogListPage() {
         title="Visitor Log"
         subtitle="Track walk-in visitors to the barangay hall"
         actions={
-          <button
+          (can("visitors:write") && (<button
             data-tour="page-visitors-add"
             onClick={() => setSelectedId("new")}
             className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
           >
             <Plus size={15} />
             New Visitor
-          </button>
+          </button>))
         }
       />
 

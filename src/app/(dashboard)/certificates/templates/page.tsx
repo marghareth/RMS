@@ -16,6 +16,7 @@ import {
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import PlaceholderRichInput, { PlaceholderRichInputHandle } from "@/components/certificates/PlaceholderRichInput";
 import { readList } from "@/lib/fetch-json";
+import { useCan } from "@/lib/hooks/useCan";
 
 export default function CertificateTemplatesPage() {
   const router = useRouter();
@@ -181,6 +182,7 @@ function TemplateEditor({
   onSave: (values: { title: string; body: string; closing_line: string }) => void;
   onReset: () => void;
 }) {
+  const can = useCan();
   const [draftTitle, setDraftTitle] = useState(template.title);
   const [draftBody, setDraftBody] = useState(template.body);
   const [draftClosing, setDraftClosing] = useState(template.closing_line);
@@ -249,14 +251,14 @@ function TemplateEditor({
               Editing: {CERTIFICATE_TYPES.find((t) => t.value === type)?.label}
             </p>
           </div>
-          <button
+          {can("certificates:write") && (<button
             onClick={onReset}
             disabled={saving}
             className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] disabled:opacity-50"
           >
             <RotateCcw size={12} />
             Reset to Default
-          </button>
+          </button>)}
         </div>
 
         <div className="space-y-4">
@@ -349,7 +351,7 @@ function TemplateEditor({
                 Template saved
               </span>
             )}
-            <button
+            {can("certificates:write") && (<button
               data-tour="page-certificates-templates-save"
               onClick={() => onSave({ title: draftTitle, body: draftBody, closing_line: draftClosing })}
               disabled={saving || !isDirty}
@@ -357,7 +359,7 @@ function TemplateEditor({
             >
               <Save size={14} />
               {saving ? "Saving..." : "Save Template"}
-            </button>
+            </button>)}
           </div>
         </div>
       </div>

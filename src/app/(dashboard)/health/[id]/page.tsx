@@ -13,6 +13,7 @@ import {
   Pencil, Trash2, FileText, Clock,
 } from "lucide-react";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Resident {
@@ -70,6 +71,7 @@ export default function HealthRecordDetailPage() {
 }
 
 function HealthRecordDetailContent({ id }: { id: string }) {
+  const can = useCan();
   const router = useRouter();
 
   const [record,   setRecord]   = useState<HealthRecord | null>(null);
@@ -146,19 +148,19 @@ function HealthRecordDetailContent({ id }: { id: string }) {
           </div>
         </div>
         <div data-tour="page-health-detail-actions" className="flex gap-2">
-          <button
+          {can("health:write") && (<button
             onClick={() => router.push(`/health/${id}/edit`)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
           >
             <Pencil size={13} /> Edit
-          </button>
-          <button
+          </button>)}
+          {can("health:delete") && (<button
             onClick={() => setConfirmOpen(true)}
             disabled={deleting}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-red-200 text-red-500 dark:text-red-400 text-[12px] font-bold hover:bg-red-50 transition disabled:opacity-50"
           >
             <Trash2 size={13} /> Delete
-          </button>
+          </button>)}
         </div>
       </div>
 
@@ -259,20 +261,20 @@ function HealthRecordDetailContent({ id }: { id: string }) {
           <div data-tour="page-health-detail-quick" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-4">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white mb-3">Quick Actions</p>
             <div className="space-y-2">
-              <button
+              {can("health:write") && (<button
                 onClick={() => router.push(`/health/new?resident_id=${record.resident_id}`)}
                 className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
               >
                 <Heart size={13} className="text-red-500 dark:text-red-400" />
                 Add Another Record
-              </button>
-              <button
+              </button>)}
+              {can("health:write") && (<button
                 onClick={() => router.push(`/health/vaccinations/new?resident_id=${record.resident_id}`)}
                 className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
               >
                 <CalendarDays size={13} className="text-(--brand-fg)" />
                 Add Vaccination
-              </button>
+              </button>)}
             </div>
           </div>
         </div>

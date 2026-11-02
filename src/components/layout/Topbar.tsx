@@ -17,7 +17,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { Menu, Search, Bell, LogOut, ChevronDown, AlertTriangle, Clock, Info, ShieldCheck, HelpCircle } from "lucide-react";
+import { isViewOnly } from "@/lib/permission";
+import { Menu, Search, Bell, LogOut, ChevronDown, AlertTriangle, Clock, Info, ShieldCheck, HelpCircle, Eye } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import Link from "next/link";
 import { useOnboarding } from "@/components/onboarding/OnboardingProvider";
@@ -72,6 +73,8 @@ export default function Topbar({
   const username = session?.user?.username ?? "User";
   const roleCode = session?.user?.role ?? "";
   const roleLabel = ROLE_LABELS[roleCode] ?? roleCode ?? "—";
+  // Captain and Kagawad can only view (access policy, Nov 2026).
+  const viewOnly = !!roleCode && isViewOnly(roleCode);
   const initial = username.charAt(0).toUpperCase();
 
   // ── User menu ──
@@ -275,7 +278,10 @@ export default function Topbar({
               <p className="text-[13px] font-semibold leading-tight text-[#1F2937] dark:text-white">
                 {username}
               </p>
-              <p className="text-[11px] text-[#9CA3AF]">{roleLabel}</p>
+              <p className="flex items-center gap-1.5 text-[11px] text-[#9CA3AF]">
+                {roleLabel}
+                {viewOnly && <ViewOnlyChip />}
+              </p>
             </div>
             <ChevronDown size={14} className="hidden text-[#9CA3AF] sm:block" />
           </button>
@@ -284,7 +290,15 @@ export default function Topbar({
             <div className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-lg border border-[#E9EAEC] bg-white shadow-lg dark:border-[#262626] dark:bg-[#171717]">
               <div className="border-b border-[#F4F5F7] px-4 py-3 dark:border-[#262626]">
                 <p className="text-[13px] font-semibold text-[#1F2937] dark:text-white">{username}</p>
-                <p className="text-[11px] text-[#9CA3AF]">{roleLabel}</p>
+                <p className="flex items-center gap-1.5 text-[11px] text-[#9CA3AF]">
+                  {roleLabel}
+                  {viewOnly && <ViewOnlyChip />}
+                </p>
+                {viewOnly && (
+                  <p className="mt-1 text-[11px] leading-snug text-[#6B7280] dark:text-[#A3A3A3]">
+                    Your account can view records but not add, edit or delete them.
+                  </p>
+                )}
               </div>
               <Link
                 href="/account/security"
@@ -310,5 +324,17 @@ export default function Topbar({
         </div>
       </div>
     </header>
+  );
+}
+
+function ViewOnlyChip() {
+  return (
+    <span
+      title="This account can view records but not add, edit or delete them"
+      className="inline-flex items-center gap-1 rounded-full border border-[#E9EAEC] bg-[#F4F5F7] px-1.5 py-px text-[10px] font-semibold text-[#6B7280] dark:border-[#333333] dark:bg-[#1F1F1F] dark:text-[#A3A3A3]"
+    >
+      <Eye size={10} strokeWidth={2.25} aria-hidden="true" />
+      View only
+    </span>
   );
 }

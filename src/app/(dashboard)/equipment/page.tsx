@@ -11,6 +11,7 @@ import EquipmentDetailSheet from "@/components/equipment/EquipmentDetailSheet";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import { fetchJson } from "@/lib/fetch-json";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type EquipmentStatus = "SERVICEABLE" | "UNSERVICEABLE" | "MISSING";
@@ -106,6 +107,7 @@ async function loadEquipment(params: URLSearchParams): Promise<{ items: Equipmen
 }
 
 export default function EquipmentPage() {
+  const can = useCan();
   const router = useRouter();
 
   const [search,        setSearch]        = useState("");
@@ -184,14 +186,14 @@ export default function EquipmentPage() {
         title="Inventory"
         subtitle="Equipment management and borrow tracking"
         actions={
-          <button
+          (can("equipment:write") && (<button
             data-tour="page-equipment-add"
             onClick={() => router.push("/equipment/new")}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--brand) hover:bg-(--brand-hover) text-white text-[13px] font-bold transition shadow-sm"
           >
             <Plus size={15} />
             Add Equipment
-          </button>
+          </button>))
         }
       />
 
@@ -312,13 +314,13 @@ export default function EquipmentPage() {
 
           {/* Quick link to borrowed items */}
           <div className="p-3 border-t border-[#F4F5F7] dark:border-[#262626]">
-            <button
+            {can("equipment:write") && (<button
               onClick={() => router.push("/equipment/borrow")}
               className="w-full py-2 rounded-xl text-[12px] font-bold text-(--brand-fg) bg-(--brand-tint) hover:bg-(--brand-tint-strong) dark:hover:bg-(--brand-tint) transition flex items-center justify-center gap-1.5"
             >
               <Clock size={13} />
               View All Borrowed Items
-            </button>
+            </button>)}
           </div>
         </div>
 
@@ -343,12 +345,12 @@ export default function EquipmentPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button
+                {can("equipment:write") && (<button
                   onClick={() => router.push(`/equipment/${selected.id}/edit`)}
                   className="px-3 py-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] text-[12px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
                 >
                   Edit
-                </button>
+                </button>)}
                 <button
                   onClick={() => setDetailSheetId(selected.id)}
                   className="px-3 py-1.5 rounded-lg bg-(--brand) text-white text-[12px] font-bold hover:bg-(--brand-hover) transition"
@@ -446,13 +448,13 @@ export default function EquipmentPage() {
                 <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">
                   Currently Borrowed
                 </p>
-                <button
+                {can("equipment:write") && (<button
                   onClick={() => router.push(`/equipment/borrow?equipment_id=${selected.id}`)}
                   className="flex items-center gap-1 text-[11px] font-bold text-(--brand-fg) hover:text-(--brand-fg-strong) transition"
                 >
                   <Plus size={12} />
                   Lend out
-                </button>
+                </button>)}
               </div>
 
               {activeBorrowings(selected).length === 0 ? (
@@ -481,12 +483,12 @@ export default function EquipmentPage() {
                             Overdue
                           </span>
                         )}
-                        <button
+                        {can("equipment:write") && (<button
                           onClick={() => router.push(`/equipment/return?borrowing_id=${b.id}`)}
                           className="text-[11px] font-bold text-(--brand-fg) hover:text-(--brand-fg-strong) transition uppercase tracking-wide"
                         >
                           Return
-                        </button>
+                        </button>)}
                       </div>
                     </div>
                   ))}
@@ -496,12 +498,12 @@ export default function EquipmentPage() {
 
             {/* Actions */}
             <div data-tour="page-equipment-actions" className="mt-5 pt-4 border-t border-[#E9EAEC] dark:border-[#262626] flex gap-2">
-              <button
+              {can("equipment:write") && (<button
                 onClick={() => router.push(`/equipment/borrow?equipment_id=${selected.id}`)}
                 className="flex-1 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-bold transition"
               >
                 Lend Out
-              </button>
+              </button>)}
               <button
                 onClick={() => setDetailSheetId(selected.id)}
                 className="flex-1 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[#6B7280] dark:text-[#A3A3A3] text-[13px] font-bold hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"

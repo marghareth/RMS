@@ -18,6 +18,7 @@ import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody, SheetFooter,
 } from "@/components/ui/sheet";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
 interface VisitorLog {
@@ -82,14 +83,14 @@ function FormField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={2}
-          className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+          className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
         />
       ) : (
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-[#3B82F6] dark:focus:border-[#60A5FA]"
+          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
         />
       )}
     </div>
@@ -104,6 +105,7 @@ interface VisitorLogSheetProps {
 }
 
 export default function VisitorLogSheet({ visitorId, onClose, onSaved }: VisitorLogSheetProps) {
+  const can = useCan();
   const open = visitorId !== null;
   const isNew = visitorId === "new";
 
@@ -252,7 +254,7 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
               <SheetBody>
                 {loading ? (
                   <div className="flex items-center justify-center py-24">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#3B82F6] dark:border-[#60A5FA] border-t-transparent" />
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
                   </div>
                 ) : (
                   <EmptyState icon={User} title="Visitor not found" description="This entry may have been deleted." />
@@ -274,13 +276,13 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   {!isNew && !editing && (
-                    <button
+                    (can("visitors:write") && (<button
                       onClick={() => setEditing(true)}
                       title="Edit"
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                     >
                       <Pencil size={15} />
-                    </button>
+                    </button>))
                   )}
                   <SheetClose />
                 </div>
@@ -364,13 +366,13 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                 {editing ? (
                   <div className="flex w-full items-center justify-between gap-2">
                     {!isNew ? (
-                      <button
+                      (can("visitors:delete") && (<button
                         onClick={() => setConfirmDeleteOpen(true)}
                         className="flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-[12px] font-bold text-[#DC2626] dark:text-[#F87171] transition hover:bg-red-50"
                       >
                         <Trash2 size={14} />
                         Delete
-                      </button>
+                      </button>))
                     ) : <span />}
                     <div className="flex gap-2">
                       <button
@@ -383,21 +385,21 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                       <button
                         onClick={handleSave}
                         disabled={submitting || !canSave}
-                        className="rounded-lg bg-[#3B82F6] px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#2563EB] dark:hover:bg-[#3B82F6] disabled:opacity-50"
+                        className="rounded-lg bg-(--brand) px-4 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-50"
                       >
                         {submitting ? "Saving…" : isNew ? "Check In Visitor" : "Save Changes"}
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <button
+                  (can("visitors:write") && (<button
                     onClick={handleCheckOut}
                     disabled={checkingOut}
                     className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#F59E0B] py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-[#D97706] dark:hover:bg-[#F59E0B] disabled:opacity-50"
                   >
                     <LogOut size={14} />
                     {checkingOut ? "Checking out…" : "Check Out"}
-                  </button>
+                  </button>))
                 )}
               </SheetFooter>
             </div>

@@ -38,6 +38,7 @@ import StatCard from "@/components/shared/StatCard";
 import HealthTypeBadge from "@/components/health/HealthTypeBadge";
 import VaccinationDetailSheet from "@/components/health/VaccinationDetailSheet";
 import HealthRecordDetailSheet from "@/components/health/HealthRecordDetailSheet";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Resident { id: number; fname: string; lname: string; purok?: { name: string } | null }
@@ -109,6 +110,7 @@ function TabBtn({ label, count, active, onClick, icon: Icon }: {
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function HealthPage() {
+  const can = useCan();
   const router = useRouter();
   const [tab,    setTab]    = useState<"health" | "vaccination">("health");
   const [search, setSearch] = useState("");
@@ -172,20 +174,20 @@ export default function HealthPage() {
           <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Community health monitoring and vaccination tracking</p>
         </div>
         <div className="flex gap-2">
-          <button
+          {can("health:write") && (<button
             data-tour="page-health-vaccination-add" onClick={() => router.push("/health/vaccinations/new")}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] text-[#6B7280] dark:text-[#A3A3A3] text-[13px] font-bold hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
           >
             <Syringe size={14} />
             Add Vaccination
-          </button>
-          <button
+          </button>)}
+          {can("health:write") && (<button
             data-tour="page-health-add" onClick={() => router.push("/health/new")}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-(--brand) hover:bg-(--brand-hover) text-white text-[13px] font-bold transition shadow-sm"
           >
             <Plus size={14} />
             Add Health Record
-          </button>
+          </button>)}
         </div>
       </div>
 
