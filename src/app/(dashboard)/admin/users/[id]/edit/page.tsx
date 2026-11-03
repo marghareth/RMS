@@ -1,11 +1,24 @@
 // FILE: src/app/(dashboard)/admin/users/[id]/edit/page.tsx
+//
+// Full-page version of the Edit User panel (UserEditSheet.tsx), kept for
+// direct links and bookmarks. Same rules:
+//   - no password field: "Reset password" issues a one-time temporary
+//     password instead (ResetPasswordButton);
+//   - only an Admin can change an Admin account or give the Admin role.
+//
+// BUGFIXES (Nov 2026): Save used to run a leftover mock first (a 500 ms
+// wait, a browser alert, then a redirect) before the real PATCH, and the
+// role and active fields started empty because they were set before the
+// user had loaded, so Save always said "Please select a role."
 "use client";
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, UserCog, Eye, EyeOff, Users } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { ArrowLeft, UserCog, Users } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import PageTutorial from "@/components/shared/PageTutorial";
+import ResetPasswordButton from "@/components/admin/ResetPasswordButton";
 import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
 import { UserMock, ROLES, Role } from "@/lib/mock/admin";
 
@@ -13,38 +26,35 @@ export default function EditUserPage() {
   const router = useRouter();
   const params = useParams();
   const userId = Number(params.id);
+  const { data: session } = useSession();
+  const actorIsAdmin = session?.user?.role === "ADMIN";
 
-  // ── MOCK DATA STATE ──────────────────────────────────────────────────────
-  // In place of the real GET /api/users/[id] call. Swap for the commented
-  // block below once the database is connected.
-  //const [original] = useState<UserMock | null>(() => MOCK_USERS.find((u) => u.id === userId) ?? null);
-  //const [loading] = useState(false);
-
-  // ── REAL DATA FETCH (disabled until API/DB is wired up) ─────────────────
   const [original, setOriginal] = useState<UserMock | null>(null);
   const [loading, setLoading] = useState(true);
-  //
-  useEffect(() => {
-     async function loadUser() {
-       setLoading(true);
-       try {
-         const res = await fetch(`/api/users/${userId}`);
-         if (!res.ok) throw new Error("Not found");
-         const data = await res.json();
-         setOriginal(data);
-       } catch (e) {
-         console.error(e);
-       } finally {
-         setLoading(false);
-       }
-     }
-     loadUser();
-   }, [userId]);
+  const [role, setRole] = useState<Role | "">("");
+  const [isActive, setIsActive] = useState(true);
 
-  const [role, setRole] = useState<Role | "">(original?.role ?? "");
-  const [isActive, setIsActive] = useState(original?.is_active ?? true);
-  const [newPassword, setNewPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/users/${userId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Not found");
+        return res.json();
+      })
+      .then((data: UserMock) => {
+        if (cancelled) return;
+        setOriginal(data);
+        setRole(data.role);
+        setIsActive(data.is_active);
+      })
+      .catch((e) => console.error(e))
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -75,44 +85,35 @@ export default function EditUserPage() {
     );
   }
 
+  // A Secretary can view an Admin account but not change it.
+  const lockedAdmin = original.role === "ADMIN" && !actorIsAdmin;
+
   async function handleSubmit() {
     setError("");
     if (!role) {
       setError("Please select a role.");
       return;
     }
-    if (newPassword && newPassword.length < 8) {
-      setError("New password must be at least 8 characters.");
-      return;
-    }
 
     setSubmitting(true);
-
-    // ── MOCK SUBMIT ─────────────────────────────────────────────────────
-    await new Promise((r) => setTimeout(r, 500));
-    setSubmitting(false);
-    alert(`[MOCK] User "${original!.username}" updated.\nA real save will redirect back to the user list.`);
-    router.push("/admin/users");
-
-    // ── REAL SUBMIT (disabled until API/DB is wired up) ───────────────────
-     try {
-       const res = await fetch(`/api/users/${userId}`, {
-         method: "PATCH",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({
-           role,
-           is_active: isActive,
-           password: newPassword || undefined, // only sent if being reset
-         }),
-       });
-       if (!res.ok) throw new Error("Failed to update user");
-       router.push("/admin/users");
-     } catch (e) {
-       console.error(e);
-       setError("Something went wrong while saving. Please try again.");
-     } finally {
-       setSubmitting(false);
-     }
+    try {
+      const res = await fetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role, is_active: isActive }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message || "Something went wrong while saving. Please try again.");
+        return;
+      }
+      router.push("/admin/users");
+    } catch (e) {
+      console.error(e);
+      setError("Something went wrong while saving. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -154,10 +155,11 @@ export default function EditUserPage() {
             </label>
             <select
               value={role}
+              disabled={lockedAdmin}
               onChange={(e) => setRole(e.target.value as Role)}
               className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
             >
-              {ROLES.map((r) => (
+              {ROLES.filter((r) => actorIsAdmin || r.value !== "ADMIN" || original.role === "ADMIN").map((r) => (
                 <option key={r.value} value={r.value}>
                   {r.label}
                 </option>
@@ -169,32 +171,19 @@ export default function EditUserPage() {
             <input
               type="checkbox"
               checked={isActive}
+              disabled={lockedAdmin}
               onChange={(e) => setIsActive(e.target.checked)}
               className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-(--brand-fg) focus:ring-(--brand-line)"
             />
             Account active (can log in)
           </label>
 
+          {lockedAdmin && (
+            <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Only an Admin can change an Admin account.</p>
+          )}
+
           <div className="border-t border-[#F4F5F7] dark:border-[#262626] pt-4">
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
-              Reset Password <span className="font-normal normal-case text-[#9CA3AF] dark:text-[#A3A3A3]">(leave blank to keep current)</span>
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="New password (min. 8 characters)"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] py-2.5 pl-3 pr-10 text-[13px] outline-none focus:border-(--brand-line)"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:text-[#374151] dark:hover:text-[#D4D4D4]"
-              >
-                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
-            </div>
+            <ResetPasswordButton user={original} />
           </div>
 
           {error && <p className="rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-4 py-3 text-[12px] text-[#DC2626] dark:text-[#F87171]">{error}</p>}
@@ -208,7 +197,7 @@ export default function EditUserPage() {
             </button>
             <button
               onClick={handleSubmit}
-              disabled={submitting}
+              disabled={submitting || lockedAdmin}
               className="rounded-lg bg-(--brand) px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-60"
             >
               {submitting ? "Saving..." : "Save Changes"}

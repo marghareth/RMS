@@ -29,6 +29,21 @@ model User {
   mfa_secret        String?
   mfa_backup_codes  String[] @default([])
 
+  // ── Passwords (change / approved reset) ──
+  // must_change_password: set when an Admin or Secretary creates the
+  // account or issues a temporary password; the user can't use the app
+  // until they choose their own (see middleware.ts).
+  // temp_password_expires_at: a temporary password stops working after
+  // this moment (30 minutes after it was issued). Null otherwise.
+  // password_changed_at: any session that signed in before this moment
+  // is signed out (src/lib/auth.ts, src/lib/session.ts).
+  must_change_password     Boolean   @default(false)
+  temp_password_expires_at DateTime?
+  password_changed_at      DateTime  @default(now())
+
+  password_reset_requests  PasswordResetRequest[] @relation("ResetRequestUser")
+  password_resets_resolved PasswordResetRequest[] @relation("ResetRequestResolver")
+
   certificates_issued  Certificate[]
   blotter_updates      BlotterUpdate[]
   meeting_records      MeetingRecord[]
@@ -49,6 +64,29 @@ model User {
   revenues             Revenue[]
   disbursements        Disbursement[]
   dashboard_preferences DashboardPreference[]
+}
+
+// A "Forgot password?" request from the login page. Nothing changes on the
+// account until an Admin or Secretary approves it, which issues a one-time
+// temporary password (src/lib/password-reset.ts).
+model PasswordResetRequest {
+  id           Int                 @id @default(autoincrement())
+  user_id      Int
+  user         User                @relation("ResetRequestUser", fields: [user_id], references: [id], onDelete: Cascade)
+  status       PasswordResetStatus @default(PENDING)
+  requested_at DateTime            @default(now())
+  resolved_at  DateTime?
+  resolved_by  Int?
+  resolver     User?               @relation("ResetRequestResolver", fields: [resolved_by], references: [id])
+
+  @@index([status, requested_at])
+  @@index([user_id])
+}
+
+enum PasswordResetStatus {
+  PENDING
+  APPROVED
+  DENIED
 }
 
 enum Role {

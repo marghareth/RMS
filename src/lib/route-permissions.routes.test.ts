@@ -28,6 +28,7 @@ const SIDEBAR_FILE = path.resolve(__dirname, '../components/layout/Sidebar.tsx')
 const SIGNED_IN_ONLY = new Set<string>([
   '/', // just redirects to /login
   '/account/security', // every user manages their own 2FA
+  '/account/password', // every user changes their own password
   '/admin', // landing page of links only; each linked page is gated
   // Older duplicate of /admin/backup. Its API (GET/POST /api/backup) still
   // requires backup:write, so no data is exposed — but the page should be

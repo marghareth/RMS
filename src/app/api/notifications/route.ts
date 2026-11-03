@@ -11,6 +11,7 @@
 //   - Blotter cases whose hearing_date has passed but the case is still
 //     FILED/ONGOING → "urgent" (needs rescheduling/resolution)
 //   - Blotter cases with a hearing coming up in the next 3 days → "warning"
+//   - "Forgot password?" requests waiting for an Admin or Secretary → "warning"
 //
 // This is intentionally scoped to what's cheap and genuinely useful to
 // surface today. It does NOT persist read/dismissed state (there's
@@ -29,6 +30,7 @@ import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { hasPermission } from "@/lib/permission";
 import { withErrorHandling } from "@/lib/api-handler";
+import { RESET_REQUEST_TTL_MS } from "@/lib/password-policy";
 
 type Severity = "urgent" | "warning" | "info";
 
@@ -134,6 +136,29 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
         message: `${c.queue_number} (${c.certificate_no}) has been waiting ${label} with no action taken.`,
         link: "/document-queue",
         date: c.requested_at.toISOString(),
+      });
+    }
+  }
+
+  // ── Password reset requests waiting for approval ──
+  // Only for roles that can approve them (Admin, Secretary).
+  if (role && hasPermission(role, "users:write")) {
+    const since = new Date(now.getTime() - RESET_REQUEST_TTL_MS);
+    const resetRequests = await prisma.passwordResetRequest.findMany({
+      where: { status: "PENDING", requested_at: { gt: since }, user: { is_active: true } },
+      include: { user: { select: { username: true } } },
+      orderBy: { requested_at: "asc" },
+      take: 10,
+    });
+
+    for (const r of resetRequests) {
+      notifications.push({
+        id: `password-reset-${r.id}`,
+        severity: "warning",
+        title: "Password reset request",
+        message: `${r.user.username} asked for a password reset. Confirm it's them before approving.`,
+        link: "/admin/users",
+        date: r.requested_at.toISOString(),
       });
     }
   }

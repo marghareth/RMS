@@ -1,9 +1,9 @@
 // FILE: src/app/(auth)/login/page.tsx
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
@@ -35,8 +35,19 @@ function withTimeout<T>(p: Promise<T>, ms = 20000): Promise<T> {
   ]);
 }
 
+// useSearchParams needs a Suspense boundary in the App Router.
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  // ?changed=1 — sent here after changing a password, which signs you out.
+  const passwordChanged = useSearchParams().get("changed") === "1";
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -46,8 +57,43 @@ export default function LoginPage() {
   // Once a username/password check comes back needing a second factor,
   // we swap to this step rather than a full separate page — same form,
   // same session of intent, just one more field.
-  const [step, setStep] = useState<"credentials" | "totp">("credentials");
+  const [step, setStep] = useState<"credentials" | "totp" | "forgot">("credentials");
   const [totp, setTotp] = useState("");
+
+  // "Forgot password?" only files a request for an Admin or Secretary to
+  // approve after confirming who you are (src/app/api/forgot-password).
+  const [forgotSent, setForgotSent] = useState("");
+
+  async function handleForgotSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const res = await withTimeout(
+        fetch("/api/forgot-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username }),
+        })
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.message || "Couldn't send the request. Try again.");
+      } else {
+        setForgotSent(data.message);
+      }
+    } catch {
+      setError("Couldn't reach the server. Please check your connection and try again.");
+    }
+    setLoading(false);
+  }
+
+  function goTo(next: "credentials" | "forgot") {
+    setStep(next);
+    setError("");
+    setForgotSent("");
+    setTotp("");
+  }
 
   async function handleCredentialsSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -79,6 +125,12 @@ export default function LoginPage() {
 
     if (res?.error === "MFA_REQUIRED") {
       setStep("totp");
+      setLoading(false);
+      return;
+    }
+
+    if (res?.error === "TEMP_PASSWORD_EXPIRED") {
+      setError("Your temporary password has expired. Use \"Forgot password?\" to ask for a new one.");
       setLoading(false);
       return;
     }
@@ -154,15 +206,75 @@ export default function LoginPage() {
             <BrandMark className="mb-8 h-6 w-6 lg:hidden" />
 
             <h1 className="text-[28px] font-bold leading-tight text-[#1F2937] dark:text-white">
-              {step === "credentials" ? "Welcome back!" : "Enter your code"}
+              {step === "credentials" ? "Welcome back!" : step === "totp" ? "Enter your code" : "Forgot password?"}
             </h1>
             <p className="mt-2 text-sm text-[#6B7280] dark:text-[#9CA3AF]">
               {step === "credentials"
                 ? "Residents, requests, records — all in one place."
-                : "Open your authenticator app, or use a backup code."}
+                : step === "totp"
+                  ? "Open your authenticator app, or use a backup code."
+                  : forgotSent
+                    ? "Request sent."
+                    : "Enter your username and we'll let the barangay administrator know."}
             </p>
 
-            {step === "credentials" ? (
+            {passwordChanged && step === "credentials" && (
+              <p className="mt-6 text-sm text-[#047857] dark:text-[#6EE7B7]">
+                Your password was changed. Sign in with the new one.
+              </p>
+            )}
+
+            {step === "forgot" ? (
+              forgotSent ? (
+                <div className="mt-8 flex flex-col gap-3">
+                  <p className="text-sm leading-relaxed text-[#374151] dark:text-[#D4D4D4]">{forgotSent}</p>
+                  <button
+                    type="button"
+                    onClick={() => goTo("credentials")}
+                    className="mt-1 w-full rounded-lg bg-(--brand) py-3 text-sm font-semibold text-white transition hover:bg-(--brand-hover)"
+                  >
+                    Back to sign in
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotSubmit} className="mt-8 flex flex-col gap-3">
+                  <input
+                    type="text"
+                    placeholder="Your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
+                    autoFocus
+                    required
+                    className="w-full rounded-lg border border-[#E9EAEC] bg-white px-4 py-3 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] transition focus:border-(--brand-line) focus:outline-none focus:ring-2 focus:ring-(--brand-line)/20 dark:border-[#262626] dark:bg-[#171717] dark:text-white dark:placeholder:text-[#6B7280]"
+                  />
+
+                  {error && <p className="text-xs text-[#A32A25] dark:text-[#E0716C]">{error}</p>}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-(--brand) py-3 text-sm font-semibold text-white transition hover:bg-(--brand-hover) disabled:opacity-70"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 size={15} className="animate-spin" /> Sending...
+                      </>
+                    ) : (
+                      "Send request"
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => goTo("credentials")}
+                    className="text-center text-xs text-[#6B7280] hover:text-[#1F2937] dark:text-[#9CA3AF] dark:hover:text-white"
+                  >
+                    Back to sign in
+                  </button>
+                </form>
+              )
+            ) : step === "credentials" ? (
               <form onSubmit={handleCredentialsSubmit} className="mt-8 flex flex-col gap-3">
                 <input
                   type="text"
@@ -191,6 +303,16 @@ export default function LoginPage() {
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#1F2937] dark:hover:text-white"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+
+                <div className="-mt-1 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => goTo("forgot")}
+                    className="text-xs font-medium text-(--brand-fg) hover:text-(--brand-fg-strong)"
+                  >
+                    Forgot password?
                   </button>
                 </div>
 
@@ -241,11 +363,7 @@ export default function LoginPage() {
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setStep("credentials");
-                    setTotp("");
-                    setError("");
-                  }}
+                  onClick={() => goTo("credentials")}
                   className="text-center text-xs text-[#6B7280] hover:text-[#1F2937] dark:text-[#9CA3AF] dark:hover:text-white"
                 >
                   Back

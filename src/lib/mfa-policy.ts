@@ -35,7 +35,14 @@ export function isMfaEnforcementOn(): boolean {
  * Paths a not-yet-enrolled account may still reach while enforcement is on.
  * Everything else redirects (pages) or returns 403 (API) until MFA is set up.
  */
-const MFA_SETUP_ALLOWED_PREFIXES = ["/account/security", "/api/account/mfa", "/access-denied"];
+const MFA_SETUP_ALLOWED_PREFIXES = [
+  "/account/security",
+  "/api/account/mfa",
+  "/access-denied",
+  // Changing your own password is also allowed before enrolling.
+  "/account/password",
+  "/api/account/password",
+];
 
 export function isAllowedDuringMfaSetup(pathname: string): boolean {
   return MFA_SETUP_ALLOWED_PREFIXES.some(

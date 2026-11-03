@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { ShieldCheck, ShieldOff, Copy, Check, AlertTriangle } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 
@@ -136,8 +137,21 @@ export default function SecuritySettingsPage() {
     <div>
       <PageHeader
         title="Security"
-        subtitle="Manage two-factor authentication for your own account."
+        subtitle="Your password and two-factor authentication."
       />
+
+      <div className="mb-5 flex max-w-lg items-center justify-between gap-4 rounded-xl border border-[#E9EAEC] bg-white px-6 py-4 dark:border-[#333333] dark:bg-[#171717]">
+        <div>
+          <h2 className="text-[15px] font-semibold text-[#1F2937] dark:text-white">Password</h2>
+          <p className="text-[13px] text-[#6B7280] dark:text-[#A3A3A3]">You&rsquo;ll need your current one to change it.</p>
+        </div>
+        <Link
+          href="/account/password"
+          className="shrink-0 rounded-lg border border-[#E9EAEC] px-4 py-2 text-[13px] font-medium text-[#1F2937] transition hover:bg-[#F4F5F7] dark:border-[#333333] dark:text-white dark:hover:bg-[#1F1F1F]"
+        >
+          Change
+        </Link>
+      </div>
 
       {status?.enforced && (
         <div className="mb-5 flex items-start gap-2 rounded-lg border border-[#FCD34D] bg-[#FFFBEB] px-4 py-3 text-[12px] text-[#92400E]">

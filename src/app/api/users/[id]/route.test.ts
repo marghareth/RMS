@@ -5,6 +5,7 @@ import { GET, PATCH, DELETE } from './route';
 import { prisma } from '@/lib/db';
 import { logAudit } from '@/lib/audit';
 import bcrypt from 'bcryptjs';
+import { requirePermission } from '@/lib/session';
 
 vi.mock('@/lib/db', () => {
   const prisma: any = {
@@ -98,35 +99,28 @@ describe('PATCH /api/users/[id] — last-admin protection', () => {
     expect(prisma.user.count).not.toHaveBeenCalled();
   });
 
-  it("resolves omitted role/is_active from the EXISTING record rather than treating them as undefined/false " +
-      '(regression: a password-only PATCH must still be evaluated against who the user currently is)', async () => {
+  it("resolves omitted role/is_active from the EXISTING record rather than treating them as undefined/false", async () => {
     (prisma.user.findUnique as any).mockResolvedValue({ role: 'ADMIN', is_active: true });
     (prisma.user.count as any).mockResolvedValue(0); // sole active admin
-
-    // Body only changes the password — role/is_active are omitted, but the
-    // route must still recognize this target as "the sole active admin"
-    // and block anything that would remove that (it wouldn't here, since
-    // role/is_active are unchanged, but the resolution logic must still
-    // correctly see role=ADMIN/is_active=true rather than undefined/false).
     (prisma.user.update as any).mockResolvedValue({ id: 1, username: 'x', role: 'ADMIN', is_active: true });
-    const res = await PATCH(makeReq({ password: 'newlongpassword1' }), makeContext('1'));
+
+    const res = await PATCH(makeReq({}), makeContext('1'));
 
     expect(res.status).toBe(200);
     const updateArgs = (prisma.user.update as any).mock.calls[0][0];
     expect(updateArgs.data.role).toBe('ADMIN');
     expect(updateArgs.data.is_active).toBe(true);
-    expect(updateArgs.data.password_hash).toBe('hashed-password');
   });
 
-  it('only hashes/sets a new password when one is provided', async () => {
+  it('refuses to set a password directly (admins issue a temporary one via Reset password)', async () => {
     (prisma.user.findUnique as any).mockResolvedValue({ role: 'ENCODER', is_active: true });
-    (prisma.user.update as any).mockResolvedValue({ id: 5, username: 'x' });
 
-    await PATCH(makeReq({ role: 'ENCODER' }), makeContext('5'));
+    const res = await PATCH(makeReq({ password: 'newlongpassword1' }), makeContext('5'));
 
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe('PASSWORD_VIA_RESET');
     expect(bcrypt.hash).not.toHaveBeenCalled();
-    const updateArgs = (prisma.user.update as any).mock.calls[0][0];
-    expect(updateArgs.data).not.toHaveProperty('password_hash');
+    expect(prisma.user.update).not.toHaveBeenCalled();
   });
 
   it('logs an audit entry on a successful update', async () => {
@@ -134,6 +128,38 @@ describe('PATCH /api/users/[id] — last-admin protection', () => {
     (prisma.user.update as any).mockResolvedValue({ id: 5, username: 'x' });
     await PATCH(makeReq({ role: 'BHW' }), makeContext('5'));
     expect(logAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'UPDATE', table_affected: 'User', record_id: 5 }), expect.anything());
+  });
+});
+
+describe('PATCH/DELETE /api/users/[id] — only an Admin manages Admin accounts', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('stops a Secretary from promoting someone (or themselves) to Admin', async () => {
+    (requirePermission as any).mockResolvedValueOnce({ session: { user: { id: '3', role: 'SECRETARY' } } });
+    (prisma.user.findUnique as any).mockResolvedValue({ role: 'SECRETARY', is_active: true });
+
+    const res = await PATCH(makeReq({ role: 'ADMIN' }), makeContext('3'));
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe('ADMIN_ONLY');
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('stops a Secretary from deactivating an Admin', async () => {
+    (requirePermission as any).mockResolvedValueOnce({ session: { user: { id: '3', role: 'SECRETARY' } } });
+    (prisma.user.findUnique as any).mockResolvedValue({ role: 'ADMIN', is_active: true });
+
+    const res = await DELETE(new NextRequest('http://localhost/api/users/1'), makeContext('1'));
+    expect(res.status).toBe(403);
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('lets a Secretary edit a non-Admin account', async () => {
+    (requirePermission as any).mockResolvedValueOnce({ session: { user: { id: '3', role: 'SECRETARY' } } });
+    (prisma.user.findUnique as any).mockResolvedValue({ role: 'ENCODER', is_active: true });
+    (prisma.user.update as any).mockResolvedValue({ id: 6, username: 'x', role: 'BHW', is_active: true });
+
+    const res = await PATCH(makeReq({ role: 'BHW' }), makeContext('6'));
+    expect(res.status).toBe(200);
   });
 });
 

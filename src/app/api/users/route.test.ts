@@ -15,6 +15,8 @@ vi.mock('@/lib/db', () => {
 
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn() }));
 
+import { requirePermission } from '@/lib/session';
+
 vi.mock('@/lib/session', () => ({
   requirePermission: vi.fn().mockResolvedValue({ session: { user: { id: '1', role: 'ADMIN' } } }),
 }));
@@ -44,7 +46,7 @@ describe('POST /api/users', () => {
   it('rejects a duplicate username with 409 without ever hashing a password', async () => {
     (prisma.user.findUnique as any).mockResolvedValue({ id: 1, username: 'jdelacruz' });
 
-    const res = await POST(makeReq({ username: 'jdelacruz', password: 'longenough1', role: 'ENCODER' }));
+    const res = await POST(makeReq({ username: 'jdelacruz', password: 'Longenough1!', role: 'ENCODER' }));
     expect(res.status).toBe(409);
     expect(bcrypt.hash).not.toHaveBeenCalled();
     expect(prisma.user.create).not.toHaveBeenCalled();
@@ -54,9 +56,9 @@ describe('POST /api/users', () => {
     (prisma.user.findUnique as any).mockResolvedValue(null);
     (prisma.user.create as any).mockResolvedValue({ id: 2, username: 'newuser', role: 'ENCODER' });
 
-    const res = await POST(makeReq({ username: 'newuser', password: 'longenough1', role: 'ENCODER' }));
+    const res = await POST(makeReq({ username: 'newuser', password: 'Longenough1!', role: 'ENCODER' }));
     expect(res.status).toBe(201);
-    expect(bcrypt.hash).toHaveBeenCalledWith('longenough1', 10);
+    expect(bcrypt.hash).toHaveBeenCalledWith('Longenough1!', 10);
 
     const createArgs = (prisma.user.create as any).mock.calls[0][0];
     expect(createArgs.data.password_hash).toBe('hashed-password');
@@ -69,7 +71,7 @@ describe('POST /api/users', () => {
     (prisma.user.findUnique as any).mockResolvedValue(null);
     (prisma.user.create as any).mockResolvedValue({ id: 3, username: 'auditme', role: 'BHW' });
 
-    await POST(makeReq({ username: 'auditme', password: 'longenough1', role: 'BHW' }));
+    await POST(makeReq({ username: 'auditme', password: 'Longenough1!', role: 'BHW' }));
     // Second arg is the transaction client: the audit row commits with the user row.
     expect(logAudit).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'CREATE', table_affected: 'User', record_id: 3 }),
@@ -81,5 +83,24 @@ describe('POST /api/users', () => {
     const res = await POST(makeReq({ username: 'shortpw', password: 'short', role: 'ENCODER' }));
     expect(res.status).toBe(400);
     expect(prisma.user.findUnique).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/users — passwords and Admin accounts', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('makes a new account choose its own password at first sign-in', async () => {
+    (prisma.user.findUnique as any).mockResolvedValue(null);
+    (prisma.user.create as any).mockResolvedValue({ id: 9, username: 'newuser', role: 'ENCODER' });
+    await POST(makeReq({ username: 'newuser', password: 'Longenough1!', role: 'ENCODER' }));
+    expect((prisma.user.create as any).mock.calls[0][0].data.must_change_password).toBe(true);
+  });
+
+  it("a Secretary can't create an Admin account", async () => {
+    (requirePermission as any).mockResolvedValueOnce({ session: { user: { id: '3', role: 'SECRETARY' } } });
+    (prisma.user.findUnique as any).mockResolvedValue(null);
+    const res = await POST(makeReq({ username: 'sneaky', password: 'Longenough1!', role: 'ADMIN' }));
+    expect(res.status).toBe(403);
+    expect(prisma.user.create).not.toHaveBeenCalled();
   });
 });

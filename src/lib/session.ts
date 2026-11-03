@@ -10,10 +10,15 @@
 //   - recomputes `mfaSetupRequired` from the current mfa_enabled flag.
 // The JWT is therefore only proof of *who* the caller is, never of what
 // they're allowed to do.
+//
+// Passwords (Nov 2026): revalidate() also ends the session when the
+// account's password changed after the session signed in (see
+// passwordChangedSince in auth.ts), and requirePermission() refuses
+// everything while the account still has to choose a new password.
 import { getServerSession, type Session } from "next-auth";
 import { getToken } from "next-auth/jwt";
 import type { NextRequest } from "next/server";
-import { authOptions } from "./auth";
+import { authOptions, passwordChangedSince } from "./auth";
 import { prisma } from "./db";
 import { hasPermission } from "./permission";
 import { mfaSetupRequired, isMfaEnforcementOn } from "./mfa-policy";
@@ -26,7 +31,14 @@ import { mfaSetupRequired, isMfaEnforcementOn } from "./mfa-policy";
  */
 const USER_CACHE_TTL_MS = 5_000;
 
-type CurrentUser = { role: string; username: string; is_active: boolean; mfa_enabled: boolean };
+type CurrentUser = {
+  role: string;
+  username: string;
+  is_active: boolean;
+  mfa_enabled: boolean;
+  must_change_password: boolean;
+  password_changed_at: Date;
+};
 const userCache = new Map<number, { at: number; user: CurrentUser | null }>();
 
 /** Test helper / manual invalidation. */
@@ -40,7 +52,14 @@ async function loadCurrentUser(id: number): Promise<CurrentUser | null> {
 
   const user = await prisma.user.findUnique({
     where: { id },
-    select: { role: true, username: true, is_active: true, mfa_enabled: true },
+    select: {
+      role: true,
+      username: true,
+      is_active: true,
+      mfa_enabled: true,
+      must_change_password: true,
+      password_changed_at: true,
+    },
   });
   userCache.set(id, { at: Date.now(), user });
   return user;
@@ -53,10 +72,12 @@ async function revalidate(session: Session | null): Promise<Session | null> {
 
   const current = await loadCurrentUser(id);
   if (!current || !current.is_active) return null;
+  if (passwordChangedSince(current.password_changed_at, session.user.pwdAt)) return null;
 
   session.user.role = current.role;
   session.user.username = current.username;
   session.user.mfaSetupRequired = mfaSetupRequired(current.role, current.mfa_enabled);
+  session.user.mustChangePassword = current.must_change_password;
   return session;
 }
 
@@ -73,6 +94,8 @@ export async function getSession(req?: NextRequest) {
         username: token.username as string,
         role: token.role as string,
         mfaSetupRequired: token.mfaSetupRequired,
+        mustChangePassword: token.mustChangePassword,
+        pwdAt: token.pwdAt,
       },
       expires: new Date((token.exp as number) * 1000).toISOString(),
     } as Session);
@@ -102,6 +125,13 @@ export async function requirePermission(
 
   if (!role || !hasPermission(role, permission)) {
     return { error: "Forbidden", status: 403 };
+  }
+
+  // Same idea for a temporary or admin-chosen password: until the user picks
+  // their own, the only thing they can do is POST /api/account/password,
+  // which uses requireAuth, not this.
+  if (session.user.mustChangePassword) {
+    return { error: "PASSWORD_CHANGE_REQUIRED", status: 403 };
   }
 
   // Defense in depth for the middleware gate: an ADMIN/CAPTAIN who hasn't

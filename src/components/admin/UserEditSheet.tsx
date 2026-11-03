@@ -8,17 +8,25 @@
 // NOTE: the full-page version this was adapted from had a leftover mock
 // submit path that ran (and short-circuited) before the real PATCH call.
 // This sheet only calls the real endpoint.
+//
+// PASSWORDS (Nov 2026): the free-text "Reset Password" field is gone. An
+// admin who typed a password for someone knew it; ResetPasswordButton
+// issues a one-time temporary password instead. Only an Admin can change
+// an Admin account or give the Admin role, so for a Secretary that option
+// is hidden and Admin accounts are read-only here (the API enforces both).
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserCog, Eye, EyeOff, Users, ExternalLink } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { UserCog, Users, ExternalLink } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody, SheetFooter,
 } from "@/components/ui/sheet";
 import EmptyState from "@/components/shared/EmptyState";
 import { UserMock, ROLES, Role } from "@/lib/mock/admin";
 import { useCan } from "@/lib/hooks/useCan";
+import ResetPasswordButton from "@/components/admin/ResetPasswordButton";
 
 interface UserEditSheetProps {
   /** The user to edit, or null to keep the sheet closed. */
@@ -31,6 +39,8 @@ interface UserEditSheetProps {
 export default function UserEditSheet({ userId, onClose, onSaved }: UserEditSheetProps) {
   const can = useCan();
   const router = useRouter();
+  const { data: session } = useSession();
+  const actorIsAdmin = session?.user?.role === "ADMIN";
   const open = userId !== null;
 
   const [original, setOriginal] = useState<UserMock | null>(null);
@@ -38,8 +48,6 @@ export default function UserEditSheet({ userId, onClose, onSaved }: UserEditShee
 
   const [role, setRole] = useState<Role | "">("");
   const [isActive, setIsActive] = useState(true);
-  const [newPassword, setNewPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -50,8 +58,6 @@ export default function UserEditSheet({ userId, onClose, onSaved }: UserEditShee
     setOriginal(null);
     setLoading(true);
     setError("");
-    setNewPassword("");
-    setShowPassword(false);
   } else if (userId === null && syncedId !== null) {
     setSyncedId(null);
   }
@@ -78,7 +84,6 @@ export default function UserEditSheet({ userId, onClose, onSaved }: UserEditShee
     if (!original) return;
     setError("");
     if (!role) { setError("Please select a role."); return; }
-    if (newPassword && newPassword.length < 8) { setError("New password must be at least 8 characters."); return; }
 
     setSubmitting(true);
     try {
@@ -88,10 +93,13 @@ export default function UserEditSheet({ userId, onClose, onSaved }: UserEditShee
         body: JSON.stringify({
           role,
           is_active: isActive,
-          password: newPassword || undefined,
         }),
       });
-      if (!res.ok) throw new Error("Failed to update user");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message || "Something went wrong while saving. Please try again.");
+        return;
+      }
       onSaved?.();
       onClose();
     } catch (e) {
@@ -101,6 +109,9 @@ export default function UserEditSheet({ userId, onClose, onSaved }: UserEditShee
       setSubmitting(false);
     }
   }
+
+  // A Secretary can view an Admin account but not change it.
+  const lockedAdmin = !!original && original.role === "ADMIN" && !actorIsAdmin;
 
   return (
     <Sheet open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
@@ -166,10 +177,11 @@ export default function UserEditSheet({ userId, onClose, onSaved }: UserEditShee
                     </label>
                     <select
                       value={role}
+                      disabled={lockedAdmin}
                       onChange={(e) => setRole(e.target.value as Role)}
                       className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
                     >
-                      {ROLES.map((r) => (
+                      {ROLES.filter((r) => actorIsAdmin || r.value !== "ADMIN" || original.role === "ADMIN").map((r) => (
                         <option key={r.value} value={r.value}>{r.label}</option>
                       ))}
                     </select>
@@ -179,32 +191,18 @@ export default function UserEditSheet({ userId, onClose, onSaved }: UserEditShee
                     <input
                       type="checkbox"
                       checked={isActive}
+                      disabled={lockedAdmin}
                       onChange={(e) => setIsActive(e.target.checked)}
                       className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-(--brand-fg) focus:ring-(--brand-line)"
                     />
                     Account active (can log in)
                   </label>
+                  {lockedAdmin && (
+                    <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Only an Admin can change an Admin account.</p>
+                  )}
 
                   <div className="border-t border-[#F4F5F7] dark:border-[#262626] pt-4">
-                    <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
-                      Reset Password <span className="font-normal normal-case text-[#9CA3AF] dark:text-[#A3A3A3]">(leave blank to keep current)</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="New password (min. 8 characters)"
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] py-2.5 pl-3 pr-10 text-[13px] outline-none focus:border-(--brand-line)"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((v) => !v)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:text-[#374151] dark:hover:text-[#D4D4D4]"
-                      >
-                        {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                      </button>
-                    </div>
+                    <ResetPasswordButton user={original} />
                   </div>
 
                   {error && <p className="rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-4 py-3 text-[12px] text-[#DC2626] dark:text-[#F87171]">{error}</p>}
@@ -221,7 +219,7 @@ export default function UserEditSheet({ userId, onClose, onSaved }: UserEditShee
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={submitting}
+                disabled={submitting || lockedAdmin}
                 className="rounded-lg bg-(--brand) px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-60"
               >
                 {submitting ? "Saving..." : "Save Changes"}

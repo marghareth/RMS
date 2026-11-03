@@ -1,9 +1,18 @@
 // FILE: src/app/api/users/route.ts
+//
+// Passwords (Nov 2026):
+//   - a new account must choose its own password at first sign-in
+//     (must_change_password), since the Admin or Secretary who created it
+//     knows the initial one;
+//   - the initial password follows src/lib/password-policy.ts;
+//   - only an Admin can create an Admin account, so a Secretary can't
+//     create one for themselves and use it to get around the
+//     "only an Admin resets an Admin" rule.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
-import { withErrorHandling } from "@/lib/api-handler";
+import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { userCreateSchema } from "@/lib/validations";
 import bcrypt from "bcryptjs";
 
@@ -25,6 +34,10 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   const body = userCreateSchema.parse(await req.json());
 
+  if (body.role === "ADMIN" && auth.session.user.role !== "ADMIN") {
+    throw new ApiError(403, "ADMIN_ONLY", "Only an Admin can create an Admin account.");
+  }
+
   const existing = await prisma.user.findUnique({ where: { username: body.username } });
   if (existing) {
     return NextResponse.json({ error: "Username already exists" }, { status: 409 });
@@ -35,7 +48,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   // User row + audit row commit together (see logAudit in src/lib/audit.ts).
   const user = await prisma.$transaction(async (tx) => {
     const created = await tx.user.create({
-      data: { username: body.username, password_hash, role: body.role },
+      data: { username: body.username, password_hash, role: body.role, must_change_password: true },
       select: { id: true, username: true, role: true, is_active: true, created_at: true },
     });
     await logAudit(

@@ -4,7 +4,19 @@ import { NextResponse } from "next/server";
 import { canAccessRoute } from "@/lib/route-permissions";
 import { isAllowedDuringMfaSetup, isMfaEnforcementOn } from "@/lib/mfa-policy";
 
-// Two gates run here on top of "must be signed in":
+// Reachable while the account must still choose a new password.
+const PASSWORD_CHANGE_ALLOWED = ["/account/password", "/api/account/password", "/api/auth"];
+
+function isAllowedDuringPasswordChange(pathname: string): boolean {
+  return PASSWORD_CHANGE_ALLOWED.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+// Three gates run here on top of "must be signed in":
+//
+//  0. New password (Nov 2026): an account on a temporary or admin-chosen
+//     password can only reach the Change password page and its API until
+//     it picks its own. Pages redirect to /account/password; API calls
+//     get a 403 JSON error.
 //
 //  1. MFA enrollment (ADMIN / CAPTAIN): until the account has enabled TOTP,
 //     everything except the enrollment page and its API is off limits.
@@ -31,6 +43,19 @@ export default withAuth(
     }
 
     if (!token) return NextResponse.next(); // `authorized` below handles this case
+
+    if (token.mustChangePassword && !isAllowedDuringPasswordChange(pathname)) {
+      if (isApi) {
+        return NextResponse.json(
+          {
+            error: "PASSWORD_CHANGE_REQUIRED",
+            message: "Choose a new password before continuing.",
+          },
+          { status: 403 }
+        );
+      }
+      return NextResponse.redirect(new URL("/account/password?required=1", req.url));
+    }
 
     if (token.mfaSetupRequired && isMfaEnforcementOn() && !isAllowedDuringMfaSetup(pathname)) {
       if (isApi) {
@@ -64,6 +89,9 @@ export default withAuth(
         // Keep-alive ping (see src/app/api/ping/route.ts) is hit by an
         // external cron job with no session — must stay public.
         if (req.nextUrl.pathname.startsWith("/api/ping")) return true;
+        // "Forgot password?" on the login page — the person isn't signed in.
+        // It only ever files a request for an admin to review.
+        if (req.nextUrl.pathname.startsWith("/api/forgot-password")) return true;
         // `invalid` is set by the jwt callback when the account has been
         // deleted or deactivated since the token was issued.
         return !!token && !token.invalid;
@@ -80,6 +108,6 @@ export const config = {
   // /api/ping, static assets, and Next.js internals. Add more public
   // paths here if needed.
   matcher: [
-    "/((?!login|verify|api/auth|api/verify|api/ping|_next/static|_next/image|favicon.ico).*)",
+    "/((?!login|verify|api/auth|api/verify|api/ping|api/forgot-password|_next/static|_next/image|favicon.ico).*)",
   ],
 };
