@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { lookupKey } from "@/lib/import-normalize";
 import { requirePermission } from "@/lib/session";
 import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { parseImportFile, validateImportRow, ImportParseError, ImportLookups } from "@/lib/residentImport";
@@ -48,10 +49,10 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   ]);
 
   const lookups: ImportLookups = {
-    puroksByName: new Map(puroks.map((p: { id: number; name: string }) => [p.name.toLowerCase(), p.id])),
+    puroksByName: new Map(puroks.map((p: { id: number; name: string }) => [lookupKey(p.name), p.id])),
     householdsByNo: new Map(
       households.map((h: { id: number; household_no: string; purok_id: number }) => [
-        h.household_no.toLowerCase(),
+        lookupKey(h.household_no),
         { id: h.id, purok_id: h.purok_id },
       ])
     ),

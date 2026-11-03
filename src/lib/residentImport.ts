@@ -16,6 +16,14 @@ import type { ImportIssue, ImportErrorType } from "@/lib/importMetrics";
 import { personName, optionalPersonName, nameSuffix, birthdate, phMobile } from "@/lib/field-rules";
 
 import { RESIDENT_IMPORT_COLUMNS } from "@/lib/residentImportColumns";
+import {
+  normalizeSex,
+  normalizeCivilStatus,
+  normalizeDate,
+  findPurok,
+  lookupKey,
+  excelDateToIso,
+} from "@/lib/import-normalize";
 
 // Re-exported so existing imports from "@/lib/residentImport" keep working.
 export { RESIDENT_IMPORT_COLUMNS };
@@ -29,51 +37,72 @@ export function buildImportTemplateCsv(): string {
 
 export class ImportParseError extends Error {}
 
+/** Turns a heading cell into the column key it means, or undefined. */
+const keyByHeader = (() => {
+  const map = new Map<string, string>();
+  const clean = (h: string) => h.replace(/\*/g, "").trim().toLowerCase().replace(/\s+/g, " ");
+  for (const col of RESIDENT_IMPORT_COLUMNS) {
+    for (const h of [col.key, col.label, col.header, col.label.replace(/\s*\(.*\)\s*$/, "")]) {
+      map.set(clean(h), col.key);
+    }
+  }
+  return (header: string) => map.get(clean(header));
+})();
+
+function cellText(value: unknown): string {
+  if (value instanceof Date) return excelDateToIso(value);
+  return String(value ?? "").trim();
+}
+
 /**
  * Parses an uploaded .csv or .xlsx file into an array of row objects keyed
- * by column header. Header matching is case/whitespace-tolerant against
- * RESIDENT_IMPORT_COLUMNS' keys and labels, so a spreadsheet with
- * "First Name" or "fname" or " FNAME " as its header all resolve the same.
+ * by column key.
+ *
+ * Headings are matched case/space-tolerantly against each column's key,
+ * label and template header, and a trailing "*" (the template's "required"
+ * mark) is ignored, so "First Name", "fname", " FNAME " and "First Name *"
+ * all resolve the same. Unknown columns are ignored.
+ *
+ * The heading row doesn't have to be the first row: the Excel template and
+ * the export put a title and a note above it. The first of the top 10 rows
+ * with a recognisable heading in it is used.
  */
 export function parseImportFile(buffer: Buffer, filename: string): Record<string, string>[] {
   const isExcel = /\.xlsx?$/i.test(filename);
 
-  let rawRows: Record<string, unknown>[];
+  let grid: unknown[][];
   if (isExcel) {
     const workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
     const firstSheetName = workbook.SheetNames[0];
     if (!firstSheetName) throw new ImportParseError("The uploaded file has no sheets.");
     const sheet = workbook.Sheets[firstSheetName];
-    rawRows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+    grid = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "", blankrows: false });
   } else {
-    const text = buffer.toString("utf-8");
-    const result = Papa.parse<Record<string, unknown>>(text, { header: true, skipEmptyLines: true });
+    const text = buffer.toString("utf-8").replace(/^\uFEFF/, "");
+    const result = Papa.parse<unknown[]>(text, { header: false, skipEmptyLines: true });
     if (result.errors.length > 0) {
       throw new ImportParseError(`CSV parse error: ${result.errors[0].message} (row ${result.errors[0].row ?? "?"})`);
     }
-    rawRows = result.data;
+    grid = result.data;
   }
 
-  const keyByHeader = new Map<string, string>();
-  for (const col of RESIDENT_IMPORT_COLUMNS) {
-    keyByHeader.set(col.key.toLowerCase(), col.key);
-    keyByHeader.set(col.label.toLowerCase(), col.key);
-  }
+  const headerIndex = grid
+    .slice(0, 10)
+    .findIndex((row) => row.some((cell) => keyByHeader(cellText(cell))));
+  if (headerIndex === -1) return [];
 
-  return rawRows.map((rawRow) => {
-    const normalized: Record<string, string> = {};
-    for (const [header, value] of Object.entries(rawRow)) {
-      const normalizedHeader = header.trim().toLowerCase();
-      const key = keyByHeader.get(normalizedHeader);
-      if (!key) continue; // unrecognized column — ignored rather than erroring the whole file
-      if (value instanceof Date) {
-        normalized[key] = value.toISOString().slice(0, 10);
-      } else {
-        normalized[key] = String(value ?? "").trim();
-      }
-    }
-    return normalized;
-  });
+  const keys = grid[headerIndex].map((cell) => keyByHeader(cellText(cell)));
+
+  return grid
+    .slice(headerIndex + 1)
+    .map((row) => {
+      const normalized: Record<string, string> = {};
+      keys.forEach((key, i) => {
+        if (key) normalized[key] = cellText(row[i]);
+      });
+      return normalized;
+    })
+    .filter((row) => Object.values(row).some((v) => v !== "")); // skip rows that are only empty cells
 }
 
 // Per-row schema. Distinct from residentCreateSchema (validations.ts):
@@ -103,9 +132,9 @@ const importRowSchema = z.object({
 });
 
 export interface ImportLookups {
-  /** Purok name (lowercased) -> id */
+  /** Purok name (lookupKey: lowercased, single spaces) -> id */
   puroksByName: Map<string, number>;
-  /** Household no. (lowercased) -> { id, purok_id } */
+  /** Household no. (lookupKey) -> { id, purok_id } */
   householdsByNo: Map<string, { id: number; purok_id: number }>;
 }
 
@@ -182,7 +211,15 @@ export function validateImportRow(
   const errors: string[] = [];
   const issues: ImportIssue[] = [];
 
-  const parsed = importRowSchema.safeParse(raw);
+  // Tidy the usual census-sheet variations ("Male", "Live-in", "03/15/1990")
+  // first; `raw` itself is kept as typed for the error report.
+  const tidied = {
+    ...raw,
+    sex: normalizeSex(raw.sex),
+    civil_status: normalizeCivilStatus(raw.civil_status),
+    birthdate: normalizeDate(raw.birthdate),
+  };
+  const parsed = importRowSchema.safeParse(tidied);
   if (!parsed.success) {
     for (const issue of parsed.error.issues) {
       const field = issue.path.join(".");
@@ -196,7 +233,7 @@ export function validateImportRow(
 
   let purok_id: number | null = null;
   if (row.purok_name) {
-    const found = lookups.puroksByName.get(row.purok_name.toLowerCase());
+    const found = findPurok(row.purok_name, lookups.puroksByName);
     if (!found) {
       const message = `"${row.purok_name}" doesn't match any existing purok`;
       errors.push(`purok_name: ${message}`);
@@ -206,7 +243,7 @@ export function validateImportRow(
 
   let household_id: number | null = null;
   if (row.household_no) {
-    const found = lookups.householdsByNo.get(row.household_no.toLowerCase());
+    const found = lookups.householdsByNo.get(lookupKey(row.household_no));
     if (!found) {
       const message = `"${row.household_no}" doesn't match any existing household`;
       errors.push(`household_no: ${message}`);

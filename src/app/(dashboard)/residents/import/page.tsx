@@ -204,7 +204,7 @@ export default function ResidentImportPage() {
         <div className="mx-auto max-w-xl">
           <div className="mb-4 flex items-center justify-between rounded-lg border border-[#E9EAEC] bg-[#F9FAFB] px-4 py-3">
             <p className="text-[12px] text-[#6B7280]">
-              Not sure what columns to use? Start from the template.
+              Start from the Excel template. It has dropdowns, this barangay&rsquo;s puroks and an Instructions tab.
             </p>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- this points to an API download route, not a Next.js page */}
             <a
@@ -212,7 +212,7 @@ export default function ResidentImportPage() {
               className="flex shrink-0 items-center gap-1.5 text-[11px] font-bold text-(--brand-fg) hover:text-(--brand-fg-strong)"
             >
               <Download size={12} />
-              Download Template
+              Download template (.xlsx)
             </a>
           </div>
 

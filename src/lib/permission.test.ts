@@ -111,3 +111,13 @@ describe('hasPermission', () => {
     expect(isViewOnly('RANDOM_ROLE')).toBe(true);
   });
 });
+
+describe('resident export (personal data)', () => {
+  it('only Admin and Secretary can export residents', () => {
+    expect(hasPermission('ADMIN', 'residents:export')).toBe(true);
+    expect(hasPermission('SECRETARY', 'residents:export')).toBe(true);
+    for (const role of ['CAPTAIN', 'KAGAWAD', 'BHW', 'ENCODER']) {
+      expect(hasPermission(role, 'residents:export')).toBe(false);
+    }
+  });
+});
