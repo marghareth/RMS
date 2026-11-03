@@ -58,6 +58,16 @@ function timeAgo(iso: string): string {
   return `${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} ago`;
 }
 
+// The actual date next to "3 days ago", e.g. "Oct 31, 2026". For today's
+// items the time is more useful, e.g. "8:45 AM".
+function exactDate(iso: string): string {
+  const d = new Date(iso);
+  const sameDay = d.toDateString() === new Date().toDateString();
+  return sameDay
+    ? d.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" })
+    : d.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
+}
+
 export default function Topbar({
   onMenuClick,
   className = "",
@@ -103,7 +113,30 @@ export default function Topbar({
 
   // notifLoading already starts as `true` (see useState above), so no
   // setState is needed here on mount — just kick off the fetch.
-  useEffect(() => { loadNotifications(); }, []);
+  //
+  // Then keep the bell current (Nov 2026): it used to load only once per
+  // page load, so an Admin with the app open all day never saw a new
+  // password reset request (or a newly overdue item) until they refreshed.
+  // Now it re-checks every minute while the tab is visible, and right away
+  // when the user comes back to the tab. A hidden tab doesn't poll.
+  useEffect(() => {
+    loadNotifications();
+
+    const POLL_MS = 60 * 1000;
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") loadNotifications();
+    }, POLL_MS);
+
+    function onVisible() {
+      if (document.visibilityState === "visible") loadNotifications();
+    }
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
 
   // Close both dropdowns on outside click.
   useEffect(() => {
@@ -251,7 +284,7 @@ export default function Topbar({
                         <div className="min-w-0">
                           <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">{n.title}</p>
                           <p className="mt-0.5 text-[11px] leading-snug text-[#6B7280]">{n.message}</p>
-                          <p className="mt-1 text-[10px] font-medium text-[#9CA3AF]">{timeAgo(n.date)}</p>
+                          <p className="mt-1 text-[10px] font-medium text-[#9CA3AF]">{timeAgo(n.date)} · {exactDate(n.date)}</p>
                         </div>
                       </button>
                     );
