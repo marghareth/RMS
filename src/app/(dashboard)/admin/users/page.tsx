@@ -10,6 +10,7 @@ import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import UserEditSheet from "@/components/admin/UserEditSheet";
+import ResetRequestsPanel from "@/components/admin/ResetRequestsPanel";
 import { UserMock, roleLabel, formatISODate } from "@/lib/mock/admin";
 import { readList } from "@/lib/fetch-json";
 import { useCan } from "@/lib/hooks/useCan";
@@ -110,6 +111,9 @@ export default function UsersListPage() {
           </button>))
         }
       />
+
+      {/* "Forgot password?" requests waiting for approval (hidden when none) */}
+      {can("users:write") && <ResetRequestsPanel />}
 
       {/* Stat cards */}
       <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">

@@ -83,7 +83,16 @@ export const AUDIT_TABLES = [
   "System",
 ];
 
-export const AUDIT_ACTIONS = ["CREATE", "UPDATE", "DELETE", "DEACTIVATE", "BACKUP"];
+export const AUDIT_ACTIONS = [
+  "CREATE",
+  "UPDATE",
+  "DELETE",
+  "DEACTIVATE",
+  "BACKUP",
+  "PASSWORD_CHANGED",
+  "PASSWORD_RESET",
+  "PASSWORD_RESET_DENIED",
+];
 
 // ── BACKUPS ────────────────────────────────────────────────────────────────
 export interface BackupMock {

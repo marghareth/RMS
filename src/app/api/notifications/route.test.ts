@@ -9,6 +9,7 @@ vi.mock('@/lib/db', () => ({
     equipmentBorrowing: { findMany: vi.fn() },
     blotterCase: { findMany: vi.fn() },
     certificate: { findMany: vi.fn() },
+    passwordResetRequest: { findMany: vi.fn() },
   },
 }));
 
@@ -28,6 +29,25 @@ describe('GET /api/notifications', () => {
     (prisma.equipmentBorrowing.findMany as any).mockResolvedValue([]);
     (prisma.blotterCase.findMany as any).mockResolvedValue([]);
     (prisma.certificate.findMany as any).mockResolvedValue([]);
+    (prisma.passwordResetRequest.findMany as any).mockResolvedValue([]);
+  });
+
+  it('shows password reset requests to a Secretary, as a warning linking to Users', async () => {
+    mockAuthAs('SECRETARY');
+    (prisma.passwordResetRequest.findMany as any).mockResolvedValue([
+      { id: 4, requested_at: new Date(), user: { username: 'encoder1' } },
+    ]);
+    const res = await GET(new NextRequest('http://localhost/api/notifications'));
+    const body = await res.json();
+    const item = body.notifications.find((n: any) => n.id === 'password-reset-4');
+    expect(item).toMatchObject({ severity: 'warning', link: '/admin/users' });
+    expect(item.message).toContain('encoder1');
+  });
+
+  it('does NOT look up password reset requests for a role that cannot approve them (Captain)', async () => {
+    mockAuthAs('CAPTAIN');
+    await GET(new NextRequest('http://localhost/api/notifications'));
+    expect(prisma.passwordResetRequest.findMany).not.toHaveBeenCalled();
   });
 
   it('returns 401 when unauthenticated', async () => {

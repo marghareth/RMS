@@ -34,6 +34,15 @@
 //    branch too, so both paths pay the same bcrypt cost before
 //    returning. It can never match a real login (the hash isn't tied to
 //    any account), so this only affects timing, not behavior.
+//
+// 4. Passwords (Nov 2026). A temporary password issued by an Admin or
+//    Secretary (src/lib/password-reset.ts) stops working 30 minutes after
+//    it was issued, and while `must_change_password` is set the user is
+//    confined to the Change password page (middleware.ts). The token also
+//    remembers when the password last changed (`pwdAt`): once the
+//    account's password_changed_at moves past it — the user changed their
+//    password, or an admin issued a temporary one — the session is
+//    signed out, on every device.
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./db";
@@ -67,6 +76,17 @@ const DUMMY_PASSWORD_HASH = bcrypt.hashSync(
   "timing-side-channel-mitigation-only-not-a-real-account",
   10
 );
+
+/**
+ * True when the password changed after this session signed in, so the
+ * session must end. A token from before this check existed has no `pwdAt`
+ * and is treated as out of date: everyone signs in once more after the
+ * update is deployed.
+ */
+export function passwordChangedSince(changedAt: Date, pwdAt: number | undefined): boolean {
+  if (typeof pwdAt !== "number") return true;
+  return changedAt.getTime() > pwdAt;
+}
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -117,6 +137,17 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // A temporary password only works for 30 minutes. Checked after the
+        // password itself, so this message only ever reaches someone who
+        // already knows the (expired) temporary password.
+        if (
+          user.must_change_password &&
+          user.temp_password_expires_at &&
+          user.temp_password_expires_at.getTime() < Date.now()
+        ) {
+          throw new Error("TEMP_PASSWORD_EXPIRED");
+        }
+
         // ── Second factor ──────────────────────────────────────────
         if (user.mfa_enabled) {
           const token = credentials.totp?.trim();
@@ -153,6 +184,8 @@ export const authOptions: NextAuthOptions = {
           username: user.username,
           role: user.role,
           mfaSetupRequired: mfaSetupRequired(user.role, user.mfa_enabled),
+          mustChangePassword: user.must_change_password,
+          pwdAt: user.password_changed_at.getTime(),
         };
       },
     }),
@@ -164,6 +197,8 @@ export const authOptions: NextAuthOptions = {
         token.username = user.username;
         token.role = user.role;
         token.mfaSetupRequired = user.mfaSetupRequired;
+        token.mustChangePassword = user.mustChangePassword;
+        token.pwdAt = user.pwdAt;
         // Only set on an actual sign-in (the `user` param is only passed
         // here at that point, never on a later token read/refresh), so the
         // client can tell "brand-new login" apart from "same session,
@@ -186,15 +221,23 @@ export const authOptions: NextAuthOptions = {
         try {
           const fresh = await prisma.user.findUnique({
             where: { id: parseInt(token.id) },
-            select: { role: true, is_active: true, mfa_enabled: true, username: true },
+            select: {
+              role: true,
+              is_active: true,
+              mfa_enabled: true,
+              username: true,
+              must_change_password: true,
+              password_changed_at: true,
+            },
           });
-          if (!fresh || !fresh.is_active) {
+          if (!fresh || !fresh.is_active || passwordChangedSince(fresh.password_changed_at, token.pwdAt)) {
             token.invalid = true;
           } else {
             token.invalid = false;
             token.role = fresh.role;
             token.username = fresh.username;
             token.mfaSetupRequired = mfaSetupRequired(fresh.role, fresh.mfa_enabled);
+            token.mustChangePassword = fresh.must_change_password;
           }
           token.checkedAt = Date.now();
         } catch (err) {
@@ -215,6 +258,8 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role;
         session.user.mfaSetupRequired = token.mfaSetupRequired;
         session.user.loginAt = token.loginAt;
+        session.user.mustChangePassword = token.mustChangePassword;
+        session.user.pwdAt = token.pwdAt;
       }
       return session;
     },

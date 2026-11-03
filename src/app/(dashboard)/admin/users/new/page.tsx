@@ -1,15 +1,25 @@
 // FILE: src/app/(dashboard)/admin/users/new/page.tsx
+//
+// Passwords (Nov 2026): the initial password follows the same rules as any
+// other (src/lib/password-policy.ts), and the new user must replace it at
+// first sign-in, since whoever created the account knows it. Only an Admin
+// can create an Admin account.
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, UserPlus, Eye, EyeOff } from "lucide-react";
 import PageTutorial from "@/components/shared/PageTutorial";
 import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
+import { useSession } from "next-auth/react";
 import { ROLES, Role } from "@/lib/mock/admin";
+import PasswordRules from "@/components/account/PasswordRules";
+import { passwordProblem } from "@/lib/password-policy";
 
 export default function NewUserPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const actorIsAdmin = session?.user?.role === "ADMIN";
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -25,8 +35,9 @@ export default function NewUserPage() {
       setError("Please enter a username.");
       return;
     }
-    if (!password || password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    const problem = passwordProblem(password, username.trim());
+    if (problem) {
+      setError(problem);
       return;
     }
     if (!role) {
@@ -46,7 +57,7 @@ export default function NewUserPage() {
         const data = await res.json().catch(() => ({}));
         // Duplicate usernames come back as 409 from the server, which is
         // the only authoritative check (the client never sees the user list).
-        setError(data.message || data.error || "Failed to create user.");
+        setError(data.issues?.[0]?.message || data.message || data.error || "Failed to create user.");
         return;
       }
       router.push("/admin/users");
@@ -106,7 +117,7 @@ export default function NewUserPage() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 8 characters"
+                placeholder="Initial password"
                 className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] py-2.5 pl-3 pr-10 text-[13px] outline-none focus:border-(--brand-line)"
               />
               <button
@@ -117,6 +128,10 @@ export default function NewUserPage() {
                 {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
+            <PasswordRules password={password} />
+            <p className="mt-1 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
+              They&rsquo;ll set their own the first time they sign in.
+            </p>
           </div>
 
           <div>
@@ -129,7 +144,7 @@ export default function NewUserPage() {
               className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
             >
               <option value="">Select role</option>
-              {ROLES.map((r) => (
+              {ROLES.filter((r) => actorIsAdmin || r.value !== "ADMIN").map((r) => (
                 <option key={r.value} value={r.value}>
                   {r.label}
                 </option>

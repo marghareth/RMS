@@ -18,6 +18,7 @@ import {
   philsysNumber,
   zipCode,
 } from "./field-rules";
+import { passwordProblem, PASSWORD_MAX_LENGTH } from "./password-policy";
 
 // ─── SHARED PRIMITIVES ─────────────────────────────────────────────────────
 const id = z.coerce.number().int().positive();
@@ -28,15 +29,38 @@ const dateString = z.coerce.date();
 // ─── USERS ──────────────────────────────────────────────────────────────────
 export const roleEnum = z.enum(["ADMIN", "CAPTAIN", "SECRETARY", "KAGAWAD", "BHW", "ENCODER"]);
 
-export const userCreateSchema = z.object({
+const userBaseSchema = z.object({
   username: nonEmptyString.max(50),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string(),
   role: roleEnum,
   is_active: z.boolean().optional(),
 });
 
-export const userUpdateSchema = userCreateSchema.partial().extend({
-  password: z.string().min(8).optional(), // don't force a password change on update
+// The initial password an Admin or Secretary sets follows the same rules as
+// one a user picks (src/lib/password-policy.ts). The user still has to
+// replace it at first sign-in.
+export const userCreateSchema = userBaseSchema.superRefine((val, ctx) => {
+  const problem = passwordProblem(val.password, val.username);
+  if (problem) ctx.addIssue({ code: "custom", path: ["password"], message: problem });
+});
+
+// No password here: an admin can't type a new password for someone else.
+// "Reset password" issues a one-time temporary password instead
+// (POST /api/users/[id]/reset-password).
+export const userUpdateSchema = userBaseSchema.omit({ password: true, username: true }).partial();
+
+// ─── PASSWORDS (change your own / forgot password) ────────────────────────
+export const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1, "Enter your current password").max(PASSWORD_MAX_LENGTH),
+  newPassword: z.string().max(PASSWORD_MAX_LENGTH),
+});
+
+export const forgotPasswordSchema = z.object({
+  username: z.string().trim().min(1, "Enter your username").max(50),
+});
+
+export const resetRequestActionSchema = z.object({
+  action: z.enum(["approve", "deny"]),
 });
 
 // ─── ACCOUNT / MFA (self-service TOTP enrollment) ──────────────────────────

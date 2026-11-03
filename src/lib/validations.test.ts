@@ -24,22 +24,32 @@ import {
 
 describe('userCreateSchema', () => {
   it('accepts a valid user', () => {
-    const result = userCreateSchema.safeParse({ username: 'jdelacruz', password: 'longenough1', role: 'ENCODER' });
+    const result = userCreateSchema.safeParse({ username: 'jdelacruz', password: 'Longenough1!', role: 'ENCODER' });
     expect(result.success).toBe(true);
   });
 
-  it('rejects a password shorter than 8 characters', () => {
+  it('rejects a password shorter than 10 characters', () => {
     const result = userCreateSchema.safeParse({ username: 'jdelacruz', password: 'short', role: 'ENCODER' });
     expect(result.success).toBe(false);
   });
 
   it('rejects an invalid role', () => {
-    const result = userCreateSchema.safeParse({ username: 'jdelacruz', password: 'longenough1', role: 'SUPERADMIN' });
+    const result = userCreateSchema.safeParse({ username: 'jdelacruz', password: 'Longenough1!', role: 'SUPERADMIN' });
     expect(result.success).toBe(false);
   });
 
   it('rejects an empty username', () => {
-    const result = userCreateSchema.safeParse({ username: '  ', password: 'longenough1', role: 'ENCODER' });
+    const result = userCreateSchema.safeParse({ username: '  ', password: 'Longenough1!', role: 'ENCODER' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a common password even when it is long enough', () => {
+    const result = userCreateSchema.safeParse({ username: 'jdelacruz', password: 'barangay123', role: 'ENCODER' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a password that contains the username', () => {
+    const result = userCreateSchema.safeParse({ username: 'jdelacruz', password: 'jdelacruz2026!', role: 'ENCODER' });
     expect(result.success).toBe(false);
   });
 });

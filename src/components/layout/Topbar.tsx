@@ -18,7 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { isViewOnly } from "@/lib/permission";
-import { Menu, Search, Bell, LogOut, ChevronDown, AlertTriangle, Clock, Info, ShieldCheck, HelpCircle, Eye } from "lucide-react";
+import { Menu, Search, Bell, LogOut, ChevronDown, AlertTriangle, Clock, Info, ShieldCheck, HelpCircle, Eye, KeyRound } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import Link from "next/link";
 import { useOnboarding } from "@/components/onboarding/OnboardingProvider";
@@ -310,6 +310,14 @@ export default function Topbar({
                 {session?.user?.mfaSetupRequired && (
                   <span className="ml-auto h-1.5 w-1.5 rounded-full bg-amber-500" />
                 )}
+              </Link>
+              <Link
+                href="/account/password"
+                onClick={() => setMenuOpen(false)}
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[13px] font-medium text-[#1F2937] transition hover:bg-[#F4F5F7] dark:text-white dark:hover:bg-[#1F1F1F]"
+              >
+                <KeyRound size={15} />
+                Change password
               </Link>
               <button
                 type="button"
