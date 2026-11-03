@@ -41,9 +41,9 @@ interface NotificationItem {
   message: string;
   link: string;
   date: string; // ISO date driving both display and sort order
+  /** Shown above everything else, newest first: someone is waiting on it right now. */
+  pinned?: boolean;
 }
-
-const SEVERITY_ORDER: Record<Severity, number> = { urgent: 0, warning: 1, info: 2 };
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("dashboard:read", req);
@@ -159,14 +159,22 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
         message: `${r.user.username} asked for a password reset. Confirm it's them before approving.`,
         link: "/admin/users",
         date: r.requested_at.toISOString(),
+        // BUGFIX: as a plain "warning" this sorted after every urgent item
+        // and, among warnings, oldest first — so a request made minutes ago
+        // landed at the very bottom of a long list (below 10 long-overdue
+        // hearings in the sample data) and looked like it never arrived.
+        pinned: true,
       });
     }
   }
 
+  // Newest first (Nov 2026). This used to list every "urgent" item first and
+  // then oldest first within each group, so the newest alerts were always
+  // at the bottom. Password reset requests stay pinned above everything,
+  // since someone is waiting on them. Severity still shows as the icon.
   notifications.sort((a, b) => {
-    const sevDiff = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
-    if (sevDiff !== 0) return sevDiff;
-    return new Date(a.date).getTime() - new Date(b.date).getTime();
+    if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
   });
 
   return NextResponse.json({ notifications, count: notifications.length });

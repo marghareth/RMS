@@ -44,6 +44,23 @@ describe('GET /api/notifications', () => {
     expect(item.message).toContain('encoder1');
   });
 
+  it('lists password reset requests above overdue items, newest request first', async () => {
+    mockAuthAs('ADMIN');
+    (prisma.blotterCase.findMany as any)
+      .mockResolvedValueOnce([{ id: 1, case_number: 'BLT-1', status: 'ONGOING', hearing_date: new Date('2025-01-01') }])
+      .mockResolvedValueOnce([]);
+    (prisma.passwordResetRequest.findMany as any).mockResolvedValue([
+      { id: 7, requested_at: new Date(Date.now() - 3600000), user: { username: 'older' } },
+      { id: 8, requested_at: new Date(), user: { username: 'newer' } },
+    ]);
+    const body = await (await GET(new NextRequest('http://localhost/api/notifications'))).json();
+    expect(body.notifications.map((n: any) => n.id).slice(0, 3)).toEqual([
+      'password-reset-8',
+      'password-reset-7',
+      'hearing-overdue-1',
+    ]);
+  });
+
   it('does NOT look up password reset requests for a role that cannot approve them (Captain)', async () => {
     mockAuthAs('CAPTAIN');
     await GET(new NextRequest('http://localhost/api/notifications'));
@@ -122,24 +139,27 @@ describe('GET /api/notifications', () => {
     expect(body.notifications[0].message).toContain('day(s)');
   });
 
-  it('sorts urgent notifications before warning notifications regardless of date', async () => {
+  it('lists the newest notifications first, whatever their severity', async () => {
     mockAuthAs('ADMIN');
     const now = new Date();
     const longAgo = new Date(now.getTime() - 10 * 86400000);
-    const soon = new Date(now.getTime() + 86400000);
+    const yesterday = new Date(now.getTime() - 86400000);
 
-    // Warning (upcoming hearing) has an earlier "date" than the urgent
-    // (overdue equipment) one — severity should still win the sort.
     (prisma.equipmentBorrowing.findMany as any).mockResolvedValue([
       { id: 1, expected_return: longAgo, borrower_name: 'Juan', equipment: { name: 'Laptop' } },
     ]);
+    (prisma.certificate.findMany as any).mockResolvedValue([
+      { id: 3, queue_number: 'Q-1', certificate_no: 'C-1', requested_at: new Date(now.getTime() - 3 * 86400000) },
+    ]);
     (prisma.blotterCase.findMany as any)
-      .mockResolvedValueOnce([]) // overdue hearings
-      .mockResolvedValueOnce([{ id: 2, case_number: 'BLT-2026-0002', status: 'FILED', hearing_date: soon }]);
+      .mockResolvedValueOnce([{ id: 2, case_number: 'BLT-2', status: 'ONGOING', hearing_date: yesterday }])
+      .mockResolvedValueOnce([]);
 
-    const res = await GET(new NextRequest('http://localhost/api/notifications'));
-    const body = await res.json();
-    expect(body.notifications[0].severity).toBe('urgent');
-    expect(body.notifications[1].severity).toBe('warning');
+    const body = await (await GET(new NextRequest('http://localhost/api/notifications'))).json();
+    expect(body.notifications.map((n: any) => n.id)).toEqual([
+      'hearing-overdue-2', // yesterday
+      'certificate-pending-3', // 3 days ago
+      'equipment-1', // 10 days ago
+    ]);
   });
 });
