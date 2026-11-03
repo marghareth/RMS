@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { lookupKey } from "@/lib/import-normalize";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
@@ -35,10 +36,10 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     prisma.household.findMany({ select: { id: true, household_no: true, purok_id: true } }),
   ]);
   const lookups: ImportLookups = {
-    puroksByName: new Map(puroks.map((p: { id: number; name: string }) => [p.name.toLowerCase(), p.id])),
+    puroksByName: new Map(puroks.map((p: { id: number; name: string }) => [lookupKey(p.name), p.id])),
     householdsByNo: new Map(
       households.map((h: { id: number; household_no: string; purok_id: number }) => [
-        h.household_no.toLowerCase(),
+        lookupKey(h.household_no),
         { id: h.id, purok_id: h.purok_id },
       ])
     ),

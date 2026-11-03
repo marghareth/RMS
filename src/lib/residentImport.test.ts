@@ -216,7 +216,7 @@ describe('validateImportRow', () => {
     });
 
     it('INVALID_OPTION: sex / civil status not in the allowed list', () => {
-      expect(typesOf({ ...validRaw, sex: 'M' })).toContainEqual(['sex', 'INVALID_OPTION']);
+      expect(typesOf({ ...validRaw, sex: 'X' })).toContainEqual(['sex', 'INVALID_OPTION']);
       expect(typesOf({ ...validRaw, civil_status: 'COMPLICATED' })).toContainEqual(['civil_status', 'INVALID_OPTION']);
     });
 
@@ -232,7 +232,7 @@ describe('validateImportRow', () => {
     });
 
     it('records every problem on a row, keeping `errors` and `issues` in step', () => {
-      const result = validateImportRow(41, { ...validRaw, fname: '', sex: 'M', mobile: 'n/a' }, emptyLookups());
+      const result = validateImportRow(41, { ...validRaw, fname: '', sex: 'X', mobile: 'n/a' }, emptyLookups());
       expect(result.issues.map((i) => i.type).sort()).toEqual(['INVALID_FORMAT', 'INVALID_OPTION', 'MISSING_REQUIRED']);
       expect(result.issues).toHaveLength(result.errors.length);
     });
@@ -292,5 +292,30 @@ describe('validateImportRow', () => {
     const result = validateImportRow(42, raw, emptyLookups());
     expect(result.rowNumber).toBe(42);
     expect(result.raw).toBe(raw);
+  });
+});
+
+describe('import is forgiving about the usual census-sheet variations', () => {
+  const base = { fname: 'Ana', lname: 'Reyes', birthdate: '03/15/1990', sex: 'female', civil_status: 'Live-in' };
+
+  it('accepts "female", "Live-in" and 03/15/1990, saving them the proper way', () => {
+    const result = validateImportRow(1, base, { puroksByName: new Map(), householdsByNo: new Map() });
+    expect(result.errors).toEqual([]);
+    expect(result.data).toMatchObject({ sex: 'FEMALE', civil_status: 'LIVE_IN' });
+    expect(result.data?.birthdate.toISOString().slice(0, 10)).toBe('1990-03-15');
+  });
+
+  it('keeps what was typed in `raw`, for the error report', () => {
+    expect(validateImportRow(1, base, { puroksByName: new Map(), householdsByNo: new Map() }).raw.sex).toBe('female');
+  });
+
+  it('finds the heading row under a title, and ignores the "*" required mark', () => {
+    const csv = 'Barangay San Jose — Residents\nSome note\nFirst Name *,Last Name *,Sex *\nAna,Reyes,Female\n';
+    expect(parseImportFile(Buffer.from(csv), 'r.csv')).toEqual([{ fname: 'Ana', lname: 'Reyes', sex: 'Female' }]);
+  });
+
+  it('skips rows that are completely empty', () => {
+    const csv = 'fname,lname\nAna,Reyes\n,\n';
+    expect(parseImportFile(Buffer.from(csv), 'r.csv')).toHaveLength(1);
   });
 });

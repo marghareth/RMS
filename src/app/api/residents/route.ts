@@ -1,5 +1,4 @@
 // FILE: src/app/api/residents/route.ts
-import type { Prisma, CivilStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
@@ -13,42 +12,21 @@ import {
 } from "@/lib/duplicate-detection";
 import { withErrorHandling } from "@/lib/api-handler";
 import { residentCreateSchema, paginationSchema } from "@/lib/validations";
+import { readResidentFilters, residentWhere } from "@/lib/resident-filters";
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("residents:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { searchParams } = new URL(req.url);
-  const search       = searchParams.get("search") || "";
-  const purok_id     = searchParams.get("purok_id");
-  const sex          = searchParams.get("sex");
-  const civil_status = searchParams.get("civil_status");
-  const is_archived  = searchParams.get("is_archived") === "true";
-  const unassigned   = searchParams.get("unassigned") === "true";
   const { page, limit } = paginationSchema.parse({
     page: searchParams.get("page"),
     limit: searchParams.get("limit"),
   });
   const skip = (page - 1) * limit;
 
-  const where: Prisma.ResidentWhereInput = {
-    is_archived,
-    AND: [
-      search
-        ? {
-            OR: [
-              { fname: { contains: search, mode: "insensitive" } },
-              { lname: { contains: search, mode: "insensitive" } },
-              { mname: { contains: search, mode: "insensitive" } },
-            ],
-          }
-        : {},
-      purok_id     ? { purok_id:     parseInt(purok_id) } : {},
-      sex          ? { sex }                              : {},
-      civil_status ? { civil_status: civil_status as CivilStatus } : {},
-      unassigned   ? { household_id: null }                : {},
-    ],
-  };
+  // Same filters as the export (src/lib/resident-filters.ts).
+  const where = residentWhere(readResidentFilters(searchParams));
 
   const [residents, total] = await Promise.all([
     prisma.resident.findMany({

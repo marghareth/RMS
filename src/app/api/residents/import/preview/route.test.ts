@@ -217,7 +217,7 @@ describe('POST /api/residents/import/preview', () => {
         'Ben,Uy,1992-02-02,MALE,SINGLE,\n' +                    // 2 ready
         ',Reyes,1993-03-03,MALE,SINGLE,\n' +                    // 3 invalid: missing fname
         'Carl,Go,2087-01-01,MALE,SINGLE,\n' +                   // 4 invalid: future birthdate
-        'Dan,Ng,1994-04-04,M,SINGLE,n/a\n' +                    // 5 invalid: bad sex + bad mobile
+        'Dan,Ng,1994-04-04,X,SINGLE,n/a\n' +                    // 5 invalid: bad sex + bad mobile
         'Maria,Santos,1985-01-20,FEMALE,MARRIED,\n' +           // 6 duplicate of existing #42
         'Ana,Lopez,1991-01-01,FEMALE,SINGLE,\n' +               // 7 duplicate of row 1
         'Maira,Santos,1985-01-20,FEMALE,MARRIED,\n';            // 8 possible (typo of #42)

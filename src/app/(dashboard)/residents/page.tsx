@@ -1,4 +1,13 @@
 // FILE: src/app/(dashboard)/residents/page.tsx
+//
+// Nov 2026:
+//   - Export: downloads the residents this list is showing (same search and
+//     filters) as a formatted Excel file in the import template's layout.
+//     Admin and Secretary only (residents:export); every export is logged.
+//   - "Register resident" is hidden from roles that can't add residents
+//     (it led to the access-denied page).
+//   - The count under the title is the real total, not just the first 100
+//     loaded.
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -6,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   Search, SlidersHorizontal, ChevronRight,
-  Plus, X, Users, Mars, Venus, Upload,
+  Plus, X, Users, Mars, Venus, Upload, Download,
 } from "lucide-react";
 import ResidentDetailSheet from "@/components/residents/ResidentDetailSheet";
 import { hasPermission } from "@/lib/permission";
@@ -107,6 +116,7 @@ export default function ResidentsPage() {
   // button that would end in a 403.)
   const { data: session } = useSession();
   const canImport = !!session?.user?.role && hasPermission(session.user.role, "residents:write");
+  const canExport = !!session?.user?.role && hasPermission(session.user.role, "residents:export");
   const router = useRouter();
 
   const [residents,  setResidents]  = useState<Resident[]>([]);
@@ -116,6 +126,9 @@ export default function ResidentsPage() {
   const [showFilter, setShowFilter] = useState(false);
   const [filters,    setFilters]    = useState<FilterState>({ sex: "", civil_status: "", purok_id: "" });
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [total,      setTotal]      = useState(0);
+  const [exporting,  setExporting]  = useState(false);
+  const [exportError, setExportError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -132,22 +145,54 @@ export default function ResidentsPage() {
     };
   }, []);
 
+  // The current search and filters, as sent to both the list and the export.
+  const filterParams = useCallback(() => {
+    const params = new URLSearchParams();
+    if (search)                params.set("search",       search);
+    if (filters.sex)           params.set("sex",          filters.sex);
+    if (filters.civil_status)  params.set("civil_status", filters.civil_status);
+    if (filters.purok_id)      params.set("purok_id",     filters.purok_id);
+    return params;
+  }, [search, filters]);
+
+  async function handleExport() {
+    setExporting(true);
+    setExportError("");
+    try {
+      const res = await fetch(`/api/residents/export?${filterParams()}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Export failed. Try again.");
+      }
+      const blob = await res.blob();
+      const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? "residents.xlsx";
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : "Export failed. Try again.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   const loadResidents = useCallback(async () => {
     setLoading(true);
     try {
       
-      const params = new URLSearchParams({ limit: "100" });
-      if (search)                params.set("search",       search);
-      if (filters.sex)           params.set("sex",          filters.sex);
-      if (filters.civil_status)  params.set("civil_status", filters.civil_status);
-      if (filters.purok_id)      params.set("purok_id",     filters.purok_id);
+      const params = filterParams();
+      params.set("limit", "100");
       const res  = await fetch(`/api/residents?${params}`);
       const data = await res.json();
       setResidents(data.residents ?? []);
+      setTotal(typeof data.total === "number" ? data.total : (data.residents ?? []).length);
     } finally {
       setLoading(false);
     }
-  }, [search, filters]);
+  }, [filterParams]);
 
   useEffect(() => {
     const t = setTimeout(loadResidents, 300);
@@ -166,10 +211,22 @@ export default function ResidentsPage() {
             Residents
           </h1>
           <p className="text-[12.5px] text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">
-            {loading ? "Loading…" : `${residents.length} resident${residents.length !== 1 ? "s" : ""} on file`}
+            {loading ? "Loading…" : `${total} resident${total !== 1 ? "s" : ""}${activeFilters || search ? (total === 1 ? " matches" : " match") : " on file"}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {exportError && <span className="text-[12px] text-[#DC2626] dark:text-[#F87171]">{exportError}</span>}
+          {canExport && (
+            <button
+              onClick={handleExport}
+              disabled={exporting || total === 0}
+              title={activeFilters || search ? "Export the residents matching your search and filters" : "Export all residents"}
+              className="flex items-center gap-2 px-3.5 h-9 rounded border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#111111] hover:bg-[#F9FAFB] dark:hover:bg-[#1A1A1A] text-[#374151] dark:text-[#E5E7EB] text-[13px] font-medium transition disabled:opacity-50"
+            >
+              <Download size={15} strokeWidth={1.8} />
+              {exporting ? "Exporting…" : "Export"}
+            </button>
+          )}
           {canImport && (
             <button
               data-tour="page-residents-import"
@@ -180,14 +237,16 @@ export default function ResidentsPage() {
               Import
             </button>
           )}
-          <button
-            data-tour="page-residents-add"
-            onClick={() => router.push("/residents/new")}
-            className="flex items-center gap-2 px-3.5 h-9 rounded bg-(--brand) hover:bg-(--brand-hover) text-white text-[13px] font-medium transition"
-          >
-            <Plus size={15} strokeWidth={1.8} />
-            Register resident
-          </button>
+          {canImport && (
+            <button
+              data-tour="page-residents-add"
+              onClick={() => router.push("/residents/new")}
+              className="flex items-center gap-2 px-3.5 h-9 rounded bg-(--brand) hover:bg-(--brand-hover) text-white text-[13px] font-medium transition"
+            >
+              <Plus size={15} strokeWidth={1.8} />
+              Register resident
+            </button>
+          )}
         </div>
       </div>
 
