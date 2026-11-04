@@ -11,6 +11,8 @@ import {
 } from "@/lib/finance";
 import { readList } from "@/lib/fetch-json";
 import { useCan } from "@/lib/hooks/useCan";
+import { fieldProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 const STATUS_STYLES: Record<AppropriationStatus, string> = {
   PENDING: "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400",
@@ -59,12 +61,19 @@ export default function AppropriationsPage() {
     return () => clearTimeout(t);
   }, [load]);
 
+  // src/lib/form-rules.ts; the API also checks obligated/disbursed against this amount.
+  const formProblems = fieldProblems([
+    { field: "item_name", label: "Item name", value: form.item_name, max: 200 },
+    { field: "appropriated_amount", label: "Amount", value: form.appropriated_amount, kind: "money" },
+  ]);
+
   async function handleSubmit() {
     setError("");
     if (!form.item_name.trim()) return setError("Please enter an item name.");
     if (!form.appropriated_amount || Number(form.appropriated_amount) < 0) {
       return setError("Please enter a valid appropriated amount.");
     }
+    if (formProblems.length > 0) return setError(formProblems[0].message);
     setSubmitting(true);
     try {
       const res = await fetch("/api/appropriations", {
@@ -127,8 +136,10 @@ export default function AppropriationsPage() {
                 value={form.item_name}
                 onChange={(e) => setForm({ ...form, item_name: e.target.value })}
                 placeholder="e.g. Office Supplies FY2026"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(formProblems, "item_name") ? fieldErrorBorder : ""}`}
+                aria-invalid={!!(problemFor(formProblems, "item_name"))}
               />
+              <FieldError message={problemFor(formProblems, "item_name")} />
             </div>
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Category *</label>
@@ -149,8 +160,10 @@ export default function AppropriationsPage() {
                 value={form.appropriated_amount}
                 onChange={(e) => setForm({ ...form, appropriated_amount: e.target.value })}
                 placeholder="0.00"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(formProblems, "appropriated_amount") ? fieldErrorBorder : ""}`}
+                aria-invalid={!!(problemFor(formProblems, "appropriated_amount"))}
               />
+              <FieldError message={problemFor(formProblems, "appropriated_amount")} />
             </div>
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</label>

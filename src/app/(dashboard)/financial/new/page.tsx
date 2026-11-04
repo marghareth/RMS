@@ -5,6 +5,8 @@ import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { FinancialType, INCOME_CATEGORIES, EXPENSE_CATEGORIES, formatCurrency } from "@/lib/mock/financial";
+import { moneyEntryProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 export default function NewFinancialRecordPage() {
   const router = useRouter();
@@ -26,6 +28,9 @@ export default function NewFinancialRecordPage() {
     if (!description.trim()) setDescription(c);
   }
 
+  // Amount above ₱0 and a date that has happened (src/lib/form-rules.ts; the API checks too).
+  const moneyProblems = moneyEntryProblems({ amount, date }, { what: "Transaction date" });
+
   async function handleSubmit() {
     setError("");
     if (!description.trim()) {
@@ -38,6 +43,10 @@ export default function NewFinancialRecordPage() {
     }
     if (!date) {
       setError("Please select a transaction date.");
+      return;
+    }
+    if (moneyProblems.length > 0) {
+      setError(moneyProblems[0].message);
       return;
     }
 
@@ -57,7 +66,11 @@ export default function NewFinancialRecordPage() {
            transaction_date: date,
          }),
        });
-     if (!res.ok) throw new Error("Failed to save transaction");
+     if (!res.ok) {
+       const data = await res.json().catch(() => ({}));
+       setError(data.message || "Something went wrong while saving. Please try again.");
+       return;
+     }
        router.push("/financial");
      } catch (e) {
        console.error(e);
@@ -185,8 +198,11 @@ export default function NewFinancialRecordPage() {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(moneyProblems, "date") ? fieldErrorBorder : ""}`}
+                max={new Date().toLocaleDateString("en-CA")}
+                aria-invalid={!!(problemFor(moneyProblems, "date"))}
               />
+              <FieldError message={problemFor(moneyProblems, "date")} />
             </div>
           </div>
 

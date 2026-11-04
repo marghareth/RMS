@@ -24,6 +24,8 @@ import {
   manilaYearRange,
   summarizeLedger,
 } from "@/lib/financial-summary";
+import { moneyEntryProblems } from "@/lib/form-rules";
+import { throwIfProblems } from "@/lib/validation-error";
 
 /** Year totals + monthly breakdown for one Manila calendar year. */
 async function yearSummary(yearParam: string | null) {
@@ -123,6 +125,10 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = financialCreateSchema.parse(await req.json());
+  // Dates and amounts have to make sense together (src/lib/form-rules.ts).
+  throwIfProblems(
+    moneyEntryProblems({ amount: body.amount, date: body.transaction_date }, { dateField: "transaction_date", what: "Transaction date" })
+  );
 
   const record = await prisma.financialRecord.create({
     data: {

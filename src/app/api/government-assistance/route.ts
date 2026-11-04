@@ -9,6 +9,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { governmentAssistanceCreateSchema } from "@/lib/validations";
+import { lifeEventProblems } from "@/lib/form-rules";
+import { throwIfProblems } from "@/lib/validation-error";
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("residents:write", req);
@@ -20,6 +22,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   if (!resident) {
     throw new ApiError(404, "NOT_FOUND", "Resident not found.");
   }
+  throwIfProblems(lifeEventProblems("date_enrolled", body.date_enrolled, "Date enrolled", resident.birthdate));
 
   const assistance = await prisma.governmentAssistance.create({
     data: {

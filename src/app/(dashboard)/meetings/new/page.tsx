@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Gavel, Megaphone, FileText } from "lucide-react";
 import { MeetingType } from "@/lib/mock/meetings";
+import { meetingProblems, fieldProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 export default function NewMeetingPage() {
   const router = useRouter();
@@ -12,17 +14,30 @@ export default function NewMeetingPage() {
   const [meetingType, setMeetingType] = useState<MeetingType>("SB_MEETING");
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
-  const [meetingDate, setMeetingDate] = useState(new Date().toISOString().slice(0, 10));
+  const [meetingDate, setMeetingDate] = useState(new Date().toLocaleDateString("en-CA"));
   const [meetingTime, setMeetingTime] = useState("14:00");
   const [minutes, setMinutes] = useState("");
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // No minutes for a meeting that hasn't happened yet; sensible lengths (src/lib/form-rules.ts).
+  const problems = [
+    ...meetingProblems({ meeting_date: meetingDate, minutes }),
+    ...fieldProblems([
+      { field: "title", label: "Title", value: title, max: 200 },
+      { field: "location", label: "Location", value: location, max: 200 },
+    ]),
+  ];
+
   async function handleSubmit() {
     setError("");
     if (!meetingDate) {
       setError("Please select the meeting date.");
+      return;
+    }
+    if (problems.length > 0) {
+      setError(problems[0].message);
       return;
     }
 
@@ -41,8 +56,11 @@ export default function NewMeetingPage() {
           minutes: minutes.trim() || undefined,
         }),
       });
-      if (!res.ok) throw new Error("Failed to create meeting record");
-      const created = await res.json();
+      const created = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(created.message || "Something went wrong while saving. Please try again.");
+        return;
+      }
       router.push(`/meetings/${created.id}`);
     } catch (e) {
       console.error(e);
@@ -112,8 +130,10 @@ export default function NewMeetingPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Q3 Budget Review & Infrastructure Update"
-              className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+              className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(problems, "title") ? fieldErrorBorder : ""}`}
+              aria-invalid={!!(problemFor(problems, "title"))}
             />
+            <FieldError message={problemFor(problems, "title")} />
           </div>
 
           <div data-tour="page-meetings-new-when" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -149,8 +169,10 @@ export default function NewMeetingPage() {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Barangay Hall Session Room"
-              className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+              className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(problems, "location") ? fieldErrorBorder : ""}`}
+              aria-invalid={!!(problemFor(problems, "location"))}
             />
+            <FieldError message={problemFor(problems, "location")} />
           </div>
 
           <div data-tour="page-meetings-new-minutes">
@@ -165,8 +187,10 @@ export default function NewMeetingPage() {
               onChange={(e) => setMinutes(e.target.value)}
               rows={8}
               placeholder="Attendance, agenda, resolutions, and other notes from the meeting..."
-              className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-(--brand-line)"
+              aria-invalid={!!problemFor(problems, "minutes")}
+              className={`w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 font-mono text-[12px] leading-relaxed outline-none focus:border-(--brand-line) ${problemFor(problems, "minutes") ? fieldErrorBorder : ""}`}
             />
+            <FieldError message={problemFor(problems, "minutes")} />
             <p className="mt-1.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
               Minutes are stored as text. For structured, trackable topics, use Agenda Items on the meeting page instead.
             </p>

@@ -10,6 +10,8 @@ import {
 } from "@/lib/finance";
 import { readList } from "@/lib/fetch-json";
 import { useCan } from "@/lib/hooks/useCan";
+import { moneyEntryProblems, problemFor, rangeError } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 const EMPTY_FORM = {
   payee: "", amount: "", date: new Date().toISOString().slice(0, 10),
@@ -60,11 +62,15 @@ export default function DisbursementsPage() {
     return () => clearTimeout(t);
   }, [load]);
 
+  // Amount above ₱0 and a date that has happened (src/lib/form-rules.ts; the API checks too).
+  const moneyProblems = moneyEntryProblems(form, { what: "Date paid" });
+
   async function handleSubmit() {
     setError("");
     if (!form.payee.trim()) return setError("Please enter a payee.");
     if (!form.amount || Number(form.amount) < 0) return setError("Please enter a valid amount.");
     if (!form.date) return setError("Please select a date.");
+    if (moneyProblems.length > 0) return setError(moneyProblems[0].message);
     setSubmitting(true);
     try {
       const res = await fetch("/api/disbursements", {
@@ -142,8 +148,10 @@ export default function DisbursementsPage() {
                 value={form.amount}
                 onChange={(e) => setForm({ ...form, amount: e.target.value })}
                 placeholder="0.00"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(moneyProblems, "amount") ? fieldErrorBorder : ""}`}
+                aria-invalid={!!(problemFor(moneyProblems, "amount"))}
               />
+              <FieldError message={problemFor(moneyProblems, "amount")} />
             </div>
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Date *</label>
@@ -151,8 +159,11 @@ export default function DisbursementsPage() {
                 type="date"
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(moneyProblems, "date") ? fieldErrorBorder : ""}`}
+                max={new Date().toLocaleDateString("en-CA")}
+                aria-invalid={!!(problemFor(moneyProblems, "date"))}
               />
+              <FieldError message={problemFor(moneyProblems, "date")} />
             </div>
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Particulars</label>
@@ -232,9 +243,13 @@ export default function DisbursementsPage() {
           <option value="">All Fund Sources</option>
           {fundSources.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
         </select>
-        <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)" />
+        <input type="date" value={dateFrom} max={dateTo || undefined} onChange={(e) => setDateFrom(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)" />
         <span className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">to</span>
-        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)" />
+        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className={`rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${rangeError(dateFrom, dateTo) ? fieldErrorBorder : ""}`}
+          min={dateFrom || undefined}
+          aria-invalid={!!(rangeError(dateFrom, dateTo))}
+        />
+        <FieldError message={rangeError(dateFrom, dateTo)} />
       </div>
 
       <div data-tour="page-disbursements-table" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">

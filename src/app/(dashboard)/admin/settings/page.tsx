@@ -8,6 +8,8 @@ import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
 import IncidentTypesManager from "@/components/shared/IncidentTypesManager";
 import { GeneralSettings } from "@/lib/mock/admin";
 import { useCan } from "@/lib/hooks/useCan";
+import { fieldProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 const DEFAULT_SETTINGS: GeneralSettings = {
   barangay_name: "",
@@ -28,12 +30,15 @@ function Field({
   onChange,
   placeholder,
   hint,
+  error,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   hint?: string;
+  /** Shown under the field in red (src/lib/form-rules.ts). */
+  error?: string;
 }) {
   return (
     <div>
@@ -44,8 +49,10 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#333333] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
+        aria-invalid={!!error}
+        className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#333333] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line) ${error ? fieldErrorBorder : ""}`}
       />
+      <FieldError message={error} />
       {hint && <p className="mt-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{hint}</p>}
     </div>
   );
@@ -83,7 +90,26 @@ export default function GeneralSettingsPage() {
     setSaved(false);
   }
 
+  // Postal code, phone, email and name in the right shape (src/lib/form-rules.ts).
+  const problems = fieldProblems([
+    { field: "barangay_name", label: "Barangay name", value: settings.barangay_name, max: 100 },
+    { field: "postal_code", label: "Postal code", value: settings.postal_code, max: 4 },
+    { field: "contact_phone", label: "Contact phone", value: settings.contact_phone, kind: "contact" },
+    { field: "contact_email", label: "Contact email", value: settings.contact_email, kind: "email" },
+    { field: "captain_override_name", label: "Override name", value: settings.captain_override_name, kind: "name", max: 150 },
+    { field: "captain_override_position", label: "Override position", value: settings.captain_override_position, max: 100 },
+  ]);
+  if (settings.postal_code && !/^\d{4}$/.test(settings.postal_code.trim())) {
+    problems.push({ field: "postal_code", message: "Postal code is 4 digits, like 6000." });
+  }
+  const [saveError, setSaveError] = useState("");
+
   async function handleSave() {
+    if (problems.length > 0) {
+      setSaveError(problems[0].message);
+      return;
+    }
+    setSaveError("");
     setSaving(true);
     try {
       const res = await fetch("/api/settings", {
@@ -91,11 +117,16 @@ export default function GeneralSettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings), // each key upserted as a SystemSetting row
       });
-      if (!res.ok) throw new Error("Failed to save settings");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to save settings");
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e) {
       console.error(e);
+      // It used to fail without telling anyone.
+      setSaveError(e instanceof Error ? e.message : "Couldn't save the settings. Try again.");
     } finally {
       setSaving(false);
     }
@@ -128,7 +159,7 @@ export default function GeneralSettingsPage() {
           </div>
 
           <div className="space-y-4">
-            <Field label="Barangay Name" value={settings.barangay_name} onChange={(v) => update("barangay_name", v)} />
+            <Field label="Barangay Name" value={settings.barangay_name} onChange={(v) => update("barangay_name", v)} error={problemFor(problems, "barangay_name")} />
             <Field label="Address" value={settings.address} onChange={(v) => update("address", v)} placeholder="Street, Purok" />
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Field label="City / Municipality" value={settings.city} onChange={(v) => update("city", v)} />
@@ -139,7 +170,7 @@ export default function GeneralSettingsPage() {
               label="Postal Code"
               value={settings.postal_code}
               onChange={(v) => update("postal_code", v)}
-              placeholder="6004"
+              placeholder="6004" error={problemFor(problems, "postal_code")}
             />
           </div>
         </div>
@@ -154,8 +185,8 @@ export default function GeneralSettingsPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Contact Phone" value={settings.contact_phone} onChange={(v) => update("contact_phone", v)} placeholder="09XX-XXX-XXXX" />
-            <Field label="Contact Email" value={settings.contact_email} onChange={(v) => update("contact_email", v)} placeholder="barangay@email.gov.ph" />
+            <Field label="Contact Phone" value={settings.contact_phone} onChange={(v) => update("contact_phone", v)} placeholder="09XX-XXX-XXXX" error={problemFor(problems, "contact_phone")} />
+            <Field label="Contact Email" value={settings.contact_email} onChange={(v) => update("contact_email", v)} placeholder="barangay@email.gov.ph" error={problemFor(problems, "contact_email")} />
           </div>
         </div>
 
@@ -179,12 +210,12 @@ export default function GeneralSettingsPage() {
               label="Override Name"
               value={settings.captain_override_name}
               onChange={(v) => update("captain_override_name", v)}
-              placeholder="Leave blank to use active Captain"
+              placeholder="Leave blank to use active Captain" error={problemFor(problems, "captain_override_name")}
             />
             <Field
               label="Override Position"
               value={settings.captain_override_position}
-              onChange={(v) => update("captain_override_position", v)}
+              onChange={(v) => update("captain_override_position", v)} error={problemFor(problems, "captain_override_position")}
             />
           </div>
         </div>
@@ -200,6 +231,7 @@ export default function GeneralSettingsPage() {
               Settings saved
             </span>
           )}
+          {saveError && <FieldError message={saveError} />}
           {can("settings:write") && (<button
             onClick={handleSave}
             disabled={saving}

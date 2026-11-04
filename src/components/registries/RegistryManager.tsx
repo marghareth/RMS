@@ -7,6 +7,8 @@ import { Plus, Search, X, Loader2 } from "lucide-react";
 import ResidentPicker, { type PickedResident } from "@/components/shared/ResidentPicker";
 import RegistryDetailSheet from "@/components/registries/RegistryDetailSheet";
 import { useCan } from "@/lib/hooks/useCan";
+import { sectorAgeProblem } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type RegistryType = "FOUR_PS" | "PWD" | "SENIOR_CITIZEN";
@@ -65,6 +67,16 @@ function AddModal({
       setError("Select a resident first.");
       return;
     }
+    // Same rules as the API (src/lib/form-rules.ts).
+    if (registryType === "PWD" && !disabilityType.trim()) {
+      setError("Enter the type of disability.");
+      return;
+    }
+    const ageProblem = registryType === "SENIOR_CITIZEN" ? sectorAgeProblem("SENIOR", resident.birthdate) : null;
+    if (ageProblem) {
+      setError(ageProblem);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -82,7 +94,7 @@ function AddModal({
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data?.error || "Failed to add resident to this registry.");
+        setError(data?.message || data?.error || "Failed to add resident to this registry.");
         return;
       }
 

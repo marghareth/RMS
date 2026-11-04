@@ -6,6 +6,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { disbursementCreateSchema } from "@/lib/validations";
+import { moneyEntryProblems } from "@/lib/form-rules";
+import { throwIfProblems } from "@/lib/validation-error";
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("disbursements:read", req);
@@ -53,6 +55,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = disbursementCreateSchema.parse(await req.json());
+  // Dates and amounts have to make sense together (src/lib/form-rules.ts).
+  throwIfProblems(moneyEntryProblems(body, { what: "Date paid" }));
   const userId = parseInt(auth.session.user.id);
   const amount = body.amount ?? 0;
 

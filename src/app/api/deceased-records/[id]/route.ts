@@ -5,6 +5,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { deceasedRecordUpdateSchema } from "@/lib/validations";
+import { lifeEventProblems } from "@/lib/form-rules";
+import { throwIfProblems } from "@/lib/validation-error";
 
 const residentSelect = {
   id: true,
@@ -13,6 +15,7 @@ const residentSelect = {
   mname: true,
   name_extension: true,
   type_of_resident: true,
+  birthdate: true, // for the "date of death can't be before birth" check on the form
 } as const;
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
@@ -38,6 +41,14 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   // resident_id is intentionally omitted from this schema — a deceased
   // record can't be re-pointed at a different resident after creation.
   const body = deceasedRecordUpdateSchema.parse(await req.json());
+
+  if (body.date_of_death) {
+    const current = await prisma.deceasedRecord.findUnique({
+      where: { id },
+      select: { resident: { select: { birthdate: true } } },
+    });
+    throwIfProblems(lifeEventProblems("date_of_death", body.date_of_death, "Date of death", current?.resident?.birthdate));
+  }
 
   const record = await prisma.deceasedRecord.update({
     where: { id },

@@ -6,6 +6,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { appropriationCreateSchema } from "@/lib/validations";
+import { appropriationProblems } from "@/lib/form-rules";
+import { throwIfProblems } from "@/lib/validation-error";
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("appropriations:read", req);
@@ -40,6 +42,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = appropriationCreateSchema.parse(await req.json());
+  // Dates and amounts have to make sense together (src/lib/form-rules.ts).
+  throwIfProblems(appropriationProblems(body));
   const userId = parseInt(auth.session.user.id);
 
   const appropriation = await prisma.appropriation.create({

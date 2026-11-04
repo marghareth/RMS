@@ -8,6 +8,8 @@ import FundSourceDetailSheet from "@/components/finance/FundSourceDetailSheet";
 import { fmtCurrency, FundSourceRecord } from "@/lib/finance";
 import { readList } from "@/lib/fetch-json";
 import { useCan } from "@/lib/hooks/useCan";
+import { fieldProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 const EMPTY_FORM = { name: "", code: "", statutory_rule: "", original_balance: "" };
 
@@ -42,9 +44,18 @@ export default function FundSourcesPage() {
     return () => clearTimeout(t);
   }, [load]);
 
+  // src/lib/form-rules.ts; the API also rejects negative balances.
+  const formProblems = fieldProblems([
+    { field: "name", label: "Fund source name", value: form.name, max: 150 },
+    { field: "code", label: "Code", value: form.code, max: 30 },
+    { field: "original_balance", label: "Original balance", value: form.original_balance, kind: "money" },
+    { field: "statutory_rule", label: "Statutory rule", value: form.statutory_rule, max: 300 },
+  ]);
+
   async function handleSubmit() {
     setError("");
     if (!form.name.trim()) return setError("Please enter a fund source name.");
+    if (formProblems.length > 0) return setError(formProblems[0].message);
     setSubmitting(true);
     try {
       const res = await fetch("/api/fund-sources", {
@@ -102,8 +113,10 @@ export default function FundSourcesPage() {
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="e.g. General Fund"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(formProblems, "name") ? fieldErrorBorder : ""}`}
+                aria-invalid={!!(problemFor(formProblems, "name"))}
               />
+              <FieldError message={problemFor(formProblems, "name")} />
             </div>
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Code</label>
@@ -111,8 +124,10 @@ export default function FundSourcesPage() {
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value })}
                 placeholder="e.g. GF-2026"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(formProblems, "code") ? fieldErrorBorder : ""}`}
+                aria-invalid={!!(problemFor(formProblems, "code"))}
               />
+              <FieldError message={problemFor(formProblems, "code")} />
             </div>
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Starting Balance (₱)</label>
@@ -121,8 +136,10 @@ export default function FundSourcesPage() {
                 value={form.original_balance}
                 onChange={(e) => setForm({ ...form, original_balance: e.target.value })}
                 placeholder="0.00"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(formProblems, "original_balance") ? fieldErrorBorder : ""}`}
+                aria-invalid={!!(problemFor(formProblems, "original_balance"))}
               />
+              <FieldError message={problemFor(formProblems, "original_balance")} />
             </div>
             <div className="lg:col-span-4">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Statutory Rule</label>
@@ -130,8 +147,10 @@ export default function FundSourcesPage() {
                 value={form.statutory_rule}
                 onChange={(e) => setForm({ ...form, statutory_rule: e.target.value })}
                 placeholder="e.g. 20% Development Fund per DILG-DBM JMC No. 2017-1"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(formProblems, "statutory_rule") ? fieldErrorBorder : ""}`}
+                aria-invalid={!!(problemFor(formProblems, "statutory_rule"))}
               />
+              <FieldError message={problemFor(formProblems, "statutory_rule")} />
             </div>
           </div>
           <div className="mt-4 flex justify-end">

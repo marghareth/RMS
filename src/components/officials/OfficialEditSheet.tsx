@@ -19,6 +19,8 @@ import {
   POSITIONS, PUROK_ASSIGNMENTS, BrgyOfficialMock, residentFullName,
 } from "@/lib/mock/officials";
 import { useCan } from "@/lib/hooks/useCan";
+import { officialProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 interface OfficialEditSheetProps {
   /** The official to edit, or null to keep the sheet closed. */
@@ -78,11 +80,15 @@ export default function OfficialEditSheet({ officialId, onClose, onSaved }: Offi
     return () => { cancelled = true; };
   }, [officialId]);
 
+  // Term end after term start (src/lib/form-rules.ts; the API also checks the age).
+  const termProblems = officialProblems({ term_start: termStart, term_end: termEnd });
+
   async function handleSubmit() {
     if (!original) return;
     setError("");
     if (!position) { setError("Please select a position."); return; }
     if (!termStart) { setError("Please provide a term start date."); return; }
+    if (termProblems.length > 0) { setError(termProblems[0].message); return; }
 
     setSubmitting(true);
     try {
@@ -251,8 +257,11 @@ export default function OfficialEditSheet({ officialId, onClose, onSaved }: Offi
                         type="date"
                         value={termEnd}
                         onChange={(e) => setTermEnd(e.target.value)}
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                        className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(termProblems, "term_end") ? fieldErrorBorder : ""}`}
+                        min={termStart || undefined}
+                        aria-invalid={!!(problemFor(termProblems, "term_end"))}
                       />
+                      <FieldError message={problemFor(termProblems, "term_end")} />
                     </div>
                   </div>
 

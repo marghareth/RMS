@@ -12,6 +12,8 @@ import {
   User, UserX, Calendar, Clock, AlertTriangle, FileText,
   Phone, MapPin, Send, ExternalLink,
 } from "lucide-react";
+import { blotterProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 import type { LucideIcon } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
@@ -133,22 +135,35 @@ export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: Blotter
     );
   }, [blotterCase]);
 
+  // A new hearing date can't be before the incident (src/lib/form-rules.ts).
+  const hearingError = blotterCase
+    ? problemFor(blotterProblems({ incident_date: blotterCase.incident_date, hearing_date: hearingDate }), "hearing_date")
+    : undefined;
+  const [updateError, setUpdateError] = useState("");
+
   async function handleAddUpdate() {
-    if (!blotterCase || !notes.trim()) return;
+    if (!blotterCase || !notes.trim() || hearingError) return;
     setSubmitting(true);
+    setUpdateError("");
     try {
+      if (hearingDate || escalate !== blotterCase.escalated) {
+        const patched = await fetch(`/api/blotter/${blotterCase.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hearing_date: hearingDate || undefined, escalated: escalate }),
+        });
+        if (!patched.ok) {
+          // Stop before saving the note, so nothing is half-saved.
+          const d = await patched.json().catch(() => ({}));
+          setUpdateError(d.message || "Couldn't update the case. Try again.");
+          return;
+        }
+      }
       await fetch(`/api/blotter/${blotterCase.id}/updates`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notes, new_status: newStatus || undefined }),
       });
-      if (hearingDate || escalate !== blotterCase.escalated) {
-        await fetch(`/api/blotter/${blotterCase.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ hearing_date: hearingDate || undefined, escalated: escalate }),
-        });
-      }
       await loadCase(blotterCase.id);
       onUpdated?.();
       setNotes("");
@@ -332,9 +347,12 @@ export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: Blotter
                       <input
                         type="date"
                         value={hearingDate}
+                        min={blotterCase.incident_date.slice(0, 10)}
                         onChange={(e) => setHearingDate(e.target.value)}
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line)"
+                        aria-invalid={!!hearingError}
+                        className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line) ${hearingError ? fieldErrorBorder : ""}`}
                       />
+                      <FieldError message={hearingError} />
                     </div>
                   </div>
 
@@ -349,9 +367,11 @@ export default function BlotterCaseSheet({ caseId, onClose, onUpdated }: Blotter
                     Escalate to higher agency
                   </label>
 
+                  <FieldError message={updateError} />
+
                   <button
                     onClick={handleAddUpdate}
-                    disabled={submitting || !notes.trim()}
+                    disabled={submitting || !notes.trim() || !!hearingError}
                     className="flex w-full items-center justify-center gap-2 rounded-lg bg-(--brand) py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-50"
                   >
                     <Send size={13} />

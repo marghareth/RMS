@@ -19,6 +19,8 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody, SheetFooter,
 } from "@/components/ui/sheet";
 import { useCan } from "@/lib/hooks/useCan";
+import { fieldProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
 interface VisitorLog {
@@ -63,7 +65,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string
 }
 
 function FormField({
-  label, value, onChange, placeholder, required, textarea,
+  label, value, onChange, placeholder, required, textarea, error,
 }: {
   label: string;
   value: string;
@@ -71,6 +73,8 @@ function FormField({
   placeholder?: string;
   required?: boolean;
   textarea?: boolean;
+  /** Shown under the field in red (src/lib/form-rules.ts). */
+  error?: string;
 }) {
   return (
     <div>
@@ -83,16 +87,19 @@ function FormField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={2}
-          className="w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
+          aria-invalid={!!error}
+          className={`w-full resize-none rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line) ${error ? fieldErrorBorder : ""}`}
         />
       ) : (
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
+          aria-invalid={!!error}
+          className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line) ${error ? fieldErrorBorder : ""}`}
         />
       )}
+      <FieldError message={error} />
     </div>
   );
 }
@@ -168,11 +175,21 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
     if (res.ok) setVisitor(await res.json());
   }
 
-  const canSave = form.visitor_name.trim() && form.purpose.trim();
+  // Name-shaped name, a real phone number if given (src/lib/form-rules.ts; the API checks too).
+  const problems = fieldProblems([
+    { field: "visitor_name", label: "Visitor name", value: form.visitor_name, kind: "name", max: 150 },
+    { field: "contact", label: "Contact", value: form.contact, kind: "contact" },
+    { field: "purpose", label: "Purpose", value: form.purpose, max: 500 },
+    { field: "person_to_visit", label: "Person / office to visit", value: form.person_to_visit, max: 150 },
+  ]);
+  const [saveError, setSaveError] = useState("");
+
+  const canSave = form.visitor_name.trim() && form.purpose.trim() && problems.length === 0;
 
   async function handleSave() {
     if (!canSave) return;
     setSubmitting(true);
+    setSaveError("");
     try {
       const payload = {
         visitor_name: form.visitor_name.trim(),
@@ -187,7 +204,12 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error("Failed to create visitor log entry");
+        if (!res.ok) {
+          // It used to fail silently.
+          const data = await res.json().catch(() => ({}));
+          setSaveError(data.message || "Couldn't save. Try again.");
+          return;
+        }
         onSaved?.();
         onClose();
       } else if (visitor) {
@@ -196,7 +218,11 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error("Failed to update visitor log entry");
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setSaveError(data.message || "Couldn't save. Try again.");
+          return;
+        }
         await refetch();
         setEditing(false);
         onSaved?.();
@@ -297,12 +323,14 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                       value={form.visitor_name}
                       onChange={(v) => setForm((f) => ({ ...f, visitor_name: v }))}
                       placeholder="Juan Dela Cruz"
+                      error={problemFor(problems, "visitor_name")}
                     />
                     <FormField
                       label="Contact"
                       value={form.contact}
                       onChange={(v) => setForm((f) => ({ ...f, contact: v }))}
                       placeholder="09XX XXX XXXX"
+                      error={problemFor(problems, "contact")}
                     />
                     <FormField
                       label="Purpose"
@@ -311,12 +339,14 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                       onChange={(v) => setForm((f) => ({ ...f, purpose: v }))}
                       placeholder="e.g. Certificate request"
                       textarea
+                      error={problemFor(problems, "purpose")}
                     />
                     <FormField
                       label="Person / Office to Visit"
                       value={form.person_to_visit}
                       onChange={(v) => setForm((f) => ({ ...f, person_to_visit: v }))}
                       placeholder="e.g. Barangay Secretary"
+                      error={problemFor(problems, "person_to_visit")}
                     />
                   </div>
                 ) : visitor ? (
@@ -374,6 +404,7 @@ export default function VisitorLogSheet({ visitorId, onClose, onSaved }: Visitor
                         Delete
                       </button>))
                     ) : <span />}
+                    <FieldError message={saveError} />
                     <div className="flex gap-2">
                       <button
                         onClick={() => (isNew ? onClose() : setEditing(false))}

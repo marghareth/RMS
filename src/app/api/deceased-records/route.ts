@@ -6,6 +6,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { deceasedRecordCreateSchema, paginationSchema } from "@/lib/validations";
+import { lifeEventProblems } from "@/lib/form-rules";
+import { throwIfProblems } from "@/lib/validation-error";
 
 const residentSelect = {
   id: true,
@@ -14,6 +16,7 @@ const residentSelect = {
   mname: true,
   name_extension: true,
   type_of_resident: true,
+  birthdate: true, // for the "date of death can't be before birth" check on the form
 } as const;
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
@@ -72,6 +75,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   if (!resident) {
     throw new ApiError(404, "NOT_FOUND", "Selected resident was not found.");
   }
+  throwIfProblems(lifeEventProblems("date_of_death", body.date_of_death, "Date of death", resident.birthdate));
 
   const existing = await prisma.deceasedRecord.findUnique({ where: { resident_id: body.resident_id } });
   if (existing) {

@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
+import { validationSummary } from "./api-error";
 
 type RouteContext = { params: Promise<Record<string, string>> } | undefined;
 type Handler = (req: NextRequest, context?: RouteContext) => Promise<NextResponse>;
@@ -43,15 +44,16 @@ export function isDatabaseUnavailable(err: unknown): boolean {
 function toErrorResponse(err: unknown, req: NextRequest): NextResponse {
   // ── Zod validation errors ────────────────────────────────────────────────
   if (err instanceof ZodError) {
+    const issues = err.issues.map((i) => ({
+      path: i.path.join("."),
+      message: i.message,
+    }));
+    // The message names the actual problem ("Resident since can't be before
+    // the birthdate"), so every form that shows `message` is specific
+    // without any changes. It used to always say "One or more fields are
+    // invalid."
     return NextResponse.json(
-      {
-        error: "VALIDATION_ERROR",
-        message: "One or more fields are invalid.",
-        issues: err.issues.map((i) => ({
-          path: i.path.join("."),
-          message: i.message,
-        })),
-      },
+      { error: "VALIDATION_ERROR", message: validationSummary(issues), issues },
       { status: 400 }
     );
   }

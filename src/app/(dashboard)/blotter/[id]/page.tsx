@@ -20,6 +20,8 @@ import {
   Printer,
   Tag,
 } from "lucide-react";
+import { blotterProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 import type { LucideIcon } from "lucide-react";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
@@ -126,18 +128,20 @@ export default function BlotterCaseDetailPage() {
     );
   }, [blotterCase]);
 
+  // A new hearing date can't be before the incident (src/lib/form-rules.ts).
+  const hearingError = blotterCase
+    ? problemFor(blotterProblems({ incident_date: blotterCase.incident_date, hearing_date: hearingDate }), "hearing_date")
+    : undefined;
+  const [updateError, setUpdateError] = useState("");
+
   async function handleAddUpdate() {
-    if (!blotterCase || !notes.trim()) return;
+    if (!blotterCase || !notes.trim() || hearingError) return;
     setSubmitting(true);
+    setUpdateError("");
 
     try {
-      await fetch(`/api/blotter/${caseId}/updates`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes, new_status: newStatus || undefined }),
-      });
       if (hearingDate || escalate !== blotterCase.escalated || incidentType !== blotterCase.incident_type) {
-        await fetch(`/api/blotter/${caseId}`, {
+        const patched = await fetch(`/api/blotter/${caseId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -146,7 +150,18 @@ export default function BlotterCaseDetailPage() {
             incident_type: incidentType !== blotterCase.incident_type ? incidentType : undefined,
           }),
         });
+        if (!patched.ok) {
+          // Stop before saving the note, so nothing is half-saved.
+          const d = await patched.json().catch(() => ({}));
+          setUpdateError(d.message || "Couldn't update the case. Try again.");
+          return;
+        }
       }
+      await fetch(`/api/blotter/${caseId}/updates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes, new_status: newStatus || undefined }),
+      });
       await loadCase(); // re-fetch to sync with server state
       setNotes("");
       setNewStatus("");
@@ -369,9 +384,12 @@ export default function BlotterCaseDetailPage() {
                 <input
                   type="date"
                   value={hearingDate}
+                  min={blotterCase.incident_date.slice(0, 10)}
                   onChange={(e) => setHearingDate(e.target.value)}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line)"
+                  aria-invalid={!!hearingError}
+                  className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line) ${hearingError ? fieldErrorBorder : ""}`}
                 />
+                <FieldError message={hearingError} />
               </div>
 
               <label className="flex items-center gap-2 rounded-lg bg-[#FEF3C7] dark:bg-amber-500/15 px-3 py-2.5 text-[12px] font-medium text-[#92400E] dark:text-[#FBBF24]">
@@ -385,9 +403,11 @@ export default function BlotterCaseDetailPage() {
                 Escalate to higher agency
               </label>
 
+              <FieldError message={updateError} />
+
               <button
                 onClick={handleAddUpdate}
-                disabled={submitting || !notes.trim()}
+                disabled={submitting || !notes.trim() || !!hearingError}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-(--brand) py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-50"
               >
                 <Send size={13} />

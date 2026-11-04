@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, UserCheck, Phone } from "lucide-react";
 import { POSITIONS, PUROK_ASSIGNMENTS } from "@/lib/mock/officials";
 import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPicker";
+import { officialProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 export default function NewOfficialPage() {
   const router = useRouter();
@@ -14,12 +16,16 @@ export default function NewOfficialPage() {
   const [position, setPosition] = useState("");
   const [purokAssignment, setPurokAssignment] = useState("");
   const [contactNo, setContactNo] = useState("");
-  const [termStart, setTermStart] = useState(new Date().toISOString().slice(0, 10));
+  const [termStart, setTermStart] = useState(new Date().toLocaleDateString("en-CA"));
   const [termEnd, setTermEnd] = useState("");
   const [isActive, setIsActive] = useState(true);
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Term end after term start, and the resident at least 18 when the term
+  // starts (src/lib/form-rules.ts; the API checks too).
+  const problems = officialProblems({ term_start: termStart, term_end: termEnd }, resident?.birthdate);
 
   async function handleSubmit() {
     setError("");
@@ -33,6 +39,10 @@ export default function NewOfficialPage() {
     }
     if (!termStart) {
       setError("Please provide a term start date.");
+      return;
+    }
+    if (problems.length > 0) {
+      setError(problems[0].message);
       return;
     }
 
@@ -164,8 +174,10 @@ export default function NewOfficialPage() {
                   type="date"
                   value={termStart}
                   onChange={(e) => setTermStart(e.target.value)}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                  className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(problems, "term_start") ? fieldErrorBorder : ""}`}
+                  aria-invalid={!!(problemFor(problems, "term_start"))}
                 />
+                <FieldError message={problemFor(problems, "term_start")} />
               </div>
               <div>
                 <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
@@ -175,8 +187,11 @@ export default function NewOfficialPage() {
                   type="date"
                   value={termEnd}
                   onChange={(e) => setTermEnd(e.target.value)}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                  className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(problems, "term_end") ? fieldErrorBorder : ""}`}
+                  min={termStart || undefined}
+                  aria-invalid={!!(problemFor(problems, "term_end"))}
                 />
+                <FieldError message={problemFor(problems, "term_end")} />
               </div>
             </div>
 

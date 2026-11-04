@@ -6,6 +6,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { householdCreateSchema, paginationSchema } from "@/lib/validations";
+import { householdProblems } from "@/lib/form-rules";
+import { throwIfProblems } from "@/lib/validation-error";
 
 // ── Generate household number e.g. HHNP100000001 ──────────────────────────────
 async function generateHouseholdNo(): Promise<string> {
@@ -47,6 +49,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = householdCreateSchema.parse(await req.json());
+  // Whole-number families, income not negative, "Other" explained (src/lib/form-rules.ts).
+  throwIfProblems(householdProblems(body));
 
   const purok = await prisma.purok.findUnique({ where: { id: body.purok_id } });
   if (!purok) {

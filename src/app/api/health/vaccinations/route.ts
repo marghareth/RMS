@@ -6,6 +6,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { vaccinationCreateSchema, paginationSchema } from "@/lib/validations";
+import { lifeEventProblems } from "@/lib/form-rules";
+import { throwIfProblems } from "@/lib/validation-error";
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("health:read", req);
@@ -59,6 +61,10 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = vaccinationCreateSchema.parse(await req.json());
+
+  // Not in the future, and not before the person was born.
+  const person = await prisma.resident.findUnique({ where: { id: body.resident_id }, select: { birthdate: true } });
+  throwIfProblems(lifeEventProblems("date_given", body.date_given, "Date given", person?.birthdate));
 
   const vaccination = await prisma.vaccination.create({
     data: {

@@ -15,6 +15,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Archive, Plus, X, Trash2, ExternalLink, Users } from "lucide-react";
+import { lifeEventProblems, sectorAgeProblem, problemFor } from "@/lib/form-rules";
+import FieldError from "@/components/shared/FieldError";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody,
 } from "@/components/ui/sheet";
@@ -286,15 +288,27 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
     };
   }, [residentId]);
 
+  const [sectorError, setSectorError] = useState("");
+
   async function handleAddSector() {
     if (!newSector || !resident) return;
+    // Senior is 60+, Youth is 15–30 (src/lib/form-rules.ts; the API checks too).
+    const ageProblem = sectorAgeProblem(newSector, resident.birthdate);
+    if (ageProblem) { setSectorError(ageProblem); return; }
     setSectorBusy(true);
+    setSectorError("");
     try {
-      await fetch("/api/resident-sectors", {
+      const res = await fetch("/api/resident-sectors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resident_id: resident.id, sector_type: newSector }),
       });
+      if (!res.ok) {
+        // It used to close the form as if it had worked.
+        const data = await res.json().catch(() => ({}));
+        setSectorError(data.message || "Couldn't add the tag. Try again.");
+        return;
+      }
       await loadResident();
       setAddingSector(false);
       setNewSector("");
@@ -330,9 +344,17 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
     setAssistanceFormOpen(a.id);
   }
 
+  const [assistanceError, setAssistanceError] = useState("");
+  // Not before the resident was born, not in the future (src/lib/form-rules.ts).
+  const enrolledError = resident
+    ? problemFor(lifeEventProblems("date_enrolled", assistanceForm.date_enrolled, "Date enrolled", resident.birthdate), "date_enrolled")
+    : undefined;
+
   async function handleSaveAssistance() {
     if (!assistanceForm.program_name.trim() || !resident) return;
+    if (enrolledError) return;
     setAssistanceBusy(true);
+    setAssistanceError("");
     try {
       const payload = {
         resident_id: resident.id,
@@ -341,17 +363,19 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
         notes: assistanceForm.notes.trim() || null,
       };
       if (assistanceFormOpen === "new") {
-        await fetch("/api/government-assistance", {
+        const res = await fetch("/api/government-assistance", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); setAssistanceError(d.message || "Couldn't save. Try again."); return; }
       } else {
-        await fetch(`/api/government-assistance/${assistanceFormOpen}`, {
+        const res = await fetch(`/api/government-assistance/${assistanceFormOpen}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); setAssistanceError(d.message || "Couldn't save. Try again."); return; }
       }
       await loadResident();
       setAssistanceFormOpen(null);
@@ -557,6 +581,9 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
                           type="date"
                           value={assistanceForm.date_enrolled}
                           onChange={(e) => setAssistanceForm((f) => ({ ...f, date_enrolled: e.target.value }))}
+                          min={resident.birthdate?.slice(0, 10)}
+                          max={new Date().toLocaleDateString("en-CA")}
+                          aria-invalid={!!enrolledError}
                           className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-(--brand-line)"
                         />
                         <input
@@ -566,13 +593,14 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
                           className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-(--brand-line)"
                         />
                       </div>
+                      <FieldError message={enrolledError || assistanceError} />
                       <div className="flex justify-end gap-2">
                         <button onClick={() => setAssistanceFormOpen(null)} className="text-[11px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:text-[#1F2937] dark:hover:text-white">
                           Cancel
                         </button>
                         <button
                           onClick={handleSaveAssistance}
-                          disabled={assistanceBusy || !assistanceForm.program_name.trim()}
+                          disabled={assistanceBusy || !assistanceForm.program_name.trim() || !!enrolledError}
                           className="rounded-md bg-(--brand) px-3 py-1.5 text-[11px] font-bold text-white hover:bg-(--brand-hover) disabled:opacity-50"
                         >
                           {assistanceBusy ? "Saving…" : "Save"}
@@ -622,10 +650,11 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
                   }
                 >
                   {addingSector && (
+                    <>
                     <div className="mb-3 flex items-center gap-2">
                       <select
                         value={newSector}
-                        onChange={(e) => setNewSector(e.target.value)}
+                        onChange={(e) => { setNewSector(e.target.value); setSectorError(""); }}
                         className="flex-1 rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-(--brand-line)"
                       >
                         <option value="">Select sector...</option>
@@ -644,6 +673,8 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
                         <X size={14} />
                       </button>
                     </div>
+                    <FieldError message={sectorError} />
+                    </>
                   )}
                   {resident.sectors.length === 0 ? (
                     <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No sectoral affiliations tagged</p>

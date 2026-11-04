@@ -5,6 +5,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { officialUpdateSchema } from "@/lib/validations";
+import { officialProblems } from "@/lib/form-rules";
+import { throwIfProblems, withChanges } from "@/lib/validation-error";
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("officials:read", req);
@@ -27,6 +29,16 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   const { id: idParam } = await context!.params;
   const id = parseInt(idParam);
   const body = officialUpdateSchema.parse(await req.json());
+
+  const current = await prisma.brgyOfficial.findUnique({
+    where: { id },
+    select: { term_start: true, term_end: true, resident: { select: { birthdate: true } } },
+  });
+  if (current) {
+    throwIfProblems(
+      officialProblems(withChanges({ term_start: current.term_start, term_end: current.term_end }, body), current.resident?.birthdate)
+    );
+  }
 
   const official = await prisma.brgyOfficial.update({
     where: { id },

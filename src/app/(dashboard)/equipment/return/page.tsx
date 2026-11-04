@@ -134,7 +134,10 @@ function ReturnEquipmentContent({ borrowingId }: { borrowingId: string }) {
           return_condition: returnCondition,
         }),
       });
-      if (!res.ok) throw new Error("Failed to process return");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to process return");
+      }
       setDone(true);
     } catch (e: any) {
       setError(e.message || "Something went wrong.");

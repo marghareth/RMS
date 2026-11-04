@@ -13,6 +13,8 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody, SheetFooter,
 } from "@/components/ui/sheet";
 import { useCan } from "@/lib/hooks/useCan";
+import { fieldProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface CalendarEventItem {
@@ -197,7 +199,22 @@ export default function CalendarPage() {
     if (res.ok) setEvents(await res.json());
   }
 
+  // src/lib/form-rules.ts
+  const eventProblems = fieldProblems([
+    { field: "title", label: "Title", value: title, max: 150 },
+    { field: "event_type_other", label: "Event type", value: eventTypeOther, max: 50 },
+  ]);
+  const eventYear = Number(eventDate.slice(0, 4));
+  const thisYear = new Date().getFullYear();
+  if (eventDate && (eventYear < thisYear - 10 || eventYear > thisYear + 10)) {
+    eventProblems.push({ field: "event_date", message: "That date is more than 10 years away. Check the year." });
+  }
+
   async function handleSubmit() {
+    if (eventProblems.length > 0) {
+      setFormError(eventProblems[0].message);
+      return;
+    }
     if (!title.trim()) {
       setFormError("Please provide an event title.");
       return;
@@ -464,8 +481,10 @@ export default function CalendarPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Barangay Assembly"
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
+                  className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line) ${problemFor(eventProblems, "title") ? fieldErrorBorder : ""}`}
+                  aria-invalid={!!(problemFor(eventProblems, "title"))}
                 />
+                <FieldError message={problemFor(eventProblems, "title")} />
               </div>
 
               <div>
@@ -489,8 +508,10 @@ export default function CalendarPage() {
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line)"
+                  className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line) ${problemFor(eventProblems, "event_date") ? fieldErrorBorder : ""}`}
+                  aria-invalid={!!(problemFor(eventProblems, "event_date"))}
                 />
+                <FieldError message={problemFor(eventProblems, "event_date")} />
               </div>
 
               <div>
@@ -509,12 +530,16 @@ export default function CalendarPage() {
                   <option value="Other">Other…</option>
                 </select>
                 {eventTypeSelect === "Other" && (
+                  <>
                   <input
                     value={eventTypeOther}
                     onChange={(e) => setEventTypeOther(e.target.value)}
                     placeholder="Specify event type"
-                    className="mt-2 w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
+                    className={`mt-2 w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line) ${problemFor(eventProblems, "event_type_other") ? fieldErrorBorder : ""}`}
+                    aria-invalid={!!(problemFor(eventProblems, "event_type_other"))}
                   />
+                  <FieldError message={problemFor(eventProblems, "event_type_other")} />
+                  </>
                 )}
               </div>
             </div>

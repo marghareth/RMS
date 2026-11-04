@@ -1,10 +1,12 @@
 // FILE: src/app/(dashboard)/residents/[id]/edit/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
 import { apiErrorMessage } from "@/lib/api-error";
+import { residentProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Purok { id: number; name: string }
@@ -101,12 +103,16 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
 }
 
 function TextInput({
-  label, value, onChange, placeholder, required, type = "text", max,
+  label, value, onChange, placeholder, required, type = "text", max, min, error,
 }: {
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; required?: boolean; type?: string;
   /** For type="date": latest selectable date (YYYY-MM-DD). */
   max?: string;
+  /** For type="date": earliest selectable date (YYYY-MM-DD). */
+  min?: string;
+  /** Shown under the field in red (src/lib/form-rules.ts). */
+  error?: string;
 }) {
   return (
     <div>
@@ -115,19 +121,24 @@ function TextInput({
         type={type}
         value={value}
         max={max}
+        min={min}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
-        className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717]"
+        aria-invalid={!!error}
+        className={`w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717] ${error ? fieldErrorBorder : ""}`}
       />
+      <FieldError message={error} />
     </div>
   );
 }
 
 function SelectInput({
-  label, value, onChange, options, required,
+  label, value, onChange, options, required, error,
 }: {
   label: string; value: string; onChange: (v: string) => void;
   options: { value: string; label: string }[]; required?: boolean;
+  /** Shown under the field in red (src/lib/form-rules.ts). */
+  error?: string;
 }) {
   return (
     <div>
@@ -136,13 +147,15 @@ function SelectInput({
         <select
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full appearance-none text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white pr-8 bg-white dark:bg-[#171717] transition"
+          aria-invalid={!!error}
+          className={`w-full appearance-none text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white pr-8 bg-white dark:bg-[#171717] transition ${error ? fieldErrorBorder : ""}`}
         >
           <option value="">— Select —</option>
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3] text-[10px]">▼</span>
       </div>
+      <FieldError message={error} />
     </div>
   );
 }
@@ -224,9 +237,17 @@ export default function EditResidentPage() {
   const set = (k: keyof ResidentForm, v: string) =>
     setForm(prev => ({ ...prev, [k]: v }));
 
+  // Logic checks (src/lib/form-rules.ts), shown under each field as you type.
+  const problems = useMemo(() => residentProblems(form), [form]);
+  const fieldError = (field: string) => problemFor(problems, field);
+
   async function handleSave() {
     if (!form.fname || !form.lname || !form.birthdate || !form.sex || !form.civil_status) {
       setError("Please fill in all required fields.");
+      return;
+    }
+    if (problems.length > 0) {
+      setError("Fix the fields marked in red first.");
       return;
     }
     setSaving(true);
@@ -327,6 +348,7 @@ export default function EditResidentPage() {
               type="date"
               max={new Date().toLocaleDateString("en-CA")}
               required
+              error={fieldError("birthdate")}
             />
           </div>
           <TextInput
@@ -340,8 +362,11 @@ export default function EditResidentPage() {
               value={form.residency_start_date}
               onChange={v => set("residency_start_date", v)}
               type="date"
+              min={form.birthdate || undefined}
+              max={new Date().toLocaleDateString("en-CA")}
+              error={fieldError("residency_start_date")}
             />
-            <p className="self-end pb-2.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
+            <p className="self-start pt-6 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
               Used for the 6-month certificate eligibility rule — set this if it was left blank at RBI creation.
             </p>
           </div>
@@ -355,6 +380,7 @@ export default function EditResidentPage() {
             />
             <SelectInput
               label="Civil Status" value={form.civil_status} onChange={v => set("civil_status", v)} required
+              error={fieldError("civil_status")}
               options={[
                 { value: "SINGLE",    label: "Single"    },
                 { value: "MARRIED",   label: "Married"   },
@@ -417,6 +443,7 @@ export default function EditResidentPage() {
           />
           <SelectInput
             label="Sector" value={form.sector} onChange={v => set("sector", v)}
+            error={fieldError("sector")}
             options={[
               { value: "SENIOR",    label: "Senior Citizen"  },
               { value: "PWD",       label: "PWD"             },

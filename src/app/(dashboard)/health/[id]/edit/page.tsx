@@ -74,7 +74,10 @@ function EditHealthRecordContent({ id }: { id: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ record_type: form.record_type, notes: form.notes || null }),
       });
-      if (!res.ok) throw new Error("Failed to update");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to update");
+      }
       router.push(`/health/${id}`);
     } catch (e: any) {
       setError(e.message || "Something went wrong.");

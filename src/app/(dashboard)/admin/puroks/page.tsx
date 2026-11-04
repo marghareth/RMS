@@ -7,6 +7,8 @@ import PageHeader from "@/components/shared/PageHeader";
 import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { useCan } from "@/lib/hooks/useCan";
+import { duplicateNameProblem } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Purok {
@@ -77,9 +79,13 @@ export default function PuroksAdminPage() {
     };
   }, []);
 
+  // No two with the same name (src/lib/form-rules.ts).
+  const newNameError = duplicateNameProblem(newName, puroks, "Purok");
+  const editingNameError = duplicateNameProblem(editingName, puroks, "Purok", editingId);
+
   async function handleAdd() {
     const name = newName.trim();
-    if (!name) return;
+    if (!name || newNameError) return;
     setAdding(true);
     setError("");
     try {
@@ -115,7 +121,7 @@ export default function PuroksAdminPage() {
 
   async function handleRename(id: number) {
     const name = editingName.trim();
-    if (!name) return;
+    if (!name || editingNameError) return;
     setSaving(true);
     setError("");
     try {
@@ -171,14 +177,16 @@ export default function PuroksAdminPage() {
       {/* Add new purok */}
       {can("settings:write") && (<div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#333333] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] p-4 mb-4 flex items-center gap-2">
         <div className="relative flex-1">
-          <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
+          <MapPin size={14} className="absolute left-3 top-4.75 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             placeholder="New purok name (e.g. Purok 5)"
-            className="w-full pl-9 pr-3 py-2.5 text-[13px] border border-[#E9EAEC] dark:border-[#333333] rounded-xl focus:outline-none focus:border-(--brand-line) placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] text-[#1F2937] dark:text-white transition"
+            className={`w-full pl-9 pr-3 py-2.5 text-[13px] border border-[#E9EAEC] dark:border-[#333333] rounded-xl focus:outline-none focus:border-(--brand-line) placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] text-[#1F2937] dark:text-white transition ${newNameError ? fieldErrorBorder : ""}`}
+            aria-invalid={!!(newNameError)}
           />
+          <FieldError message={newNameError} />
         </div>
         <button
           onClick={handleAdd}
@@ -232,6 +240,7 @@ export default function PuroksAdminPage() {
                   {/* Name / rename input */}
                   <div className="min-w-0">
                     {isEditing ? (
+                      <>
                       <input
                         autoFocus
                         value={editingName}
@@ -240,8 +249,11 @@ export default function PuroksAdminPage() {
                           if (e.key === "Enter") handleRename(p.id);
                           if (e.key === "Escape") cancelEditing();
                         }}
-                        className="w-full text-[13px] border border-(--brand-line) rounded-lg px-3 py-1.5 focus:outline-none text-[#1F2937] dark:text-white"
+                        className={`w-full text-[13px] border border-(--brand-line) rounded-lg px-3 py-1.5 focus:outline-none text-[#1F2937] dark:text-white ${editingNameError ? fieldErrorBorder : ""}`}
+                        aria-invalid={!!(editingNameError)}
                       />
+                      <FieldError message={editingNameError} />
+                      </>
                     ) : (
                       <div className="flex items-center gap-2 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-(--brand-tint) flex items-center justify-center shrink-0">
