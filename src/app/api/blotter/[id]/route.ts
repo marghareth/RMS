@@ -5,6 +5,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { blotterUpdateSchema } from "@/lib/validations";
+import { blotterProblems } from "@/lib/form-rules";
+import { throwIfProblems, withChanges } from "@/lib/validation-error";
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("blotter:read", req);
@@ -34,6 +36,19 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   const { id: idParam } = await context!.params;
   const id = parseInt(idParam);
   const body = blotterUpdateSchema.parse(await req.json());
+
+  const current = await prisma.blotterCase.findUnique({
+    where: { id },
+    select: { incident_date: true, hearing_date: true, complainant_id: true, respondent_id: true },
+  });
+  // Only the hearing date is checked against the existing incident date;
+  // an old incident date isn't re-judged on every edit.
+  if (current) {
+    const merged = withChanges(current, body);
+    throwIfProblems(blotterProblems({ ...merged, incident_date: undefined }).concat(
+      blotterProblems(merged).filter((p) => p.field === "hearing_date")
+    ));
+  }
 
   const blotterCase = await prisma.blotterCase.update({
     where: { id },

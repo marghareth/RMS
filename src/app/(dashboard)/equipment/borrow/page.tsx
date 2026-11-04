@@ -4,6 +4,8 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Package, Save, User, CalendarDays } from "lucide-react";
+import { borrowProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Equipment { id: number; name: string; quantity: number; status: string }
@@ -56,10 +58,12 @@ function SelectInput({
 }
 
 function TextInput({
-  label, value, onChange, placeholder, required, hint, type = "text", min,
+  label, value, onChange, placeholder, required, hint, type = "text", min, error,
 }: {
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; required?: boolean; hint?: string; type?: string; min?: string;
+  /** Shown under the field in red (src/lib/form-rules.ts). */
+  error?: string;
 }) {
   return (
     <div>
@@ -70,8 +74,10 @@ function TextInput({
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
         min={min}
-        className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717]"
+        aria-invalid={!!error}
+        className={`w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717] ${error ? fieldErrorBorder : ""}`}
       />
+      <FieldError message={error} />
     </div>
   );
 }
@@ -114,7 +120,7 @@ function BorrowEquipmentPageInner() {
       notes:           "",
     };
   });
-  const [todayMin] = useState(() => new Date().toISOString().split("T")[0]);
+  const [todayMin] = useState(() => new Date().toLocaleDateString("en-CA"));
 
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState("");
@@ -155,13 +161,16 @@ function BorrowEquipmentPageInner() {
 
   const selectedEquipment = equipmentList.find(e => String(e.id) === form.equipment_id);
 
+  // Expected return on or after the borrow date (src/lib/form-rules.ts; the API checks too).
+  const borrowErrors = borrowProblems(form);
+
   async function handleSave() {
     if (!form.equipment_id || !form.borrower_name || !form.date_borrowed || !form.expected_return) {
       setError("Please fill in all required fields.");
       return;
     }
-    if (form.expected_return < form.date_borrowed) {
-      setError("Expected return date must be after the borrow date.");
+    if (borrowErrors.length > 0) {
+      setError(borrowErrors[0].message);
       return;
     }
     setSaving(true);
@@ -178,7 +187,10 @@ function BorrowEquipmentPageInner() {
           expected_return: form.expected_return,
         }),
       });
-      if (!res.ok) throw new Error("Failed to record borrowing");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to record borrowing");
+      }
       router.push("/equipment");
     } catch (e: any) {
       setError(e.message || "Something went wrong.");
@@ -295,8 +307,9 @@ function BorrowEquipmentPageInner() {
                 value={form.expected_return}
                 onChange={v => set("expected_return", v)}
                 type="date"
-                min={todayMin}
+                min={form.date_borrowed || todayMin}
                 required
+                error={problemFor(borrowErrors, "expected_return")}
               />
             </div>
 

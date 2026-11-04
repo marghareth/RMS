@@ -20,9 +20,12 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody, SheetFooter,
 } from "@/components/ui/sheet";
 import { useCan } from "@/lib/hooks/useCan";
+import { lifeEventProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
 interface DeceasedResident {
+  birthdate?: string;
   id: number;
   fname: string;
   lname: string;
@@ -156,8 +159,15 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
     ? !!pickedResident && !!form.date_of_death && form.immediate_cause.trim()
     : !!form.date_of_death && form.immediate_cause.trim();
 
+  // Not in the future, not before the person was born (src/lib/form-rules.ts; the API checks too).
+  const deathBirthdate = isNew ? pickedResident?.birthdate : record?.resident.birthdate;
+  const deathError = problemFor(
+    lifeEventProblems("date_of_death", form.date_of_death, "Date of death", deathBirthdate),
+    "date_of_death"
+  );
+
   async function handleSave() {
-    if (!canSave) return;
+    if (!canSave || deathError) return;
     setSubmitting(true);
     setFormError(null);
     try {
@@ -180,7 +190,7 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
         onSaved?.();
         onClose();
       } else if (record) {
-        await fetch(`/api/deceased-records/${record.id}`, {
+        const res = await fetch(`/api/deceased-records/${record.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -189,6 +199,12 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
             underlying_cause: form.underlying_cause.trim() || null,
           }),
         });
+        if (!res.ok) {
+          // It used to close the editor as if it had saved.
+          const err = await res.json().catch(() => null);
+          setFormError(err?.message || "Could not save this record.");
+          return;
+        }
         await refetch();
         setEditing(false);
         onSaved?.();
@@ -287,8 +303,12 @@ export default function DeceasedRecordSheet({ recordId, onClose, onSaved }: Dece
                         type="date"
                         value={form.date_of_death}
                         onChange={(e) => setForm((f) => ({ ...f, date_of_death: e.target.value }))}
-                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line)"
+                        className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] text-[#1F2937] dark:text-white outline-none transition focus:border-(--brand-line) ${deathError ? fieldErrorBorder : ""}`}
+                        min={deathBirthdate?.slice(0, 10)}
+                        max={new Date().toLocaleDateString("en-CA")}
+                        aria-invalid={!!(deathError)}
                       />
+                      <FieldError message={deathError} />
                     </div>
 
                     <div>

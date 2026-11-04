@@ -120,7 +120,10 @@ export default function NewHealthRecordPage() {
           notes:       form.notes || null,
         }),
       });
-      if (!res.ok) throw new Error("Failed to save health record");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to save health record");
+      }
       router.push("/health");
     } catch (e: any) {
       setError(e.message || "Something went wrong.");

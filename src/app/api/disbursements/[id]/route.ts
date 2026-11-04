@@ -5,6 +5,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { disbursementUpdateSchema } from "@/lib/validations";
+import { moneyEntryProblems } from "@/lib/form-rules";
+import { throwIfProblems, withChanges } from "@/lib/validation-error";
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("disbursements:read", req);
@@ -35,6 +37,9 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
 
   const existing = await prisma.disbursement.findUnique({ where: { id } });
   if (!existing) throw new ApiError(404, "NOT_FOUND", "Disbursement not found.");
+  throwIfProblems(
+    moneyEntryProblems(withChanges({ amount: Number(existing.amount), date: existing.date }, body), { what: "Date paid" })
+  );
 
   const newAmount = body.amount ?? Number(existing.amount);
   const oldAmount = Number(existing.amount);

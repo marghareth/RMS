@@ -12,6 +12,8 @@ import { useState, useEffect, useCallback } from "react";
 import { Tag, Plus, Pencil, Trash2, Check, X, ScrollText, Ban, CheckCircle2 } from "lucide-react";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { useCan } from "@/lib/hooks/useCan";
+import { duplicateNameProblem } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 interface IncidentType {
   id: number;
@@ -79,9 +81,13 @@ export default function IncidentTypesManager() {
     };
   }, []);
 
+  // No two with the same name (src/lib/form-rules.ts).
+  const newNameError = duplicateNameProblem(newName, types, "Incident type");
+  const editingNameError = duplicateNameProblem(editingName, types, "Incident type", editingId);
+
   async function handleAdd() {
     const name = newName.trim();
-    if (!name) return;
+    if (!name || newNameError) return;
     setAdding(true);
     setError("");
     try {
@@ -117,7 +123,7 @@ export default function IncidentTypesManager() {
 
   async function handleRename(id: number) {
     const name = editingName.trim();
-    if (!name) return;
+    if (!name || editingNameError) return;
     setSaving(true);
     setError("");
     try {
@@ -198,14 +204,16 @@ export default function IncidentTypesManager() {
       {/* Add new incident type */}
       {can("incident-types:write") && (<div className="mb-4 flex items-center gap-2">
         <div className="relative flex-1">
-          <Tag size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
+          <Tag size={14} className="absolute left-3 top-4.75 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             placeholder="New incident type (e.g. Vandalism)"
-            className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
+            className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line) ${newNameError ? fieldErrorBorder : ""}`}
+            aria-invalid={!!(newNameError)}
           />
+          <FieldError message={newNameError} />
         </div>
         <button
           onClick={handleAdd}
@@ -257,6 +265,7 @@ export default function IncidentTypesManager() {
                   {/* Name / rename input */}
                   <div className="min-w-0">
                     {isEditing ? (
+                      <>
                       <input
                         autoFocus
                         value={editingName}
@@ -265,8 +274,11 @@ export default function IncidentTypesManager() {
                           if (e.key === "Enter") handleRename(t.id);
                           if (e.key === "Escape") cancelEditing();
                         }}
-                        className="w-full rounded-lg border border-(--brand-line) px-2.5 py-1.5 text-[13px] text-[#1F2937] dark:text-white outline-none"
+                        className={`w-full rounded-lg border border-(--brand-line) px-2.5 py-1.5 text-[13px] text-[#1F2937] dark:text-white outline-none ${editingNameError ? fieldErrorBorder : ""}`}
+                        aria-invalid={!!(editingNameError)}
                       />
+                      <FieldError message={editingNameError} />
+                      </>
                     ) : (
                       <p className={`truncate text-[13px] font-semibold ${t.is_active ? "text-[#1F2937] dark:text-white" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
                         {t.name}

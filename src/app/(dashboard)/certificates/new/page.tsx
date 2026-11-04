@@ -15,6 +15,8 @@ import {
   certDisplayDate,
 } from "@/lib/mock/certificates";
 import { useBarangayInfo } from "@/lib/hooks/useBarangayInfo";
+import { fieldProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 export default function NewCertificatePage() {
   const router = useRouter();
@@ -75,8 +77,23 @@ export default function NewCertificatePage() {
 
   const duplicateWarning = dupKey && dupResult?.key === dupKey ? dupResult.cert : null;
 
+  // Walk-in name must look like a name; sensible lengths (src/lib/form-rules.ts).
+  const problems = fieldProblems([
+    ...(walkIn
+      ? [
+          { field: "manual_name", label: "Applicant name", value: manualName, kind: "name" as const, max: 150 },
+          { field: "manual_address", label: "Address", value: manualAddress, max: 300 },
+        ]
+      : []),
+    { field: "purpose", label: "Purpose", value: purpose, max: 300 },
+  ]);
+
   async function handleSubmit() {
     setError("");
+    if (problems.length > 0) {
+      setError(problems[0].message);
+      return;
+    }
 
     if (!walkIn && !resident) {
       setError("Please select a resident, or switch to walk-in entry.");
@@ -184,8 +201,10 @@ export default function NewCertificatePage() {
                   value={manualName}
                   onChange={(e) => setManualName(e.target.value)}
                   placeholder="Juan Dela Cruz"
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                  className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(problems, "manual_name") ? fieldErrorBorder : ""}`}
+                  aria-invalid={!!(problemFor(problems, "manual_name"))}
                 />
+                <FieldError message={problemFor(problems, "manual_name")} />
               </div>
               <div>
                 <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
@@ -195,8 +214,10 @@ export default function NewCertificatePage() {
                   value={manualAddress}
                   onChange={(e) => setManualAddress(e.target.value)}
                   placeholder="Purok, Street"
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                  className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(problems, "manual_address") ? fieldErrorBorder : ""}`}
+                  aria-invalid={!!(problemFor(problems, "manual_address"))}
                 />
+                <FieldError message={problemFor(problems, "manual_address")} />
               </div>
               <div className="flex items-start gap-2 rounded-lg bg-[#FEF3C7] dark:bg-amber-500/15 px-3 py-2.5">
                 <AlertTriangle size={14} className="mt-0.5 shrink-0 text-[#D97706] dark:text-[#FBBF24]" />

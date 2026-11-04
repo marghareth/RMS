@@ -7,6 +7,8 @@ import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
 import DeceasedRecordSheet from "@/components/deceased/DeceasedRecordSheet";
 import { useCan } from "@/lib/hooks/useCan";
+import { rangeError } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
 interface DeceasedResident {
@@ -164,7 +166,7 @@ export default function DeceasedRecordsListPage() {
                 </label>
                 <input
                   type="date"
-                  value={filters.date_from}
+                  value={filters.date_from} max={filters.date_to || undefined}
                   onChange={(e) => setFilters((f) => ({ ...f, date_from: e.target.value }))}
                   className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-2 py-2 text-[12px] outline-none focus:border-(--brand-line)"
                 />
@@ -177,8 +179,11 @@ export default function DeceasedRecordsListPage() {
                   type="date"
                   value={filters.date_to}
                   onChange={(e) => setFilters((f) => ({ ...f, date_to: e.target.value }))}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-2 py-2 text-[12px] outline-none focus:border-(--brand-line)"
+                  className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-2 py-2 text-[12px] outline-none focus:border-(--brand-line) ${rangeError(filters.date_from, filters.date_to) ? fieldErrorBorder : ""}`}
+                  min={filters.date_from || undefined}
+                  aria-invalid={!!(rangeError(filters.date_from, filters.date_to))}
                 />
+                <FieldError message={rangeError(filters.date_from, filters.date_to)} />
               </div>
             </div>
 

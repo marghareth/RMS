@@ -4,11 +4,13 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, User, UserX, FileText, Info } from "lucide-react";
 import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPicker";
 import { addWorkingDays } from "@/lib/mock/blotter";
+import { blotterProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 interface IncidentType {
   id: number;
@@ -58,7 +60,8 @@ export default function NewBlotterCasePage() {
 
   // ── Case details ──────────────────────────────────────────────────────────
   const [narrative, setNarrative] = useState("");
-  const [incidentDate, setIncidentDate] = useState(new Date().toISOString().slice(0, 10));
+  // Local date (en-CA is YYYY-MM-DD). toISOString() gave yesterday's date before 8 AM in Manila.
+  const [incidentDate, setIncidentDate] = useState(new Date().toLocaleDateString("en-CA"));
   const [hearingDate, setHearingDate] = useState("");
 
   const [error, setError] = useState("");
@@ -69,6 +72,19 @@ export default function NewBlotterCasePage() {
   const suggestedHearing = incidentDate
     ? addWorkingDays(new Date(incidentDate), 3).toISOString().slice(0, 10)
     : null;
+
+  // Incident not in the future, hearing not before the incident, and not the
+  // same resident on both sides (src/lib/form-rules.ts; the API checks too).
+  const problems = useMemo(
+    () =>
+      blotterProblems({
+        incident_date: incidentDate,
+        hearing_date: hearingDate,
+        complainant_id: complainantWalkIn ? null : complainant?.id,
+        respondent_id: respondentWalkIn ? null : respondent?.id,
+      }),
+    [incidentDate, hearingDate, complainantWalkIn, complainant, respondentWalkIn, respondent]
+  );
 
   async function handleSubmit() {
     setError("");
@@ -100,6 +116,10 @@ export default function NewBlotterCasePage() {
       setError("Please provide the incident date.");
       return;
     }
+    if (problems.length > 0) {
+      setError(problems[0].message);
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -119,8 +139,11 @@ export default function NewBlotterCasePage() {
           hearing_date: hearingDate || undefined,
         }),
       });
-      if (!res.ok) throw new Error("Failed to file case");
-      const created = await res.json();
+      const created = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(created.message || "Something went wrong while filing the case. Please try again.");
+        return;
+      }
       router.push(`/blotter/${created.id}`);
     } catch (e) {
       console.error(e);
@@ -304,9 +327,12 @@ export default function NewBlotterCasePage() {
                 <input
                   type="date"
                   value={incidentDate}
+                  max={new Date().toLocaleDateString("en-CA")}
                   onChange={(e) => setIncidentDate(e.target.value)}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                  aria-invalid={!!problemFor(problems, "incident_date")}
+                  className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(problems, "incident_date") ? fieldErrorBorder : ""}`}
                 />
+                <FieldError message={problemFor(problems, "incident_date")} />
               </div>
               <div>
                 <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
@@ -315,9 +341,12 @@ export default function NewBlotterCasePage() {
                 <input
                   type="date"
                   value={hearingDate}
+                  min={incidentDate || undefined}
                   onChange={(e) => setHearingDate(e.target.value)}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                  aria-invalid={!!problemFor(problems, "hearing_date")}
+                  className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(problems, "hearing_date") ? fieldErrorBorder : ""}`}
                 />
+                <FieldError message={problemFor(problems, "hearing_date")} />
               </div>
             </div>
 

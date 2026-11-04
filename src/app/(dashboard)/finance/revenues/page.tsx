@@ -8,6 +8,8 @@ import StatCard from "@/components/shared/StatCard";
 import { fmtCurrency, fmtDate, RevenueRecord, FundSourceMini } from "@/lib/finance";
 import { readList } from "@/lib/fetch-json";
 import { useCan } from "@/lib/hooks/useCan";
+import { moneyEntryProblems, problemFor, rangeError } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 const EMPTY_FORM = { source: "", amount: "", date: new Date().toISOString().slice(0, 10), category: "", fund_source_id: "", or_number: "" };
 
@@ -52,11 +54,15 @@ export default function RevenueTrackingPage() {
     return () => clearTimeout(t);
   }, [load]);
 
+  // Amount above ₱0 and a date that has happened (src/lib/form-rules.ts; the API checks too).
+  const moneyProblems = moneyEntryProblems(form, { what: "Date received" });
+
   async function handleSubmit() {
     setError("");
     if (!form.source.trim()) return setError("Please enter a revenue source.");
     if (!form.amount || Number(form.amount) < 0) return setError("Please enter a valid amount.");
     if (!form.date) return setError("Please select a date.");
+    if (moneyProblems.length > 0) return setError(moneyProblems[0].message);
     setSubmitting(true);
     try {
       const res = await fetch("/api/revenues", {
@@ -132,8 +138,10 @@ export default function RevenueTrackingPage() {
                 value={form.amount}
                 onChange={(e) => setForm({ ...form, amount: e.target.value })}
                 placeholder="0.00"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(moneyProblems, "amount") ? fieldErrorBorder : ""}`}
+                aria-invalid={!!(problemFor(moneyProblems, "amount"))}
               />
+              <FieldError message={problemFor(moneyProblems, "amount")} />
             </div>
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Date *</label>
@@ -141,8 +149,11 @@ export default function RevenueTrackingPage() {
                 type="date"
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(moneyProblems, "date") ? fieldErrorBorder : ""}`}
+                max={new Date().toLocaleDateString("en-CA")}
+                aria-invalid={!!(problemFor(moneyProblems, "date"))}
               />
+              <FieldError message={problemFor(moneyProblems, "date")} />
             </div>
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</label>
@@ -191,9 +202,13 @@ export default function RevenueTrackingPage() {
           <option value="">All Fund Sources</option>
           {fundSources.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
         </select>
-        <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)" />
+        <input type="date" value={dateFrom} max={dateTo || undefined} onChange={(e) => setDateFrom(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)" />
         <span className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">to</span>
-        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)" />
+        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className={`rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${rangeError(dateFrom, dateTo) ? fieldErrorBorder : ""}`}
+          min={dateFrom || undefined}
+          aria-invalid={!!(rangeError(dateFrom, dateTo))}
+        />
+        <FieldError message={rangeError(dateFrom, dateTo)} />
       </div>
 
       <div data-tour="page-revenues-table" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">

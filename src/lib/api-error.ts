@@ -20,14 +20,27 @@ export function humanizeFieldPath(path: string): string {
     .trim();
 }
 
+/**
+ * One issue as text. A full sentence ("Resident since can't be before the
+ * birthdate.", from src/lib/form-rules.ts) is shown as is; a fragment
+ * ("must be a Philippine mobile number") gets its field name in front.
+ */
+export function issueText(i: ApiIssue): string {
+  const msg = i.message ?? "is invalid";
+  const sentence = /^[A-Z₱]/.test(msg) && /[.!?)]$/.test(msg);
+  return i.path && !sentence ? `${humanizeFieldPath(i.path)}: ${msg}` : msg;
+}
+
+/** The top-level `message` of a validation error: the first problem, plus how many more. */
+export function validationSummary(issues: ApiIssue[]): string {
+  if (issues.length === 0) return "One or more fields are invalid.";
+  const first = issueText(issues[0]);
+  return issues.length === 1 ? first : `${first} (and ${issues.length - 1} more problem${issues.length === 2 ? "" : "s"})`;
+}
+
 export function apiErrorMessage(body: ApiErrorBody, fallback: string): string {
   if (Array.isArray(body?.issues) && body.issues.length > 0) {
-    return body.issues
-      .map((i) => {
-        const msg = i.message ?? "is invalid";
-        return i.path ? `${humanizeFieldPath(i.path)}: ${msg}` : msg;
-      })
-      .join(" • ");
+    return body.issues.map(issueText).join(" • ");
   }
   return body?.message || body?.error || fallback;
 }

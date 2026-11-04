@@ -1,11 +1,13 @@
 // FILE: src/app/(dashboard)/residents/new/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { apiErrorMessage } from "@/lib/api-error";
 import { describeMatch, type DuplicateMatchInfo } from "@/lib/duplicate-detection";
+import { residentProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 /** Today as YYYY-MM-DD in the browser's local time (used to block future birthdates). */
 const todayLocalISO = () => new Date().toLocaleDateString("en-CA");
@@ -50,13 +52,15 @@ const EMPTY_MEMBER: Omit<MemberDraft, "_key"> = {
 
 // ── SELECT FIELD ──────────────────────────────────────────────────────────────
 function SelectField({
-  label, value, onChange, options, required,
+  label, value, onChange, options, required, error,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
   required?: boolean;
+  /** Shown under the field in red (src/lib/form-rules.ts). */
+  error?: string;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -67,7 +71,8 @@ function SelectField({
         <select
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="w-full appearance-none text-[13px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-(--brand-line) text-[#1F2937] dark:text-white pr-8"
+          aria-invalid={!!error}
+          className={`w-full appearance-none text-[13px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-(--brand-line) text-[#1F2937] dark:text-white pr-8 ${error ? fieldErrorBorder : ""}`}
         >
           <option value="">SELECT</option>
           {options.map(o => (
@@ -76,13 +81,14 @@ function SelectField({
         </select>
         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3] text-[10px]">▼</span>
       </div>
+      <FieldError message={error} />
     </div>
   );
 }
 
 // ── TEXT FIELD ────────────────────────────────────────────────────────────────
 function TextField({
-  label, value, onChange, placeholder, required, type = "text", max,
+  label, value, onChange, placeholder, required, type = "text", max, min, error,
 }: {
   label: string;
   value: string;
@@ -92,6 +98,10 @@ function TextField({
   type?: string;
   /** For type="date": latest selectable date (YYYY-MM-DD). */
   max?: string;
+  /** For type="date": earliest selectable date (YYYY-MM-DD). */
+  min?: string;
+  /** Shown under the field in red (src/lib/form-rules.ts). */
+  error?: string;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -102,10 +112,13 @@ function TextField({
         type={type}
         value={value}
         max={max}
+        min={min}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
-        className="text-[13px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-(--brand-line) placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] text-[#1F2937] dark:text-white"
+        aria-invalid={!!error}
+        className={`text-[13px] bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-3 focus:outline-none focus:border-(--brand-line) placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] text-[#1F2937] dark:text-white ${error ? fieldErrorBorder : ""}`}
       />
+      <FieldError message={error} />
     </div>
   );
 }
@@ -277,8 +290,13 @@ export default function NewRBIPage() {
   // ── Member form helpers ──────────────────────────────────────────────────
   const memberFormValid = form.fname && form.lname && form.birthdate && form.sex && form.civil_status && form.residency_start_date;
 
+  // Logic checks (src/lib/form-rules.ts), shown under each field as you type.
+  const memberProblems = useMemo(() => residentProblems(form), [form]);
+  const fieldError = (field: string) => problemFor(memberProblems, field);
+
   function handleAddClick() {
     if (!memberFormValid) { setError("Please fill in required member fields."); return; }
+    if (memberProblems.length > 0) { setError("Fix the fields marked in red first."); return; }
     setError("");
     setShowConfirm(true);
   }
@@ -578,7 +596,7 @@ export default function NewRBIPage() {
                     { value: "IV",  label: "IV"  },
                   ]}
                 />
-                <TextField label="Date of Birth" value={form.birthdate} onChange={v => setField("birthdate", v)} type="date" max={todayLocalISO()} required />
+                <TextField label="Date of Birth" value={form.birthdate} onChange={v => setField("birthdate", v)} type="date" max={todayLocalISO()} required error={fieldError("birthdate")} />
                 <SelectField
                   label="Gender"
                   value={form.sex}
@@ -594,9 +612,12 @@ export default function NewRBIPage() {
                   value={form.residency_start_date}
                   onChange={v => setField("residency_start_date", v)}
                   type="date"
+                  min={form.birthdate || undefined}
+                  max={todayLocalISO()}
                   required
+                  error={fieldError("residency_start_date")}
                 />
-                <p className="col-span-1 self-end pb-3 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
+                <p className="col-span-1 self-start pt-6 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
                   The date they actually moved in / became a resident — used for the 6-month certificate
                   eligibility rule. Not the same as today&apos;s date, unless they truly just moved in.
                 </p>
@@ -611,6 +632,7 @@ export default function NewRBIPage() {
                   label="Civil Status"
                   value={form.civil_status}
                   onChange={v => setField("civil_status", v)}
+                  error={fieldError("civil_status")}
                   options={[
                     { value: "SINGLE",    label: "Single"    },
                     { value: "MARRIED",   label: "Married"   },
@@ -664,6 +686,7 @@ export default function NewRBIPage() {
                   label="Sector"
                   value={form.sector}
                   onChange={v => setField("sector", v)}
+                  error={fieldError("sector")}
                   options={[
                     { value: "SENIOR", label: "Senior Citizen" },
                     { value: "PWD",    label: "PWD"            },

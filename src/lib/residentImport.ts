@@ -16,6 +16,7 @@ import type { ImportIssue, ImportErrorType } from "@/lib/importMetrics";
 import { personName, optionalPersonName, nameSuffix, birthdate, phMobile } from "@/lib/field-rules";
 
 import { RESIDENT_IMPORT_COLUMNS } from "@/lib/residentImportColumns";
+import { residentProblems } from "@/lib/form-rules";
 import {
   normalizeSex,
   normalizeCivilStatus,
@@ -230,6 +231,13 @@ export function validateImportRow(
   }
 
   const row = parsed.data;
+
+  // The same logic checks as the Add Resident form (src/lib/form-rules.ts),
+  // e.g. a 6-year-old can't be married.
+  for (const p of residentProblems({ birthdate: row.birthdate, civil_status: row.civil_status })) {
+    errors.push(`${p.field}: ${p.message}`);
+    issues.push({ field: p.field, type: "INVALID_OPTION", message: p.message });
+  }
 
   let purok_id: number | null = null;
   if (row.purok_name) {

@@ -5,6 +5,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { equipmentUpdateSchema } from "@/lib/validations";
+import { equipmentProblems } from "@/lib/form-rules";
+import { throwIfProblems, withChanges } from "@/lib/validation-error";
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("equipment:read", req);
@@ -32,6 +34,9 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   const { id: idParam } = await context!.params;
   const id = parseInt(idParam);
   const body = equipmentUpdateSchema.parse(await req.json());
+
+  const current = await prisma.equipment.findUnique({ where: { id }, select: { purchase_date: true, date_acquired: true } });
+  if (current) throwIfProblems(equipmentProblems(withChanges(current, body)));
 
   const equipment = await prisma.equipment.update({
     where: { id },

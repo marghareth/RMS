@@ -34,6 +34,8 @@ import {
 } from "@/lib/mock/households";
 import type { HouseholdMock, HouseholdMemberMock, MigrantMock } from "@/lib/mock/households";
 import { useCan } from "@/lib/hooks/useCan";
+import { fieldProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 const HOUSING_LABEL: Record<string, string> = { OWN: "Own", RENT: "Rent", SHARED: "Shared", INFORMAL: "Informal" };
 const WATER_LABEL: Record<string, string> = { INDIVIDUAL: "Individual", COMMUNAL: "Communal", WELL: "Well", OTHER: "Other" };
@@ -273,8 +275,17 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
     setMigrantFormOpen(m.id);
   }
 
+  // Name required and name-shaped; the rest just not too long (src/lib/form-rules.ts).
+  const migrantProblems = fieldProblems([
+    { field: "name", label: "Name", value: migrantForm.name, kind: "name" },
+    { field: "previous_location", label: "Previous location", value: migrantForm.previous_location },
+    { field: "reason", label: "Reason", value: migrantForm.reason, max: 500 },
+    { field: "transferred_to", label: "Transferred to", value: migrantForm.transferred_to },
+    { field: "duration_here", label: "Duration here", value: migrantForm.duration_here, max: 50 },
+  ]);
+
   async function handleSaveMigrant() {
-    if (!migrantForm.name.trim() || !household) return;
+    if (migrantProblems.length > 0 || !migrantForm.name.trim() || !household) return;
     setMigrantBusy(true);
     setActionError("");
     try {
@@ -301,7 +312,10 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
               body: JSON.stringify(payload),
             });
 
-      if (!res.ok) throw new Error("Failed to save migrant record");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to save migrant record");
+      }
       await loadHousehold();
       setMigrantFormOpen(null);
     } catch (e: any) {
@@ -596,8 +610,10 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
                     <input
                       value={migrantForm.name}
                       onChange={(e) => setMigrantForm((f) => ({ ...f, name: e.target.value }))}
-                      className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line)"
+                      className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(migrantProblems, "name") ? fieldErrorBorder : ""}`}
+                      aria-invalid={!!(problemFor(migrantProblems, "name"))}
                     />
+                    <FieldError message={problemFor(migrantProblems, "name")} />
                   </div>
                   <div>
                     <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
@@ -606,8 +622,10 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
                     <input
                       value={migrantForm.previous_location}
                       onChange={(e) => setMigrantForm((f) => ({ ...f, previous_location: e.target.value }))}
-                      className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line)"
+                      className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(migrantProblems, "previous_location") ? fieldErrorBorder : ""}`}
+                      aria-invalid={!!(problemFor(migrantProblems, "previous_location"))}
                     />
+                    <FieldError message={problemFor(migrantProblems, "previous_location")} />
                   </div>
                   <div>
                     <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
@@ -616,8 +634,10 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
                     <input
                       value={migrantForm.reason}
                       onChange={(e) => setMigrantForm((f) => ({ ...f, reason: e.target.value }))}
-                      className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line)"
+                      className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(migrantProblems, "reason") ? fieldErrorBorder : ""}`}
+                      aria-invalid={!!(problemFor(migrantProblems, "reason"))}
                     />
+                    <FieldError message={problemFor(migrantProblems, "reason")} />
                   </div>
                   <div>
                     <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
@@ -626,8 +646,10 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
                     <input
                       value={migrantForm.transferred_to}
                       onChange={(e) => setMigrantForm((f) => ({ ...f, transferred_to: e.target.value }))}
-                      className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line)"
+                      className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(migrantProblems, "transferred_to") ? fieldErrorBorder : ""}`}
+                      aria-invalid={!!(problemFor(migrantProblems, "transferred_to"))}
                     />
+                    <FieldError message={problemFor(migrantProblems, "transferred_to")} />
                   </div>
                   <div>
                     <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
@@ -637,8 +659,10 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
                       value={migrantForm.duration_here}
                       onChange={(e) => setMigrantForm((f) => ({ ...f, duration_here: e.target.value }))}
                       placeholder="e.g. 2 years"
-                      className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line)"
+                      className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(migrantProblems, "duration_here") ? fieldErrorBorder : ""}`}
+                      aria-invalid={!!(problemFor(migrantProblems, "duration_here"))}
                     />
+                    <FieldError message={problemFor(migrantProblems, "duration_here")} />
                   </div>
                   <label className="flex items-center gap-2 sm:col-span-2">
                     <input
@@ -659,7 +683,7 @@ function HouseholdDetailContent({ householdId }: { householdId: number }) {
                   </button>
                   <button
                     onClick={handleSaveMigrant}
-                    disabled={migrantBusy || !migrantForm.name.trim()}
+                    disabled={migrantBusy || !migrantForm.name.trim() || migrantProblems.length > 0}
                     className="rounded-lg bg-(--brand) px-3 py-2 text-[11px] font-bold text-white transition hover:bg-(--brand-hover) disabled:opacity-50"
                   >
                     {migrantBusy ? "Saving…" : "Save"}

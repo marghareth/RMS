@@ -5,6 +5,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { governmentAssistanceUpdateSchema } from "@/lib/validations";
+import { lifeEventProblems } from "@/lib/form-rules";
+import { throwIfProblems } from "@/lib/validation-error";
 
 export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("residents:write", req);
@@ -13,6 +15,14 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   const { id: idParam } = await context!.params;
   const id = parseInt(idParam);
   const body = governmentAssistanceUpdateSchema.parse(await req.json());
+
+  if (body.date_enrolled) {
+    const current = await prisma.governmentAssistance.findUnique({
+      where: { id },
+      select: { resident: { select: { birthdate: true } } },
+    });
+    throwIfProblems(lifeEventProblems("date_enrolled", body.date_enrolled, "Date enrolled", current?.resident?.birthdate));
+  }
 
   const assistance = await prisma.governmentAssistance.update({
     where: { id },

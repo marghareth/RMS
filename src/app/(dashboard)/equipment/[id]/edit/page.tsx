@@ -4,6 +4,8 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Save, Package } from "lucide-react";
+import { equipmentProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type EquipmentStatus = "SERVICEABLE" | "UNSERVICEABLE" | "MISSING";
@@ -49,10 +51,16 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
 }
 
 function TextInput({
-  label, value, onChange, placeholder, required, type = "text",
+  label, value, onChange, placeholder, required, type = "text", max, min, error,
 }: {
   label: string; value: string; onChange: (v: string) => void;
   placeholder?: string; required?: boolean; type?: string;
+  /** For dates: latest allowed (YYYY-MM-DD). */
+  max?: string;
+  /** For dates: earliest allowed (YYYY-MM-DD). */
+  min?: string;
+  /** Shown under the field in red (src/lib/form-rules.ts). */
+  error?: string;
 }) {
   return (
     <div>
@@ -60,10 +68,14 @@ function TextInput({
       <input
         type={type}
         value={value}
+        min={min}
+        max={max}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder ?? label}
-        className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717]"
+        aria-invalid={!!error}
+        className={`w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white placeholder:text-[#D1D5DB] dark:placeholder:text-[#525252] transition bg-white dark:bg-[#171717] ${error ? fieldErrorBorder : ""}`}
       />
+      <FieldError message={error} />
     </div>
   );
 }
@@ -149,9 +161,17 @@ export default function EditEquipmentPage() {
       .catch(() => router.push("/equipment"));
   }, [params.id, router]);
 
+  // Purchase and acquired dates not in the future, acquired not before
+  // purchased (src/lib/form-rules.ts; the API checks too).
+  const problems = equipmentProblems(form);
+
   async function handleSave() {
     if (!form.name.trim() || !form.quantity) {
       setError("Name and quantity are required.");
+      return;
+    }
+    if (problems.length > 0) {
+      setError(problems[0].message);
       return;
     }
     setSaving(true);
@@ -177,7 +197,10 @@ export default function EditEquipmentPage() {
           description:   form.description || null,
         }),
       });
-      if (!res.ok) throw new Error("Failed to update");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to update");
+      }
       router.push(`/equipment/${params.id}`);
     } catch (e: any) {
       setError(e.message || "Something went wrong.");
@@ -280,8 +303,7 @@ export default function EditEquipmentPage() {
             label="Date Acquired"
             value={form.date_acquired}
             onChange={v => set("date_acquired", v)}
-            type="date"
-          />
+            type="date" min={form.purchase_date || undefined} max={new Date().toLocaleDateString("en-CA")} error={problemFor(problems, "date_acquired")} />
 
           {/* Valuation */}
           <div data-tour="page-equipment-edit-value" className="grid grid-cols-2 gap-4">
@@ -304,8 +326,7 @@ export default function EditEquipmentPage() {
             label="Purchase Date"
             value={form.purchase_date}
             onChange={v => set("purchase_date", v)}
-            type="date"
-          />
+            type="date" max={new Date().toLocaleDateString("en-CA")} error={problemFor(problems, "purchase_date")} />
 
           {/* Assignment */}
           <div className="grid grid-cols-2 gap-4">

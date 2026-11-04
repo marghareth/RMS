@@ -5,6 +5,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { householdUpdateSchema } from "@/lib/validations";
+import { householdProblems } from "@/lib/form-rules";
+import { throwIfProblems } from "@/lib/validation-error";
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("households:read", req);
@@ -38,6 +40,8 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   // result, and Prisma's `update` skips undefined fields — so this can be
   // passed straight through without wiping out fields the caller didn't send.
   const body = householdUpdateSchema.parse(await req.json());
+  // Checked on what was sent; the "Other" text is only required when "Other" is chosen in this edit.
+  throwIfProblems(householdProblems(body));
 
   const household = await prisma.household.update({
     where: { id },

@@ -319,3 +319,15 @@ describe('import is forgiving about the usual census-sheet variations', () => {
     expect(parseImportFile(Buffer.from(csv), 'r.csv')).toHaveLength(1);
   });
 });
+
+describe('import applies the same logic checks as the form', () => {
+  it('rejects a child marked as married', () => {
+    const result = validateImportRow(
+      1,
+      { fname: 'Ana', lname: 'Reyes', birthdate: '2020-01-01', sex: 'FEMALE', civil_status: 'MARRIED' },
+      { puroksByName: new Map(), householdsByNo: new Map() }
+    );
+    expect(result.data).toBeUndefined();
+    expect(result.errors[0]).toMatch(/^civil_status: This person is \d+ years old, too young to be married/);
+  });
+});

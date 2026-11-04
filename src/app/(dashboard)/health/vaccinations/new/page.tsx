@@ -17,6 +17,8 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Syringe, Save, User, CalendarDays } from "lucide-react";
 import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPicker";
+import { lifeEventProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface VaccinationForm { resident_id: string; vaccine_name: string; custom_vaccine: string; date_given: string }
@@ -117,9 +119,19 @@ function NewVaccinationPageInner() {
 
   const finalVaccineName = form.vaccine_name === "Other (specify)" ? form.custom_vaccine : form.vaccine_name;
 
+  // Not in the future, not before the person was born (src/lib/form-rules.ts; the API checks too).
+  const dateGivenError = problemFor(
+    lifeEventProblems("date_given", form.date_given, "Date given", selectedResident?.birthdate),
+    "date_given"
+  );
+
   async function handleSave() {
     if (!form.resident_id || !finalVaccineName || !form.date_given) {
       setError("Please fill in all required fields.");
+      return;
+    }
+    if (dateGivenError) {
+      setError(dateGivenError);
       return;
     }
     setSaving(true); setError("");
@@ -133,7 +145,10 @@ function NewVaccinationPageInner() {
           date_given:   form.date_given,
         }),
       });
-      if (!res.ok) throw new Error("Failed to save vaccination");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Failed to save vaccination");
+      }
       router.push("/health");
     } catch (e: any) {
       setError(e.message || "Something went wrong.");
@@ -223,10 +238,13 @@ function NewVaccinationPageInner() {
             <input
               type="date"
               value={form.date_given}
-              max={new Date().toISOString().split("T")[0]}
+              max={new Date().toLocaleDateString("en-CA")}
               onChange={e => set("date_given", e.target.value)}
-              className="w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white bg-white dark:bg-[#171717]"
+              className={`w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white bg-white dark:bg-[#171717] ${dateGivenError ? fieldErrorBorder : ""}`}
+              min={selectedResident?.birthdate?.slice(0, 10)}
+              aria-invalid={!!(dateGivenError)}
             />
+            <FieldError message={dateGivenError} />
           </div>
         </div>
 

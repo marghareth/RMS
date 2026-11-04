@@ -5,6 +5,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { appropriationUpdateSchema } from "@/lib/validations";
+import { appropriationProblems } from "@/lib/form-rules";
+import { throwIfProblems, withChanges } from "@/lib/validation-error";
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("appropriations:read", req);
@@ -38,6 +40,25 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   // plain edit form overwrite it directly, or it'll drift from the actual
   // disbursement ledger.
   const { disbursed_amount, ...editable } = body;
+
+  const current = await prisma.appropriation.findUnique({
+    where: { id },
+    select: { appropriated_amount: true, obligated_amount: true, disbursed_amount: true },
+  });
+  if (current) {
+    throwIfProblems(
+      appropriationProblems(
+        withChanges(
+          {
+            appropriated_amount: Number(current.appropriated_amount),
+            obligated_amount: Number(current.obligated_amount),
+            disbursed_amount: Number(current.disbursed_amount),
+          },
+          editable
+        )
+      )
+    );
+  }
 
   const appropriation = await prisma.appropriation.update({
     where: { id },

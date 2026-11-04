@@ -7,6 +7,8 @@
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody, SheetFooter } from "@/components/ui/sheet";
 import { AgendaItemMock, AgendaItemStatus, AGENDA_ITEM_STATUSES } from "@/lib/mock/meetings";
+import { fieldProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 interface AgendaItemSheetProps {
   open: boolean;
@@ -41,8 +43,19 @@ export default function AgendaItemSheet({ open, meetingId, item, onClose, onSave
     setError("");
   }
 
+  // src/lib/form-rules.ts
+  const problems = fieldProblems([
+    { field: "title", label: "Title", value: title, max: 200 },
+    { field: "description", label: "Description", value: description, max: 2000 },
+    { field: "sort_order", label: "Order", value: sortOrder, kind: "count" },
+  ]);
+
   async function handleSubmit() {
     setError("");
+    if (problems.length > 0) {
+      setError(problems[0].message);
+      return;
+    }
     if (!title.trim()) {
       setError("Title is required.");
       return;
@@ -65,7 +78,11 @@ export default function AgendaItemSheet({ open, meetingId, item, onClose, onSave
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message || "Something went wrong while saving. Please try again.");
+        return;
+      }
       onSaved();
     } catch (e) {
       console.error(e);
@@ -96,8 +113,10 @@ export default function AgendaItemSheet({ open, meetingId, item, onClose, onSave
                 onChange={(e) => setTitle(e.target.value)}
                 autoFocus
                 placeholder="e.g. Review of Q3 budget utilization"
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(problems, "title") ? fieldErrorBorder : ""}`}
+                aria-invalid={!!(problemFor(problems, "title"))}
               />
+              <FieldError message={problemFor(problems, "title")} />
             </div>
 
             <div>
@@ -122,8 +141,10 @@ export default function AgendaItemSheet({ open, meetingId, item, onClose, onSave
                   type="number"
                   value={sortOrder}
                   onChange={(e) => setSortOrder(parseInt(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                  className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${problemFor(problems, "sort_order") ? fieldErrorBorder : ""}`}
+                  aria-invalid={!!(problemFor(problems, "sort_order"))}
                 />
+                <FieldError message={problemFor(problems, "sort_order")} />
               </div>
               <div>
                 <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">

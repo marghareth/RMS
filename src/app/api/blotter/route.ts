@@ -6,6 +6,8 @@ import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { blotterCreateSchema, paginationSchema } from "@/lib/validations";
+import { blotterProblems } from "@/lib/form-rules";
+import { throwIfProblems } from "@/lib/validation-error";
 
 function generateCaseNumber(): string {
   const now = new Date();
@@ -69,6 +71,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const body = blotterCreateSchema.parse(await req.json());
+  // Dates and amounts have to make sense together (src/lib/form-rules.ts).
+  throwIfProblems(blotterProblems(body));
 
   // ensure unique case number
   let case_number = generateCaseNumber();

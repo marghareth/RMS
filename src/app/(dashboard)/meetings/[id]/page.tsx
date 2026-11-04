@@ -37,6 +37,8 @@ import {
   MEETING_STATUSES,
 } from "@/lib/mock/meetings";
 import { useCan } from "@/lib/hooks/useCan";
+import { meetingProblems, problemFor } from "@/lib/form-rules";
+import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 export default function MeetingDetailPage() {
   const can = useCan();
@@ -68,6 +70,7 @@ export default function MeetingDetailPage() {
   // ── Minutes inline edit ──────────────────────────────────────────────
   const [editingMinutes, setEditingMinutes] = useState(false);
   const [draftMinutes, setDraftMinutes] = useState("");
+  const [minutesError, setMinutesError] = useState("");
   const [savingMinutes, setSavingMinutes] = useState(false);
 
   // ── Meeting details inline edit ──────────────────────────────────────
@@ -134,7 +137,13 @@ export default function MeetingDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ minutes: draftMinutes.trim() || null }),
       });
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) {
+        // e.g. minutes for a meeting that hasn't happened yet (src/lib/form-rules.ts)
+        const data = await res.json().catch(() => ({}));
+        setMinutesError(data.message || "Couldn't save the minutes. Try again.");
+        return;
+      }
+      setMinutesError("");
       await loadMeeting();
       setEditingMinutes(false);
     } catch (e) {
@@ -158,10 +167,17 @@ export default function MeetingDetailPage() {
     setEditingMeeting(true);
   }
 
+  // A meeting can't be marked completed before its date (src/lib/form-rules.ts; the API checks too).
+  const statusError = problemFor(meetingProblems(draft), "status");
+
   async function handleSaveMeeting() {
     setMeetingError("");
     if (!draft.meeting_date) {
       setMeetingError("Please select the meeting date.");
+      return;
+    }
+    if (statusError) {
+      setMeetingError(statusError);
       return;
     }
     setSavingMeeting(true);
@@ -178,7 +194,11 @@ export default function MeetingDetailPage() {
           meeting_date: meetingDateTime,
         }),
       });
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setMeetingError(data.message || "Something went wrong while saving. Please try again.");
+        return;
+      }
       await loadMeeting();
       setEditingMeeting(false);
     } catch (e) {
@@ -337,7 +357,8 @@ export default function MeetingDetailPage() {
               <select
                 value={draft.status}
                 onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value as MeetingStatus }))}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                aria-invalid={!!(statusError)}
+                className={`w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line) ${statusError ? fieldErrorBorder : ""}`}
               >
                 {MEETING_STATUSES.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -345,6 +366,7 @@ export default function MeetingDetailPage() {
                   </option>
                 ))}
               </select>
+              <FieldError message={statusError} />
             </div>
             <div>
               <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
@@ -509,6 +531,7 @@ export default function MeetingDetailPage() {
                 </div>
               )}
             </div>
+            <FieldError message={minutesError} />
 
             {editingMinutes ? (
               <textarea
