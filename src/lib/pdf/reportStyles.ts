@@ -1,11 +1,12 @@
+// FILE: src/lib/pdf/reportStyles.ts
 // Shared @react-pdf/renderer styles for report PDFs, matching the app's
 // brand tokens (blue accent, gray text scale) so generated documents feel
 // consistent with the on-screen UI.
 import { StyleSheet, Font } from "@react-pdf/renderer";
 
 export const COLORS = {
-  blue: "#3B82F6",
-  blueDark: "#1D4ED8",
+  blue: "#2348B0",
+  blueDark: "#1A3A8F",
   ink: "#1F2937",
   gray: "#6B7280",
   grayLight: "#9CA3AF",
@@ -42,9 +43,11 @@ export const reportStyles = StyleSheet.create({
     marginBottom: 6,
     color: COLORS.ink,
   },
-  statRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
+  // Wraps to a second row when a report has more than four headline figures.
+  statRow: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
   statBox: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: "22%",
     border: `1 solid ${COLORS.border}`,
     borderRadius: 6,
     padding: 10,

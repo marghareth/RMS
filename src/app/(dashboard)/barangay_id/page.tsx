@@ -28,6 +28,15 @@ import {
 import { useBarangayInfo } from "@/lib/hooks/useBarangayInfo";
 import { useCan } from "@/lib/hooks/useCan";
 
+/** Tells the Processing Time report this document was printed (only the first time counts). */
+function markPrinted(kind: "certificate" | "barangay-id", id: number) {
+  fetch("/api/timing/printed", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind, id }),
+  }).catch(() => {});
+}
+
 export default function BarangayIdListPage() {
   const can = useCan();
   const router = useRouter();
@@ -177,7 +186,10 @@ export default function BarangayIdListPage() {
                     /api/pdf/barangay-id/${selected.id}; the on-screen card is
                     printed directly for now. */}
                 <button
-                  onClick={() => window.print()}
+                  onClick={() => {
+                    markPrinted("barangay-id", selected.id);
+                    window.print();
+                  }}
                   className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover) print:hidden"
                 >
                   <Printer size={14} />

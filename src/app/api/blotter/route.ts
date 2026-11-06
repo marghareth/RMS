@@ -3,6 +3,7 @@ import type { Prisma, BlotterStatus } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
+import { formOpenedAt } from "@/lib/process-timing";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { blotterCreateSchema, paginationSchema } from "@/lib/validations";
@@ -70,7 +71,9 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("blotter:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = blotterCreateSchema.parse(await req.json());
+  const raw = await req.json();
+  const body = blotterCreateSchema.parse(raw);
+  const form_opened_at = formOpenedAt(raw);
   // Dates and amounts have to make sense together (src/lib/form-rules.ts).
   throwIfProblems(blotterProblems(body));
 
@@ -93,6 +96,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       incident_date: body.incident_date,
       incident_type: body.incident_type,
       hearing_date: body.hearing_date ?? null,
+      form_opened_at,
     },
   });
 

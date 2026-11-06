@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, IdCard, Info } from "lucide-react";
 import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPicker";
+import RequestSummaryDialog from "@/components/shared/RequestSummaryDialog";
+import { useFormTimer } from "@/lib/hooks/useFormTimer";
 
 function fullName(r: PickedResident) {
   const ext = r.name_extension ? ` ${r.name_extension}` : "";
@@ -18,35 +20,48 @@ export default function NewBarangayIdPage() {
   const [resident, setResident] = useState<PickedResident | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Review step (Nov 2026): "review" before saving, "done" with the ID number after.
+  const [summary, setSummary] = useState<"review" | "done" | null>(null);
+  const [issued, setIssued] = useState<{ id: number; number: string } | null>(null);
+  const [saveError, setSaveError] = useState("");
+  // How long this form was open, for the Processing Time report.
+  const timer = useFormTimer();
 
   // Preview of the auto-generated ID number (the real number is assigned
   // server-side by generateIdNumber() in POST /api/barangay-id).
   const previewIdNumber = `BID-${new Date().getFullYear()}-XXXXXX`;
 
-  async function handleSubmit() {
+  function handleSubmit() {
     setError("");
     if (!resident) {
       setError("Please select a resident.");
       return;
     }
+    setSaveError("");
+    setSummary("review");
+  }
 
+  async function confirmSubmit() {
+    if (!resident) return;
+    setSaveError("");
     setSubmitting(true);
     try {
       const res = await fetch("/api/barangay-id", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ resident_id: resident.id }),
+        body: JSON.stringify({ resident_id: resident.id, form_seconds: timer.seconds() }),
       });
       const data = await res.json();
       if (!res.ok) {
         // Server returns e.g. DUPLICATE_ID with a human-readable message
-        setError(data.message || data.error || "Failed to issue barangay ID.");
+        setSaveError(data.message || data.error || "Failed to issue barangay ID.");
         return;
       }
-      router.push("/barangay-id");
+      setIssued({ id: data.id, number: data.id_number ?? "" });
+      setSummary("done");
     } catch (e) {
       console.error(e);
-      setError("Something went wrong while saving. Please try again.");
+      setSaveError("Something went wrong while saving. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -54,6 +69,39 @@ export default function NewBarangayIdPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
+      <RequestSummaryDialog
+        open={summary !== null}
+        mode={summary ?? "review"}
+        title="Barangay ID issuance"
+        rows={[
+          { label: "Resident", value: resident ? fullName(resident) : "" },
+          { label: "Sex", value: resident?.sex },
+          { label: "Civil status", value: resident?.civil_status },
+          { label: "Purok", value: resident?.purok?.name },
+          { label: "Address", value: resident?.household?.address },
+        ]}
+        reference={issued?.number ? { label: "ID No.", value: issued.number } : undefined}
+        note={
+          summary === "done"
+            ? "The ID card itself is printed from the Barangay ID list."
+            : "These details come from the resident's profile. If something is wrong, fix the profile first."
+        }
+        error={saveError}
+        busy={submitting}
+        onEdit={() => setSummary(null)}
+        onConfirm={confirmSubmit}
+        confirmLabel="Issue ID"
+        slipHref={issued ? `/api/pdf/slip/barangay-id/${issued.id}` : undefined}
+        onDone={() => router.push("/barangay-id")}
+        doneLabel="Back to Barangay IDs"
+        onAnother={() => {
+          setSummary(null);
+          setIssued(null);
+          setResident(null);
+          timer.restart();
+        }}
+        anotherLabel="Issue another"
+      />
       <button
         onClick={() => router.push("/barangay-id")}
         className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"

@@ -3,6 +3,7 @@ import type { Prisma, CertificateType, RequestStatus, PaymentStatus } from "@pri
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
+import { formOpenedAt } from "@/lib/process-timing";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { certificateCreateSchema, paginationSchema } from "@/lib/validations";
@@ -112,7 +113,9 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("certificates:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = certificateCreateSchema.parse(await req.json());
+  const raw = await req.json();
+  const body = certificateCreateSchema.parse(raw);
+  const form_opened_at = formOpenedAt(raw);
 
   // 6-month residency check
   if (body.resident_id) {
@@ -183,6 +186,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       flagged_manual: body.flagged_manual ?? false,
       manual_name: body.manual_name ?? null,
       manual_address: body.manual_address ?? null,
+      form_opened_at,
       // status/payment_status/requested_at all take their schema defaults
       // (PENDING/PENDING/now()) — a new request always starts in the queue.
     },

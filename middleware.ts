@@ -92,6 +92,9 @@ export default withAuth(
         // "Forgot password?" on the login page — the person isn't signed in.
         // It only ever files a request for an admin to review.
         if (req.nextUrl.pathname.startsWith("/api/forgot-password")) return true;
+        // The barangay seal for the login page (Nov 2026). Serves only that
+        // one image; it's printed on every certificate anyway.
+        if (req.nextUrl.pathname === "/api/branding/logo") return true;
         // `invalid` is set by the jwt callback when the account has been
         // deleted or deactivated since the token was issued.
         return !!token && !token.invalid;
@@ -105,9 +108,9 @@ export default withAuth(
 
 export const config = {
   // Protects everything except: /login, /verify, /api/auth/*, /api/verify,
-  // /api/ping, static assets, and Next.js internals. Add more public
+  // /api/ping, /api/forgot-password, /api/branding/logo, static assets, and Next.js internals. Add more public
   // paths here if needed.
   matcher: [
-    "/((?!login|verify|api/auth|api/verify|api/ping|api/forgot-password|_next/static|_next/image|favicon.ico).*)",
+    "/((?!login|verify|api/auth|api/verify|api/ping|api/forgot-password|api/branding/logo|_next/static|_next/image|favicon.ico).*)",
   ],
 };

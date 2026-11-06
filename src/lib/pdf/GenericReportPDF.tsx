@@ -4,18 +4,24 @@
 // the same visual language as PopulationReportPDF (see reportStyles.ts) so
 // every generated report in the app looks consistent, without needing a
 // bespoke React component per report type.
-import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Font } from "@react-pdf/renderer";
+
+// Wrap whole words only ("Clearance", not "Clear-ance").
+Font.registerHyphenationCallback((word) => [word]);
 import { reportStyles as s } from "./reportStyles";
 
 export interface StatItem {
   label: string;
   value: string;
+  hint?: string;
 }
 
 export interface TableSection {
   title: string;
   columns: { header: string; align?: "left" | "right" }[];
   rows: string[][];
+  /** Small print under the table, e.g. "Showing the latest 100 of 412." */
+  note?: string;
 }
 
 interface GenericReportPDFProps {
@@ -67,6 +73,7 @@ export default function GenericReportPDF({
               <View key={st.label} style={s.statBox}>
                 <Text style={s.statValue}>{st.value}</Text>
                 <Text style={s.statLabel}>{st.label}</Text>
+                {st.hint ? <Text style={{ fontSize: 7, color: "#9CA3AF", marginTop: 2 }}>{st.hint}</Text> : null}
               </View>
             ))}
           </View>
@@ -74,7 +81,10 @@ export default function GenericReportPDF({
 
         {/* Tables */}
         {tables.map((table) => (
-          <View key={table.title} style={s.section} wrap={false}>
+          // Short tables stay together on one page; long ones are allowed to
+          // continue onto the next page (wrap={false} on a table taller than
+          // a page used to push it off the bottom).
+          <View key={table.title} style={s.section} wrap={table.rows.length > 15}>
             <Text style={s.sectionTitle}>{table.title}</Text>
             <View style={s.table}>
               <View style={s.tableHeaderRow}>
@@ -109,6 +119,7 @@ export default function GenericReportPDF({
                 ))
               )}
             </View>
+            {table.note ? <Text style={{ fontSize: 7, color: "#9CA3AF", marginTop: 3 }}>{table.note}</Text> : null}
           </View>
         ))}
 

@@ -1,26 +1,36 @@
 // FILE: src/app/(dashboard)/certificates/[id]/preview/page.tsx
+//
+// Nov 2026: the page shows the actual PDF (GET /api/pdf/certificate/[id])
+// instead of an HTML look-alike, so what you see here is exactly what
+// prints and downloads: the full barangay format with logos, officials,
+// signatures and the verification QR. Print prints that PDF.
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Printer, Download, FileText, FileEdit, Pencil } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
-import {
-  CertificateMock,
-  residentFullName,
-  formatISODate,
-} from "@/lib/mock/certificates";
-import { renderTemplate, CertificateTemplateMock } from "@/lib/mock/certificateTemplates";
-import { useBarangayInfo } from "@/lib/hooks/useBarangayInfo";
+import { CertificateMock, residentFullName } from "@/lib/mock/certificates";
+import { CertificateTemplateMock } from "@/lib/mock/certificateTemplates";
 import { useCan } from "@/lib/hooks/useCan";
+
+/** Tells the Processing Time report this document was printed (only the first time counts). */
+function markPrinted(kind: "certificate" | "barangay-id", id: number) {
+  fetch("/api/timing/printed", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind, id }),
+  }).catch(() => {});
+}
 
 export default function CertificatePreviewPage() {
   const can = useCan();
   const router = useRouter();
   const params = useParams();
   const certId = Number(params.id);
-  // Real barangay + active captain from the database (never hardcoded).
-  const { barangay: BARANGAY, captain: CAPTAIN } = useBarangayInfo();
+  // Bumped after a correction is saved so the PDF reloads with it.
+  const [pdfVersion, setPdfVersion] = useState(0);
+  const pdfFrame = useRef<HTMLIFrameElement>(null);
 
   const [certificate, setCertificate] = useState<CertificateMock | null>(null);
   const [certLoading, setCertLoading] = useState(true);
@@ -103,52 +113,20 @@ export default function CertificatePreviewPage() {
   // or two before the real data arrived.
   const loading = certLoading || (certificate !== null && templateLoading);
 
-  const mergedValues = useMemo<Record<string, string>>(() => {
-    if (!certificate) {
-      return {
-        full_name: "",
-        address: "",
-        purpose: "",
-        captain_name: "",
-        captain_position: "",
-        barangay_name: "",
-        city: "",
-        province: "",
-        date_issued: "",
-      };
-    }
-    const name =
-      certificate.override_full_name ||
-      (certificate.resident
-        ? residentFullName(certificate.resident).toUpperCase()
-        : (certificate.manual_name ?? "").toUpperCase());
-    const address =
-      certificate.override_address ||
-      certificate.resident?.household?.address ||
-      certificate.manual_address ||
-      "this barangay";
-    return {
-      full_name: name,
-      address,
-      purpose: certificate.purpose,
-      captain_name: CAPTAIN.name,
-      captain_position: CAPTAIN.position,
-      barangay_name: BARANGAY.name,
-      city: BARANGAY.city,
-      province: BARANGAY.province,
-      date_issued: formatISODate(certificate.issued_at) ?? "",
-    };
-  }, [certificate, BARANGAY, CAPTAIN]);
-
-  const renderedTitle = template ? renderTemplate(template.title, mergedValues) : "";
-  const renderedBody = template ? renderTemplate(template.body, mergedValues) : "";
-  const renderedClosing = template ? renderTemplate(template.closing_line, mergedValues) : "";
-
   function handlePrint() {
-    window.print();
+    markPrinted("certificate", Number(certId));
+    // Print the PDF itself (same document as the download). If the browser
+    // won't print an embedded PDF, open it in a tab where it can.
+    try {
+      pdfFrame.current?.contentWindow?.focus();
+      pdfFrame.current?.contentWindow?.print();
+    } catch {
+      window.open(`/api/pdf/certificate/${certId}`, "_blank");
+    }
   }
 
   function handleDownloadPdf() {
+    markPrinted("certificate", Number(certId));
     // Renders the same template server-side via @react-pdf/renderer
     // (see src/lib/pdf.ts) and streams back a downloadable PDF file.
     window.open(`/api/pdf/certificate/${certId}`, "_blank");
@@ -222,6 +200,7 @@ export default function CertificatePreviewPage() {
       // into what we already have instead of replacing it.
       setCertificate((prev) => (prev ? { ...prev, ...data } : prev));
       setEditingOverride(false);
+      setPdfVersion((v) => v + 1);
     } catch (e) {
       console.error(e);
       setOverrideError("Something went wrong. Please try again.");
@@ -347,65 +326,20 @@ export default function CertificatePreviewPage() {
         </div>
       )}
 
-      {/* Printable document */}
-      <div data-tour="page-certificates-preview-document" className="mx-auto max-w-3xl rounded-xl border border-[#E9EAEC] bg-white p-12 shadow-sm print:border-none print:p-0 print:shadow-none">
-        {/* Letterhead */}
-        <div className="mb-8 flex flex-col items-center border-b-2 border-[#1F2937] pb-6 text-center">
-          <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-(--brand)">
-            <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8">
-              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" fill="white" />
-              <rect x="9" y="12" width="6" height="10" fill="#2348B0" />
-            </svg>
-          </div>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-[#6B7280]">
-            Republic of the Philippines
-          </p>
-          <p className="text-[11px] text-[#6B7280]">
-            {BARANGAY.province}, {BARANGAY.region}
-          </p>
-          <p className="text-[11px] text-[#6B7280]">City of {BARANGAY.city}</p>
-          <p className="mt-2 text-xl font-black uppercase tracking-wide text-[#1F2937]">
-            Office of the {BARANGAY.name}
-          </p>
-        </div>
-
-        {/* Title */}
-        <h2 className="mb-8 text-center text-lg font-black uppercase tracking-widest text-[#1F2937]">
-          {renderedTitle}
-        </h2>
-
-        {/* Body */}
-        <div className="space-y-5 text-[13px] leading-loose text-[#374151]">
-          <p>TO WHOM IT MAY CONCERN:</p>
-          <p className="indent-8 text-justify">{renderedBody}</p>
-          <p className="indent-8 text-justify">
-            This certification is being issued upon the request of the above-named person for the purpose of:
-          </p>
-          <p className="rounded-lg bg-[#F9FAFB] px-4 py-3 text-center font-semibold uppercase text-[#1F2937]">
-            {certificate.purpose}
-          </p>
-          <p className="indent-8 text-justify">{renderedClosing}</p>
-        </div>
-
-        {/* Signatory */}
-        <div className="mt-16 flex justify-end">
-          <div className="text-center">
-            <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937]">
-              {CAPTAIN.name}
-            </p>
-            <div className="mt-1 w-56 border-t border-[#1F2937] pt-1">
-              <p className="text-[11px] text-[#6B7280]">{CAPTAIN.position}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer meta */}
-        <div className="mt-10 flex items-center justify-between border-t border-[#F4F5F7] pt-4 text-[10px] text-[#9CA3AF]">
-          <span>Certificate No. {certificate.certificate_no}</span>
-          <span>Applicant: {applicantName}</span>
-          {certificate.flagged_manual && <span className="font-semibold text-[#D97706]">Walk-in / Not Yet in RBI</span>}
-        </div>
+      {/* The certificate exactly as it prints */}
+      <div data-tour="page-certificates-preview-document" className="mx-auto max-w-4xl overflow-hidden rounded-xl border border-[#E9EAEC] bg-[#525659] shadow-sm dark:border-[#262626]">
+        <iframe
+          key={pdfVersion}
+          ref={pdfFrame}
+          src={`/api/pdf/certificate/${certId}?v=${pdfVersion}#view=FitH&toolbar=0`}
+          title={`Certificate ${certificate.certificate_no}`}
+          className="block h-[calc(100vh-180px)] min-h-180 w-full"
+        />
       </div>
+      <p className="mx-auto mt-2 max-w-4xl text-[11px] text-[#9CA3AF] print:hidden">
+        Applicant: {applicantName} · Certificate No. {certificate.certificate_no}
+        {certificate.flagged_manual ? " · Walk-in, not yet in the RBI" : ""}
+      </p>
     </div>
   );
 }

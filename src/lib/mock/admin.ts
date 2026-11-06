@@ -44,6 +44,9 @@ export interface GeneralSettings {
   contact_email: string;
   captain_override_name: string;
   captain_override_position: string;
+  /** Seals printed on certificates, as PNG/JPEG data URLs ("" when not set). */
+  logo_barangay: string;
+  logo_city: string;
 }
 
 

@@ -12,6 +12,7 @@ import GenericReportPDF, { StatItem, TableSection } from "@/lib/pdf/GenericRepor
 import { getBarangayInfo } from "@/lib/barangay-info";
 import { withErrorHandling } from "@/lib/api-handler";
 import { computeTurnaround, formatDuration } from "@/lib/turnaround";
+import { buildReport, isDefinedReport, readPeriod } from "@/lib/reports/definitions";
 
 // @react-pdf/renderer renders with a real Node canvas/font pipeline, which
 // isn't available on the Edge runtime — this route must run on Node.
@@ -40,6 +41,29 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { type: rawType } = await context!.params;
+
+  // The reports added in Nov 2026 (src/lib/reports/definitions.ts) build
+  // their own figures; the page shows exactly the same data.
+  if (isDefinedReport(rawType)) {
+    const period = readPeriod(new URL(req.url).searchParams);
+    const [report, info] = await Promise.all([buildReport(prisma, rawType, period), getBarangayInfo()]);
+    const pdf = await renderToBuffer(
+      createElement(GenericReportPDF, {
+        reportTitle: report.title,
+        periodLabel: report.periodLabel,
+        stats: report.stats,
+        tables: report.tables,
+        barangayName: info.name,
+        city: info.city,
+        province: info.province,
+      }) as Parameters<typeof renderToBuffer>[0]
+    );
+    const fileName = `${rawType}-report-${period.year}${period.month ? `-${String(period.month).padStart(2, "0")}` : ""}.pdf`;
+    return new NextResponse(new Uint8Array(pdf), {
+      headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="${fileName}"` },
+    });
+  }
+
   if (!REPORT_TYPES.includes(rawType as ReportType)) {
     return NextResponse.json({ error: "Invalid report type" }, { status: 400 });
   }

@@ -11,6 +11,8 @@ import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPick
 import { addWorkingDays } from "@/lib/mock/blotter";
 import { blotterProblems, problemFor } from "@/lib/form-rules";
 import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
+import RequestSummaryDialog from "@/components/shared/RequestSummaryDialog";
+import { useFormTimer } from "@/lib/hooks/useFormTimer";
 
 interface IncidentType {
   id: number;
@@ -66,6 +68,12 @@ export default function NewBlotterCasePage() {
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Review step (Nov 2026): "review" before saving, "done" with the case number after.
+  const [summary, setSummary] = useState<"review" | "done" | null>(null);
+  const [filed, setFiled] = useState<{ id: number; caseNo: string } | null>(null);
+  const [saveError, setSaveError] = useState("");
+  // How long this form was open, for the Processing Time report.
+  const timer = useFormTimer();
 
   // Only derive a suggestion when incidentDate is actually set — avoids
   // calling the impure Date.now() during render if the field is cleared.
@@ -86,15 +94,15 @@ export default function NewBlotterCasePage() {
     [incidentDate, hearingDate, complainantWalkIn, complainant, respondentWalkIn, respondent]
   );
 
-  async function handleSubmit() {
-    setError("");
+  const finalComplainantName = complainantWalkIn ? complainantName.trim() : complainant
+    ? `${complainant.lname}, ${complainant.fname}`
+    : "";
+  const finalRespondentName = respondentWalkIn ? respondentName.trim() : respondent
+    ? `${respondent.lname}, ${respondent.fname}`
+    : "";
 
-    const finalComplainantName = complainantWalkIn ? complainantName.trim() : complainant
-      ? `${complainant.lname}, ${complainant.fname}`
-      : "";
-    const finalRespondentName = respondentWalkIn ? respondentName.trim() : respondent
-      ? `${respondent.lname}, ${respondent.fname}`
-      : "";
+  function handleSubmit() {
+    setError("");
 
     if (!finalComplainantName) {
       setError("Please select or enter the complainant's name.");
@@ -120,7 +128,12 @@ export default function NewBlotterCasePage() {
       setError(problems[0].message);
       return;
     }
+    setSaveError("");
+    setSummary("review");
+  }
 
+  async function confirmSubmit() {
+    setSaveError("");
     setSubmitting(true);
     try {
       const res = await fetch("/api/blotter", {
@@ -137,24 +150,59 @@ export default function NewBlotterCasePage() {
           incident_date: incidentDate,
           incident_type: incidentType,
           hearing_date: hearingDate || undefined,
+          form_seconds: timer.seconds(),
         }),
       });
       const created = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(created.message || "Something went wrong while filing the case. Please try again.");
+        setSaveError(created.message || "Something went wrong while filing the case. Please try again.");
         return;
       }
-      router.push(`/blotter/${created.id}`);
+      setFiled({ id: created.id, caseNo: created.case_number ?? "" });
+      setSummary("done");
     } catch (e) {
       console.error(e);
-      setError("Something went wrong while filing the case. Please try again.");
+      setSaveError("Something went wrong while filing the case. Please try again.");
     } finally {
       setSubmitting(false);
     }
   }
 
+  const longDate = (iso: string) =>
+    iso ? new Date(`${iso}T00:00:00`).toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" }) : "";
+  const shortNarrative = narrative.trim().length > 220 ? `${narrative.trim().slice(0, 220)}…` : narrative.trim();
+
   return (
     <div className="mx-auto max-w-3xl">
+      <RequestSummaryDialog
+        open={summary !== null}
+        mode={summary ?? "review"}
+        title={`Blotter case${incidentType ? ` · ${incidentType}` : ""}`}
+        rows={[
+          { label: "Complainant", value: finalComplainantName + (complainantWalkIn ? " (non-resident)" : "") },
+          { label: "Contact no.", value: complainantContact.trim() },
+          { label: "Complainant address", value: complainantAddress.trim() },
+          { label: "Respondent", value: finalRespondentName + (respondentWalkIn ? " (non-resident)" : "") },
+          { label: "Incident type", value: incidentType },
+          { label: "Incident date", value: longDate(incidentDate) },
+          { label: "Hearing date", value: hearingDate ? longDate(hearingDate) : "To be scheduled" },
+          { label: "Narrative", value: shortNarrative },
+        ]}
+        reference={filed?.caseNo ? { label: "Case No.", value: filed.caseNo } : undefined}
+        note={
+          summary === "done"
+            ? "Give the complainant the slip. They bring it to the hearing."
+            : "Once filed, the case number can't be changed. Check both names before submitting."
+        }
+        error={saveError}
+        busy={submitting}
+        onEdit={() => setSummary(null)}
+        onConfirm={confirmSubmit}
+        confirmLabel="File case"
+        slipHref={filed ? `/api/pdf/slip/blotter/${filed.id}` : undefined}
+        onDone={() => filed && router.push(`/blotter/${filed.id}`)}
+        doneLabel="Open case"
+      />
       <button
         onClick={() => router.push("/blotter")}
         className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"

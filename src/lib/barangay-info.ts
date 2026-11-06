@@ -35,6 +35,12 @@ const SETTING_KEYS = [
   "region",
   "captain_override_name",
   "captain_override_position",
+  // Older key names some databases (and the seed) use for the same things.
+  "municipality",
+  "address",
+  "contact_phone",
+  "contact_number",
+  "contact_email",
 ] as const;
 
 async function loadSettings(): Promise<Record<string, string>> {
@@ -55,7 +61,9 @@ export async function getBarangayInfo(): Promise<BarangayInfo> {
   const s = await loadSettings();
   return {
     name: s.barangay_name ?? "",
-    city: s.city ?? "",
+    // BUGFIX: the seed (and older setups) store the city as "municipality",
+    // so certificates printed "City of " with nothing after it.
+    city: s.city || s.municipality || "",
     province: s.province ?? "",
     region: s.region ?? "",
   };
@@ -91,4 +99,68 @@ export async function getActiveCaptain(): Promise<ActiveCaptain> {
 export async function getBarangayContext(): Promise<{ barangay: BarangayInfo; captain: ActiveCaptain }> {
   const [barangay, captain] = await Promise.all([getBarangayInfo(), getActiveCaptain()]);
   return { barangay, captain };
+}
+
+// ─── certificate letterhead (Nov 2026) ─────────────────────────────────────
+
+export interface LetterheadOfficial {
+  position: string;
+  name: string;
+}
+
+export interface Letterhead {
+  barangay: BarangayInfo & { address: string; contact: string; email: string };
+  captain: ActiveCaptain;
+  /** Active officials in the usual order: captain, kagawads, SK, secretary, treasurer, others. */
+  officials: LetterheadOfficial[];
+  /** PNG/JPEG data URLs uploaded in General Settings, or "" when not set. */
+  logos: { barangay: string; city: string };
+}
+
+/** Where a position goes in the officials column (lower first). */
+function positionRank(position: string): number {
+  const p = position.toLowerCase();
+  if (p.includes("punong") || p.includes("captain")) return 0;
+  if (p.includes("kagawad")) return 1;
+  if (p.startsWith("sk") || p.includes("sangguniang kabataan")) return 2;
+  if (p.includes("secretary")) return 3;
+  if (p.includes("treasurer")) return 4;
+  return 5;
+}
+
+/** Everything a certificate's letterhead needs, in one go. */
+export async function getLetterhead(): Promise<Letterhead> {
+  const [s, captain, officials, logos] = await Promise.all([
+    loadSettings(),
+    getActiveCaptain(),
+    prisma.brgyOfficial.findMany({
+      where: { is_active: true },
+      include: { resident: { select: { fname: true, mname: true, lname: true, name_extension: true } } },
+      orderBy: { term_start: "asc" },
+    }),
+    prisma.systemSetting.findMany({ where: { key: { in: ["logo_barangay", "logo_city"] } } }),
+  ]);
+  const logo = (key: string) => {
+    const v = logos.find((l: { key: string; value: string }) => l.key === key)?.value ?? "";
+    return /^data:image\/(png|jpe?g);base64,/.test(v) ? v : "";
+  };
+  return {
+    barangay: {
+      name: s.barangay_name ?? "",
+      city: s.city || s.municipality || "",
+      province: s.province ?? "",
+      region: s.region ?? "",
+      address: s.address ?? "",
+      contact: s.contact_phone || s.contact_number || "",
+      email: s.contact_email ?? "",
+    },
+    captain,
+    officials: officials
+      .map((o: { position: string; resident: { fname: string; mname: string | null; lname: string; name_extension: string | null } }) => ({
+        position: o.position,
+        name: signatoryName(o.resident),
+      }))
+      .sort((a: LetterheadOfficial, b: LetterheadOfficial) => positionRank(a.position) - positionRank(b.position)),
+    logos: { barangay: logo("logo_barangay"), city: logo("logo_city") },
+  };
 }

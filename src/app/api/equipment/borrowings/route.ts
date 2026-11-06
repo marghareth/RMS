@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
+import { formOpenedAt } from "@/lib/process-timing";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling } from "@/lib/api-handler";
 import { equipmentBorrowCreateSchema } from "@/lib/validations";
@@ -41,7 +42,9 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("equipment:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = equipmentBorrowCreateSchema.parse(await req.json());
+  const raw = await req.json();
+  const body = equipmentBorrowCreateSchema.parse(raw);
+  const form_opened_at = formOpenedAt(raw);
   // Dates and amounts have to make sense together (src/lib/form-rules.ts).
   throwIfProblems(borrowProblems(body));
 
@@ -53,6 +56,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       date_borrowed: body.date_borrowed,
       expected_return: body.expected_return,
       recorded_by: parseInt(auth.session.user.id),
+      form_opened_at,
     },
     include: { equipment: true, resident: true },
   });

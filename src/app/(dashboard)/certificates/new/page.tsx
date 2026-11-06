@@ -17,6 +17,8 @@ import {
 import { useBarangayInfo } from "@/lib/hooks/useBarangayInfo";
 import { fieldProblems, problemFor } from "@/lib/form-rules";
 import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
+import RequestSummaryDialog from "@/components/shared/RequestSummaryDialog";
+import { useFormTimer } from "@/lib/hooks/useFormTimer";
 
 export default function NewCertificatePage() {
   const router = useRouter();
@@ -34,6 +36,12 @@ export default function NewCertificatePage() {
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Review step (Nov 2026): "review" before saving, "done" with the queue number after.
+  const [summary, setSummary] = useState<"review" | "done" | null>(null);
+  const [filed, setFiled] = useState<{ id: number; queue: string } | null>(null);
+  const [saveError, setSaveError] = useState("");
+  // How long this form was open, for the Processing Time report.
+  const timer = useFormTimer();
 
   // ── ELIGIBILITY HINTS ──────────────────────────────────────────────────
   // POST /api/certificates is the authority for both rules (6-month
@@ -88,7 +96,7 @@ export default function NewCertificatePage() {
     { field: "purpose", label: "Purpose", value: purpose, max: 300 },
   ]);
 
-  async function handleSubmit() {
+  function handleSubmit() {
     setError("");
     if (problems.length > 0) {
       setError(problems[0].message);
@@ -120,6 +128,12 @@ export default function NewCertificatePage() {
       return;
     }
 
+    setSaveError("");
+    setSummary("review");
+  }
+
+  async function confirmSubmit() {
+    setSaveError("");
     setSubmitting(true);
 
     try {
@@ -133,25 +147,71 @@ export default function NewCertificatePage() {
           flagged_manual: walkIn,
           manual_name: walkIn ? manualName : undefined,
           manual_address: walkIn ? manualAddress : undefined,
+          form_seconds: timer.seconds(),
         }),
       });
       const data = await res.json();
       if (!res.ok) {
         // Server returns RESIDENCY_CHECK_FAILED or DUPLICATE_CERT with a message
-        setError(data.message || "Something went wrong while filing the certificate request.");
+        setSaveError(data.message || "Something went wrong while filing the certificate request.");
         return;
       }
-      router.push(`/certificates/${data.id}/preview`);
+      setFiled({ id: data.id, queue: data.queue_number ?? "" });
+      setSummary("done");
     } catch (e) {
       console.error(e);
-      setError("Something went wrong. Please try again.");
+      setSaveError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
   }
 
+  const typeLabel = CERTIFICATE_TYPES.find((t) => t.value === certType)?.label ?? "Certificate";
+  const pickedName = resident
+    ? [resident.fname, resident.mname ? `${resident.mname[0]}.` : "", resident.lname, resident.name_extension ?? ""].filter(Boolean).join(" ")
+    : "";
+
+  function fileAnother() {
+    timer.restart();
+    setSummary(null);
+    setFiled(null);
+    setResident(null);
+    setManualName("");
+    setManualAddress("");
+    setCertType("");
+    setPurpose("");
+  }
+
   return (
     <div className="mx-auto max-w-2xl">
+      <RequestSummaryDialog
+        open={summary !== null}
+        mode={summary ?? "review"}
+        title={`${typeLabel} request`}
+        rows={[
+          { label: "Applicant", value: walkIn ? manualName.trim() : pickedName },
+          { label: "Entry", value: walkIn ? "Walk-in (not in resident records)" : "Registered resident" },
+          { label: "Address", value: walkIn ? manualAddress.trim() : resident?.household?.address || resident?.purok?.name },
+          { label: "Document", value: typeLabel },
+          { label: "Purpose", value: purpose.trim() },
+        ]}
+        reference={filed?.queue ? { label: "Queue No.", value: filed.queue } : undefined}
+        note={
+          summary === "done"
+            ? "Give the requester the slip. They show it when claiming the certificate."
+            : "Check the spelling of the name. It is printed on the certificate exactly as shown."
+        }
+        error={saveError}
+        busy={submitting}
+        onEdit={() => setSummary(null)}
+        onConfirm={confirmSubmit}
+        confirmLabel="Submit request"
+        slipHref={filed ? `/api/pdf/slip/certificate/${filed.id}` : undefined}
+        onDone={() => filed && router.push(`/certificates/${filed.id}/preview`)}
+        doneLabel="Open certificate"
+        onAnother={fileAnother}
+        anotherLabel="File another"
+      />
       <button
         onClick={() => router.push("/certificates")}
         className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"

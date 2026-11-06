@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Pencil, Archive, Plus, X, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Archive, Plus, X, Trash2, Printer } from "lucide-react";
+import PrintProfileDialog from "@/components/residents/PrintProfileDialog";
 import { lifeEventProblems, sectorAgeProblem, problemFor } from "@/lib/form-rules";
 import FieldError from "@/components/shared/FieldError";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
@@ -183,6 +184,7 @@ function Badge({ label, color = "blue" }: { label: string; color?: "blue" | "gre
 // ── MAIN PAGE ─────────────────────────────────────────────────────────────────
 export default function ResidentDetailPage() {
   const can = useCan();
+  const [printOpen, setPrintOpen] = useState(false);
   const router    = useRouter();
   const { id }    = useParams<{ id: string }>();
 
@@ -394,6 +396,13 @@ export default function ResidentDetailPage() {
 
   return (
     <div>
+      <PrintProfileDialog
+        residentId={resident.id}
+        residentName={displayName}
+        open={printOpen}
+        onClose={() => setPrintOpen(false)}
+        can={can}
+      />
       {/* Page header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -411,6 +420,12 @@ export default function ResidentDetailPage() {
         <div className="flex gap-2">
           {resident.is_archived && <Badge label="Archived" color="red" />}
           {resident.is_deceased && <Badge label="Deceased" color="red" />}
+          <button
+            onClick={() => setPrintOpen(true)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[#E9EAEC] dark:border-[#333333] text-[#374151] dark:text-[#D4D4D4] text-[12px] font-bold hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
+          >
+            <Printer size={13} /> Print profile
+          </button>
           {can("residents:write") && (<button
             onClick={() => router.push(`/residents/${id}/edit`)}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-(--brand) text-white text-[12px] font-bold hover:bg-(--brand-hover) transition"

@@ -1,3 +1,4 @@
+// FILE: src/lib/mock/certificateTemplates.ts
 // ── MOCK DATA ──────────────────────────────────────────────────────────────
 // Temporary in-memory (localStorage-backed) store standing in for the new
 // `CertificateTemplate` Prisma model while templating is being built. Mirrors
@@ -33,7 +34,14 @@ export const TEMPLATE_PLACEHOLDERS: { token: string; label: string; description:
   { token: "{{barangay_name}}", label: "Barangay Name", description: "Barangay name" },
   { token: "{{city}}", label: "City / Municipality", description: "City / Municipality" },
   { token: "{{province}}", label: "Province", description: "Province" },
-  { token: "{{date_issued}}", label: "Date Issued", description: "Date the certificate was issued" },
+  { token: "{{date_issued}}", label: "Date Issued", description: "e.g. 4th day of November, 2026" },
+  { token: "{{person_details}}", label: "Age, Status, Citizenship", description: "e.g. 34 years old, married, Filipino" },
+  { token: "{{age}}", label: "Age", description: "Age in years" },
+  { token: "{{civil_status}}", label: "Civil Status", description: "single, married, widowed…" },
+  { token: "{{sex}}", label: "Sex", description: "male or female" },
+  { token: "{{purok}}", label: "Purok", description: "Applicant's purok" },
+  { token: "{{resident_since}}", label: "Resident Since", description: "When they became a resident" },
+  { token: "{{he_she}}", label: "He / She", description: "he, she, or he/she when sex is not recorded" },
 ];
 
 // Extracted from the previous hardcoded `certificateBody()` switch-case, now

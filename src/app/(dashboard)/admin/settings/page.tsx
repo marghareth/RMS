@@ -9,6 +9,7 @@ import IncidentTypesManager from "@/components/shared/IncidentTypesManager";
 import { GeneralSettings } from "@/lib/mock/admin";
 import { useCan } from "@/lib/hooks/useCan";
 import { fieldProblems, problemFor } from "@/lib/form-rules";
+import { BRANDING_UPDATED } from "@/components/shared/BarangayLogo";
 import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 const DEFAULT_SETTINGS: GeneralSettings = {
@@ -22,7 +23,96 @@ const DEFAULT_SETTINGS: GeneralSettings = {
   contact_email: "",
   captain_override_name: "",
   captain_override_position: "",
+  logo_barangay: "",
+  logo_city: "",
 };
+
+/**
+ * Reads an image file and shrinks it to at most 400×400, as a PNG data URL,
+ * so a phone photo of the seal doesn't make every certificate several MB.
+ */
+async function toLogoDataUrl(file: File): Promise<string> {
+  if (!/^image\/(png|jpeg)$/.test(file.type)) throw new Error("Use a PNG or JPG image.");
+  if (file.size > 5 * 1024 * 1024) throw new Error("That image is over 5 MB. Use a smaller one.");
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error("Couldn't read that image."));
+      i.src = url;
+    });
+    const scale = Math.min(1, 400 / Math.max(img.width, img.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/png");
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+function LogoSlot({
+  label,
+  hint,
+  value,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  hint: string;
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+}) {
+  const [error, setError] = useState("");
+  return (
+    <div className="flex items-center gap-4">
+      <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-dashed border-[#D1D5DB] bg-[#F9FAFB] dark:border-[#404040] dark:bg-[#111111]">
+        {value ? (
+          // eslint-disable-next-line @next/next/no-img-element -- a data URL preview, nothing to optimise
+          <img src={value} alt={label} className="h-full w-full object-contain" />
+        ) : (
+          <span className="text-[10px] text-[#9CA3AF]">No logo</span>
+        )}
+      </div>
+      <div className="min-w-0">
+        <p className="text-[13px] font-semibold text-[#1F2937] dark:text-white">{label}</p>
+        <p className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{hint}</p>
+        {!disabled && (
+          <div className="mt-2 flex items-center gap-3">
+            <label className="cursor-pointer text-[12px] font-medium text-(--brand-fg) hover:text-(--brand-fg-strong)">
+              {value ? "Replace" : "Upload"}
+              <input
+                type="file"
+                accept="image/png,image/jpeg"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!file) return;
+                  try {
+                    setError("");
+                    onChange(await toLogoDataUrl(file));
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : "Couldn't use that image.");
+                  }
+                }}
+              />
+            </label>
+            {value && (
+              <button type="button" onClick={() => onChange("")} className="text-[12px] text-[#6B7280] hover:text-[#1F2937] dark:text-[#A3A3A3] dark:hover:text-white">
+                Remove
+              </button>
+            )}
+          </div>
+        )}
+        <FieldError message={error} />
+      </div>
+    </div>
+  );
+}
 
 function Field({
   label,
@@ -72,7 +162,14 @@ export default function GeneralSettingsPage() {
       try {
         const res = await fetch("/api/settings");
         const data = await res.json();
-        setSettings({ ...DEFAULT_SETTINGS, ...data });
+        // Older setups (and the seed) store some of these under other key names.
+        setSettings({
+          ...DEFAULT_SETTINGS,
+          ...data,
+          city: data.city || data.municipality || "",
+          postal_code: data.postal_code || data.zip_code || "",
+          contact_phone: data.contact_phone || data.contact_number || "",
+        });
       } catch (e) {
         console.error(e);
       } finally {
@@ -123,6 +220,8 @@ export default function GeneralSettingsPage() {
       }
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+      // The sidebar logo (BarangayLogo) reloads without a page refresh.
+      window.dispatchEvent(new Event(BRANDING_UPDATED));
     } catch (e) {
       console.error(e);
       // It used to fail without telling anyone.
@@ -188,6 +287,22 @@ export default function GeneralSettingsPage() {
             <Field label="Contact Phone" value={settings.contact_phone} onChange={(v) => update("contact_phone", v)} placeholder="09XX-XXX-XXXX" error={problemFor(problems, "contact_phone")} />
             <Field label="Contact Email" value={settings.contact_email} onChange={(v) => update("contact_email", v)} placeholder="barangay@email.gov.ph" error={problemFor(problems, "contact_email")} />
           </div>
+        </div>
+
+        {/* Barangay logo: certificates, slips, sidebar and login page */}
+        <div className="rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] p-5">
+          <p className="mb-1 text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Barangay Logo</p>
+          <p className="mb-4 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
+            Shown at the top left of certificates and request slips, and in the sidebar and login page. Until one is uploaded, those
+            places show the barangay name only. PNG or JPG; a square image with a transparent background looks best.
+          </p>
+          <LogoSlot
+            label="Barangay seal"
+            hint="Saved when you click Save Settings."
+            value={settings.logo_barangay}
+            onChange={(v) => update("logo_barangay", v)}
+            disabled={!can("settings:write")}
+          />
         </div>
 
         {/* Certificate Signatory Override */}
