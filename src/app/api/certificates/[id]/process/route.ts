@@ -44,6 +44,8 @@ export const POST = withErrorHandling(async (req: NextRequest, context) => {
       // is what the certificate PDF and audit trail treat as the true
       // "date issued", not creation time.
       issued_at: body.status === "RELEASED" ? new Date() : undefined,
+      // Processing time: when work on it started (Nov 2026).
+      processing_started_at: body.status === "PROCESSING" ? new Date() : undefined,
     },
   });
 

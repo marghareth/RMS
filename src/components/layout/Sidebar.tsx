@@ -54,6 +54,7 @@ import NavItem from "./NavItem";
 import NavGroup from "./NavGroup";
 import { hasPermission } from "@/lib/permission";
 import { canAccessRoute } from "@/lib/route-permissions";
+import BarangayLogo from "@/components/shared/BarangayLogo";
 
 type Child = {
   label: string;
@@ -364,13 +365,18 @@ export default function Sidebar({
         } ${className}`}
       >
         <div data-tour="sidebar-logo" className="flex h-15 shrink-0 items-center gap-2.5 border-b border-(--nav-border) px-4">
-          <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 shrink-0 text-(--nav-logo)">
-            <path d="M12 2.6 20.2 8v1.5H3.8V8L12 2.6Z" fill="currentColor" />
-            <rect x="5.4" y="10.6" width="2.3" height="7.4" fill="currentColor" />
-            <rect x="10.85" y="10.6" width="2.3" height="7.4" fill="currentColor" />
-            <rect x="16.3" y="10.6" width="2.3" height="7.4" fill="currentColor" />
-            <rect x="3.4" y="19.2" width="17.2" height="2.2" rx="1" fill="currentColor" />
-          </svg>
+          <BarangayLogo
+            className="h-8 w-8"
+            fallback={
+              <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 shrink-0 text-(--nav-logo)">
+                <path d="M12 2.6 20.2 8v1.5H3.8V8L12 2.6Z" fill="currentColor" />
+                <rect x="5.4" y="10.6" width="2.3" height="7.4" fill="currentColor" />
+                <rect x="10.85" y="10.6" width="2.3" height="7.4" fill="currentColor" />
+                <rect x="16.3" y="10.6" width="2.3" height="7.4" fill="currentColor" />
+                <rect x="3.4" y="19.2" width="17.2" height="2.2" rx="1" fill="currentColor" />
+              </svg>
+            }
+          />
           <div className="min-w-0">
             <b className="block truncate text-[13px] font-semibold text-(--nav-text-strong)">Barangay RMS</b>
             <small className="block truncate text-[10.5px] text-(--nav-text-muted)">

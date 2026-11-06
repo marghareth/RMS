@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
+import { formOpenedAt } from "@/lib/process-timing";
 import { logAudit } from "@/lib/audit";
 import { withErrorHandling, ApiError } from "@/lib/api-handler";
 import { barangayIdCreateSchema, paginationSchema } from "@/lib/validations";
@@ -48,7 +49,9 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("barangay_id:write", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const body = barangayIdCreateSchema.parse(await req.json());
+  const raw = await req.json();
+  const body = barangayIdCreateSchema.parse(raw);
+  const form_opened_at = formOpenedAt(raw);
 
   const resident = await prisma.resident.findUnique({ where: { id: body.resident_id } });
   if (!resident) {
@@ -76,6 +79,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       resident_id: body.resident_id,
       id_number,
       issued_by: parseInt(auth.session.user.id),
+      form_opened_at,
     },
     include: {
       resident: { include: { purok: true, household: true } },

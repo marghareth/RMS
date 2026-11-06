@@ -5,8 +5,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Users, FileText, Shield, Wallet,
-  Package, BookOpen,
-  ChevronRight, Download, AlertTriangle, RefreshCw,
+  Package, BookOpen, ClipboardList, Home, HeartPulse, Cross, UserCheck,
+  DoorOpen, CalendarDays, IdCard, Landmark,
+  ChevronRight, Download, AlertTriangle, RefreshCw, Timer,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -229,6 +230,20 @@ export default function ReportsPage() {
     setExporting(false);
   }
 
+  // Reports added Nov 2026 (src/lib/reports/definitions.ts, page at /reports/[type]).
+  const MORE_REPORTS = [
+    { key: "requests", label: "Summary of Requests", description: "Documents, IDs, cases and borrowings requested, by type and status", icon: ClipboardList, accent: "text-[#2348B0] dark:text-[#8FB0FF]", stat: "By month or year" },
+    { key: "households", label: "Households Report", description: "Households by purok, size, housing and utilities", icon: Home, accent: "text-[#3E5C76] dark:text-[#8FB0CC]", stat: "As of today" },
+    { key: "health", label: "Health Report", description: "Health records and vaccinations", icon: HeartPulse, accent: "text-[#B3261E] dark:text-[#F87171]", stat: "By month or year" },
+    { key: "deceased", label: "Deaths Report", description: "Recorded deaths by cause, age and purok", icon: Cross, accent: "text-[#6B7280] dark:text-[#A3A3A3]", stat: "By month or year" },
+    { key: "officials", label: "Officials Report", description: "Positions, terms and terms ending soon", icon: UserCheck, accent: "text-[#0B6E4F] dark:text-[#34A37A]", stat: "As of today" },
+    { key: "visitors", label: "Visitor Log Report", description: "Visits by purpose, office and time of day", icon: DoorOpen, accent: "text-[#B45309] dark:text-[#FBBF24]", stat: "By month or year" },
+    { key: "meetings", label: "Meetings Report", description: "Sessions, assemblies, agenda and minutes", icon: CalendarDays, accent: "text-[#6D4AFF] dark:text-[#A78BFA]", stat: "By month or year" },
+    { key: "barangay-ids", label: "Barangay ID Report", description: "IDs issued by month, purok and issuer", icon: IdCard, accent: "text-[#0E7490] dark:text-[#22D3EE]", stat: "By month or year" },
+    { key: "finance", label: "Barangay Finance Report", description: "Revenues, disbursements, appropriations, fund balances", icon: Landmark, accent: "text-[#9D174D] dark:text-[#F472B6]", stat: "By month or year" },
+    { key: "processing", label: "Processing Time", description: "How long certificates, IDs, cases and borrowings take, step by step", icon: Timer, accent: "text-[#047857] dark:text-[#34D399]", stat: "By month or year" },
+  ];
+
   const REPORT_MODULES = [
     {
       key: "population", label: "Population Report",
@@ -326,6 +341,15 @@ export default function ReportsPage() {
         <p className="text-[11px] font-bold uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3] mb-3">Report Modules</p>
         <div data-tour="page-reports-modules" className="grid grid-cols-3 gap-4">
           {REPORT_MODULES.map(mod => (
+            <ModuleCard key={mod.key} mod={mod} onClick={() => router.push(`/reports/${mod.key}`)} />
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3] mb-3">More Reports</p>
+        <div className="grid grid-cols-3 gap-4">
+          {MORE_REPORTS.map(mod => (
             <ModuleCard key={mod.key} mod={mod} onClick={() => router.push(`/reports/${mod.key}`)} />
           ))}
         </div>

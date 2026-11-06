@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Package, Save, User, CalendarDays } from "lucide-react";
 import { borrowProblems, problemFor } from "@/lib/form-rules";
 import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
+import RequestSummaryDialog from "@/components/shared/RequestSummaryDialog";
+import { useFormTimer } from "@/lib/hooks/useFormTimer";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 interface Equipment { id: number; name: string; quantity: number; status: string }
@@ -124,6 +126,12 @@ function BorrowEquipmentPageInner() {
 
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState("");
+  // Review step (Nov 2026): "review" before saving, "done" with the slip after.
+  const [summary, setSummary] = useState<"review" | "done" | null>(null);
+  const [savedId, setSavedId] = useState<number | null>(null);
+  const [saveError, setSaveError] = useState("");
+  // How long this form was open, for the Processing Time report.
+  const timer = useFormTimer();
 
   const set = (k: keyof BorrowForm, v: string) => setForm(p => ({ ...p, [k]: v }));
 
@@ -164,7 +172,7 @@ function BorrowEquipmentPageInner() {
   // Expected return on or after the borrow date (src/lib/form-rules.ts; the API checks too).
   const borrowErrors = borrowProblems(form);
 
-  async function handleSave() {
+  function handleSave() {
     if (!form.equipment_id || !form.borrower_name || !form.date_borrowed || !form.expected_return) {
       setError("Please fill in all required fields.");
       return;
@@ -173,8 +181,14 @@ function BorrowEquipmentPageInner() {
       setError(borrowErrors[0].message);
       return;
     }
-    setSaving(true);
     setError("");
+    setSaveError("");
+    setSummary("review");
+  }
+
+  async function confirmSave() {
+    setSaving(true);
+    setSaveError("");
     try {
       const res = await fetch("/api/equipment/borrowings", {
         method:  "POST",
@@ -185,15 +199,17 @@ function BorrowEquipmentPageInner() {
           resident_id:     form.resident_id ? parseInt(form.resident_id) : null,
           date_borrowed:   form.date_borrowed,
           expected_return: form.expected_return,
+          form_seconds: timer.seconds(),
         }),
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Failed to record borrowing");
       }
-      router.push("/equipment");
+      setSavedId(typeof data.id === "number" ? data.id : null);
+      setSummary("done");
     } catch (e: any) {
-      setError(e.message || "Something went wrong.");
+      setSaveError(e.message || "Something went wrong.");
     } finally {
       setSaving(false);
     }
@@ -201,8 +217,37 @@ function BorrowEquipmentPageInner() {
 
   const isValid = form.equipment_id && form.borrower_name && form.date_borrowed && form.expected_return;
 
+  const longDate = (iso: string) =>
+    iso ? new Date(`${iso}T00:00:00`).toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" }) : "";
+
   return (
     <div className="max-w-2xl mx-auto">
+      <RequestSummaryDialog
+        open={summary !== null}
+        mode={summary ?? "review"}
+        title="Equipment borrowing"
+        rows={[
+          { label: "Equipment", value: selectedEquipment?.name },
+          { label: "Borrower", value: form.borrower_name.trim() },
+          { label: "Resident record", value: form.resident_id ? "Linked" : "Not linked (non-resident)" },
+          { label: "Date borrowed", value: longDate(form.date_borrowed) },
+          { label: "Return by", value: longDate(form.expected_return) },
+        ]}
+        reference={savedId ? { label: "Borrowing No.", value: `BRW-${String(savedId).padStart(5, "0")}` } : undefined}
+        note={
+          summary === "done"
+            ? "The borrower keeps the slip and returns it with the equipment."
+            : "Check the equipment's condition with the borrower before handing it over."
+        }
+        error={saveError}
+        busy={saving}
+        onEdit={() => setSummary(null)}
+        onConfirm={confirmSave}
+        confirmLabel="Record borrowing"
+        slipHref={savedId ? `/api/pdf/slip/borrowing/${savedId}` : undefined}
+        onDone={() => router.push("/equipment")}
+        doneLabel="Back to equipment"
+      />
 
       {/* ── Page header ── */}
       <div className="flex items-center gap-3 mb-6">

@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import BarangayLogo from "@/components/shared/BarangayLogo";
 
 // Small reusable brand mark — same house/flag glyph used in the sidebar
 // header (src/components/layout/Sidebar.tsx) so the login screen reads
@@ -181,7 +182,7 @@ function LoginForm() {
         <div className="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-[#12151C]/50 blur-3xl" />
 
         <div className="relative flex items-center gap-2.5">
-          <BrandMark className="h-7 w-7 shrink-0" fill="#FFFFFF" />
+          <BarangayLogo className="h-10 w-10 rounded-full bg-white p-0.5" fallback={<BrandMark className="h-7 w-7 shrink-0" fill="#FFFFFF" />} />
           <b className="block text-[15px] font-semibold leading-tight text-white">
             Barangay Records Management System
           </b>
@@ -203,7 +204,9 @@ function LoginForm() {
 
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-85">
-            <BrandMark className="mb-8 h-6 w-6 lg:hidden" />
+            <div className="mb-8 lg:hidden">
+              <BarangayLogo className="h-12 w-12" fallback={<BrandMark className="h-6 w-6" />} />
+            </div>
 
             <h1 className="text-[28px] font-bold leading-tight text-[#1F2937] dark:text-white">
               {step === "credentials" ? "Welcome back!" : step === "totp" ? "Enter your code" : "Forgot password?"}

@@ -313,6 +313,15 @@ model Certificate {
   status           RequestStatus   @default(PENDING)
   requested_at     DateTime        @default(now())
 
+  // ── Processing time (Nov 2026), for comparing against the manual process.
+  // Steps: form opened → requested_at (filed) → processing_started_at →
+  // issued_at (released). printed_at is the first time Print was used.
+  // Null on requests filed before this was added, or when the form sat
+  // open for more than 4 hours (see src/lib/process-timing.ts). ──
+  form_opened_at        DateTime?
+  processing_started_at DateTime?
+  printed_at            DateTime?
+
   resident Resident? @relation(fields: [resident_id], references: [id])
   issuer   User      @relation(fields: [issued_by], references: [id])
 }
@@ -377,6 +386,8 @@ model BlotterCase {
   status              BlotterStatus @default(FILED)
   escalated           Boolean       @default(false)
   created_at          DateTime      @default(now())
+  // Processing time (Nov 2026): when the filing form was opened.
+  form_opened_at      DateTime?
 
   complainant Resident?     @relation("Complainant", fields: [complainant_id], references: [id])
   respondent  Resident?     @relation("Respondent", fields: [respondent_id], references: [id])
@@ -540,6 +551,8 @@ model EquipmentBorrowing {
   is_overdue       Boolean  @default(false)
   recorded_by      Int
   created_at       DateTime @default(now())
+  // Processing time (Nov 2026): when the borrow form was opened.
+  form_opened_at   DateTime?
 
   equipment Equipment @relation(fields: [equipment_id], references: [id])
   resident  Resident? @relation(fields: [resident_id], references: [id])
@@ -605,6 +618,9 @@ model BarangayId {
   id_number   String   @unique
   issued_date DateTime @default(now())
   issued_by   Int
+  // Processing time (Nov 2026): when the Issue form was opened, and when the ID was first printed.
+  form_opened_at DateTime?
+  printed_at     DateTime?
 
   resident Resident @relation(fields: [resident_id], references: [id])
   issuer   User     @relation(fields: [issued_by], references: [id])
