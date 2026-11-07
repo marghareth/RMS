@@ -1,4 +1,4 @@
-/* src/app/globals.css */
+/* FILE: src/app/globals.css */
 @import "tailwindcss";
 
 /* Makes Tailwind's `dark:` utilities respond to a `.dark` class on <html>
@@ -7,7 +7,16 @@
    `prefers-color-scheme` media query, which is Tailwind v4's default.
    This is what lets the sun/moon toggle actually override the system
    setting. */
-@custom-variant dark (&:where(.dark, .dark *));
+/* PRINT (Nov 2026): `dark:` styles apply on screen only, so a page
+   printed while dark mode is on still comes out as dark text on white
+   paper instead of white text the printer can't show. */
+@custom-variant dark {
+  @media screen {
+    &:where(.dark, .dark *) {
+      @slot;
+    }
+  }
+}
 
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -99,6 +108,7 @@
    hex/Tailwind utility colors instead (most of the app today) won't be
    affected by this block and need their own `dark:` classes added
    separately. */
+@media screen {
 .dark {
   --color-primary: #3358c9;
   --color-primary-hover: #4166d6;
@@ -153,6 +163,7 @@
 
   color-scheme: dark;
 }
+}
 
 *,
 *::before,
@@ -196,15 +207,102 @@ body {
     color-scheme: light;
   }
 
-  .dark select {
-    color-scheme: dark;
-    background-color: #171717;
-    color: #ffffff;
-    border-color: #333333;
+  @media screen {
+    .dark select {
+      color-scheme: dark;
+      background-color: #171717;
+      color: #ffffff;
+      border-color: #333333;
+    }
+
+    .dark select:disabled {
+      background-color: #1a1a1a;
+      color: #737373;
+    }
+  }
+}
+
+/* ─── PRINTING (Nov 2026) ─────────────────────────────────────────────
+   Before this there were no print rules at all, so a page's Print button
+   printed the whole app: the sidebar, the top bar, and only the part of
+   the page that fit on one screen (the dashboard shell is a fixed-height
+   box that scrolls inside itself). Now only the page content prints, at
+   its full length, in light colours.
+
+   The markers come from src/app/(dashboard)/layout.tsx:
+     data-print="hide"     sidebar and top bar — never printed
+     data-print="shell"    the full-screen frame — becomes normal flow
+     data-print="flow"     inner scrolling areas — unclipped
+     data-print="content"  the page itself — full width, no side padding
+   Individual pages hide their own buttons with Tailwind's `print:hidden`.
+
+   Documents with a fixed format (certificates, IDs, slips) print their
+   PDF instead of the page — see src/lib/print-pdf.ts. */
+@media print {
+  @page {
+    margin: 12mm;
   }
 
-  .dark select:disabled {
-    background-color: #1a1a1a;
-    color: #737373;
+  html,
+  body {
+    /* Dark mode sets a dark colour scheme on <html>, which would paint
+       the paper margins black. */
+    color-scheme: light !important;
+    background: #ffffff !important;
+    color: #111827;
+  }
+
+  [data-print="hide"] {
+    display: none !important;
+  }
+
+  [data-print="shell"],
+  [data-print="flow"] {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  [data-print="content"] {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Keep badge, chart and highlight colours instead of dropping them. */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Table rows and charts move to the next page whole rather than being
+     cut through the middle. (Whole cards aren't kept together — a tall
+     card would leave most of a page blank.) */
+  tr,
+  .recharts-wrapper {
+    break-inside: avoid;
+  }
+
+  /* "← Back to …" links mean nothing on paper. Matched by their arrow
+     icon so every page's back link is covered without marking each one. */
+  [data-print="content"] button:has(> svg.lucide-arrow-left),
+  [data-print="content"] a:has(> svg.lucide-arrow-left) {
+    display: none !important;
+  }
+
+  /* Charts are sized for the screen; let them shrink to the paper. */
+  .recharts-wrapper,
+  .recharts-surface {
+    max-width: 100% !important;
+  }
+  .recharts-surface {
+    height: auto;
+  }
+
+  /* No shadows on paper. */
+  [data-print="content"] * {
+    box-shadow: none !important;
   }
 }

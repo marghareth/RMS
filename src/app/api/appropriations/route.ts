@@ -15,6 +15,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
 
   const { searchParams } = new URL(req.url);
   const category = searchParams.get("category");
+  const subcategory = searchParams.get("subcategory");
   const status = searchParams.get("status");
   const fund_source_id = searchParams.get("fund_source_id");
   const search = searchParams.get("search") || "";
@@ -22,6 +23,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   const where: Prisma.AppropriationWhereInput = {
     AND: [
       category ? { category: category as AppropriationCategory } : {},
+      subcategory ? { subcategory } : {},
       status ? { status: status as AppropriationStatus } : {},
       fund_source_id ? { fund_source_id: parseInt(fund_source_id) } : {},
       search ? { item_name: { contains: search, mode: "insensitive" } } : {},
@@ -50,6 +52,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     data: {
       item_name: body.item_name,
       category: body.category,
+      subcategory: body.subcategory ?? null,
       appropriated_amount: body.appropriated_amount ?? 0,
       obligated_amount: body.obligated_amount ?? 0,
       disbursed_amount: body.disbursed_amount ?? 0,
@@ -66,7 +69,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     action: "CREATE",
     table_affected: "Appropriation",
     record_id: appropriation.id,
-    details: `Added appropriation: ${appropriation.item_name} (${appropriation.category})`,
+    details: `Added appropriation: ${appropriation.item_name} (${appropriation.category}${appropriation.subcategory ? ` › ${appropriation.subcategory}` : ""})`,
   });
 
   return NextResponse.json(appropriation, { status: 201 });

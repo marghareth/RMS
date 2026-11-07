@@ -1,7 +1,16 @@
 // FILE: src/app/(dashboard)/certificates/new/page.tsx
+//
+// PROCESS NOW (Nov 2026): when no other request is Pending, the form offers
+// two ways to save — "Process now" (skips Pending and starts it as
+// Processing, for applicants who can be served on the spot) and "Submit
+// request" (the usual: Pending in the Document Queue). While anyone is
+// waiting, only Submit request is offered so nobody is skipped; the API
+// enforces the same rule. The queue count is re-checked every 30 seconds
+// and again just before the summary opens. "What happens after you save"
+// (RequestFlowGuide) and the "How to use" guide explain the status flow.
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, FileText, User, AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import ResidentPicker, { PickedResident } from "@/components/shared/ResidentPicker";
@@ -19,6 +28,12 @@ import { fieldProblems, problemFor } from "@/lib/form-rules";
 import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 import RequestSummaryDialog from "@/components/shared/RequestSummaryDialog";
 import { useFormTimer } from "@/lib/hooks/useFormTimer";
+import RequestFlowGuide from "@/components/certificates/RequestFlowGuide";
+import PageTutorial from "@/components/shared/PageTutorial";
+import { DOCUMENT_TUTORIALS } from "@/lib/documentTutorials";
+
+// How often to re-check whether anyone is waiting in the queue.
+const QUEUE_POLL_MS = 30_000;
 
 export default function NewCertificatePage() {
   const router = useRouter();
@@ -42,6 +57,45 @@ export default function NewCertificatePage() {
   const [saveError, setSaveError] = useState("");
   // How long this form was open, for the Processing Time report.
   const timer = useFormTimer();
+
+  // ── PROCESS NOW ────────────────────────────────────────────────────────
+  // `waiting` = requests still PENDING (null until the first check comes
+  // back, or if it fails — then only Submit request is offered).
+  // `action` = which button opened the summary.
+  const [waiting, setWaiting] = useState<number | null>(null);
+  const [action, setAction] = useState<"request" | "process">("request");
+
+  const refreshQueue = useCallback(async (): Promise<number | null> => {
+    try {
+      const res = await fetch("/api/certificates?status=PENDING&limit=1");
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const total = typeof data?.total === "number" ? data.total : null;
+      setWaiting(total);
+      return total;
+    } catch {
+      setWaiting(null);
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    // Deferred so no setState runs synchronously in the effect body
+    // (react-hooks/set-state-in-effect), same as the rest of the app.
+    Promise.resolve().then(() => {
+      if (!cancelled) refreshQueue();
+    });
+    const id = window.setInterval(() => {
+      if (!cancelled) refreshQueue();
+    }, QUEUE_POLL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [refreshQueue]);
+
+  const canProcessNow = waiting === 0;
 
   // ── ELIGIBILITY HINTS ──────────────────────────────────────────────────
   // POST /api/certificates is the authority for both rules (6-month
@@ -96,7 +150,7 @@ export default function NewCertificatePage() {
     { field: "purpose", label: "Purpose", value: purpose, max: 300 },
   ]);
 
-  function handleSubmit() {
+  async function handleSubmit(chosen: "request" | "process") {
     setError("");
     if (problems.length > 0) {
       setError(problems[0].message);
@@ -128,6 +182,22 @@ export default function NewCertificatePage() {
       return;
     }
 
+    // Re-check the queue right before the summary, so "Process now" isn't
+    // offered on a count that's up to 30 seconds old.
+    let next = chosen;
+    if (chosen === "process") {
+      const latest = await refreshQueue();
+      if (latest !== 0) {
+        next = "request";
+        setError(
+          latest === null
+            ? "Couldn't check the queue just now, so this will be filed as a request."
+            : `${latest} ${latest === 1 ? "request is" : "requests are"} now waiting in the queue, so this will be filed as a request behind them.`
+        );
+      }
+    }
+
+    setAction(next);
     setSaveError("");
     setSummary("review");
   }
@@ -148,11 +218,21 @@ export default function NewCertificatePage() {
           manual_name: walkIn ? manualName : undefined,
           manual_address: walkIn ? manualAddress : undefined,
           form_seconds: timer.seconds(),
+          process_now: action === "process",
         }),
       });
       const data = await res.json();
       if (!res.ok) {
-        // Server returns RESIDENCY_CHECK_FAILED or DUPLICATE_CERT with a message
+        // Server returns RESIDENCY_CHECK_FAILED, DUPLICATE_CERT or
+        // QUEUE_NOT_EMPTY with a message.
+        if (data?.error === "QUEUE_NOT_EMPTY") {
+          // Someone filed a request while this summary was open. Switch
+          // this one to a normal request; staff confirm again.
+          setAction("request");
+          refreshQueue();
+          setSaveError(`${data.message} Click Submit request to file it in the queue.`);
+          return;
+        }
         setSaveError(data.message || "Something went wrong while filing the certificate request.");
         return;
       }
@@ -173,6 +253,8 @@ export default function NewCertificatePage() {
 
   function fileAnother() {
     timer.restart();
+    setAction("request");
+    refreshQueue();
     setSummary(null);
     setFiled(null);
     setResident(null);
@@ -196,19 +278,25 @@ export default function NewCertificatePage() {
           { label: "Purpose", value: purpose.trim() },
         ]}
         reference={filed?.queue ? { label: "Queue No.", value: filed.queue } : undefined}
+        reviewHeading={action === "process" ? "Review before processing" : "Review before submitting"}
+        doneHeading={action === "process" ? "Saved, now Processing" : "Request filed"}
         note={
           summary === "done"
-            ? "Give the requester the slip. They show it when claiming the certificate."
-            : "Check the spelling of the name. It is printed on the certificate exactly as shown."
+            ? action === "process"
+              ? "It skipped the queue and is now Processing. Print it, then click Mark as Released in the Document Queue when you hand it over."
+              : "Give the requester the slip. They show it when claiming the certificate. It stays Pending in the Document Queue until someone starts processing it."
+            : action === "process"
+              ? "This skips the queue and saves it as Processing so you can print it right away. Check the spelling of the name. It is printed on the certificate exactly as shown."
+              : "This files it as Pending in the Document Queue. Check the spelling of the name. It is printed on the certificate exactly as shown."
         }
         error={saveError}
         busy={submitting}
         onEdit={() => setSummary(null)}
         onConfirm={confirmSubmit}
-        confirmLabel="Submit request"
+        confirmLabel={action === "process" ? "Process now" : "Submit request"}
         slipHref={filed ? `/api/pdf/slip/certificate/${filed.id}` : undefined}
         onDone={() => filed && router.push(`/certificates/${filed.id}/preview`)}
-        doneLabel="Open certificate"
+        doneLabel={action === "process" ? "Print certificate" : "Open certificate"}
         onAnother={fileAnother}
         anotherLabel="File another"
       />
@@ -220,11 +308,14 @@ export default function NewCertificatePage() {
         Back to Certificates
       </button>
 
-      <div className="mb-5">
-        <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Request Certificate</h1>
-        <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-          Auto-fills from the residents profile. A certificate number will be generated automatically.
-        </p>
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Request Certificate</h1>
+          <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">
+            Auto-fills from the residents profile. A certificate number will be generated automatically.
+          </p>
+        </div>
+        <PageTutorial tutorial={DOCUMENT_TUTORIALS.certificatesNew} />
       </div>
 
       <div className="space-y-5">
@@ -374,22 +465,40 @@ export default function NewCertificatePage() {
           </div>
         </div>
 
+        <RequestFlowGuide waiting={waiting} />
+
         {error && <p className="rounded-lg bg-[#FEE2E2] dark:bg-red-500/15 px-4 py-3 text-[12px] text-[#DC2626] dark:text-[#F87171]">{error}</p>}
 
-        <div data-tour="page-certificates-new-save" className="flex items-center justify-end gap-3 pb-8">
+        <div data-tour="page-certificates-new-save" className="flex flex-wrap items-center justify-end gap-3 pb-8">
           <button
             onClick={() => router.push("/certificates")}
-            className="text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
+            className="mr-auto text-[12px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white sm:mr-1"
           >
             Cancel
           </button>
+          {/* With the queue empty, Process now is the main button and Submit
+              request the alternative; otherwise Submit request is the only one. */}
           <button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit("request")}
             disabled={submitting}
-            className="rounded-lg bg-(--brand) px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-60"
+            className={
+              canProcessNow
+                ? "rounded-lg border border-[#D1D5DB] dark:border-[#404040] bg-white dark:bg-[#171717] px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] disabled:opacity-60"
+                : "rounded-lg bg-(--brand) px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-60"
+            }
           >
-            {submitting ? "Submitting..." : "Submit Request"}
+            Submit Request
           </button>
+          {canProcessNow && (
+            <button
+              data-tour="page-certificates-new-process-now"
+              onClick={() => handleSubmit("process")}
+              disabled={submitting}
+              className="rounded-lg bg-(--brand) px-6 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-(--brand-hover) disabled:opacity-60"
+            >
+              Process Now
+            </button>
+          )}
         </div>
       </div>
     </div>

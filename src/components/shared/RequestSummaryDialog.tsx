@@ -10,6 +10,11 @@
 //
 // Used by certificate requests, Barangay ID issuance, blotter filing and
 // equipment borrowing.
+//
+// reviewHeading / doneHeading (Nov 2026) let a page replace "Review before
+// submitting" and "Request filed" — e.g. a certificate saved with Process
+// now isn't "filed" in the queue. Both default to the old wording, so
+// every other page is unchanged.
 "use client";
 
 import { useEffect } from "react";
@@ -28,6 +33,10 @@ interface Props {
   rows: SummaryRow[];
   /** Shown big on the "done" screen, e.g. { label: "Queue No.", value: "Q-2026-0214" }. */
   reference?: SummaryRow;
+  /** Replaces "Review before submitting" on the review screen. */
+  reviewHeading?: string;
+  /** Replaces "Request filed" on the done screen. */
+  doneHeading?: string;
   /** A line under the details, e.g. what happens next. */
   note?: string;
   error?: string;
@@ -53,6 +62,8 @@ export default function RequestSummaryDialog({
   title,
   rows,
   reference,
+  reviewHeading = "Review before submitting",
+  doneHeading = "Request filed",
   note,
   error,
   busy,
@@ -82,10 +93,10 @@ export default function RequestSummaryDialog({
         <div className="border-b border-[#E9EAEC] px-5 py-4 dark:border-[#333333]">
           {mode === "done" ? (
             <p className="flex items-center gap-2 text-[15px] font-semibold text-[#047857] dark:text-[#34D399]">
-              <CheckCircle2 size={17} /> Request filed
+              <CheckCircle2 size={17} /> {doneHeading}
             </p>
           ) : (
-            <p className="text-[15px] font-semibold text-[#1F2937] dark:text-white">Review before submitting</p>
+            <p className="text-[15px] font-semibold text-[#1F2937] dark:text-white">{reviewHeading}</p>
           )}
           <p className="mt-0.5 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{title}</p>
         </div>

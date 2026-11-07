@@ -36,6 +36,11 @@ function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string
   );
 }
 
+/** "Nov 1, 3:42 PM" — short enough to sit next to the document type in the list. */
+function shortDateTime(iso: string) {
+  return new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
 type QueueFilter = "ACTIVE" | "PENDING" | "PROCESSING" | "ALL";
 
 export default function DocumentQueuePage() {
@@ -160,24 +165,47 @@ export default function DocumentQueuePage() {
               <div className="max-h-160 divide-y divide-[#F4F5F7] dark:divide-[#262626] overflow-y-auto">
                 {items.map((c) => {
                   const active = c.id === selectedId;
+                  const applicant = (c.resident ? residentFullName(c.resident) : c.manual_name) || "No name";
+                  const type = certTypeLabel(c.certificate_type);
+                  // REDESIGN (Nov 2026): the selected row used to be solid
+                  // brand blue with the name/type line left in a dark tint
+                  // (unreadable), and the status badge was hidden on it.
+                  // Now the selected row is a light tint with a brand bar on
+                  // the left, so every line keeps its normal readable color,
+                  // the status stays visible on every row, and the applicant
+                  // and document type each get their own line instead of
+                  // being cut off together.
                   return (
                     <button
                       key={c.id}
                       onClick={() => setSelectedId(c.id)}
-                      className={`flex w-full items-center gap-3 px-4 py-3 text-left transition ${active ? "bg-(--brand)" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"}`}
+                      aria-current={active ? "true" : undefined}
+                      title={`${c.queue_number} · ${applicant} · ${type}`}
+                      className={`relative block w-full px-4 py-3 text-left transition ${
+                        active
+                          ? "bg-(--brand-tint) dark:bg-(--brand)/15"
+                          : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
+                      }`}
                     >
-                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${active ? "bg-(--brand-line) dark:bg-(--brand)" : "bg-[#F4F5F7] dark:bg-[#262626]"}`}>
-                        <FileText size={16} className={active ? "text-white" : "text-[#9CA3AF] dark:text-[#A3A3A3]"} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className={`truncate text-[13px] font-bold ${active ? "text-white" : "text-[#1F2937] dark:text-white"}`}>
+                      {active && <span aria-hidden className="absolute inset-y-0 left-0 w-0.75 bg-(--brand)" />}
+                      <div className="flex items-center justify-between gap-3">
+                        <p
+                          className={`font-mono text-[13px] font-bold tabular-nums ${
+                            active ? "text-(--brand-fg-strong) dark:text-white" : "text-[#1F2937] dark:text-white"
+                          }`}
+                        >
                           {c.queue_number}
                         </p>
-                        <p className={`truncate text-[11px] ${active ? "text-(--brand-fg-strong)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
-                          {c.resident ? residentFullName(c.resident) : c.manual_name} · {certTypeLabel(c.certificate_type)}
-                        </p>
+                        <span className="shrink-0">
+                          <StatusBadge status={c.status} />
+                        </span>
                       </div>
-                      {!active && <StatusBadge status={c.status} />}
+                      <p className="mt-1 truncate text-[13px] font-medium text-[#1F2937] dark:text-[#E5E5E5]">{applicant}</p>
+                      <p className="mt-0.5 flex items-center gap-1.5 text-[12px] text-[#4B5563] dark:text-[#A3A3A3]">
+                        <span className="truncate">{type}</span>
+                        <span aria-hidden className="text-[#D1D5DB] dark:text-[#525252]">|</span>
+                        <span className="shrink-0 tabular-nums">{shortDateTime(c.requested_at)}</span>
+                      </p>
                     </button>
                   );
                 })}

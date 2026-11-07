@@ -38,11 +38,17 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const props = await buildCertificatePdfProps(certificate, template);
   const buffer = await renderToBuffer(createElement(CertificatePDF, props));
 
+  // ?download=1 (Download PDF on the preview page, Nov 2026) saves the file
+  // instead of opening it in the browser's PDF viewer. Named after the
+  // certificate number, e.g. CERT-2026-000218.pdf.
+  const download = new URL(req.url).searchParams.get("download") === "1";
+  const filename = `${certificate.certificate_no.replace(/[^A-Za-z0-9_-]/g, "_")}.pdf`;
+
   return new NextResponse(new Uint8Array(buffer), {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="certificate-${certificate.id}.pdf"`,
+      "Content-Disposition": `${download ? "attachment" : "inline"}; filename="${filename}"`,
       "Content-Length": String(buffer.length),
     },
   });

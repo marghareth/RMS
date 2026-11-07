@@ -18,6 +18,18 @@
 //      never been recorded. A plain page refresh of an existing session
 //      does NOT retrigger this — see the loginAt handling below.
 //
+//      FIX (Nov 2026): the preference used to only reach the dashboard.
+//      Page tours were still gated on answering "Yes" on the beginner
+//      prompt, which only appears on /dashboard (and only while the
+//      admin's sitewide switch is on). Signing in onto any other page
+//      (e.g. returning to /residents after the session expired), or
+//      having the sitewide prompt turned off, meant no other page ever
+//      showed its tour. With the preference on, the user has already
+//      opted in, so page tours now auto-launch on every page (once per
+//      page per login) unless they answer "No thanks" on the prompt during
+//      that login. The prompt itself is also offered to them even when the
+//      sitewide switch is off.
+//
 // Actual rendering lives in BeginnerPromptModal.tsx and TourOverlay.tsx,
 // both of which read this context via useOnboarding().
 "use client";
@@ -255,11 +267,12 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   // Ask once per user: the first time a signed-in user with no recorded
   // decision lands on /dashboard, and only while the sitewide setting
-  // allows it.
+  // allows it. A user who turned on "Show tutorial every time I log in"
+  // has asked for it personally, so the sitewide switch doesn't block them.
   useEffect(() => {
     if (status !== "authenticated" || !username) return;
     if (pathname !== "/dashboard") return;
-    if (!tourEnabledSitewide) return;
+    if (!tourEnabledSitewide && !readAlwaysShow(username)) return;
     if (readDecision(username) !== null) return;
 
     let cancelled = false;
@@ -270,19 +283,25 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [status, username, pathname, tourEnabledSitewide]);
+  }, [status, username, pathname, tourEnabledSitewide, alwaysShowTour]);
 
-  // Auto-launch a page tour: only for users who've already opted into
-  // guided tours in general (decision === "yes"), the first time they
-  // land on a page that has one, and only if nothing else is already
-  // showing. Intentionally NOT gated on tourEnabledSitewide — that
+  // Auto-launch a page tour: only for users who've opted into guided
+  // tours, the first time they land on a page that has one, and only if
+  // nothing else is already showing. "Opted in" means either answering
+  // "Yes" on the beginner prompt, or having "Show tutorial every time I
+  // log in" turned on — the latter counts on its own, so the page tours
+  // play on every page, not just after visiting the dashboard. An
+  // explicit "No thanks" on the prompt still switches them off for that
+  // login. Intentionally NOT gated on tourEnabledSitewide — that
   // setting is specifically about whether the initial prompt gets
   // offered; a user who already said yes keeps getting guided page by
   // page even if an admin later turns the prompt off for new users.
   useEffect(() => {
     if (status !== "authenticated" || !username) return;
     if (!currentPageTour) return;
-    if (readDecision(username) !== "yes") return;
+    const decision = readDecision(username);
+    const optedIn = decision === "yes" || (decision !== "no" && readAlwaysShow(username));
+    if (!optedIn) return;
     if (readPageSeen(username, currentPageTour.id)) return;
     if (isActive || promptOpen) return;
 
@@ -299,7 +318,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [status, username, currentPageTour, isActive, promptOpen]);
+  }, [status, username, currentPageTour, isActive, promptOpen, alwaysShowTour]);
 
   const answerYes = useCallback(() => {
     if (username) writeDecision(username, "yes");

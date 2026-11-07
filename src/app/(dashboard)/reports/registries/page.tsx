@@ -59,7 +59,7 @@ const PWD_COLORS    = ["#0B6E4F","#3E5C76","#B45309","#B3261E","#6D4AFF","#9CA3A
 function ChartCard({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     <div className={`bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-5 ${className}`}>
-      <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white mb-4">{title}</p>
+      <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white mb-4">{title}</p>
       {children}
     </div>
   );
@@ -144,12 +144,9 @@ export default function RegistriesReportPage() {
               <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#F4F5F7] dark:bg-[#262626] flex items-center justify-center">
-                <BookOpen size={18} className="text-[#0E7490] dark:text-[#22D3EE]" />
-              </div>
               <div>
-                <h1 className="text-[19px] font-bold text-[#1B2430] dark:text-white uppercase tracking-wide">Special Registries</h1>
-                <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Senior citizens, PWD, and 4Ps per purok</p>
+                <h1 className="text-[22px] font-semibold leading-tight text-[#1B2430] dark:text-white">Special Registries</h1>
+                <p className="mt-0.5 text-[13px] text-[#6B7280] dark:text-[#A3A3A3]">Senior citizens, PWD, and 4Ps per purok</p>
               </div>
             </div>
           </div>
@@ -207,10 +204,10 @@ export default function RegistriesReportPage() {
 
           <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Senior Citizen Registry</p>
+              <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white">Senior Citizen Registry</p>
             </div>
             <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
-              {["Name", "Age", "Purok", "Sex"].map(h => <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>)}
+              {["Name", "Age", "Purok", "Sex"].map(h => <span key={h} className="text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">{h}</span>)}
             </div>
             {data.seniorList.map((s, i) => (
               <div key={s.id} className={`grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-5 py-3 border-b border-[#F4F5F7] dark:border-[#262626] items-center ${i % 2 !== 0 ? "bg-[#FAFAFA] dark:bg-[#171717]" : ""}`}>
@@ -269,10 +266,10 @@ export default function RegistriesReportPage() {
 
           <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">PWD Registry</p>
+              <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white">PWD Registry</p>
             </div>
             <div className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
-              {["Name", "Disability Type", "Purok", "Sex"].map(h => <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>)}
+              {["Name", "Disability Type", "Purok", "Sex"].map(h => <span key={h} className="text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">{h}</span>)}
             </div>
             {data.pwdList.map((p, i) => (
               <div key={p.id} className={`grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 px-5 py-3 border-b border-[#F4F5F7] dark:border-[#262626] items-center ${i % 2 !== 0 ? "bg-[#FAFAFA] dark:bg-[#171717]" : ""}`}>

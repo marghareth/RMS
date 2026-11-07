@@ -1,4 +1,9 @@
-// src/components/certificates/CertificateDetailSheet.tsx
+// FILE: src/components/certificates/CertificateDetailSheet.tsx
+//
+// HEADER REDESIGN (Nov 2026): the title is now the document type with the
+// certificate number under it, and the status / queue no. / dates /
+// payment plus a Pending → Processing → Released tracker live in
+// CertificateOverview at the top of the body, same as the full page.
 //
 // The certificate detail + issuance-history view, as a slide-over instead
 // of a full page navigation. Content mirrors
@@ -20,7 +25,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody,
 } from "@/components/ui/sheet";
 import EmptyState from "@/components/shared/EmptyState";
-import StatusBadge from "@/components/shared/StatusBadge";
+import CertificateOverview, { type CertificateWithTiming } from "@/components/certificates/CertificateOverview";
 import {
   CertificateMock,
   certTypeLabel,
@@ -58,7 +63,7 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
   // that's still browsing within this same sheet/module, so it updates
   // in place rather than closing and reopening via the parent.
   const [activeId, setActiveId] = useState<number | null>(null);
-  const [certificate, setCertificate] = useState<CertificateMock | null>(null);
+  const [certificate, setCertificate] = useState<CertificateWithTiming | null>(null);
   const [loading, setLoading] = useState(true);
   const [residentHistory, setResidentHistory] = useState<CertificateMock[]>([]);
 
@@ -135,22 +140,12 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
           <div className="flex h-full flex-col">
             <SheetHeader>
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <SheetTitle>{certificate.certificate_no}</SheetTitle>
-                  <span className="inline-flex items-center rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong)">
-                    {certTypeLabel(certificate.certificate_type)}
-                  </span>
-                  <StatusBadge status={certificate.status} />
+                <SheetTitle>{certTypeLabel(certificate.certificate_type)}</SheetTitle>
+                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
+                  <span className="font-mono tabular-nums text-[#374151] dark:text-[#D4D4D4]">{certificate.certificate_no}</span>
                   {certificate.flagged_manual && (
-                    <span className="inline-flex items-center rounded-full bg-[#FEF3C7] dark:bg-amber-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#D97706] dark:text-[#FBBF24]">
-                      Walk-in
-                    </span>
+                    <span className="border-l border-[#E5E7EB] pl-3 dark:border-[#333333]">Walk-in</span>
                   )}
-                </div>
-                <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-                  {certificate.issued_at
-                    ? `Released ${formatISODateTime(certificate.issued_at)}`
-                    : `Requested ${formatISODateTime(certificate.requested_at)} · Queue #${certificate.queue_number}`}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1">
@@ -173,6 +168,9 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
             </SheetHeader>
 
             <SheetBody>
+              <div className="mb-4">
+                <CertificateOverview certificate={certificate} />
+              </div>
               <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
                 {/* ── Left: certificate details ── */}
                 <div className="space-y-4 lg:col-span-2">

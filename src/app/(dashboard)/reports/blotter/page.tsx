@@ -9,6 +9,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid,
 } from "recharts";
 import StatCard from "@/components/shared/StatCard";
+import SharedStatusBadge from "@/components/shared/StatusBadge";
 
 interface BlotterCase {
   id: number;
@@ -46,7 +47,7 @@ function fmtDate(iso: string) {
 function ChartCard({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     <div className={`bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-5 ${className}`}>
-      <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white mb-4">{title}</p>
+      <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white mb-4">{title}</p>
       {children}
     </div>
   );
@@ -64,14 +65,10 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
+// Nov 2026: uses the app-wide dot + text status style instead of an
+// ALL-CAPS pill.
 function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUS_CFG[status] ?? STATUS_CFG["DISMISSED"];
-  return (
-    <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${cfg.bg} ${cfg.text}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {status}
-    </span>
-  );
+  return <SharedStatusBadge status={status} />;
 }
 
 export default function BlotterReportPage() {
@@ -113,12 +110,9 @@ export default function BlotterReportPage() {
               <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#F4F5F7] dark:bg-[#262626] flex items-center justify-center">
-                <Shield size={18} className="text-[#B45309] dark:text-[#FBBF24]" />
-              </div>
               <div>
-                <h1 className="text-[19px] font-bold text-[#1B2430] dark:text-white uppercase tracking-wide">Blotter Report</h1>
-                <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Incident cases, status tracking and trends</p>
+                <h1 className="text-[22px] font-semibold leading-tight text-[#1B2430] dark:text-white">Blotter Report</h1>
+                <p className="mt-0.5 text-[13px] text-[#6B7280] dark:text-[#A3A3A3]">Incident cases, status tracking and trends</p>
               </div>
             </div>
           </div>
@@ -142,7 +136,7 @@ export default function BlotterReportPage() {
             </button>
           </div>
         </div>
-        <div className="mt-4 h-px bg-[#1B2430] dark:bg-[#E5E7EB]" />
+        <div className="mt-5 h-px bg-[#E9EAEC] dark:bg-[#262626]" />
         <div className="mt-0.75 h-px bg-[#E9EAEC] dark:bg-[#262626]" />
       </div>
 
@@ -232,11 +226,11 @@ export default function BlotterReportPage() {
 
           <div data-tour="page-reports-blotter-recent" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Recent Cases</p>
+              <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white">Recent Cases</p>
             </div>
             <div className="grid grid-cols-[1.2fr_1.5fr_1.5fr_1fr_1fr_0.5fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
               {["Case No.", "Complainant", "Respondent", "Status", "Date Filed", "Flag"].map(h => (
-                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>
+                <span key={h} className="text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">{h}</span>
               ))}
             </div>
             {data.recent.map((r, i) => (

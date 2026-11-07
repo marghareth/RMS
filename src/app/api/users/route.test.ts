@@ -32,6 +32,15 @@ function makeReq(body: unknown) {
 describe('GET /api/users', () => {
   beforeEach(() => vi.clearAllMocks());
 
+  it('never selects the two-factor secret or backup codes', async () => {
+    (prisma.user.findMany as any).mockResolvedValue([]);
+    await GET(new NextRequest('http://localhost/api/users'));
+    const selectArgs = (prisma.user.findMany as any).mock.calls[0][0].select;
+    expect(selectArgs).not.toHaveProperty('mfa_secret');
+    expect(selectArgs).not.toHaveProperty('mfa_backup_codes');
+    expect(selectArgs.mfa_enabled).toBe(true);
+  });
+
   it('never selects password_hash', async () => {
     (prisma.user.findMany as any).mockResolvedValue([{ id: 1, username: 'admin' }]);
     await GET(new NextRequest('http://localhost/api/users'));

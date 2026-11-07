@@ -80,6 +80,27 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+      {
+        // FIX (Nov 2026): the generated PDFs (certificates, IDs, profiles,
+        // reports, slips) are shown INSIDE the app's own pages — e.g. the
+        // certificate preview embeds /api/pdf/certificate/[id] in an
+        // iframe so staff can see and print the real document. The
+        // site-wide `X-Frame-Options: DENY` / `frame-ancestors 'none'`
+        // above also applied to these responses, so the browser refused
+        // to show them ("refused to connect") and Print had nothing to
+        // print. For these PDF routes only, framing is allowed by the
+        // app's own pages (same origin) and still refused for every other
+        // site, so the clickjacking protection stays in place. When two
+        // rules set the same header, Next.js uses the last one, so these
+        // replace the two framing headers above for /api/pdf/* only.
+        source: "/api/pdf/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          // A PDF runs no page scripts, so the only rule it needs is who
+          // may frame it.
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+        ],
+      },
     ];
   },
 };

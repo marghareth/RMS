@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Package, Download, CheckCircle2, AlertTriangle, XCircle, Clock } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 import StatCard from "@/components/shared/StatCard";
+import SharedStatusBadge from "@/components/shared/StatusBadge";
 
 interface InventoryItem {
   id: number;
@@ -54,7 +55,7 @@ function fmtDate(iso: string | null) {
 function ChartCard({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     <div className={`bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-5 ${className}`}>
-      <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white mb-4">{title}</p>
+      <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white mb-4">{title}</p>
       {children}
     </div>
   );
@@ -70,15 +71,10 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
+// Nov 2026: uses the app-wide dot + text status style instead of an
+// ALL-CAPS pill with an icon.
 function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUS_CFG[status];
-  if (!cfg) return null;
-  const Icon = cfg.icon;
-  return (
-    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${cfg.bg} ${cfg.text}`}>
-      <Icon size={10} /> {status}
-    </span>
-  );
+  return <SharedStatusBadge status={status} />;
 }
 
 export default function InventoryReportPage() {
@@ -114,12 +110,9 @@ export default function InventoryReportPage() {
               <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#F4F5F7] dark:bg-[#262626] flex items-center justify-center">
-                <Package size={18} className="text-[#B3261E] dark:text-[#F87171]" />
-              </div>
               <div>
-                <h1 className="text-[19px] font-bold text-[#1B2430] dark:text-white uppercase tracking-wide">Inventory Report</h1>
-                <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Equipment status and year-end inventory</p>
+                <h1 className="text-[22px] font-semibold leading-tight text-[#1B2430] dark:text-white">Inventory Report</h1>
+                <p className="mt-0.5 text-[13px] text-[#6B7280] dark:text-[#A3A3A3]">Equipment status and year-end inventory</p>
               </div>
             </div>
           </div>
@@ -136,7 +129,7 @@ export default function InventoryReportPage() {
             </button>
           </div>
         </div>
-        <div className="mt-4 h-px bg-[#1B2430] dark:bg-[#E5E7EB]" />
+        <div className="mt-5 h-px bg-[#E9EAEC] dark:bg-[#262626]" />
         <div className="mt-0.75 h-px bg-[#E9EAEC] dark:bg-[#262626]" />
       </div>
 
@@ -191,11 +184,11 @@ export default function InventoryReportPage() {
 
           <div data-tour="page-reports-inventory-list" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden mb-5">
             <div className="px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Equipment Inventory List</p>
+              <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white">Equipment Inventory List</p>
             </div>
             <div className="grid grid-cols-[2fr_0.8fr_1.2fr_1fr_1fr_0.8fr_0.6fr] gap-3 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
               {["Item Name", "Qty", "Status", "Condition", "Date Acquired", "Currently Out", "Overdue"].map(h => (
-                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>
+                <span key={h} className="text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">{h}</span>
               ))}
             </div>
             {data.items.map((item, i) => (
@@ -216,11 +209,11 @@ export default function InventoryReportPage() {
 
           <div data-tour="page-reports-inventory-borrowings" className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Recent Borrow Transactions</p>
+              <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white">Recent Borrow Transactions</p>
             </div>
             <div className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_1fr_0.8fr] gap-3 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
               {["Equipment", "Borrower", "Date Borrowed", "Due Date", "Returned", "Status"].map(h => (
-                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>
+                <span key={h} className="text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">{h}</span>
               ))}
             </div>
             {data.recentBorrowings.map((b, i) => (

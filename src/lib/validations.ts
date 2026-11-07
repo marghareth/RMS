@@ -229,6 +229,10 @@ export const certificateCreateSchema = z.object({
   flagged_manual: z.boolean().optional(),
   manual_name: z.string().trim().optional().nullable(),
   manual_address: z.string().trim().optional().nullable(),
+  // "Process now" (Nov 2026): skip the Pending step and start processing
+  // right away. Only accepted while no other request is waiting in the
+  // queue — see POST /api/certificates.
+  process_now: z.boolean().optional(),
 }).refine(
   (data) => data.resident_id || (data.manual_name && data.manual_address),
   { message: "Either resident_id or manual_name + manual_address must be provided." }
@@ -518,6 +522,14 @@ export const appropriationStatusEnum = z.enum(["PENDING", "APPROVED", "COMPLETED
 export const appropriationCreateSchema = z.object({
   item_name: nonEmptyString,
   category: appropriationCategoryEnum,
+  // Optional sub-category under PS / MOOE / CO (Nov 2026). Blank → none.
+  subcategory: z
+    .string()
+    .trim()
+    .max(60, "Sub-category must be 60 characters or fewer")
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v : v === undefined ? undefined : null)),
   appropriated_amount: z.coerce.number().nonnegative("Amount must be 0 or greater").default(0),
   obligated_amount: z.coerce.number().nonnegative().optional().default(0),
   disbursed_amount: z.coerce.number().nonnegative().optional().default(0),

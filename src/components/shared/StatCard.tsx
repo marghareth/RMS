@@ -25,17 +25,20 @@ interface StatCardProps {
   color?: "blue" | "amber" | "green" | "red" | "purple" | "teal";
 }
 
+// Nov 2026: the label is plain sentence-case text instead of tiny
+// letter-spaced capitals, which read as generic generated UI and were hard
+// to scan.
 export default function StatCard({ label, value, sub, icon: Icon }: StatCardProps) {
   return (
     <div className="flex flex-col justify-between gap-4 rounded-xl border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] px-5 py-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[10.5px] font-bold uppercase tracking-widest text-[#9CA3AF] dark:text-[#A3A3A3]">
+        <p className="text-[12.5px] text-[#6B7280] dark:text-[#A3A3A3]">
           {label}
         </p>
         <Icon size={14} className="mt-0.5 shrink-0 text-[#9CA3AF] dark:text-[#A3A3A3]" />
       </div>
       <div>
-        <p className="text-[28px] font-bold leading-none text-[#1B2430] dark:text-white tabular-nums">
+        <p className="text-[26px] font-semibold leading-none text-[#1B2430] dark:text-white tabular-nums">
           {value}
         </p>
         {sub && <p className="mt-1.5 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{sub}</p>}

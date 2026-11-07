@@ -743,6 +743,11 @@ model Appropriation {
   id                  Int                 @id @default(autoincrement())
   item_name           String
   category            AppropriationCategory
+  // Optional second level under PS / MOOE / CO, e.g. MOOE → "Office
+  // Supplies" (Nov 2026). Picked from the list staff manage on the
+  // Appropriations page (src/lib/category-lists.ts); stored as text so a
+  // later rename or removal of that list entry doesn't change saved items.
+  subcategory         String?
   appropriated_amount Decimal             @db.Decimal(14, 2)
   obligated_amount    Decimal             @default(0) @db.Decimal(14, 2)
   disbursed_amount    Decimal             @default(0) @db.Decimal(14, 2)
@@ -756,6 +761,8 @@ model Appropriation {
   fund_source   FundSource?    @relation(fields: [fund_source_id], references: [id])
   recorder      User?          @relation(fields: [recorded_by], references: [id])
   disbursements Disbursement[]
+
+  @@index([category, subcategory])
 }
 
 enum AppropriationCategory {

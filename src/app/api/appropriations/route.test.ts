@@ -64,4 +64,26 @@ describe('POST /api/appropriations', () => {
     const res = await POST(makeReq({ item_name: 'Item', category: 'INVALID' }));
     expect(res.status).toBe(400);
   });
+
+  // Sub-categories (Nov 2026)
+  it('saves a sub-category, and stores a blank one as none', async () => {
+    (prisma.appropriation.create as any).mockResolvedValue({ id: 3, item_name: 'Bond paper', category: 'MOOE', subcategory: 'Office Supplies' });
+    await POST(makeReq({ item_name: 'Bond paper', category: 'MOOE', subcategory: ' Office Supplies ' }));
+    expect((prisma.appropriation.create as any).mock.calls[0][0].data.subcategory).toBe('Office Supplies');
+
+    await POST(makeReq({ item_name: 'Repairs', category: 'MOOE', subcategory: '' }));
+    expect((prisma.appropriation.create as any).mock.calls[1][0].data.subcategory).toBeNull();
+  });
+});
+
+describe('GET /api/appropriations — sub-category filter', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('filters by sub-category alongside the class', async () => {
+    (prisma.appropriation.findMany as any).mockResolvedValue([]);
+    await GET(new NextRequest('http://localhost/api/appropriations?category=MOOE&subcategory=Office%20Supplies'));
+    const where = (prisma.appropriation.findMany as any).mock.calls[0][0].where;
+    expect(where.AND).toContainEqual({ category: 'MOOE' });
+    expect(where.AND).toContainEqual({ subcategory: 'Office Supplies' });
+  });
 });

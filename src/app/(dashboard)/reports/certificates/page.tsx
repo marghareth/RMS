@@ -48,7 +48,7 @@ function fmtDate(iso: string) {
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-5">
-      <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white mb-4">{title}</p>
+      <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white mb-4">{title}</p>
       {children}
     </div>
   );
@@ -78,7 +78,7 @@ const TYPE_BG: Record<string, string> = {
 
 function TypeBadge({ type }: { type: string }) {
   const cls = TYPE_BG[type] ?? "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-[#D4D4D4]";
-  return <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${cls}`}>{type}</span>;
+  return <span className={`rounded-md px-2 py-0.5 text-[12px] font-medium ${cls}`}>{type}</span>;
 }
 
 export default function CertificatesReportPage() {
@@ -120,12 +120,9 @@ export default function CertificatesReportPage() {
               <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#F4F5F7] dark:bg-[#262626] flex items-center justify-center">
-                <FileText size={18} className="text-[#0B6E4F] dark:text-[#34A37A]" />
-              </div>
               <div>
-                <h1 className="text-[19px] font-bold text-[#1B2430] dark:text-white uppercase tracking-wide">Certificate Report</h1>
-                <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Issuance history and breakdown by type</p>
+                <h1 className="text-[22px] font-semibold leading-tight text-[#1B2430] dark:text-white">Certificate Report</h1>
+                <p className="mt-0.5 text-[13px] text-[#6B7280] dark:text-[#A3A3A3]">Issuance history and breakdown by type</p>
               </div>
             </div>
           </div>
@@ -149,7 +146,7 @@ export default function CertificatesReportPage() {
             </button>
           </div>
         </div>
-        <div className="mt-4 h-px bg-[#1B2430] dark:bg-[#E5E7EB]" />
+        <div className="mt-5 h-px bg-[#E9EAEC] dark:bg-[#262626]" />
         <div className="mt-0.75 h-px bg-[#E9EAEC] dark:bg-[#262626]" />
       </div>
 
@@ -167,7 +164,7 @@ export default function CertificatesReportPage() {
 
           {data.turnaround && (
             <div data-tour="page-reports-certificates-turnaround" className="mb-5">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white mb-3">
+              <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white mb-3">
                 Processing Time
                 <span className="ml-2 font-normal normal-case tracking-normal text-[#9CA3AF] dark:text-[#A3A3A3]">
                   from request filed to released
@@ -213,7 +210,7 @@ export default function CertificatesReportPage() {
                   <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
                     <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
                       {["Certificate Type", "Released", "Average", "Median", "Fastest", "Slowest"].map((h, i) => (
-                        <span key={h} className={`text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide ${i > 0 ? "text-right" : ""}`}>{h}</span>
+                        <span key={h} className={`text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3] ${i > 0 ? "text-right" : ""}`}>{h}</span>
                       ))}
                     </div>
                     {data.turnaround.byType.map((t, i) => (
@@ -295,11 +292,11 @@ export default function CertificatesReportPage() {
 
           <div data-tour="page-reports-certificates-recent" className="mt-5 bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">Recent Issuances</p>
+              <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white">Recent Issuances</p>
             </div>
             <div className="grid grid-cols-[2fr_1.5fr_1.5fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
               {["Resident", "Type", "Purpose", "Date", "Issued By"].map(h => (
-                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>
+                <span key={h} className="text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">{h}</span>
               ))}
             </div>
             {data.recent.map((r, i) => (
