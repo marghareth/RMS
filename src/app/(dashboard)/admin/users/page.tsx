@@ -10,7 +10,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSafeSession } from "@/lib/hooks/useSafeSession";
 import { Users, Search, Plus } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
@@ -37,7 +37,7 @@ type Filter = "all" | "active" | "inactive";
 export default function UsersListPage() {
   const can = useCan();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session } = useSafeSession();
   const myId = (session?.user as { id?: string } | undefined)?.id;
 
   const [users, setUsers] = useState<UserMock[]>([]);

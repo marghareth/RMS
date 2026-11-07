@@ -43,7 +43,7 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSafeSession } from "@/lib/hooks/useSafeSession";
 import { ONBOARDING_STEPS } from "@/lib/onboarding/steps";
 import { findPageTour, type PageTour } from "@/lib/onboarding/pageTours";
 import type { TourStep } from "@/lib/onboarding/types";
@@ -194,7 +194,7 @@ function resetOnboardingProgress(username: string) {
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { data: session, status } = useSession();
+  const { data: session, status } = useSafeSession();
   const username = (session?.user as { username?: string } | undefined)?.username;
   // Set once per sign-in (not on every session read) — see the jwt callback
   // in src/lib/auth.ts. Used below to detect a genuinely new login.

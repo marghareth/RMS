@@ -8,7 +8,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSafeSession } from "@/lib/hooks/useSafeSession";
 import Link from "next/link";
 import { ShieldCheck, ShieldOff, Copy, Check, AlertTriangle } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
@@ -19,7 +19,7 @@ export default function SecuritySettingsPage() {
   // `update()` makes the server re-read this account and re-issue the
   // session cookie, so the middleware's "MFA required" gate lifts as soon
   // as enrollment succeeds instead of on the next sign-in.
-  const { update: refreshSession } = useSession();
+  const { update: refreshSession } = useSafeSession();
   const [status, setStatus] = useState<Status | null>(null);
   const [loading, setLoading] = useState(true);
 

@@ -14,7 +14,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSafeSession } from "@/lib/hooks/useSafeSession";
 import { ArrowLeft, UserCog, Users } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import PageTutorial from "@/components/shared/PageTutorial";
@@ -26,7 +26,7 @@ export default function EditUserPage() {
   const router = useRouter();
   const params = useParams();
   const userId = Number(params.id);
-  const { data: session } = useSession();
+  const { data: session } = useSafeSession();
   const actorIsAdmin = session?.user?.role === "ADMIN";
 
   const [original, setOriginal] = useState<UserMock | null>(null);

@@ -17,11 +17,11 @@
 
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSafeSession } from "@/lib/hooks/useSafeSession";
 import { hasPermission, isViewOnly } from "@/lib/permission";
 
 export function useCan(): (permission: string | string[]) => boolean {
-  const { data } = useSession();
+  const { data } = useSafeSession();
   const role = data?.user?.role ?? "";
   return (permission) => {
     if (!role) return false;
@@ -32,7 +32,7 @@ export function useCan(): (permission: string | string[]) => boolean {
 
 /** True for roles that can only view (Captain, Kagawad). False while loading. */
 export function useIsViewOnly(): boolean {
-  const { data } = useSession();
+  const { data } = useSafeSession();
   const role = data?.user?.role;
   return !!role && isViewOnly(role);
 }

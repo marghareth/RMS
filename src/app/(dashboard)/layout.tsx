@@ -1,4 +1,4 @@
-// FILE: src/app/(dashboard)/layout.tsx
+// FILE: src/app/(dashboard)/layout.tsx  (DASHBOARD layout — sidebar, top bar. Not the root layout.)
 "use client";
 import { useEffect, useLayoutEffect, useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
@@ -83,14 +83,23 @@ export default function DashboardLayout({
     };
   }, []);
 
+  // PRINTING (Nov 2026): the data-print markers below are read by the
+  // @media print rules in src/app/globals.css. On paper the sidebar and
+  // top bar are left out, and the fixed-height, inner-scrolling shell is
+  // turned back into normal page flow — otherwise the browser printed only
+  // the sidebar and the visible part of the page, cut off at one screen.
   return (
     <OnboardingProvider>
-      <div className="flex h-screen bg-[#F4F5F7] overflow-hidden dark:bg-[#0A0A0A]">
-        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
-        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-          <Topbar onMenuClick={() => setCollapsed(!collapsed)} />
-          <main className="flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-7xl px-6 py-6 sm:px-8 sm:py-8">
+      <div data-print="shell" className="flex h-screen bg-[#F4F5F7] overflow-hidden dark:bg-[#0A0A0A]">
+        <div data-print="hide" className="contents">
+          <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+        </div>
+        <div data-print="flow" className="flex flex-col flex-1 min-w-0 overflow-hidden">
+          <div data-print="hide" className="contents">
+            <Topbar onMenuClick={() => setCollapsed(!collapsed)} />
+          </div>
+          <main data-print="flow" className="flex-1 overflow-y-auto">
+            <div data-print="content" className="mx-auto w-full max-w-7xl px-6 py-6 sm:px-8 sm:py-8">
               {children}
             </div>
           </main>

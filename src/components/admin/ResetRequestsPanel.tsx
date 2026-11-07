@@ -10,7 +10,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSafeSession } from "@/lib/hooks/useSafeSession";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import TemporaryPasswordDialog, { IssuedPassword } from "@/components/admin/TemporaryPasswordDialog";
 import { roleLabel, type Role } from "@/lib/mock/admin";
@@ -29,7 +29,7 @@ function timeAgo(iso: string) {
 }
 
 export default function ResetRequestsPanel() {
-  const { data: session } = useSession();
+  const { data: session } = useSafeSession();
   const [requests, setRequests] = useState<ResetRequest[]>([]);
   const [pending, setPending] = useState<{ request: ResetRequest; action: "approve" | "deny" } | null>(null);
   const [busy, setBusy] = useState(false);

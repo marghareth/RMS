@@ -1,112 +1,63 @@
-// FILE: src/app/(dashboard)/layout.tsx
-"use client";
-import { useEffect, useLayoutEffect, useState } from "react";
-import Sidebar from "@/components/layout/Sidebar";
-import Topbar from "@/components/layout/Topbar";
-import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
-import TourOverlay from "@/components/onboarding/TourOverlay";
-import BeginnerPromptModal from "@/components/onboarding/BeginnerPromptModal";
-// TEST: dashboard-only typeface trial (Manrope, in place of the site-wide
-// Inter). Self-hosted the same way Inter is — via a Fontsource variable
-// package, bundled from npm at install time, not fetched from a
-// third-party CDN at request time — deliberately avoiding the exact
-// mistake called out below and already fixed once in src/app/layout.tsx
-// for the same reason (no third-party font-CDN calls from an internal
-// records-management system).
-import "@fontsource-variable/manrope";
+// FILE: src/app/layout.tsx  (ROOT layout — wraps the whole app: theme + session provider. Not the dashboard layout.)
+import type { Metadata } from "next";
+import "@fontsource-variable/inter";
+import "./globals.css";
+import AuthSessionProvider from "@/components/providers/SessionProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
-// FIX: this file was pulling "Google Sans" from fonts.googleapis.com on
-// every dashboard load. Two problems with that:
-//   1. Its own comment said it was a one-off typeface TEST — leftover
-//      experimental code, not a real decision, sitting in the shipped
-//      layout.
-//   2. It made every authenticated user's browser send a request (with
-//      referrer/IP) to a third-party CDN on every session, added an
-//      external point of failure with no fallback/self-hosting, and never
-//      even set up a `preconnect` for it. For an internal
-//      records-management system this is an unnecessary external
-//      dependency and a minor privacy leak.
-// Reverted to the system font stack; if a custom typeface is wanted later
-// it should be self-hosted (e.g. via `next/font/local`) rather than
-// fetched from a third-party CDN on every page load.
-
-// The Manrope test used to be a plain inline `fontFamily` style on the
-// wrapping <div> below. That covers everything actually nested under this
-// layout in the React tree — but NOT the Sheet/Dialog components used
-// throughout the dashboard (residents, households, blotter, etc.):
-// src/components/ui/sheet.tsx portals its content straight to <body> (see
-// @base-ui/react's DialogPortal — "the portal element is appended to
-// <body>" by default), which makes it a *sibling* of this div in the DOM,
-// not a descendant. An inline style on the div simply never reaches it.
+// FIX: next/font/google fetches Inter from fonts.googleapis.com at build
+// time — same category of problem already called out and fixed in
+// (dashboard)/layout.tsx for "Google Sans" (see that file's comment): a
+// third-party network dependency at build time, plus a per-session
+// privacy leak at runtime for what's meant to be an internal
+// records-management system. It made `next build` hard-fail in any
+// environment without outbound access to Google's CDN.
 //
-// Fixed by overriding the shared `--font-sans` CSS custom property on
-// <html> instead, for as long as this layout is mounted. `<body>` already
-// renders with the `font-sans` utility class (see src/app/layout.tsx),
-// which resolves `var(--font-sans)` — and CSS custom properties cascade
-// through the whole document, portaled nodes included, since they're
-// still descendants of <html> even when they're not descendants of this
-// div. Login/verify pages never mount this layout, so they never run this
-// effect and keep rendering with the default `--font-sans` (Inter) from
-// globals.css — same contained, reversible test as before, just scoped at
-// the right level.
-const DASHBOARD_FONT_STACK =
-  "'Manrope Variable', var(--font-inter), ui-sans-serif, system-ui, sans-serif";
-export default function DashboardLayout({
+// Self-hosted instead via @fontsource-variable/inter, which bundles the
+// actual woff2 files inside node_modules (fetched once from npm at
+// `npm install`, not from Google on every build/request). The variable
+// font's family name, "Inter Variable", is wired into the --font-inter
+// custom property in globals.css, which --font-sans already falls back
+// through — see the @theme block there.
+
+export const metadata: Metadata = {
+  title: "Brgy-RMS",
+  description: "Barangay Records Management System",
+};
+
+// Runs before React hydrates / before first paint, reading the same
+// localStorage key ThemeProvider uses ("rms-theme") so the correct theme
+// class is already on <html> by the time anything renders — without
+// this, the page would always paint light first and then "flash" to dark
+// a moment later for users who'd chosen dark mode.
+const NO_FLASH_THEME_SCRIPT = `
+(function () {
+  try {
+    var stored = localStorage.getItem("rms-theme");
+    var isDark = stored === "dark" || (stored !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+      document.documentElement.style.colorScheme = "dark";
+    }
+  } catch (e) {}
+})();
+`;
+
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // On phones/tablets the rail renders as an overlay drawer (see
-  // Sidebar.tsx), so it should start closed there. Starting from `false`
-  // (open) on every render — matching what the server always renders,
-  // since it has no viewport to check — and closing it here, once, after
-  // mount avoids a hydration mismatch; on desktop this effect is a no-op.
-  const [collapsed, setCollapsed] = useState(false);
-  useEffect(() => {
-    if (!window.matchMedia("(max-width: 1023px)").matches) return;
-    const frame = window.requestAnimationFrame(() => setCollapsed(true));
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
-  // Apply the Manrope test only while a dashboard route is mounted, and
-  // clean up on unmount (navigating to /login, /verify, etc.) so those
-  // pages are never affected and there's no leftover global state between
-  // route changes. useLayoutEffect (not useEffect) so this runs before
-  // the browser paints — otherwise every dashboard page load would flash
-  // Inter for a frame before swapping to Manrope, the same class of bug
-  // the NO_FLASH_THEME_SCRIPT in src/app/layout.tsx already exists to
-  // avoid for dark mode.
-  useLayoutEffect(() => {
-    document.documentElement.style.setProperty("--font-sans", DASHBOARD_FONT_STACK);
-    return () => {
-      document.documentElement.style.removeProperty("--font-sans");
-    };
-  }, []);
-
-  // PRINTING (Nov 2026): the data-print markers below are read by the
-  // @media print rules in src/app/globals.css. On paper the sidebar and
-  // top bar are left out, and the fixed-height, inner-scrolling shell is
-  // turned back into normal page flow — otherwise the browser printed only
-  // the sidebar and the visible part of the page, cut off at one screen.
   return (
-    <OnboardingProvider>
-      <div data-print="shell" className="flex h-screen bg-[#F4F5F7] overflow-hidden dark:bg-[#0A0A0A]">
-        <div data-print="hide" className="contents">
-          <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
-        </div>
-        <div data-print="flow" className="flex flex-col flex-1 min-w-0 overflow-hidden">
-          <div data-print="hide" className="contents">
-            <Topbar onMenuClick={() => setCollapsed(!collapsed)} />
-          </div>
-          <main data-print="flow" className="flex-1 overflow-y-auto">
-            <div data-print="content" className="mx-auto w-full max-w-7xl px-6 py-6 sm:px-8 sm:py-8">
-              {children}
-            </div>
-          </main>
-        </div>
-      </div>
-      <BeginnerPromptModal />
-      <TourOverlay />
-    </OnboardingProvider>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />
+      </head>
+      <body className="font-sans antialiased" suppressHydrationWarning>
+        <ThemeProvider>
+          <AuthSessionProvider>{children}</AuthSessionProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }

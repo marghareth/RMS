@@ -30,7 +30,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSafeSession } from "@/lib/hooks/useSafeSession";
 import {
   LayoutDashboard,
   Users,
@@ -331,7 +331,7 @@ export default function Sidebar({
   className?: string;
 }) {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session } = useSafeSession();
   const role = session?.user?.role ?? "";
   const barangayName = useBarangayName();
 

@@ -11,14 +11,14 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, UserPlus, Eye, EyeOff } from "lucide-react";
 import PageTutorial from "@/components/shared/PageTutorial";
 import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
-import { useSession } from "next-auth/react";
+import { useSafeSession } from "@/lib/hooks/useSafeSession";
 import { ROLES, Role } from "@/lib/mock/admin";
 import PasswordRules from "@/components/account/PasswordRules";
 import { passwordProblem } from "@/lib/password-policy";
 
 export default function NewUserPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session } = useSafeSession();
   const actorIsAdmin = session?.user?.role === "ADMIN";
 
   const [username, setUsername] = useState("");
