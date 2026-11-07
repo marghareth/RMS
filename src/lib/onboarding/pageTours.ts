@@ -1827,7 +1827,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-certificates-detail-applicant"]',
         placement: "right",
         title: "The applicant",
-        body: "Shows the resident this was issued to, or the walk-in name and address if it wasn't linked to a resident record.",
+        body: "Who the certificate is for: name, age, sex, purok and birthdate, with a link to their RBI record. For a walk-in, the name and address typed on the form.",
         waitMs: 6000,
       },
       {
@@ -1835,7 +1835,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-certificates-detail-purpose"]',
         placement: "right",
         title: "Purpose",
-        body: "The reason given when the certificate was requested, exactly as the applicant stated it.",
+        body: "The purpose exactly as it prints on the certificate, who filed the request, and when it was released. If the printed name or address was corrected, that shows here too.",
         waitMs: 6000,
       },
       {
@@ -1843,7 +1843,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-certificates-detail-history"]',
         placement: "right",
         title: "Issuance history",
-        body: "Every other certificate this resident has been issued, newest first. Click one to open it.",
+        body: "Every other certificate this resident has requested, newest first, with its status. Click one to open it.",
         waitMs: 6000,
       },
       {
@@ -1851,7 +1851,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-certificates-detail-issuance"]',
         placement: "left",
         title: "Issuance info",
-        body: "Who issued it, when, the certificate and queue numbers, and whether payment is pending, paid or waived.",
+        body: "Who filed the request and when it was released. The certificate number is in the title, and the queue number and payment are in the row above.",
         waitMs: 6000,
       },
     ],
