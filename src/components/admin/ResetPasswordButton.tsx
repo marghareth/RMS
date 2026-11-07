@@ -8,7 +8,7 @@
 
 import { useState } from "react";
 import { KeyRound } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useSafeSession } from "@/lib/hooks/useSafeSession";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import TemporaryPasswordDialog, { IssuedPassword } from "@/components/admin/TemporaryPasswordDialog";
 
@@ -17,7 +17,7 @@ export default function ResetPasswordButton({
 }: {
   user: { id: number; username: string; role: string; is_active: boolean };
 }) {
-  const { data: session } = useSession();
+  const { data: session } = useSafeSession();
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [issued, setIssued] = useState<IssuedPassword | null>(null);

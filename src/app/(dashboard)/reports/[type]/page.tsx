@@ -25,7 +25,7 @@ const NO_PERIOD = new Set(["households", "officials"]);
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-xl border border-[#E9EAEC] bg-white p-5 dark:border-[#262626] dark:bg-[#171717]">
-      <h2 className="mb-4 text-[11px] font-bold uppercase tracking-widest text-[#1B2430] dark:text-white">{title}</h2>
+      <h2 className="mb-4 text-[14px] font-semibold text-[#1B2430] dark:text-white">{title}</h2>
       {children}
     </section>
   );
@@ -95,8 +95,8 @@ export default function DefinedReportPage() {
               <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
             </button>
             <div>
-              <h1 className="text-[20px] font-bold text-[#1F2937] dark:text-white">{data?.title ?? "Report"}</h1>
-              <p className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
+              <h1 className="text-[22px] font-semibold leading-tight text-[#1F2937] dark:text-white">{data?.title ?? "Report"}</h1>
+              <p className="mt-0.5 text-[13px] text-[#6B7280] dark:text-[#A3A3A3]">
                 {data ? `${data.description} · ${data.periodLabel}` : " "}
               </p>
             </div>
@@ -136,7 +136,7 @@ export default function DefinedReportPage() {
             </a>
           </div>
         </div>
-        <div className="mt-4 h-px bg-[#1B2430] dark:bg-[#E5E7EB]" />
+        <div className="mt-5 h-px bg-[#E9EAEC] dark:bg-[#262626]" />
       </div>
 
       {error ? (
@@ -152,8 +152,8 @@ export default function DefinedReportPage() {
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {data.stats.map((st) => (
               <div key={st.label} className="rounded-xl border border-[#E9EAEC] bg-white px-4 py-3.5 dark:border-[#262626] dark:bg-[#171717]">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">{st.label}</p>
-                <p className="mt-1 text-[22px] font-bold text-[#1F2937] dark:text-white">{st.value}</p>
+                <p className="text-[12.5px] text-[#6B7280] dark:text-[#A3A3A3]">{st.label}</p>
+                <p className="mt-1 text-[24px] font-semibold leading-tight tabular-nums text-[#1F2937] dark:text-white">{st.value}</p>
                 {st.hint && <p className="text-[11px] text-[#9CA3AF]">{st.hint}</p>}
               </div>
             ))}
@@ -214,7 +214,7 @@ export default function DefinedReportPage() {
                     <thead>
                       <tr className="border-b border-[#E9EAEC] dark:border-[#262626]">
                         {table.columns.map((c) => (
-                          <th key={c.header} className={`px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3] ${c.align === "right" ? "text-right" : ""}`}>
+                          <th key={c.header} className={`px-3 py-2 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3] ${c.align === "right" ? "text-right" : ""}`}>
                             {c.header}
                           </th>
                         ))}

@@ -12,7 +12,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSafeSession } from "@/lib/hooks/useSafeSession";
 import {
   Search, SlidersHorizontal, ChevronRight,
   Plus, X, Users, Mars, Venus, Upload, Download,
@@ -114,7 +114,7 @@ export default function ResidentsPage() {
   // Bulk import writes residents, so only offer it to roles that may.
   // (The API enforces residents:write regardless; this just avoids showing a
   // button that would end in a 403.)
-  const { data: session } = useSession();
+  const { data: session } = useSafeSession();
   const canImport = !!session?.user?.role && hasPermission(session.user.role, "residents:write");
   const canExport = !!session?.user?.role && hasPermission(session.user.role, "residents:export");
   const router = useRouter();

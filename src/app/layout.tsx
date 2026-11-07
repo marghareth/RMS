@@ -1,4 +1,4 @@
-// src/app/layout.tsx
+// FILE: src/app/layout.tsx  (ROOT layout — wraps the whole app: theme + session provider. Not the dashboard layout.)
 import type { Metadata } from "next";
 import "@fontsource-variable/inter";
 import "./globals.css";

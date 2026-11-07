@@ -75,6 +75,8 @@ export interface AppropriationRecord {
   id: number;
   item_name: string;
   category: AppropriationCategory;
+  /** Optional sub-category under PS / MOOE / CO (Nov 2026). */
+  subcategory?: string | null;
   appropriated_amount: number | string;
   obligated_amount: number | string;
   disbursed_amount: number | string;

@@ -11,25 +11,25 @@ export const ADMIN_TUTORIALS = {
   hub: {
     title: "How to use the Admin page",
     intro:
-      "This is the starting point for system administration. Each card opens a different tool for managing accounts, zones, activity records, and backups.",
+      "This is the starting point for system administration. Each row opens a tool for managing accounts, zones, activity records, backups or settings, and shows how things stand right now.",
     steps: [
       {
-        title: "Pick a section",
+        title: "Check the status on the right",
         description:
-          "Click a card — User Management, Puroks, Audit Logs, or Backup — to open that tool.",
+          "Each row says how things stand: how many accounts are active, how many puroks there are, the latest recorded action, and when the last backup ran. Anything that needs you, like a password reset waiting for approval or no recent backup, is shown in amber.",
+      },
+      {
+        title: "Open a section",
+        description:
+          "Click a row — Users, Puroks, Audit logs, Backup or Settings — to open that tool.",
       },
       {
         title: "Come back any time",
         description:
-          "Every admin page has a Back link or the sidebar's Admin menu to return here.",
-      },
-      {
-        title: "Looking for barangay details or incident types?",
-        description:
-          "Those are under Settings in the sidebar, not on this page.",
+          "Every admin page has a Back link, or use the sidebar's Admin menu to return here.",
       },
     ],
-    tips: ["Which cards you can open depends on your account's permissions."],
+    tips: ["You only see the sections your account is allowed to open."],
   },
 
   users: {
@@ -38,9 +38,9 @@ export const ADMIN_TUTORIALS = {
       "Every person who logs in to this system has a user account here. Use this page to create accounts, change roles, and turn access on or off.",
     steps: [
       {
-        title: "Check the totals",
+        title: "Switch between All, Active and Deactivated",
         description:
-          "The cards at the top show how many accounts exist, how many can log in (Active), and how many are switched off (Inactive).",
+          "The tabs above the list show how many accounts are in each group. Click one to see only those accounts.",
       },
       {
         title: "Find an account",
@@ -50,7 +50,7 @@ export const ADMIN_TUTORIALS = {
       {
         title: "Add a new account",
         description:
-          "Click Add User at the top right, fill in the username, password, and role, then click Create User.",
+          "Click Add user at the top right, fill in the username, password, and role, then click Create User.",
       },
       {
         title: "Edit an account",
@@ -60,12 +60,13 @@ export const ADMIN_TUTORIALS = {
       {
         title: "Deactivate or reactivate",
         description:
-          "Click Deactivate on a row to stop that person from logging in, then confirm. Click Activate on an inactive row to give access back.",
+          "Click Deactivate on a row to stop that person from logging in, then confirm. Click Reactivate on a deactivated account to give access back. You can't deactivate your own account."
       },
     ],
     tips: [
       "Deactivating keeps the account and its history — it just blocks login. Prefer this over removing people.",
-      "Give each person the lowest role that lets them do their job.",
+      "Give each person the lowest role that lets them do their job. The line under each role says what it can do.",
+      "\"Hasn't chosen their own password yet\" means the person is still on a temporary or admin-set password. \"Two-factor off\" means they sign in with a password only.",
     ],
   },
 

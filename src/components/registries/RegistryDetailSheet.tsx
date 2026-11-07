@@ -5,6 +5,11 @@
 // (which still exists for direct links/bookmarks), just re-homed so it can
 // render inside <Sheet> and be driven by an `entryId` prop from the list
 // page. Mirrors the pattern set by BlotterCaseSheet.
+//
+// BUGFIX (Nov 2026): every entry showed "Entry not found" because
+// /api/registries/[id] was looking up a resident instead of the registry
+// entry (fixed in that route). Remove now checks registries:delete and
+// reports a failed removal instead of closing as if it had worked.
 "use client";
 
 import { useEffect, useState } from "react";
@@ -172,9 +177,17 @@ export default function RegistryDetailSheet({
     if (!confirm("Remove this resident from the registry? This cannot be undone.")) return;
     setDeleting(true);
     try {
-      await fetch(`/api/registries/${entry.id}`, { method: "DELETE" });
+      // Removes the registry entry only — the resident's RBI record stays.
+      const res = await fetch(`/api/registries/${entry.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        alert(data?.message || data?.error || "Couldn't remove this resident from the registry. Please try again.");
+        return;
+      }
       onRemoved?.();
       onClose();
+    } catch {
+      alert("Couldn't remove this resident from the registry. Please try again.");
     } finally {
       setDeleting(false);
     }
@@ -404,7 +417,7 @@ export default function RegistryDetailSheet({
             </SheetBody>
 
             <SheetFooter>
-              {can("residents:delete") && (<button
+              {can("registries:delete") && (<button
                 onClick={handleDelete}
                 disabled={deleting}
                 className="flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2 text-[12px] font-bold text-red-500 dark:text-red-400 transition hover:bg-red-50 disabled:opacity-50"

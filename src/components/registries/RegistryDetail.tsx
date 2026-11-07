@@ -1,4 +1,11 @@
 // FILE: src/components/registries/RegistryDetail.tsx
+//
+// Full-page registry entry view (/registries/*/[id]).
+//
+// BUGFIX (Nov 2026): this page always bounced back to the list because
+// /api/registries/[id] was looking up a resident instead of the registry
+// entry (fixed in that route). Remove now checks registries:delete and
+// reports a failed removal instead of leaving the page as if it had worked.
 "use client";
 
 import { useState, useEffect } from "react";
@@ -157,8 +164,16 @@ export default function RegistryDetail({
     if (!confirm("Remove this resident from the registry? This cannot be undone.")) return;
     setDeleting(true);
     try {
-      await fetch(`/api/registries/${entryId}`, { method: "DELETE" });
+      // Removes the registry entry only — the resident's RBI record stays.
+      const res = await fetch(`/api/registries/${entryId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        alert(data?.message || data?.error || "Couldn't remove this resident from the registry. Please try again.");
+        return;
+      }
       router.push(listBase);
+    } catch {
+      alert("Couldn't remove this resident from the registry. Please try again.");
     } finally {
       setDeleting(false);
     }
@@ -215,7 +230,7 @@ export default function RegistryDetail({
           >
             <User size={13} /> View RBI Profile
           </button>
-          {can("residents:delete") && (<button
+          {can("registries:delete") && (<button
             onClick={handleDelete}
             disabled={deleting}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-red-200 text-red-500 dark:text-red-400 text-[12px] font-bold hover:bg-red-50 transition disabled:opacity-50"

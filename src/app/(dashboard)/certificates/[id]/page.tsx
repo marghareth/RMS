@@ -1,4 +1,9 @@
 // FILE: src/app/(dashboard)/certificates/[id]/page.tsx
+//
+// HEADER REDESIGN (Nov 2026): the title is the document type with the
+// certificate number under it; status, queue no., dates and payment, plus a
+// Pending → Processing → Released tracker, are in CertificateOverview. A
+// "How to use" guide (src/lib/documentTutorials.ts) explains the statuses.
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
@@ -6,7 +11,9 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, FileText, User, Calendar, ShieldCheck, Printer, History } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
-import StatusBadge from "@/components/shared/StatusBadge";
+import CertificateOverview, { type CertificateWithTiming } from "@/components/certificates/CertificateOverview";
+import PageTutorial from "@/components/shared/PageTutorial";
+import { DOCUMENT_TUTORIALS } from "@/lib/documentTutorials";
 import {
   CertificateMock,
   certTypeLabel,
@@ -35,7 +42,7 @@ export default function CertificateDetailPage() {
   const certId = Number(params.id);
 
   // GET /api/certificates/[id]
-  const [certificate, setCertificate] = useState<CertificateMock | null>(null);
+  const [certificate, setCertificate] = useState<CertificateWithTiming | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -100,42 +107,45 @@ export default function CertificateDetailPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="mb-5 flex items-start justify-between">
-        <div>
-          <button
-            onClick={() => router.push("/certificates")}
-            className="mb-2 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
-          >
-            <ArrowLeft size={14} />
-            Back to Certificates
-          </button>
-          <div className="flex items-center gap-3">
-            <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">{certificate.certificate_no}</h1>
-            <span className="inline-flex items-center rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong)">
-              {certTypeLabel(certificate.certificate_type)}
-            </span>
-            <StatusBadge status={certificate.status} />
+      {/* Header — redesigned Nov 2026: the document type is the title, the
+          certificate number sits under it, and the status, queue number,
+          dates and payment moved into CertificateOverview below instead of
+          being squeezed into one line of pills and middots. */}
+      <button
+        onClick={() => router.push("/certificates")}
+        className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
+      >
+        <ArrowLeft size={14} />
+        Back to Certificates
+      </button>
+
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-[24px] font-semibold leading-tight text-[#1F2937] dark:text-white">
+            {certTypeLabel(certificate.certificate_type)}
+          </h1>
+          <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#6B7280] dark:text-[#A3A3A3]">
+            <span className="font-mono tabular-nums text-[#374151] dark:text-[#D4D4D4]">{certificate.certificate_no}</span>
             {certificate.flagged_manual && (
-              <span className="inline-flex items-center rounded-full bg-[#FEF3C7] dark:bg-amber-500/15 px-2.5 py-1 text-[11px] font-semibold text-[#D97706] dark:text-[#FBBF24]">
-                Walk-in
-              </span>
+              <span className="border-l border-[#E5E7EB] pl-3 dark:border-[#333333]">Walk-in, not linked to the RBI</span>
             )}
-          </div>
-          <p className="mt-0.5 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-            {certificate.issued_at
-              ? `Released ${formatISODateTime(certificate.issued_at)}`
-              : `Requested ${formatISODateTime(certificate.requested_at)} · Queue #${certificate.queue_number}`}
           </p>
         </div>
-        <button
-          data-tour="page-certificates-detail-preview"
-          onClick={() => router.push(`/certificates/${certId}/preview`)}
-          className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
-        >
-          <Printer size={14} />
-          Preview / Print
-        </button>
+        <div className="flex items-center gap-2">
+          <PageTutorial tutorial={DOCUMENT_TUTORIALS.certificateDetail} />
+          <button
+            data-tour="page-certificates-detail-preview"
+            onClick={() => router.push(`/certificates/${certId}/preview`)}
+            className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
+          >
+            <Printer size={14} />
+            Preview / Print
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-5">
+        <CertificateOverview certificate={certificate} />
       </div>
 
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">

@@ -1,15 +1,55 @@
 // FILE: src/app/(dashboard)/financial/new/page.tsx
+//
+// EDITABLE CATEGORIES (Nov 2026): the Income / Expense category shortcuts
+// are no longer a fixed list. Staff who can add transactions click
+// "Edit list" next to them to add, rename or remove categories right here
+// (ListEditorDialog → PUT /api/financial-categories). Until someone edits
+// a list, the original defaults are used (src/lib/category-lists.ts).
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
-import { FinancialType, INCOME_CATEGORIES, EXPENSE_CATEGORIES, formatCurrency } from "@/lib/mock/financial";
+import { ArrowLeft, ArrowUpCircle, ArrowDownCircle, Pencil } from "lucide-react";
+import { FinancialType, formatCurrency } from "@/lib/mock/financial";
+import { FINANCIAL_CATEGORY_DEFAULTS, type FinancialListType } from "@/lib/category-lists";
+import ListEditorDialog from "@/components/shared/ListEditorDialog";
+import { useCan } from "@/lib/hooks/useCan";
 import { moneyEntryProblems, problemFor } from "@/lib/form-rules";
 import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 export default function NewFinancialRecordPage() {
   const router = useRouter();
+  const can = useCan();
+
+  // Category shortcuts — the saved lists, or the defaults until they load.
+  const [categoryLists, setCategoryLists] = useState<Record<FinancialListType, string[]>>(FINANCIAL_CATEGORY_DEFAULTS);
+  const [editingList, setEditingList] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/financial-categories")
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data) => {
+        if (!cancelled && Array.isArray(data?.INCOME) && Array.isArray(data?.EXPENSE)) setCategoryLists(data);
+      })
+      .catch(() => {
+        // Keep the defaults; the shortcuts are a convenience only.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function saveCategoryList(list: string[]) {
+    const res = await fetch("/api/financial-categories", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, categories: list }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(data?.message || "Couldn't save the categories. Please try again.");
+    setCategoryLists((prev) => ({ ...prev, [type]: data.categories }));
+  }
 
   const [type, setType] = useState<FinancialType>("INCOME");
   const [category, setCategory] = useState("");
@@ -20,7 +60,7 @@ export default function NewFinancialRecordPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const categories = type === "INCOME" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+  const categories = categoryLists[type];
   const parsedAmount = useMemo(() => parseFloat(amount), [amount]);
 
   function handleCategoryPick(c: string) {
@@ -82,6 +122,15 @@ export default function NewFinancialRecordPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
+      <ListEditorDialog
+        open={editingList}
+        title={type === "INCOME" ? "Edit income categories" : "Edit expense categories"}
+        description="These are the shortcut buttons on this form. Picking one fills in the Description. Changes apply to everyone and don't affect transactions already saved."
+        items={categories}
+        defaults={FINANCIAL_CATEGORY_DEFAULTS[type]}
+        onSave={saveCategoryList}
+        onClose={() => setEditingList(false)}
+      />
       <button
         onClick={() => router.push("/financial")}
         className="mb-4 flex items-center gap-1.5 text-[12px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] transition hover:text-[#1F2937] dark:hover:text-white"
@@ -133,9 +182,20 @@ export default function NewFinancialRecordPage() {
         <div className="space-y-4">
           {/* Category quick-picks */}
           <div data-tour="page-financial-new-category">
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
-              Category <span className="font-normal normal-case text-[#9CA3AF] dark:text-[#A3A3A3]">(fills description below)</span>
-            </label>
+            <div className="mb-1.5 flex items-center justify-between gap-3">
+              <label className="block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                Category <span className="font-normal normal-case text-[#9CA3AF] dark:text-[#A3A3A3]">(fills description below)</span>
+              </label>
+              {can("financial:write") && (
+                <button
+                  type="button"
+                  onClick={() => setEditingList(true)}
+                  className="flex items-center gap-1 text-[12px] font-semibold text-(--brand-fg) transition hover:underline"
+                >
+                  <Pencil size={12} /> Edit list
+                </button>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {categories.map((c) => (
                 <button

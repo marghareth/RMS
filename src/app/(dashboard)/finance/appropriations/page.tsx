@@ -1,8 +1,19 @@
 // FILE: src/app/(dashboard)/finance/appropriations/page.tsx
+//
+// SUB-CATEGORIES (Nov 2026): PS / MOOE / CO stay the official classes
+// (the Budget Overview groups by them), and each appropriation can also
+// have an optional sub-category, e.g. MOOE → "Office Supplies". Staff
+// manage the sub-category lists right here ("Edit list" under the
+// Sub-category field → PUT /api/appropriation-subcategories), not in
+// Admin. The list can be filtered by class and then by sub-category.
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ClipboardList, Plus, X, Search } from "lucide-react";
+import { ClipboardList, Plus, X, Search, Pencil } from "lucide-react";
+import ListEditorDialog from "@/components/shared/ListEditorDialog";
+import {
+  APPROPRIATION_CLASSES, APPROPRIATION_SUBCATEGORY_DEFAULTS, type AppropriationClass,
+} from "@/lib/category-lists";
 import EmptyState from "@/components/shared/EmptyState";
 import {
   fmtCurrency,
@@ -20,7 +31,10 @@ const STATUS_STYLES: Record<AppropriationStatus, string> = {
   COMPLETED: "bg-green-50 dark:bg-green-500/15 text-green-600 dark:text-green-400",
 };
 
-const EMPTY_FORM = { item_name: "", category: "PS" as AppropriationCategory, appropriated_amount: "", payee: "", fund_source_id: "" };
+const EMPTY_FORM = { item_name: "", category: "PS" as AppropriationCategory, subcategory: "", appropriated_amount: "", payee: "", fund_source_id: "" };
+
+const FIELD = "w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)";
+const FILTER = "rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)";
 
 export default function AppropriationsPage() {
   const can = useCan();
@@ -28,7 +42,40 @@ export default function AppropriationsPage() {
   const [fundSources, setFundSources] = useState<FundSourceMini[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("");
+  const [subcategoryFilter, setSubcategoryFilter] = useState("");
   const [status, setStatus] = useState("");
+
+  // Sub-category choices per class — saved lists, or the defaults until they load.
+  const [subLists, setSubLists] = useState<Record<AppropriationClass, string[]>>(APPROPRIATION_SUBCATEGORY_DEFAULTS);
+  const [editingClass, setEditingClass] = useState<AppropriationClass | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/appropriation-subcategories")
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data) => {
+        if (!cancelled && APPROPRIATION_CLASSES.every((c) => Array.isArray(data?.[c]))) setSubLists(data);
+      })
+      .catch(() => {
+        // Keep the defaults.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function saveSubList(cls: AppropriationClass, list: string[]) {
+    const res = await fetch("/api/appropriation-subcategories", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category: cls, subcategories: list }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(data?.message || "Couldn't save the sub-categories. Please try again.");
+    setSubLists((prev) => ({ ...prev, [cls]: data.subcategories }));
+    // If the one picked on the form was renamed or removed, clear it.
+    setForm((f) => (f.category === cls && f.subcategory && !data.subcategories.includes(f.subcategory) ? { ...f, subcategory: "" } : f));
+  }
   const [search, setSearch] = useState("");
 
   const [showForm, setShowForm] = useState(false);
@@ -41,6 +88,7 @@ export default function AppropriationsPage() {
     try {
       const params = new URLSearchParams();
       if (category) params.set("category", category);
+      if (category && subcategoryFilter) params.set("subcategory", subcategoryFilter);
       if (status) params.set("status", status);
       if (search) params.set("search", search);
       const [apRes, fsRes] = await Promise.all([
@@ -54,7 +102,7 @@ export default function AppropriationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [category, status, search]);
+  }, [category, subcategoryFilter, status, search]);
 
   useEffect(() => {
     const t = setTimeout(load, 250);
@@ -82,6 +130,7 @@ export default function AppropriationsPage() {
         body: JSON.stringify({
           item_name: form.item_name,
           category: form.category,
+          subcategory: form.subcategory || null,
           appropriated_amount: Number(form.appropriated_amount),
           payee: form.payee || undefined,
           fund_source_id: form.fund_source_id ? Number(form.fund_source_id) : undefined,
@@ -111,6 +160,19 @@ export default function AppropriationsPage() {
 
   return (
     <div>
+      <ListEditorDialog
+        open={editingClass !== null}
+        title={editingClass ? `Edit ${editingClass} sub-categories` : ""}
+        description={
+          editingClass
+            ? `Choices under ${editingClass} — ${APPROPRIATION_CATEGORY_LABELS[editingClass]}. Renaming or removing one doesn't change appropriations already saved with it.`
+            : undefined
+        }
+        items={editingClass ? subLists[editingClass] : []}
+        defaults={editingClass ? APPROPRIATION_SUBCATEGORY_DEFAULTS[editingClass] : undefined}
+        onSave={(list) => saveSubList(editingClass!, list)}
+        onClose={() => setEditingClass(null)}
+      />
       <div className="mb-5 flex items-start justify-between">
         <div>
           <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Appropriations</h1>
@@ -129,7 +191,7 @@ export default function AppropriationsPage() {
       {showForm && (
         <div className="mb-5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           {error && <div className="mb-3 rounded-lg bg-red-50 dark:bg-red-500/15 px-3 py-2.5 text-[12px] text-red-600 dark:text-red-400">{error}</div>}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
             <div className="lg:col-span-2">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Item Name *</label>
               <input
@@ -145,13 +207,31 @@ export default function AppropriationsPage() {
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Category *</label>
               <select
                 value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value as AppropriationCategory })}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+                onChange={(e) => setForm({ ...form, category: e.target.value as AppropriationCategory, subcategory: "" })}
+                className={FIELD}
               >
-                {(["PS", "MOOE", "CO"] as const).map((c) => (
+                {APPROPRIATION_CLASSES.map((c) => (
                   <option key={c} value={c}>{c} — {APPROPRIATION_CATEGORY_LABELS[c]}</option>
                 ))}
               </select>
+            </div>
+            <div data-tour="page-appropriations-subcategory">
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Sub-category</label>
+              <select
+                value={form.subcategory}
+                onChange={(e) => setForm({ ...form, subcategory: e.target.value })}
+                className={FIELD}
+              >
+                <option value="">— None —</option>
+                {subLists[form.category].map((sc) => <option key={sc} value={sc}>{sc}</option>)}
+              </select>
+              <button
+                type="button"
+                onClick={() => setEditingClass(form.category)}
+                className="mt-1.5 flex items-center gap-1 text-[12px] font-semibold text-(--brand-fg) transition hover:underline"
+              >
+                <Pencil size={12} /> Edit {form.category} list
+              </button>
             </div>
             <div>
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Amount (₱) *</label>
@@ -199,10 +279,24 @@ export default function AppropriationsPage() {
             className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] outline-none focus:border-(--brand-line)"
           />
         </div>
-        <select data-tour="page-appropriations-filters" value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)">
+        <select
+          data-tour="page-appropriations-filters"
+          value={category}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            setSubcategoryFilter("");
+          }}
+          className={FILTER}
+        >
           <option value="">All Categories</option>
-          {(["PS", "MOOE", "CO"] as const).map((c) => <option key={c} value={c}>{c}</option>)}
+          {APPROPRIATION_CLASSES.map((c) => <option key={c} value={c}>{c} — {APPROPRIATION_CATEGORY_LABELS[c]}</option>)}
         </select>
+        {category && (
+          <select value={subcategoryFilter} onChange={(e) => setSubcategoryFilter(e.target.value)} className={FILTER} aria-label="Sub-category">
+            <option value="">All {category} sub-categories</option>
+            {subLists[category as AppropriationClass].map((sc) => <option key={sc} value={sc}>{sc}</option>)}
+          </select>
+        )}
         <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)">
           <option value="">All Statuses</option>
           {(["PENDING", "APPROVED", "COMPLETED"] as const).map((s) => <option key={s} value={s}>{s}</option>)}
@@ -236,9 +330,13 @@ export default function AppropriationsPage() {
                     <span
                       className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
                       style={{ backgroundColor: APPROPRIATION_CATEGORY_COLORS[a.category] }}
+                      title={APPROPRIATION_CATEGORY_LABELS[a.category]}
                     >
                       {a.category}
                     </span>
+                    {a.subcategory && (
+                      <p className="mt-1 text-[12px] text-[#4B5563] dark:text-[#A3A3A3]">{a.subcategory}</p>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-[12px] text-[#374151] dark:text-[#D4D4D4]">{a.fund_source?.name ?? "—"}</td>
                   <td className="px-4 py-3 text-right text-[12px] font-semibold text-[#1F2937] dark:text-white">{fmtCurrency(a.appropriated_amount)}</td>

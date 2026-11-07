@@ -27,6 +27,7 @@ import {
 } from "@/lib/mock/barangayId";
 import { useBarangayInfo } from "@/lib/hooks/useBarangayInfo";
 import { useCan } from "@/lib/hooks/useCan";
+import { printPdf } from "@/lib/print-pdf";
 
 /** Tells the Processing Time report this document was printed (only the first time counts). */
 function markPrinted(kind: "certificate" | "barangay-id", id: number) {
@@ -182,13 +183,13 @@ export default function BarangayIdListPage() {
                     Issued {formatISODate(selected.issued_date)} by {selected.issuer.username}
                   </p>
                 </div>
-                {/* A server-rendered PDF of this ID is available at
-                    /api/pdf/barangay-id/${selected.id}; the on-screen card is
-                    printed directly for now. */}
+                {/* FIX (Nov 2026): prints the server-rendered ID card PDF
+                    (/api/pdf/barangay-id/[id]) — window.print() printed the
+                    whole page, list and sidebar included. */}
                 <button
                   onClick={() => {
                     markPrinted("barangay-id", selected.id);
-                    window.print();
+                    printPdf(`/api/pdf/barangay-id/${selected.id}`);
                   }}
                   className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover) print:hidden"
                 >

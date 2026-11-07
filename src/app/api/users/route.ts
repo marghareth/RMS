@@ -20,8 +20,12 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   const auth = await requirePermission("users:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
+  // mfa_enabled / must_change_password are shown on the Users list (Nov
+  // 2026) so an admin can see who still needs to set up two-factor or pick
+  // their own password. Never the secrets themselves (mfa_secret, backup
+  // codes, password_hash).
   const users = await prisma.user.findMany({
-    select: { id: true, username: true, role: true, is_active: true, created_at: true },
+    select: { id: true, username: true, role: true, is_active: true, created_at: true, mfa_enabled: true, must_change_password: true },
     orderBy: { username: "asc" },
   });
 

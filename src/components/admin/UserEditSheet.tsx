@@ -18,7 +18,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSafeSession } from "@/lib/hooks/useSafeSession";
 import { UserCog, Users, ExternalLink } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody, SheetFooter,
@@ -39,7 +39,7 @@ interface UserEditSheetProps {
 export default function UserEditSheet({ userId, onClose, onSaved }: UserEditSheetProps) {
   const can = useCan();
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session } = useSafeSession();
   const actorIsAdmin = session?.user?.role === "ADMIN";
   const open = userId !== null;
 

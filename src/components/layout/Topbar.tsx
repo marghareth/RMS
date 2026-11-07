@@ -16,7 +16,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
+import { useSafeSession } from "@/lib/hooks/useSafeSession";
 import { isViewOnly } from "@/lib/permission";
 import { Menu, Search, Bell, LogOut, ChevronDown, AlertTriangle, Clock, Info, ShieldCheck, HelpCircle, Eye, KeyRound } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
@@ -77,7 +78,7 @@ export default function Topbar({
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const { data: session } = useSession();
+  const { data: session } = useSafeSession();
   const { start: startTour, startPageTour, currentPageTour } = useOnboarding();
 
   const username = session?.user?.username ?? "User";

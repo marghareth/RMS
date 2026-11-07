@@ -11,7 +11,8 @@
 "use client";
 
 import { useState } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
+import { useSafeSession } from "@/lib/hooks/useSafeSession";
 import PageHeader from "@/components/shared/PageHeader";
 import PasswordRules from "@/components/account/PasswordRules";
 import { passwordProblem } from "@/lib/password-policy";
@@ -51,7 +52,7 @@ function Field({
 }
 
 export default function ChangePasswordPage() {
-  const { data: session } = useSession();
+  const { data: session } = useSafeSession();
   const username = session?.user?.username ?? "";
   const required = !!session?.user?.mustChangePassword;
 

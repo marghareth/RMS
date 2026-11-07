@@ -4,6 +4,14 @@
 // instead of an HTML look-alike, so what you see here is exactly what
 // prints and downloads: the full barangay format with logos, officials,
 // signatures and the verification QR. Print prints that PDF.
+//
+// FIX (Nov 2026): the embedded PDF showed "refused to connect" because the
+// site-wide anti-framing headers also blocked the app's own PDF routes
+// (now allowed for same-origin pages in next.config.ts). Print now prints
+// the loaded document (or loads it on its own if the preview hasn't
+// finished), and Download PDF really downloads the file instead of opening
+// a new tab that pop-up blockers could stop. Both show "Preparing…" while
+// the PDF is being made.
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -13,6 +21,7 @@ import EmptyState from "@/components/shared/EmptyState";
 import { CertificateMock, residentFullName } from "@/lib/mock/certificates";
 import { CertificateTemplateMock } from "@/lib/mock/certificateTemplates";
 import { useCan } from "@/lib/hooks/useCan";
+import { downloadPdf, printFrame, printPdf } from "@/lib/print-pdf";
 
 /** Tells the Processing Time report this document was printed (only the first time counts). */
 function markPrinted(kind: "certificate" | "barangay-id", id: number) {
@@ -31,6 +40,8 @@ export default function CertificatePreviewPage() {
   // Bumped after a correction is saved so the PDF reloads with it.
   const [pdfVersion, setPdfVersion] = useState(0);
   const pdfFrame = useRef<HTMLIFrameElement>(null);
+  // True once the embedded PDF has finished loading, so Print can use it.
+  const [pdfReady, setPdfReady] = useState(false);
 
   const [certificate, setCertificate] = useState<CertificateMock | null>(null);
   const [certLoading, setCertLoading] = useState(true);
@@ -113,23 +124,22 @@ export default function CertificatePreviewPage() {
   // or two before the real data arrived.
   const loading = certLoading || (certificate !== null && templateLoading);
 
+  const pdfUrl = `/api/pdf/certificate/${certId}?v=${pdfVersion}`;
+
   function handlePrint() {
     markPrinted("certificate", Number(certId));
-    // Print the PDF itself (same document as the download). If the browser
-    // won't print an embedded PDF, open it in a tab where it can.
-    try {
-      pdfFrame.current?.contentWindow?.focus();
-      pdfFrame.current?.contentWindow?.print();
-    } catch {
-      window.open(`/api/pdf/certificate/${certId}`, "_blank");
-    }
+    // Print the certificate itself (the same PDF as the download), never
+    // the web page. Use the preview if it has loaded; otherwise load the
+    // PDF on its own just for printing.
+    if (pdfReady && printFrame(pdfFrame.current)) return;
+    printPdf(pdfUrl);
   }
 
   function handleDownloadPdf() {
     markPrinted("certificate", Number(certId));
-    // Renders the same template server-side via @react-pdf/renderer
-    // (see src/lib/pdf.ts) and streams back a downloadable PDF file.
-    window.open(`/api/pdf/certificate/${certId}`, "_blank");
+    // Renders the same template server-side via @react-pdf/renderer and
+    // saves it as e.g. CERT-2026-000218.pdf.
+    downloadPdf(pdfUrl, `${certificate?.certificate_no ?? `certificate-${certId}`}.pdf`);
   }
 
   if (loading) {
@@ -201,6 +211,7 @@ export default function CertificatePreviewPage() {
       setCertificate((prev) => (prev ? { ...prev, ...data } : prev));
       setEditingOverride(false);
       setPdfVersion((v) => v + 1);
+      setPdfReady(false); // the corrected PDF reloads below
     } catch (e) {
       console.error(e);
       setOverrideError("Something went wrong. Please try again.");
@@ -328,10 +339,14 @@ export default function CertificatePreviewPage() {
 
       {/* The certificate exactly as it prints */}
       <div data-tour="page-certificates-preview-document" className="mx-auto max-w-4xl overflow-hidden rounded-xl border border-[#E9EAEC] bg-[#525659] shadow-sm dark:border-[#262626]">
+        {!pdfReady && (
+          <p className="py-3 text-center text-[12px] text-[#E5E7EB]">Preparing the certificate…</p>
+        )}
         <iframe
           key={pdfVersion}
           ref={pdfFrame}
-          src={`/api/pdf/certificate/${certId}?v=${pdfVersion}#view=FitH&toolbar=0`}
+          onLoad={() => setPdfReady(true)}
+          src={`${pdfUrl}#view=FitH&toolbar=0`}
           title={`Certificate ${certificate.certificate_no}`}
           className="block h-[calc(100vh-180px)] min-h-180 w-full"
         />

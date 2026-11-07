@@ -163,6 +163,24 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     }
   }
 
+  // ── "Process now" (Nov 2026) ──
+  // Lets staff skip the queue for a request they can handle on the spot,
+  // but only when nobody is waiting: if any request is still PENDING,
+  // starting a new one straight away would serve this applicant ahead of
+  // people who were there first. Checked here as well as on the form, so
+  // a stale form (the queue filled up while it was open) can't skip ahead.
+  const processNow = body.process_now === true;
+  if (processNow) {
+    const waiting = await prisma.certificate.count({ where: { status: "PENDING" } });
+    if (waiting > 0) {
+      throw new ApiError(
+        409,
+        "QUEUE_NOT_EMPTY",
+        `${waiting} ${waiting === 1 ? "request is" : "requests are"} already waiting in the queue, so this one can't skip ahead. Submit it as a request instead.`
+      );
+    }
+  }
+
   let certificate_no = await generateCertificateNo();
   while (await prisma.certificate.findUnique({ where: { certificate_no } })) {
     // Extremely unlikely race between the count check and the insert below —
@@ -175,6 +193,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     queue_number = `${queue_number}-${Math.floor(100 + Math.random() * 900)}`;
   }
 
+  const filedAt = new Date();
   const certificate = await prisma.certificate.create({
     data: {
       certificate_no,
@@ -187,8 +206,12 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
       manual_name: body.manual_name ?? null,
       manual_address: body.manual_address ?? null,
       form_opened_at,
-      // status/payment_status/requested_at all take their schema defaults
-      // (PENDING/PENDING/now()) — a new request always starts in the queue.
+      // payment_status/requested_at take their schema defaults
+      // (PENDING/now()). A normal request starts in the queue as PENDING;
+      // "Process now" starts it as PROCESSING with the same timestamp as
+      // requested_at, which is how the certificate page shows Pending as
+      // skipped.
+      ...(processNow ? { status: "PROCESSING" as const, requested_at: filedAt, processing_started_at: filedAt } : {}),
     },
     include: {
       resident: { include: { purok: true, household: true } },
@@ -201,7 +224,9 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     action: "CREATE",
     table_affected: "Certificate",
     record_id: certificate.id,
-    details: `Issued ${certificate.certificate_type} certificate: ${certificate.certificate_no}`,
+    details: processNow
+      ? `Issued ${certificate.certificate_type} certificate: ${certificate.certificate_no} (processed right away, queue was empty)`
+      : `Issued ${certificate.certificate_type} certificate: ${certificate.certificate_no}`,
   });
 
   return NextResponse.json(certificate, { status: 201 });
