@@ -1,20 +1,17 @@
-// FILE: src/app/api/certificates/[id]/route.ts
-//
-// Fetches and updates a single certificate request as JSON. This is what
-// the Document Queue, the certificate detail page, and the certificate
-// preview page all call — it must return JSON, never the rendered PDF.
-// PDF output lives at its own route, GET /api/pdf/certificate/[id], which
-// renders through @react-pdf/renderer. Status transitions (PENDING ->
-// PROCESSING -> RELEASED, or -> CANCELLED) are handled by the dedicated
-// POST /api/certificates/[id]/process and /cancel routes, not here — PATCH
-// on this route is intentionally limited to payment_status so it can't be
-// used to bypass those transition rules.
+// FILE: src/app/api/pdf/certificate/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { createElement } from "react";
+import { renderToBuffer } from "@react-pdf/renderer";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
-import { logAudit } from "@/lib/audit";
-import { withErrorHandling, ApiError } from "@/lib/api-handler";
-import { certificateUpdateSchema } from "@/lib/validations";
+import CertificatePDF from "@/lib/pdf/CertificatePDF";
+import { buildCertificatePdfProps } from "@/lib/pdf/buildCertificatePdfProps";
+import { withErrorHandling } from "@/lib/api-handler";
+import { parsePaper } from "@/lib/pdf/paper";
+
+// @react-pdf/renderer renders with a real Node canvas/font pipeline, which
+// isn't available on the Edge runtime — this route must run on Node.
+export const runtime = "nodejs";
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const auth = await requirePermission("certificates:read", req);
@@ -30,64 +27,32 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
     where: { id },
     include: {
       resident: { include: { purok: true, household: true } },
-      issuer: { select: { id: true, username: true, role: true } },
     },
   });
-  if (!certificate) throw new ApiError(404, "NOT_FOUND", "Certificate request not found.");
+  if (!certificate) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  return NextResponse.json(certificate);
-});
-
-export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("certificates:write", req);
-  if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
-
-  const { id: idParam } = await context!.params;
-  const id = parseInt(idParam);
-  if (Number.isNaN(id)) {
-    return NextResponse.json({ error: "Invalid certificate id" }, { status: 400 });
-  }
-
-  const existing = await prisma.certificate.findUnique({ where: { id } });
-  if (!existing) throw new ApiError(404, "NOT_FOUND", "Certificate request not found.");
-
-  const body = certificateUpdateSchema.parse(await req.json());
-  if (Object.keys(body).length === 0) {
-    throw new ApiError(400, "VALIDATION_ERROR", "No fields to update.");
-  }
-
-  const data: {
-    payment_status?: typeof body.payment_status;
-    override_full_name?: string | null;
-    override_address?: string | null;
-  } = {};
-  const changes: string[] = [];
-
-  if (body.payment_status !== undefined) {
-    data.payment_status = body.payment_status;
-    changes.push(`payment status → ${body.payment_status}`);
-  }
-  // Empty string clears an override back to "use the resident's real
-  // data" — same convention used elsewhere in the app (e.g. resident
-  // edit) rather than requiring an explicit null from the client.
-  if (body.override_full_name !== undefined) {
-    data.override_full_name = body.override_full_name?.trim() || null;
-    changes.push(data.override_full_name ? "name corrected for this document" : "name correction cleared");
-  }
-  if (body.override_address !== undefined) {
-    data.override_address = body.override_address?.trim() || null;
-    changes.push(data.override_address ? "address corrected for this document" : "address correction cleared");
-  }
-
-  const certificate = await prisma.certificate.update({ where: { id }, data });
-
-  await logAudit({
-    user_id: parseInt(auth.session.user.id),
-    action: "UPDATE",
-    table_affected: "Certificate",
-    record_id: id,
-    details: `Updated ${certificate.certificate_no} (${certificate.queue_number}): ${changes.join(", ")}`,
+  const template = await prisma.certificateTemplate.findUnique({
+    where: { certificate_type: certificate.certificate_type },
   });
+  if (!template) return NextResponse.json({ error: "Template not found for this certificate type" }, { status: 404 });
 
-  return NextResponse.json(certificate);
+  // ?paper=A4|LETTER|FOLIO|LEGAL (Nov 2026) — chosen on the preview page.
+  const paper = parsePaper(new URL(req.url).searchParams.get("paper"));
+  const props = await buildCertificatePdfProps(certificate, template);
+  const buffer = await renderToBuffer(createElement(CertificatePDF, { ...props, paper }));
+
+  // ?download=1 (Download PDF on the preview page, Nov 2026) saves the file
+  // instead of opening it in the browser's PDF viewer. Named after the
+  // certificate number, e.g. CERT-2026-000218.pdf.
+  const download = new URL(req.url).searchParams.get("download") === "1";
+  const filename = `${certificate.certificate_no.replace(/[^A-Za-z0-9_-]/g, "_")}.pdf`;
+
+  return new NextResponse(new Uint8Array(buffer), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `${download ? "attachment" : "inline"}; filename="${filename}"`,
+      "Content-Length": String(buffer.length),
+    },
+  });
 });

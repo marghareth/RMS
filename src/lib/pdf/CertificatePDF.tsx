@@ -5,7 +5,7 @@
 // preview (certificates/[id]/preview) shows this same PDF, so what's
 // previewed, printed and downloaded is one document.
 //
-// Nov 2026: laid out like the standard barangay clearance (A4, framed):
+// Nov 2026: laid out like the standard barangay clearance (framed):
 //   ┌──────────────────────────────────────────────────────┐
 //   │ [seal]        Republic of the Philippines             │
 //   │                   Province of …                       │
@@ -24,6 +24,12 @@
 //   │ Doc. Stamp: Paid                                      │
 //   │ cert no. · notes                               [QR]   │
 //   └──────────────────────────────────────────────────────┘
+// PAPER SIZE (Nov 2026): the page used to be A4 only, so printing on
+// Letter at actual size cut off the bottom. The page is now laid out on the
+// paper picked on the preview page (A4, Letter, Long/Folio 8.5×13, Legal —
+// src/lib/pdf/paper.ts). The frame and footer are pinned to the page edges,
+// so they follow the sheet; the gaps between sections stretch or tighten
+// with the sheet's height so the certificate fills it.
 // The seal comes from General Settings → Barangay Logo (logo_barangay).
 // Until one is uploaded nothing is printed in its place and the letterhead
 // is text only.
@@ -33,6 +39,7 @@
 import { Document, Page, Text, View, StyleSheet, Image as PdfImage, Font } from "@react-pdf/renderer";
 import type { LetterheadOfficial } from "@/lib/barangay-info";
 import { TANGERINE_BOLD_WOFF } from "@/lib/pdf/fonts/tangerine-bold";
+import { PAPER_SIZES, DEFAULT_PAPER, verticalScale, type PaperSize } from "@/lib/pdf/paper";
 
 // Never split words with a hyphen ("mar-ried"); wrap whole words only.
 Font.registerHyphenationCallback((word) => [word]);
@@ -45,7 +52,9 @@ const GRAY = "#555555";
 const RULE = "#6B6B6B";
 
 const s = StyleSheet.create({
-  page: { paddingTop: 44, paddingBottom: 40, paddingHorizontal: 58, fontFamily: "Times-Roman", fontSize: 12, color: INK },
+  // paddingBottom keeps the flowing text clear of the footer (certificate
+  // number + QR), which is pinned to the bottom of the sheet.
+  page: { paddingTop: 44, paddingBottom: 104, paddingHorizontal: 58, fontFamily: "Times-Roman", fontSize: 12, color: INK },
   frame: { position: "absolute", top: 22, left: 22, right: 22, bottom: 22, border: `1 solid ${INK}` },
 
   header: { position: "relative", alignItems: "center", textAlign: "center", minHeight: 84, justifyContent: "center" },
@@ -106,6 +115,8 @@ interface CertificatePDFProps {
   paid?: boolean;
   /** PNG data URL for the verification QR code (from the `qrcode` package). Omit to render without one. */
   qrDataUrl?: string;
+  /** Sheet to lay the certificate out on. Defaults to A4. */
+  paper?: PaperSize;
   // Still produced by buildCertificatePdfProps (used by other documents);
   // not printed on this layout.
   barangayAddress?: string;
@@ -167,7 +178,24 @@ export default function CertificatePDF({
   validityNote,
   paid,
   qrDataUrl,
+  paper = DEFAULT_PAPER,
 }: CertificatePDFProps) {
+  // Gaps between sections, scaled to the sheet's height (1 on A4) — and
+  // tightened when the text is long for this sheet, so a certificate stays
+  // on one page instead of running into the footer or onto a second page.
+  // The text height is estimated (about 95 characters per line at 12 pt on
+  // these page widths); the estimate errs on the generous side.
+  const paragraphCount = body.split(/\n\s*\n|\n/).filter((p) => p.trim()).length + (closing ? 1 : 0);
+  const lineCount = Math.ceil((body.length + closing.length) / 95) + paragraphCount;
+  const pageHeight = PAPER_SIZES[paper].pt[1];
+  const available = pageHeight - 44 - 104; // inside the top padding and the footer reserve
+  const FIXED = 285; // letterhead, title, salutation, signature and fee lines
+  const GAPS = 180; // the five scaled gaps at k = 1
+  const roomForGaps = available - FIXED - lineCount * 12 * 1.9;
+  const k = Math.max(0.35, Math.min(verticalScale(paper), roomForGaps / GAPS));
+  // Very long text: also tighten the line spacing a little.
+  const lineHeight = roomForGaps / GAPS < 0.35 ? 1.6 : 1.9;
+  const gap = (pt: number) => Math.round(pt * k * 10) / 10;
   const terms = [bodyName, purpose];
   const paragraphs = body.split(/\n\s*\n|\n/).map((p) => p.trim()).filter(Boolean);
   // Custom templates that never mention the purpose still get it stated.
@@ -182,7 +210,7 @@ export default function CertificatePDF({
 
   return (
     <Document title={`${title} – ${applicantName}`} author={barangayName}>
-      <Page size="A4" style={s.page}>
+      <Page size={PAPER_SIZES[paper].pt} style={s.page}>
         <View style={s.frame} fixed />
 
         {/* Letterhead */}
@@ -196,30 +224,30 @@ export default function CertificatePDF({
         <View style={s.ruleThick} />
         <View style={s.ruleThin} />
 
-        <Text style={s.office}>{office}</Text>
-        <Text style={s.title}>{title}</Text>
+        <Text style={[s.office, { marginTop: gap(30) }]}>{office}</Text>
+        <Text style={[s.title, { marginTop: gap(14) }]}>{title}</Text>
 
-        <Text style={s.salutation}>TO WHOM IT MAY CONCERN:</Text>
+        <Text style={[s.salutation, { marginTop: gap(40) }]}>TO WHOM IT MAY CONCERN:</Text>
         {paragraphs.map((p, i) => (
-          <Text key={i} style={s.para}>
+          <Text key={i} style={[s.para, { lineHeight }]}>
             {emphasize(p, terms)}
           </Text>
         ))}
         {!mentionsPurpose && purpose.trim() ? (
-          <Text style={s.para}>
+          <Text style={[s.para, { lineHeight }]}>
             This certification is issued for <Text style={s.strong}>{purpose}</Text> and for whatever legal purpose it may serve.
           </Text>
         ) : null}
-        {closing ? <Text style={s.para}>{closingLine(closing, terms)}</Text> : null}
+        {closing ? <Text style={[s.para, { lineHeight }]}>{closingLine(closing, terms)}</Text> : null}
 
-        <View style={s.signRow} wrap={false}>
+        <View style={[s.signRow, { marginTop: gap(50) }]} wrap={false}>
           <View style={s.sign}>
             <Text style={s.captainName}>{captainName || " "}</Text>
             <Text style={s.captainPos}>{captainPosition || "Punong Barangay"}</Text>
           </View>
         </View>
 
-        <View style={s.fees} wrap={false}>
+        <View style={[s.fees, { marginTop: gap(46) }]} wrap={false}>
           <View style={s.feeItem}>
             <Text style={s.feeLabel}>O.R No.</Text>
             <View style={s.feeBlank} />

@@ -12,6 +12,10 @@
 // finished), and Download PDF really downloads the file instead of opening
 // a new tab that pop-up blockers could stop. Both show "Preparing…" while
 // the PDF is being made.
+//
+// PAPER SIZE (Nov 2026): a "Paper" picker (A4, Letter, Long/Folio, Legal)
+// lays the certificate out for that sheet, so nothing is cut off when it's
+// printed at actual size. The choice is remembered in this browser.
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -22,6 +26,9 @@ import { CertificateMock, residentFullName } from "@/lib/mock/certificates";
 import { CertificateTemplateMock } from "@/lib/mock/certificateTemplates";
 import { useCan } from "@/lib/hooks/useCan";
 import { downloadPdf, printFrame, printPdf } from "@/lib/print-pdf";
+import { PAPER_SIZES, DEFAULT_PAPER, parsePaper, type PaperSize } from "@/lib/pdf/paper";
+
+const PAPER_PREF_KEY = "rms-paper-size";
 
 /** Tells the Processing Time report this document was printed (only the first time counts). */
 function markPrinted(kind: "certificate" | "barangay-id", id: number) {
@@ -42,6 +49,25 @@ export default function CertificatePreviewPage() {
   const pdfFrame = useRef<HTMLIFrameElement>(null);
   // True once the embedded PDF has finished loading, so Print can use it.
   const [pdfReady, setPdfReady] = useState(false);
+
+  // Paper the certificate is laid out on; the last choice is remembered.
+  const [paper, setPaperState] = useState<PaperSize>(() => {
+    if (typeof window === "undefined") return DEFAULT_PAPER;
+    try {
+      return parsePaper(window.localStorage.getItem(PAPER_PREF_KEY));
+    } catch {
+      return DEFAULT_PAPER;
+    }
+  });
+  function setPaper(next: PaperSize) {
+    setPaperState(next);
+    setPdfReady(false); // the PDF reloads in the new size
+    try {
+      window.localStorage.setItem(PAPER_PREF_KEY, next);
+    } catch {
+      // Private browsing: the choice just isn't remembered.
+    }
+  }
 
   const [certificate, setCertificate] = useState<CertificateMock | null>(null);
   const [certLoading, setCertLoading] = useState(true);
@@ -124,7 +150,7 @@ export default function CertificatePreviewPage() {
   // or two before the real data arrived.
   const loading = certLoading || (certificate !== null && templateLoading);
 
-  const pdfUrl = `/api/pdf/certificate/${certId}?v=${pdfVersion}`;
+  const pdfUrl = `/api/pdf/certificate/${certId}?v=${pdfVersion}&paper=${paper}`;
 
   function handlePrint() {
     markPrinted("certificate", Number(certId));
@@ -247,6 +273,22 @@ export default function CertificatePreviewPage() {
             <FileEdit size={14} />
             Edit Template
           </button>
+          <label className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] pl-3 text-[13px] text-[#6B7280] dark:text-[#A3A3A3]">
+            Paper
+            <select
+              data-tour="page-certificates-preview-paper"
+              value={paper}
+              onChange={(e) => setPaper(parsePaper(e.target.value))}
+              title="The certificate is laid out for this paper size"
+              className="rounded-r-lg border-0 bg-transparent py-2.5 pl-1 pr-2 text-[13px] font-semibold text-[#374151] outline-none dark:text-[#D4D4D4]"
+            >
+              {(Object.keys(PAPER_SIZES) as PaperSize[]).map((key) => (
+                <option key={key} value={key}>
+                  {PAPER_SIZES[key].label} ({PAPER_SIZES[key].detail})
+                </option>
+              ))}
+            </select>
+          </label>
           <button
             onClick={handlePrint}
             className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-2.5 text-[13px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
@@ -343,7 +385,7 @@ export default function CertificatePreviewPage() {
           <p className="py-3 text-center text-[12px] text-[#E5E7EB]">Preparing the certificate…</p>
         )}
         <iframe
-          key={pdfVersion}
+          key={`${pdfVersion}-${paper}`}
           ref={pdfFrame}
           onLoad={() => setPdfReady(true)}
           src={`${pdfUrl}#view=FitH&toolbar=0`}

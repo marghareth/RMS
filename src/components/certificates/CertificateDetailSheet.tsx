@@ -1,5 +1,10 @@
 // FILE: src/components/certificates/CertificateDetailSheet.tsx
 //
+// BODY REDESIGN (Nov 2026): the Applicant / Purpose / Issuance Info boxes
+// are replaced by CertificateDetails (Applicant, Request, Other
+// certificates), shared with the full page, without repeating what the
+// header already shows.
+//
 // HEADER REDESIGN (Nov 2026): the title is now the document type with the
 // certificate number under it, and the status / queue no. / dates /
 // payment plus a Pending → Processing → Released tracker live in
@@ -19,39 +24,27 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, User, Calendar, ShieldCheck, Printer, History, ExternalLink } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { FileText, Printer, ExternalLink } from "lucide-react";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody,
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetClose,
+  SheetBody,
 } from "@/components/ui/sheet";
 import EmptyState from "@/components/shared/EmptyState";
 import CertificateOverview, { type CertificateWithTiming } from "@/components/certificates/CertificateOverview";
+import CertificateDetails from "@/components/certificates/CertificateDetails";
 import {
   CertificateMock,
   certTypeLabel,
-  residentFullName,
-  formatISODateTime,
-  formatISODate,
-  certDisplayDate,
-  PAYMENT_STATUS_LABELS,
 } from "@/lib/mock/certificates";
 
 interface CertificateDetailSheetProps {
   /** The certificate to show, or null to keep the sheet closed. */
   certificateId: number | null;
   onClose: () => void;
-}
-
-function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: string | null }) {
-  return (
-    <div className="flex items-start gap-2.5 py-1.5">
-      <Icon size={14} className="mt-0.5 shrink-0 text-[#9CA3AF] dark:text-[#A3A3A3]" />
-      <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">{label}</p>
-        <p className="text-[13px] text-[#1F2937] dark:text-white">{value || "—"}</p>
-      </div>
-    </div>
-  );
 }
 
 export default function CertificateDetailSheet({ certificateId, onClose }: CertificateDetailSheetProps) {
@@ -171,87 +164,11 @@ export default function CertificateDetailSheet({ certificateId, onClose }: Certi
               <div className="mb-4">
                 <CertificateOverview certificate={certificate} />
               </div>
-              <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
-                {/* ── Left: certificate details ── */}
-                <div className="space-y-4 lg:col-span-2">
-                  <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
-                    <div className="mb-3 flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--brand-tint)">
-                        <User size={14} className="text-(--brand-fg-strong)" />
-                      </div>
-                      <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Applicant</p>
-                    </div>
-                    {certificate.resident ? (
-                      <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
-                        <InfoRow icon={User} label="Full Name" value={residentFullName(certificate.resident)} />
-                        <InfoRow icon={Calendar} label="Date of Birth" value={formatISODate(certificate.resident.birthdate)} />
-                        <InfoRow icon={ShieldCheck} label="Purok" value={certificate.resident.purok?.name} />
-                        <InfoRow icon={FileText} label="Resident Record" value={`Linked · RBI #${certificate.resident.id}`} />
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
-                        <InfoRow icon={User} label="Full Name" value={certificate.manual_name} />
-                        <InfoRow icon={ShieldCheck} label="Address" value={certificate.manual_address} />
-                        <InfoRow icon={FileText} label="Resident Record" value="Not linked / walk-in entry" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
-                    <p className="mb-2 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Purpose</p>
-                    <p className="text-[13px] leading-relaxed text-[#374151] dark:text-[#D4D4D4]">{certificate.purpose}</p>
-                  </div>
-
-                  {/* Issuance history for this resident */}
-                  <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
-                    <div className="mb-3 flex items-center gap-2">
-                      <History size={14} className="text-[#6B7280] dark:text-[#A3A3A3]" />
-                      <p className="text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
-                        Other Certificates for This Resident ({residentHistory.length})
-                      </p>
-                    </div>
-                    {!certificate.resident ? (
-                      <p className="py-3 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-                        Walk-in entries aren&apos;t linked to a resident record, so no issuance history is available.
-                      </p>
-                    ) : residentHistory.length === 0 ? (
-                      <p className="py-3 text-center text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No other certificates issued yet.</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {residentHistory.map((c) => (
-                          <button
-                            key={c.id}
-                            onClick={() => setActiveId(c.id)}
-                            className="flex w-full items-center justify-between rounded-lg border border-[#F4F5F7] dark:border-[#262626] px-3 py-2.5 text-left transition hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
-                          >
-                            <div>
-                              <p className="text-[12px] font-bold text-[#1F2937] dark:text-white">{certTypeLabel(c.certificate_type)}</p>
-                              <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">{c.purpose}</p>
-                            </div>
-                            <span className="shrink-0 text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">{formatISODate(certDisplayDate(c))}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* ── Right: issuance info ── */}
-                <div className="lg:col-span-1">
-                  <div className="rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4">
-                    <p className="mb-3 text-[12px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Issuance Info</p>
-                    <InfoRow icon={ShieldCheck} label="Issued By" value={certificate.issuer.username} />
-                    <InfoRow
-                      icon={Calendar}
-                      label="Date Issued"
-                      value={certificate.issued_at ? formatISODateTime(certificate.issued_at) : "Awaiting release"}
-                    />
-                    <InfoRow icon={FileText} label="Certificate No." value={certificate.certificate_no} />
-                    <InfoRow icon={FileText} label="Queue No." value={certificate.queue_number} />
-                    <InfoRow icon={ShieldCheck} label="Payment" value={PAYMENT_STATUS_LABELS[certificate.payment_status]} />
-                  </div>
-                </div>
-              </div>
+              <CertificateDetails
+                certificate={certificate}
+                history={residentHistory}
+                onOpenOther={(id) => setActiveId(id)}
+              />
             </SheetBody>
           </div>
         )}
