@@ -3,8 +3,8 @@
 // SUB-CATEGORIES (Nov 2026): PS / MOOE / CO stay the official classes
 // (the Budget Overview groups by them), and each appropriation can also
 // have an optional sub-category, e.g. MOOE → "Office Supplies". Staff
-// manage the sub-category lists right here ("Edit list" under the
-// Sub-category field → PUT /api/appropriation-subcategories), not in
+// manage the sub-category lists right here ("Edit PS list" under the
+// Category field → PUT /api/appropriation-subcategories), not in
 // Admin. The list can be filtered by class and then by sub-category.
 "use client";
 
@@ -26,9 +26,9 @@ import { fieldProblems, problemFor } from "@/lib/form-rules";
 import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
 
 const STATUS_STYLES: Record<AppropriationStatus, string> = {
-  PENDING: "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400",
-  APPROVED: "bg-(--brand-tint) text-(--brand-fg)",
-  COMPLETED: "bg-green-50 dark:bg-green-500/15 text-green-600 dark:text-green-400",
+  PENDING: "text-amber-600 dark:text-amber-400",
+  APPROVED: "text-(--brand-fg) dark:text-[#93C5FD]",
+  COMPLETED: "text-green-600 dark:text-green-400",
 };
 
 const EMPTY_FORM = { item_name: "", category: "PS" as AppropriationCategory, subcategory: "", appropriated_amount: "", payee: "", fund_source_id: "" };
@@ -162,10 +162,10 @@ export default function AppropriationsPage() {
     <div>
       <ListEditorDialog
         open={editingClass !== null}
-        title={editingClass ? `Edit ${editingClass} sub-categories` : ""}
+        title={editingClass ? `Edit the ${editingClass} list` : ""}
         description={
           editingClass
-            ? `Choices under ${editingClass} — ${APPROPRIATION_CATEGORY_LABELS[editingClass]}. Renaming or removing one doesn't change appropriations already saved with it.`
+            ? `Add or delete the items you can pick under ${editingClass} — ${APPROPRIATION_CATEGORY_LABELS[editingClass]}. PS, MOOE and CO themselves stay fixed because the official budget report groups by them. Changing this list doesn't change appropriations already saved.`
             : undefined
         }
         items={editingClass ? subLists[editingClass] : []}
@@ -190,10 +190,10 @@ export default function AppropriationsPage() {
 
       {showForm && (
         <div className="mb-5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
-          {error && <div className="mb-3 rounded-lg bg-red-50 dark:bg-red-500/15 px-3 py-2.5 text-[12px] text-red-600 dark:text-red-400">{error}</div>}
+          {error && <div className="mb-3 rounded-lg px-3 py-2.5 text-[12px] text-red-600 dark:text-red-400">{error}</div>}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
             <div className="lg:col-span-2">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Item Name *</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Item Name *</label>
               <input
                 value={form.item_name}
                 onChange={(e) => setForm({ ...form, item_name: e.target.value })}
@@ -204,7 +204,7 @@ export default function AppropriationsPage() {
               <FieldError message={problemFor(formProblems, "item_name")} />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Category *</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Category *</label>
               <select
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value as AppropriationCategory, subcategory: "" })}
@@ -214,9 +214,19 @@ export default function AppropriationsPage() {
                   <option key={c} value={c}>{c} — {APPROPRIATION_CATEGORY_LABELS[c]}</option>
                 ))}
               </select>
+              {can("appropriations:write") && (
+                <button
+                  type="button"
+                  data-tour="page-appropriations-edit-list"
+                  onClick={() => setEditingClass(form.category)}
+                  className="mt-1.5 flex items-center gap-1 text-[12px] font-semibold text-(--brand-fg) transition hover:underline"
+                >
+                  <Pencil size={12} /> Edit {form.category} list
+                </button>
+              )}
             </div>
             <div data-tour="page-appropriations-subcategory">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Sub-category</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Sub-category</label>
               <select
                 value={form.subcategory}
                 onChange={(e) => setForm({ ...form, subcategory: e.target.value })}
@@ -225,16 +235,9 @@ export default function AppropriationsPage() {
                 <option value="">— None —</option>
                 {subLists[form.category].map((sc) => <option key={sc} value={sc}>{sc}</option>)}
               </select>
-              <button
-                type="button"
-                onClick={() => setEditingClass(form.category)}
-                className="mt-1.5 flex items-center gap-1 text-[12px] font-semibold text-(--brand-fg) transition hover:underline"
-              >
-                <Pencil size={12} /> Edit {form.category} list
-              </button>
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Amount (₱) *</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Amount (₱) *</label>
               <input
                 type="number"
                 value={form.appropriated_amount}
@@ -246,7 +249,7 @@ export default function AppropriationsPage() {
               <FieldError message={problemFor(formProblems, "appropriated_amount")} />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</label>
               <select
                 value={form.fund_source_id}
                 onChange={(e) => setForm({ ...form, fund_source_id: e.target.value })}
@@ -313,13 +316,13 @@ export default function AppropriationsPage() {
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Item</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Category</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</th>
-                <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Appropriated</th>
-                <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Disbursed</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Status</th>
+              <tr className="border-b border-[#F0F1F3] dark:border-[#262626]">
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Item</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Category</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</th>
+                <th className="px-4 py-2.5 text-right text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Appropriated</th>
+                <th className="px-4 py-2.5 text-right text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Disbursed</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -328,8 +331,8 @@ export default function AppropriationsPage() {
                   <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937] dark:text-white">{a.item_name}</td>
                   <td className="px-4 py-3">
                     <span
-                      className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold text-white"
-                      style={{ backgroundColor: APPROPRIATION_CATEGORY_COLORS[a.category] }}
+                      className="inline-flex items-center gap-1.5 text-[12.5px] font-medium before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full before:bg-current before:content-['']"
+                      style={{ color: APPROPRIATION_CATEGORY_COLORS[a.category] }}
                       title={APPROPRIATION_CATEGORY_LABELS[a.category]}
                     >
                       {a.category}
@@ -342,7 +345,7 @@ export default function AppropriationsPage() {
                   <td className="px-4 py-3 text-right text-[12px] font-semibold text-[#1F2937] dark:text-white">{fmtCurrency(a.appropriated_amount)}</td>
                   <td className="px-4 py-3 text-right text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{fmtCurrency(a.disbursed_amount)}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS_STYLES[a.status]}`}>
+                    <span className={`inline-flex items-center gap-1.5 text-[12.5px] font-medium before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full before:bg-current before:content-[''] ${STATUS_STYLES[a.status]}`}>
                       {a.status.charAt(0) + a.status.slice(1).toLowerCase()}
                     </span>
                   </td>

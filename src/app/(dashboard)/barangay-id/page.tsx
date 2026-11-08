@@ -3,18 +3,9 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  IdCard,
-  CalendarDays,
-  CalendarRange,
-  AlertTriangle,
-  Search,
-  Plus,
-  ChevronRight,
-  Printer,
-} from "lucide-react";
+import { IdCard, Search, Plus, ChevronRight, Printer } from "lucide-react";
+import { ListSummary } from "@/components/shared/ListUI";
 import PageHeader from "@/components/shared/PageHeader";
-import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import {
   BarangayIdMock,
@@ -30,6 +21,12 @@ import { useCan } from "@/lib/hooks/useCan";
 import { printPdf } from "@/lib/print-pdf";
 
 /** Tells the Processing Time report this document was printed (only the first time counts). */
+type SignerOfficial = {
+  position: string;
+  is_active: boolean;
+  resident: { fname: string; mname: string | null; lname: string; name_extension: string | null };
+};
+
 function markPrinted(kind: "certificate" | "barangay-id", id: number) {
   fetch("/api/timing/printed", {
     method: "POST",
@@ -42,6 +39,23 @@ export default function BarangayIdListPage() {
   const can = useCan();
   const router = useRouter();
   const { barangay } = useBarangayInfo();
+
+  // The active Punong Barangay signs every ID, so the preview shows the same
+  // signature block the printed card has.
+  const [captain, setCaptain] = useState<{ name: string; position: string } | null>(null);
+  useEffect(() => {
+    fetch("/api/officials?is_active=true")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list: SignerOfficial[]) => {
+        const c = Array.isArray(list) ? list.find((o) => o.position === "Punong Barangay" && o.is_active) : undefined;
+        if (!c) return;
+        const r = c.resident;
+        // Signature lines read first-name-first: "Ramil C. Navarro".
+        const name = [r.fname, r.mname ? `${r.mname[0]}.` : "", r.lname, r.name_extension ?? ""].filter(Boolean).join(" ");
+        setCaptain({ name, position: c.position });
+      })
+      .catch(() => {});
+  }, []);
 
   const [ids, setIds] = useState<BarangayIdMock[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +106,7 @@ export default function BarangayIdListPage() {
     <div>
       <PageHeader
         title="Barangay ID"
-        subtitle="Issue and manage resident barangay identification cards"
+        subtitle={<span data-tour="page-barangay-id-stats"><ListSummary items={[`${stats.total} ${stats.total === 1 ? "ID issued" : "IDs issued"}`, `${stats.thisMonth} this month`, stats.expired > 0 && `${stats.expired} expired`]} /></span>}
         actions={
           (can("barangay_id:write") && (<button
             data-tour="page-barangay-id-add"
@@ -104,14 +118,6 @@ export default function BarangayIdListPage() {
           </button>))
         }
       />
-
-      {/* Stat cards */}
-      <div data-tour="page-barangay-id-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Issued" value={stats.total} sub="All-time records" icon={IdCard} color="blue" />
-        <StatCard label="This Month" value={stats.thisMonth} sub="Issued this month" icon={CalendarDays} color="green" />
-        <StatCard label="This Year" value={stats.thisYear} sub="Issued this year" icon={CalendarRange} color="amber" />
-        <StatCard label="Expired" value={stats.expired} sub="Past 3-year validity" icon={AlertTriangle} color="red" />
-      </div>
 
       <div className="flex min-h-[calc(100vh-280px)] gap-5">
         {/* ── Left: list panel ── */}
@@ -144,19 +150,19 @@ export default function BarangayIdListPage() {
                     key={i.id}
                     onClick={() => setSelectedId(i.id)}
                     className={`flex w-full items-center gap-3 border-b border-[#F4F5F7] dark:border-[#262626] px-4 py-3 text-left transition ${
-                      active ? "bg-(--brand)" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
+                      active ? "bg-(--brand-tint) shadow-[inset_3px_0_0_var(--brand)] dark:bg-(--brand)/15" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
                     }`}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className={`truncate text-[13px] font-bold ${active ? "text-white" : "text-[#1F2937] dark:text-white"}`}>
+                      <p className={`truncate text-[13px] font-bold ${active ? "text-(--brand-fg-strong) dark:text-white" : "text-[#1F2937] dark:text-white"}`}>
                         {residentFullName(i.resident)}
                       </p>
-                      <p className={`mt-0.5 truncate font-mono text-[11px] ${active ? "text-(--brand-fg-strong)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
+                      <p className={`mt-0.5 truncate font-mono text-[11px] ${"text-[#4B5563] dark:text-[#A3A3A3]"}`}>
                         {i.id_number}
                         {expired && " · Expired"}
                       </p>
                     </div>
-                    <ChevronRight size={14} className={active ? "text-white" : "text-[#D1D5DB] dark:text-[#525252]"} />
+                    <ChevronRight size={14} className={active ? "text-(--brand-fg)" : "text-[#C4C8CE] dark:text-[#525252]"} />
                   </button>
                 );
               })
@@ -222,7 +228,7 @@ export default function BarangayIdListPage() {
                     Photo
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[9px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">Name</p>
+                    <p className="text-[11.5px] text-[#6B7280] dark:text-[#A3A3A3]">Name</p>
                     <p className="truncate text-[14px] font-black uppercase text-[#1F2937] dark:text-white">
                       {residentFullName(selected.resident)}
                     </p>
@@ -250,23 +256,20 @@ export default function BarangayIdListPage() {
                   </div>
                 </div>
 
-                {/* Footer */}
-                <div className="flex items-center justify-between border-t border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] px-5 py-3">
+                {/* Footer: ID details on the left, the captain's signature on the right */}
+                <div className="flex items-end justify-between gap-4 border-t border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] px-5 py-3">
                   <div>
                     <p className="font-mono text-[10px] font-bold text-[#1F2937] dark:text-white">{selected.id_number}</p>
-                    <p className="text-[8px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-                      Valid until {formatShortDate(expiryDate(selected.issued_date))}
+                    <p className="text-[8px] text-[#9CA3AF] dark:text-[#A3A3A3]">Issued {formatShortDate(selected.issued_date)}</p>
+                    <p className={`text-[8px] ${isExpired(selected.issued_date) ? "text-[#DC2626] dark:text-[#F87171]" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
+                      {isExpired(selected.issued_date) ? "Expired" : "Valid until"} {formatShortDate(expiryDate(selected.issued_date))}
                     </p>
                   </div>
-                  {isExpired(selected.issued_date) ? (
-                    <span className="rounded-full bg-[#FEE2E2] dark:bg-red-500/15 px-2 py-1 text-[9px] font-bold uppercase text-[#DC2626] dark:text-[#F87171]">
-                      Expired
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-[#D1FAE5] dark:bg-emerald-500/15 px-2 py-1 text-[9px] font-bold uppercase text-[#059669] dark:text-[#34D399]">
-                      Valid
-                    </span>
-                  )}
+                  <div className="w-36 pt-5 text-center">
+                    <div className="mb-0.5 border-t border-[#374151] dark:border-[#A3A3A3]" />
+                    {captain && <p className="truncate text-[9px] font-semibold text-[#1F2937] dark:text-white">{captain.name}</p>}
+                    <p className="text-[8px] text-[#6B7280] dark:text-[#A3A3A3]">{captain?.position ?? "Punong Barangay"}</p>
+                  </div>
                 </div>
               </div>
 

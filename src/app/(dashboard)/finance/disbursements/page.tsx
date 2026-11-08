@@ -2,9 +2,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ListSummary } from "@/components/shared/ListUI";
 import { TrendingDown, Plus, X, Search } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
-import StatCard from "@/components/shared/StatCard";
 import {
   fmtCurrency, fmtDate, DisbursementRecord, FundSourceMini, AppropriationRecord,
 } from "@/lib/finance";
@@ -111,7 +111,7 @@ export default function DisbursementsPage() {
       <div className="mb-5 flex items-start justify-between">
         <div>
           <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Disbursements</h1>
-          <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">Payments made against appropriations and fund sources</p>
+          <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]" data-tour="page-disbursements-stats"><ListSummary items={[`${fmtCurrency(total)} across ${items.length} ${items.length === 1 ? "entry" : "entries"}`, `${fmtCurrency(thisMonth)} this month`]} /></p>
         </div>
         {can("disbursements:write") && (<button
           data-tour="page-disbursements-add"
@@ -123,17 +123,12 @@ export default function DisbursementsPage() {
         </button>)}
       </div>
 
-      <div data-tour="page-disbursements-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <StatCard label="Total (Filtered)" value={fmtCurrency(total)} sub={`${items.length} transaction(s)`} icon={TrendingDown} color="red" />
-        <StatCard label="This Month" value={fmtCurrency(thisMonth)} sub="Disbursed so far" icon={TrendingDown} color="amber" />
-      </div>
-
       {showForm && (
         <div className="mb-5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           {error && <div className="mb-3 rounded-lg bg-red-50 dark:bg-red-500/15 px-3 py-2.5 text-[12px] text-red-600 dark:text-red-400">{error}</div>}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Payee *</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Payee *</label>
               <input
                 value={form.payee}
                 onChange={(e) => setForm({ ...form, payee: e.target.value })}
@@ -142,7 +137,7 @@ export default function DisbursementsPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Amount (₱) *</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Amount (₱) *</label>
               <input
                 type="number"
                 value={form.amount}
@@ -154,7 +149,7 @@ export default function DisbursementsPage() {
               <FieldError message={problemFor(moneyProblems, "amount")} />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Date *</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Date *</label>
               <input
                 type="date"
                 value={form.date}
@@ -166,7 +161,7 @@ export default function DisbursementsPage() {
               <FieldError message={problemFor(moneyProblems, "date")} />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Particulars</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Particulars</label>
               <input
                 value={form.particular}
                 onChange={(e) => setForm({ ...form, particular: e.target.value })}
@@ -175,7 +170,7 @@ export default function DisbursementsPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Check #</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Check #</label>
               <input
                 value={form.check_number}
                 onChange={(e) => setForm({ ...form, check_number: e.target.value })}
@@ -184,7 +179,7 @@ export default function DisbursementsPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">OR Number</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">OR Number</label>
               <input
                 value={form.or_number}
                 onChange={(e) => setForm({ ...form, or_number: e.target.value })}
@@ -193,7 +188,7 @@ export default function DisbursementsPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</label>
               <select
                 value={form.fund_source_id}
                 onChange={(e) => setForm({ ...form, fund_source_id: e.target.value })}
@@ -204,7 +199,7 @@ export default function DisbursementsPage() {
               </select>
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Appropriation</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Appropriation</label>
               <select
                 value={form.appropriation_id}
                 onChange={(e) => setForm({ ...form, appropriation_id: e.target.value })}
@@ -262,12 +257,12 @@ export default function DisbursementsPage() {
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Date</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Payee</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Appropriation</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</th>
-                <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Amount</th>
+              <tr className="border-b border-[#F0F1F3] dark:border-[#262626]">
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Date</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Payee</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Appropriation</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</th>
+                <th className="px-4 py-2.5 text-right text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Amount</th>
               </tr>
             </thead>
             <tbody>

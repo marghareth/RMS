@@ -1,125 +1,116 @@
 // FILE: src/app/api/registries/[id]/route.ts
-import type { Prisma } from "@prisma/client";
+//
+// One special-registry entry (Senior Citizen, PWD or 4Ps), by the
+// SpecialRegistry row's own id — the same id the registry list
+// (GET /api/registries) returns for each entry, and the one the detail
+// slide-over (RegistryDetailSheet) and full page (RegistryDetail) pass in.
+//
+// BUGFIX (Nov 2026): this file used to be a copy of the residents
+// endpoint. It looked up a *Resident* by the registry entry's id, so:
+//   - GET came back 404 ("Entry not found") for almost every entry, or
+//     showed the wrong person when a resident happened to share that id,
+//     and never returned the registry fields (registry_type,
+//     registered_at, disability_type) the screens need;
+//   - DELETE ("Remove from registry") ARCHIVED THAT RESIDENT instead of
+//     removing the registry entry;
+//   - PATCH edited that resident's RBI record.
+// GET and DELETE now work on the registry entry itself. PATCH is gone —
+// nothing called it, and resident details are edited through
+// /api/residents/[id].
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requirePermission } from "@/lib/session";
 import { logAudit } from "@/lib/audit";
-import { withErrorHandling, ApiError } from "@/lib/api-handler";
-import { residentUpdateSchema } from "@/lib/validations";
+import { withErrorHandling } from "@/lib/api-handler";
+
+const REGISTRY_LABEL: Record<string, string> = {
+  SENIOR_CITIZEN: "Senior Citizen",
+  PWD: "PWD",
+  FOUR_PS: "4Ps",
+};
+
+/** A positive whole-number id from the URL, or null for anything else ("abc", "0", "1.5"). */
+function parseId(raw: string): number | null {
+  if (!/^\d+$/.test(raw)) return null;
+  const id = Number(raw);
+  return id > 0 && Number.isSafeInteger(id) ? id : null;
+}
 
 export const GET = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("residents:read", req);
+  const auth = await requirePermission("registries:read", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;
-  const id = parseInt(idParam);
+  const id = parseId(idParam);
+  if (id === null) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const resident = await prisma.resident.findUnique({
+  const entry = await prisma.specialRegistry.findUnique({
     where: { id },
     include: {
-      purok: true,
-      household: {
+      resident: {
         include: {
-          members: { where: { is_archived: false }, orderBy: { lname: "asc" } },
+          purok: true,
+          household: { include: { _count: { select: { members: true } } } },
+          // Only certificates that were actually released have an issue
+          // date; pending or cancelled requests would print as "Jan 1, 1970".
+          certificates: {
+            where: { status: "RELEASED", issued_at: { not: null } },
+            orderBy: { issued_at: "desc" },
+            select: { id: true, certificate_type: true, issued_at: true },
+          },
+          barangay_ids: {
+            orderBy: { issued_date: "desc" },
+            select: { id: true, id_number: true, issued_date: true },
+          },
+          health_records: {
+            orderBy: { recorded_at: "desc" },
+            select: { id: true, record_type: true, notes: true, recorded_at: true },
+          },
+          vaccinations: {
+            orderBy: { date_given: "desc" },
+            select: { id: true, vaccine_name: true, date_given: true },
+          },
         },
       },
-      certificates: { orderBy: { requested_at: "desc" } },
-      special_registries: true,
-      health_records: { orderBy: { recorded_at: "desc" } },
-      vaccinations: { orderBy: { date_given: "desc" } },
-      barangay_ids: true,
-      official: true,
-
-      // ── Resident Profile Enhancements (2.9) ──
-      deceased_record: true,
-      sectors: { orderBy: { created_at: "asc" } },
-      government_assistance: { orderBy: { date_enrolled: "desc" } },
-      blotter_as_complainant: { orderBy: { incident_date: "desc" } },
-      blotter_as_respondent: { orderBy: { incident_date: "desc" } },
     },
   });
 
-  if (!resident) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  // ── Activity History (2.9) ──
-  // Pulled from AuditLog rather than a dedicated table: any log row whose
-  // table_affected/record_id points at this resident, their household, or
-  // one of their certificates counts as "this resident's activity".
-  const certificateIds = resident.certificates.map((c) => c.id);
-  const orConditions: Prisma.AuditLogWhereInput[] = [{ table_affected: "Resident", record_id: id }];
-  if (resident.household_id) {
-    orConditions.push({ table_affected: "Household", record_id: resident.household_id });
-  }
-  if (certificateIds.length > 0) {
-    orConditions.push({ table_affected: "Certificate", record_id: { in: certificateIds } });
-  }
-  if (resident.deceased_record) {
-    orConditions.push({ table_affected: "DeceasedRecord", record_id: resident.deceased_record.id });
-  }
-
-  const activity_history = await prisma.auditLog.findMany({
-    where: { OR: orConditions },
-    include: { user: { select: { username: true } } },
-    orderBy: { performed_at: "desc" },
-    take: 50,
-  });
-
-  return NextResponse.json({ ...resident, activity_history });
+  if (!entry) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(entry);
 });
 
-export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("residents:write", req);
-  if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
-
-  const { id: idParam } = await context!.params;
-  const id = parseInt(idParam);
-
-  // .partial() means an omitted field parses to `undefined`, and Prisma's
-  // `update` silently skips undefined fields — so a PATCH sending only
-  // `{ household_id }` can no longer wipe out purok_id, sector, etc. the
-  // way the old `body.x ?? null` pattern did. This also means every new
-  // 2.9 field (email, mobile, granular address, identity, voter info)
-  // flows through automatically since residentUpdateSchema already covers
-  // them field-for-field — no extra mapping needed here.
-  const body = residentUpdateSchema.parse(await req.json());
-
-  if (Object.keys(body).length === 0) {
-    throw new ApiError(400, "VALIDATION_ERROR", "No fields to update.");
-  }
-
-  const resident = await prisma.resident.update({ where: { id }, data: body });
-
-  await logAudit({
-    user_id: parseInt(auth.session.user.id),
-    action: "UPDATE",
-    table_affected: "Resident",
-    record_id: id,
-    details: `Updated resident: ${resident.fname} ${resident.lname}`,
-  });
-
-  return NextResponse.json(resident);
-});
-
+// Removes the resident from this one registry only. The resident's RBI
+// record, and any other registry they're in, are left untouched.
 export const DELETE = withErrorHandling(async (req: NextRequest, context) => {
-  const auth = await requirePermission("residents:delete", req);
+  const auth = await requirePermission("registries:delete", req);
   if ("error" in auth) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
   const { id: idParam } = await context!.params;
-  const id = parseInt(idParam);
+  const id = parseId(idParam);
+  if (id === null) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Soft delete only — never hard delete residents
-  const resident = await prisma.resident.update({
+  const entry = await prisma.specialRegistry.findUnique({
     where: { id },
-    data: { is_archived: true },
+    include: { resident: { select: { fname: true, lname: true } } },
+  });
+  if (!entry) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const label = REGISTRY_LABEL[entry.registry_type] ?? entry.registry_type;
+
+  // Audit row in the same transaction, so a removal is never left unlogged.
+  await prisma.$transaction(async (tx) => {
+    await tx.specialRegistry.delete({ where: { id } });
+    await logAudit(
+      {
+        user_id: parseInt(auth.session.user.id),
+        action: "DELETE",
+        table_affected: "SpecialRegistry",
+        record_id: id,
+        details: `Removed ${entry.resident.fname} ${entry.resident.lname} from the ${label} registry`,
+      },
+      tx
+    );
   });
 
-  await logAudit({
-    user_id: parseInt(auth.session.user.id),
-    action: "ARCHIVE",
-    table_affected: "Resident",
-    record_id: id,
-    details: `Archived resident: ${resident.fname} ${resident.lname}`,
-  });
-
-  return NextResponse.json({ message: "Resident archived successfully" });
+  return NextResponse.json({ message: "Removed from registry" });
 });

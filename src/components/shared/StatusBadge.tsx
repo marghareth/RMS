@@ -83,12 +83,12 @@ const statusMap: Record<string, { label: string; tone: Tone }> = {
   EXPIRED:       { label: "Expired",       tone: "gray" },
 };
 
-export default function StatusBadge({ status }: { status: Status }) {
+export default function StatusBadge({ status, label }: { status: Status; /** Overrides the default wording, e.g. "In the building". */ label?: string }) {
   const s = statusMap[status] ?? { label: status, tone: "gray" as Tone };
   return (
     <span className={`inline-flex items-center gap-1.5 whitespace-nowrap text-[12.5px] font-medium leading-5 ${TONE_TEXT[s.tone]}`}>
       <span aria-hidden className={`h-1.75 w-1.75 shrink-0 rounded-full ${TONE_DOT[s.tone]}`} />
-      {s.label}
+      {label ?? s.label}
     </span>
   );
 }

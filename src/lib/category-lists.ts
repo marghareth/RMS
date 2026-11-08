@@ -11,6 +11,9 @@
 //     official PS / MOOE / CO budget classes (/finance/appropriations).
 //     PS, MOOE and CO themselves stay fixed because the Budget Overview
 //     and the official format group by them.
+//   • Revenue categories (/finance/revenues) and equipment types
+//     (/equipment/new, /equipment/[id]/edit) — plain pick-lists, edited
+//     with "Edit list" under the dropdown (PUT /api/pick-lists/[list]).
 //
 // Each list is stored as a JSON array in one SystemSetting row (keys in
 // SETTING_KEYS). Until someone edits a list, the defaults below are used.
@@ -59,6 +62,52 @@ export const APPROPRIATION_SUBCATEGORY_DEFAULTS: Record<AppropriationClass, stri
   ],
   CO: ["Infrastructure", "Office Equipment", "Furniture and Fixtures", "Motor Vehicles", "Other Capital Outlay"],
 };
+
+export const REVENUE_CATEGORY_DEFAULTS = [
+  "Clearance and Certification Fees",
+  "Business Permit Fees",
+  "Real Property Tax Share",
+  "Community Tax Share",
+  "NTA / IRA Share",
+  "Rental Income",
+  "Donations and Grants",
+  "Other Income",
+];
+
+export const EQUIPMENT_TYPE_DEFAULTS = [
+  "Furniture",
+  "Electronics",
+  "Office Equipment",
+  "Sound System",
+  "Tools",
+  "Appliances",
+  "Vehicles",
+  "Medical Equipment",
+  "Other",
+];
+
+/**
+ * Single pick-lists served by /api/pick-lists/[list]: storage key, defaults,
+ * who may read / edit, and how the audit log names it.
+ */
+export const PICK_LISTS = {
+  "revenue-categories": {
+    key: "list_revenue_categories",
+    defaults: REVENUE_CATEGORY_DEFAULTS,
+    read: "revenues:read",
+    write: "revenues:write",
+    noun: "revenue categories",
+  },
+  "equipment-types": {
+    key: "list_equipment_types",
+    defaults: EQUIPMENT_TYPE_DEFAULTS,
+    read: "equipment:read",
+    write: "equipment:write",
+    noun: "equipment types",
+  },
+} as const;
+export type PickListName = keyof typeof PICK_LISTS;
+export const isPickListName = (v: string): v is PickListName => Object.prototype.hasOwnProperty.call(PICK_LISTS, v);
 
 export const SETTING_KEYS = {
   financial: {

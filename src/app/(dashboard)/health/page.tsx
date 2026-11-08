@@ -28,13 +28,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ListSummary } from "@/components/shared/ListUI";
 import { useRouter } from "next/navigation";
-import {
-  Search, Plus, Heart, Syringe,
-  ChevronRight, User, CalendarDays,
-  Activity, ShieldCheck,
-} from "lucide-react";
-import StatCard from "@/components/shared/StatCard";
+import { Search, Plus, Heart, Syringe, ChevronRight, User, CalendarDays } from "lucide-react";
 import HealthTypeBadge from "@/components/health/HealthTypeBadge";
 import VaccinationDetailSheet from "@/components/health/VaccinationDetailSheet";
 import HealthRecordDetailSheet from "@/components/health/HealthRecordDetailSheet";
@@ -170,8 +166,8 @@ export default function HealthPage() {
       {/* ── Page header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[20px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Health Records</h1>
-          <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Community health monitoring and vaccination tracking</p>
+          <h1 className="text-[22px] font-bold leading-tight text-[#1F2937] dark:text-white">Health Records</h1>
+          <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5" data-tour="page-health-stats"><ListSummary items={[`${healthTotal} ${healthTotal === 1 ? "health record" : "health records"}`, `${vaccinationTotal} ${vaccinationTotal === 1 ? "vaccination" : "vaccinations"}`, activeCases > 0 && `${activeCases} active`, `${residentsCovered} residents covered`]} /></p>
         </div>
         <div className="flex gap-2">
           {can("health:write") && (<button
@@ -191,19 +187,11 @@ export default function HealthPage() {
         </div>
       </div>
 
-      {/* ── Stat cards ── */}
-      <div data-tour="page-health-stats" className="grid grid-cols-4 gap-4">
-        <StatCard label="Total Health Records" value={healthTotal}       sub="All recorded conditions" icon={Heart}       color="red" />
-        <StatCard label="Vaccinations Given"    value={vaccinationTotal} sub="Doses administered"      icon={Syringe}     color="blue" />
-        <StatCard label="Active Cases"          value={activeCases}      sub="Ongoing treatment"       icon={Activity}    color="amber" />
-        <StatCard label="Residents Covered"     value={residentsCovered} sub="Unique residents"        icon={ShieldCheck} color="green" />
-      </div>
-
       {/* ── Main content ── */}
       <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#F0F1F3] dark:border-[#262626]">
           <div data-tour="page-health-tabs" className="flex items-center gap-2">
             <TabBtn label="Health Records" count={healthTotal}       icon={Heart}   active={tab === "health"}      onClick={() => setTab("health")}      />
             <TabBtn label="Vaccinations"   count={vaccinationTotal}  icon={Syringe} active={tab === "vaccination"} onClick={() => setTab("vaccination")} />
@@ -223,9 +211,9 @@ export default function HealthPage() {
         {tab === "health" && (
           <div data-tour="page-health-table">
             {/* Table header */}
-            <div className="grid grid-cols-[2fr_1.5fr_2.5fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
+            <div className="grid grid-cols-[2fr_1.5fr_2.5fr_1fr_1fr] gap-4 px-5 py-2.5 border-b border-[#F0F1F3] dark:border-[#262626]">
               {["Resident", "Record Type", "Notes", "Date", "Action"].map(h => (
-                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>
+                <span key={h} className="text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">{h}</span>
               ))}
             </div>
 
@@ -282,9 +270,9 @@ export default function HealthPage() {
         {tab === "vaccination" && (
           <div data-tour="page-health-table">
             {/* Table header */}
-            <div className="grid grid-cols-[2fr_2fr_1.5fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
+            <div className="grid grid-cols-[2fr_2fr_1.5fr_1fr_1fr] gap-4 px-5 py-2.5 border-b border-[#F0F1F3] dark:border-[#262626]">
               {["Resident", "Vaccine", "Date Given", "Recorded By", "Action"].map(h => (
-                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>
+                <span key={h} className="text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">{h}</span>
               ))}
             </div>
 

@@ -3,9 +3,9 @@
 
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Home, Users, MapPin, UserX, Search, Plus, ChevronRight, Download } from "lucide-react";
+import { Home, Search, Plus, ChevronRight, Download } from "lucide-react";
+import { ListSummary } from "@/components/shared/ListUI";
 import PageHeader from "@/components/shared/PageHeader";
-import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import { memberFullName, buildBimsCsv, downloadCsv } from "@/lib/mock/households";
 import type { PurokMock, HouseholdMock } from "@/lib/mock/households";
@@ -137,7 +137,7 @@ export default function HouseholdsListPage() {
     <div>
       <PageHeader
         title="Households"
-        subtitle="Manage household records, heads, and members"
+        subtitle={<span><ListSummary items={[`${stats.total} ${stats.total === 1 ? "household" : "households"}`, `avg. ${stats.avgSize} members`, `${stats.puroksCovered} of ${puroks.length} puroks`, stats.withoutHead > 0 && `${stats.withoutHead} without a head`]} /></span>}
         actions={
           <div className="flex items-center gap-2">
             <button
@@ -165,14 +165,6 @@ export default function HouseholdsListPage() {
           Couldn&apos;t export the BIMS CSV: {exportError} No file was saved.
         </div>
       )}
-
-      {/* Stat cards */}
-      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Households" value={stats.total} sub="Registered records" icon={Home} color="blue" />
-        <StatCard label="Avg. Household Size" value={stats.avgSize} sub="Members per household" icon={Users} color="green" />
-        <StatCard label="Puroks Covered" value={stats.puroksCovered} sub={`of ${puroks.length} puroks`} icon={MapPin} color="amber" />
-        <StatCard label="Without Household Head" value={stats.withoutHead} sub="Needs assignment" icon={UserX} color="red" />
-      </div>
 
       {/* Search + purok filter */}
       <div className="mb-4 flex items-center gap-2">
@@ -214,13 +206,13 @@ export default function HouseholdsListPage() {
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Household No.</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Address</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Purok</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Household Head</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Members</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Housing Type</th>
+              <tr className="border-b border-[#F0F1F3] dark:border-[#262626]">
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Household No.</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Address</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Purok</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Household Head</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Members</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Housing Type</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -234,7 +226,7 @@ export default function HouseholdsListPage() {
                   <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937] dark:text-white">{h.household_no}</td>
                   <td className="px-4 py-3 text-[12px] text-[#374151] dark:text-[#D4D4D4]">{h.address}</td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong)">
+                    <span className="text-[13px] text-[#374151] dark:text-[#D4D4D4]">
                       {h.purok.name}
                     </span>
                   </td>

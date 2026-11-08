@@ -3,7 +3,8 @@ import PageTutorial, { TutorialContent } from "@/components/shared/PageTutorial"
 
 interface PageHeaderProps {
   title: string;
-  subtitle?: string;
+  /** Text, or a short line of figures (e.g. <ListSummary />). */
+  subtitle?: React.ReactNode;
   actions?: React.ReactNode;
   /** When provided, shows a "How to use" button that opens this guide. */
   tutorial?: TutorialContent;

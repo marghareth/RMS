@@ -180,7 +180,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-certificates-stats"]',
         placement: "bottom",
         title: "Keep an eye on the flagged ones",
-        body: "\u201CWalk-in / Flagged\u201D means the requester isn't in RBI yet — worth double-checking before releasing.",
+        body: "The line under the title counts what was issued this month and this year. If it mentions walk-ins, those requesters aren't in RBI yet, so double-check before releasing.",
       },
       {
         id: "certificates-search",
@@ -216,7 +216,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-blotter-stats"]',
         placement: "bottom",
         title: "Where every case stands",
-        body: "Filed, ongoing, resolved, or escalated — these counts update the moment a case's status changes.",
+        body: "Click a tab to show only the cases in that status. The number beside each tab updates the moment a case's status changes.",
       },
       {
         id: "blotter-search",
@@ -245,7 +245,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-visitors-stats"]',
         placement: "bottom",
         title: "Who's in the building right now",
-        body: "\u201CChecked In Now\u201D is a live count — useful at a glance without scrolling the list.",
+        body: "Use the tabs to see everyone, only the people still in the building, or those who have checked out. The line under the title shows the live count.",
       },
       {
         id: "visitors-search",
@@ -374,7 +374,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-reports-certificates-turnaround"]',
         placement: "bottom",
         title: "How fast are requests handled?",
-        body: "Average, median, fastest and slowest time from when a request is filed to when it is released, for the period you picked. The table breaks it down by certificate type. Requests that are cancelled or not yet released are not counted.",
+        body: "How long requests take from filing to release. Start with the typical time; \u201CWhere the time goes\u201D splits it into waiting in line, being prepared and waiting for pickup, and \u201CHow it\u2019s measured\u201D explains the rest.",
         waitMs: 6000,
       },
       {
@@ -539,7 +539,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-reports-registries-controls"]',
         placement: "bottom",
         title: "Choose a year, then export",
-        body: "Pick the year for the registry figures. Export PDF opens your browser's print dialog \u2014 pick \u201CSave as PDF\u201D as the destination.",
+        body: "Pick the year for the registry figures. Export PDF downloads the registries report as a PDF file.",
         waitMs: 6000,
       },
       {
@@ -547,16 +547,16 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-reports-registries-tabs"]',
         placement: "bottom",
         title: "Three registries, one page",
-        body: "Senior Citizens, PWD, and 4Ps Beneficiaries, each with its total. The highlighted card is the one you're viewing.",
-        hint: "Try it: click a different card to switch registries.",
+        body: "Senior citizens, PWD, and 4Ps beneficiaries, each with its count. The underlined tab is the one you're viewing.",
+        hint: "Try it: click a different tab to switch registries.",
         waitMs: 6000,
       },
       {
         id: "reports-registries-content",
         target: '[data-tour="page-reports-registries-content"]',
         placement: "top",
-        title: "Charts and names",
-        body: "This area changes with the card you picked: a breakdown by Purok, and for Senior Citizens and PWD a short preview of the people on the registry. 4Ps shows totals and households.",
+        title: "Breakdown and names",
+        body: "This area follows the tab you picked: how many are in each purok (and, for PWD, each disability type), then everyone on the registry. Search narrows the list; click a name to open the resident.",
         waitMs: 6000,
       },
     ],
@@ -625,7 +625,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-officials-stats"]',
         placement: "bottom",
         title: "Who's serving",
-        body: "Total records, how many are currently active, and the active Punong Barangay. That Captain's name is automatically printed as the signatory on certificates, so keep it up to date.",
+        body: "The line under the title shows how many are serving and who the active Punong Barangay is. That name is printed as the signatory on certificates, so keep it up to date.",
       },
       {
         id: "officials-search",
@@ -639,7 +639,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-officials-active"]',
         placement: "right",
         title: "Current vs. past officials",
-        body: "By default only active officials are listed. Untick this to include those whose term has ended, marked Inactive.",
+        body: "Serving lists officials currently in office. Inactive lists those whose term has ended, and All shows everyone.",
         hint: "Try it: untick the box to see everyone.",
       },
       {
@@ -757,7 +757,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-meetings-stats"]',
         placement: "bottom",
         title: "Meetings at a glance",
-        body: "Counts of SB meetings, barangay assemblies, meetings still scheduled ahead, and everything recorded this year.",
+        body: "The line under the title counts SB meetings, barangay assemblies, meetings still ahead, and everything recorded this year.",
         waitMs: 6000,
       },
       {
@@ -964,7 +964,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-revenues-add"]',
         placement: "left",
         title: "Record collected money",
-        body: "Opens a form for the source (for example, clearance fees), the amount, the fund source it goes to, and the OR number. Saving it adds the amount to that fund source's balance.",
+        body: "Opens a form for the source (for example, clearance fees), the amount, its category, the fund source it goes to, and the OR number. Use Edit list under Category to add or delete categories. Saving it adds the amount to that fund source's balance.",
         hint: "Try it: click to open the form.",
       },
       {
@@ -972,7 +972,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-revenues-stats"]',
         placement: "bottom",
         title: "Totals",
-        body: "The first card totals whatever the filters below currently show. The second card shows what has been collected so far this month.",
+        body: "The line under the title totals whatever the filters below show, then what has been collected so far this month.",
         waitMs: 6000,
       },
       {
@@ -1011,7 +1011,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-disbursements-stats"]',
         placement: "bottom",
         title: "Totals",
-        body: "The first card totals whatever the filters below currently show. The second card shows what has been paid out so far this month.",
+        body: "The line under the title totals whatever the filters below show, then what has been paid out so far this month.",
         waitMs: 6000,
       },
       {
@@ -1136,7 +1136,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-financial-stats"]',
         placement: "bottom",
         title: "Income, expense, net",
-        body: "Totals for whatever the filters currently show. Net Balance is income minus expense, marked Surplus or Deficit.",
+        body: "The line under the title shows income, expense, and net (income minus expense) for whatever the filters currently show.",
         waitMs: 6000,
       },
       {
@@ -1271,7 +1271,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-equipment-stats"]',
         placement: "bottom",
         title: "Inventory at a glance",
-        body: "Total item types, how many are serviceable, how many are out on loan right now, and how many are overdue. Keep an eye on the Overdue count.",
+        body: "The line under the title counts items, how many are working, how many are out on loan, and how many loans are overdue.",
       },
       {
         id: "equipment-search",
@@ -1285,7 +1285,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-equipment-filters"]',
         placement: "right",
         title: "Filter by status",
-        body: "OK shows serviceable items, Broken shows unserviceable ones, and Missing shows items that can't be found. Once items have a Type, a Type dropdown appears just below.",
+        body: "Working shows serviceable items, Broken shows unserviceable ones, and Missing shows items that can't be found. The number beside each tab is its count.",
       },
       {
         id: "equipment-list",
@@ -1329,7 +1329,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-equipment-new-type"]',
         placement: "top",
         title: "Type and serial number",
-        body: "Type groups similar items, such as Furniture or Electronics, so you can filter by it later. Add a serial number if the item has one.",
+        body: "Type groups similar items, such as Furniture or Electronics, so you can filter by it later. Pick one from the list, or use Edit list to add or delete types. Add a serial number if the item has one.",
       },
       {
         id: "equipment-new-value",
@@ -1554,7 +1554,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-health-stats"]',
         placement: "bottom",
         title: "Community health at a glance",
-        body: "Total records, vaccinations given, active cases (ongoing conditions such as hypertension or diabetes), and how many different residents are covered.",
+        body: "The line under the title counts health records, vaccinations, active cases (ongoing conditions such as hypertension), and residents covered.",
       },
       {
         id: "health-tabs",
@@ -1941,7 +1941,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-document-queue-filters"]',
         placement: "bottom",
         title: "Filter the queue",
-        body: "Active combines Pending and Processing, which is what you'll use most. Switch to All to also see requests that are already Released or Cancelled.",
+        body: "Active combines Pending and Processing, which is what you'll use most. Click All to also see requests that are already Released or Cancelled.",
       },
       {
         id: "document-queue-list",
@@ -1987,7 +1987,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-document-release-stats"]',
         placement: "bottom",
         title: "Released documents at a glance",
-        body: "How many were handed out today, how many match your current search and date range, and how many were released before payment was settled.",
+        body: "The line under the title shows how many were released today, how many match your search, and how many went out before payment was settled.",
       },
       {
         id: "document-release-filters",
@@ -2023,7 +2023,7 @@ export const PAGE_TOURS: PageTour[] = [
         target: '[data-tour="page-barangay-id-stats"]',
         placement: "bottom",
         title: "Issuance at a glance",
-        body: "Total issued, how many this month and this year, and how many have passed their 3-year validity.",
+        body: "The line under the title shows the total issued, how many this month, and how many have passed their 3-year validity.",
       },
       {
         id: "barangay-id-search",

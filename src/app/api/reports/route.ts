@@ -167,7 +167,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
         // the selected period, so it lines up with the issuance counts above.
         prisma.certificate.findMany({
           where: { status: "RELEASED", issued_at: { gte: effectiveStart, lte: effectiveEnd } },
-          select: { certificate_type: true, requested_at: true, issued_at: true },
+          select: { certificate_type: true, requested_at: true, issued_at: true, processing_started_at: true, printed_at: true },
         }),
         // Snapshot of the current backlog (independent of the period filter).
         prisma.certificate.aggregate({
@@ -469,21 +469,23 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
         byPurok: groupByPurok(fourPsEntries),
       };
 
-      const seniorList = seniorEntries.slice(0, 6).map((e) => ({
+      // Full name lists, alphabetical. Registries in one barangay are small
+      // (dozens to a few hundred), so the page shows everyone and filters
+      // with its own search box instead of a short preview.
+      const byName = (x: { name: string }, y: { name: string }) => x.name.localeCompare(y.name);
+      const person = (e: (typeof seniorEntries)[number]) => ({
         id: e.resident.id,
         name: residentName(e.resident, null),
         age: computeAge(new Date(e.resident.birthdate), now),
         purok: e.resident.purok?.name ?? "Unassigned",
         sex: titleCase(e.resident.sex),
-      }));
+      });
 
-      const pwdList = pwdEntries.slice(0, 5).map((e) => ({
-        id: e.resident.id,
-        name: residentName(e.resident, null),
-        disability: e.disability_type ?? "Not specified",
-        purok: e.resident.purok?.name ?? "Unassigned",
-        sex: titleCase(e.resident.sex),
-      }));
+      const seniorList = seniorEntries.map(person).sort(byName);
+      const pwdList = pwdEntries
+        .map((e) => ({ ...person(e), disability: e.disability_type ?? "Not specified" }))
+        .sort(byName);
+      const fourPsList = fourPsEntries.map(person).sort(byName);
 
       return NextResponse.json({
         seniors,
@@ -491,6 +493,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
         fourPs,
         seniorList,
         pwdList,
+        fourPsList,
       });
     }
 

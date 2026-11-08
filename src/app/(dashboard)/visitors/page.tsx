@@ -1,15 +1,19 @@
 // FILE: src/app/(dashboard)/visitors/page.tsx
+//
+// REDESIGN (Nov 2026): same list look as the Users page (ListUI). The stat
+// cards became tabs — All · In the building · Checked out — and a summary
+// line under the title ("2 in the building now · 9 visitors today").
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
-import {
-  DoorOpen, LogIn, LogOut, Search, SlidersHorizontal, ChevronRight, Plus, X,
-} from "lucide-react";
+import { DoorOpen, ChevronRight, Plus } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
-import StatCard from "@/components/shared/StatCard";
 import StatusBadge from "@/components/shared/StatusBadge";
 import EmptyState from "@/components/shared/EmptyState";
 import VisitorLogSheet from "@/components/visitors/VisitorLogSheet";
+import {
+  ListCard, ListTabs, ListSearch, ListToolbar, ListSummary, DateRangeFilter, THEAD_ROW, TH, TR_HOVER,
+} from "@/components/shared/ListUI";
 import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
@@ -24,12 +28,13 @@ interface VisitorLog {
 }
 
 interface FilterState {
-  status: string; // "" | "active" | "checked_out"
   date_from: string;
   date_to: string;
 }
 
-const EMPTY_FILTERS: FilterState = { status: "", date_from: "", date_to: "" };
+const EMPTY_FILTERS: FilterState = { date_from: "", date_to: "" };
+
+type Tab = "ALL" | "IN" | "OUT";
 
 function formatTime(iso?: string | null): string {
   if (!iso) return "—";
@@ -41,8 +46,8 @@ function formatTime(iso?: string | null): string {
 export default function VisitorLogListPage() {
   const can = useCan();
   const [search, setSearch] = useState("");
-  const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
+  const [tab, setTab] = useState<Tab>("ALL");
 
   const [logs, setLogs] = useState<VisitorLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +58,6 @@ export default function VisitorLogListPage() {
     try {
       const params = new URLSearchParams({ limit: "50" });
       if (search) params.set("search", search);
-      if (filters.status) params.set("status", filters.status);
       if (filters.date_from) params.set("date_from", filters.date_from);
       if (filters.date_to) params.set("date_to", filters.date_to);
 
@@ -72,190 +76,120 @@ export default function VisitorLogListPage() {
     return () => clearTimeout(t);
   }, [loadLogs]);
 
-  const counts = useMemo(
-    () => ({
-      active: logs.filter((l) => !l.time_out).length,
-      today: logs.filter((l) => {
-        const d = new Date(l.time_in);
-        const now = new Date();
-        return d.toDateString() === now.toDateString();
-      }).length,
-      total: logs.length,
-    }),
-    [logs]
+  const counts = useMemo(() => {
+    const today = new Date().toDateString();
+    const inside = logs.filter((l) => !l.time_out).length;
+    return {
+      ALL: logs.length,
+      IN: inside,
+      OUT: logs.length - inside,
+      today: logs.filter((l) => new Date(l.time_in).toDateString() === today).length,
+    };
+  }, [logs]);
+
+  const shown = useMemo(
+    () => logs.filter((l) => (tab === "IN" ? !l.time_out : tab === "OUT" ? !!l.time_out : true)),
+    [logs, tab]
   );
 
-  const activeFilterCount = (filters.status ? 1 : 0) + (filters.date_from ? 1 : 0) + (filters.date_to ? 1 : 0);
+  const TABS: { key: Tab; label: string; count: number }[] = [
+    { key: "ALL", label: "All", count: counts.ALL },
+    { key: "IN", label: "In the building", count: counts.IN },
+    { key: "OUT", label: "Checked out", count: counts.OUT },
+  ];
 
   return (
     <div>
       <PageHeader
-        title="Visitor Log"
-        subtitle="Track walk-in visitors to the barangay hall"
+        title="Visitor log"
+        subtitle={
+          loading && logs.length === 0 ? (
+            "Walk-in visitors to the barangay hall"
+          ) : (
+            <ListSummary items={[`${counts.IN} in the building now`, `${counts.today} ${counts.today === 1 ? "visitor" : "visitors"} today`]} />
+          )
+        }
         actions={
-          (can("visitors:write") && (<button
-            data-tour="page-visitors-add"
-            onClick={() => setSelectedId("new")}
-            className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
-          >
-            <Plus size={15} />
-            New Visitor
-          </button>))
+          can("visitors:write") && (
+            <button
+              data-tour="page-visitors-add"
+              onClick={() => setSelectedId("new")}
+              className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm transition hover:bg-(--brand-hover)"
+            >
+              <Plus size={15} />
+              New visitor
+            </button>
+          )
         }
       />
 
-      {/* Stat cards */}
-      <div data-tour="page-visitors-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Checked In Now" value={counts.active} sub="Currently in the building" icon={LogIn} color="blue" />
-        <StatCard label="Visitors Today" value={counts.today} sub="Logged since midnight" icon={DoorOpen} color="amber" />
-        <StatCard label="Checked Out" value={counts.total - counts.active} sub="Completed visits" icon={LogOut} color="green" />
-      </div>
-
-      {/* Search + filters */}
-      <div className="relative mb-4 flex items-center gap-2">
-        <div data-tour="page-visitors-search" className="relative flex-1">
-          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search visitor name or purpose"
-            className="w-full rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
-          />
-        </div>
-        <button
-          onClick={() => setShowFilter((v) => !v)}
-          className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition ${
-            showFilter || activeFilterCount ? "bg-(--brand) text-white" : "bg-white dark:bg-[#171717] text-[#6B7280] dark:text-[#A3A3A3] border border-[#E9EAEC] dark:border-[#262626] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
-          }`}
-        >
-          <SlidersHorizontal size={15} />
-          {activeFilterCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 dark:bg-red-500 text-[9px] font-bold text-white">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
-
-        {showFilter && (
-          <div className="absolute right-0 top-full z-20 mt-2 w-72 space-y-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4 shadow-lg">
-            <div className="mb-1 flex items-center justify-between">
-              <span className="text-[12px] font-bold uppercase tracking-wide text-[#1F2937] dark:text-white">Filters</span>
-              <button onClick={() => setShowFilter(false)}>
-                <X size={14} className="text-[#9CA3AF] dark:text-[#A3A3A3]" />
-              </button>
+      <ListCard>
+        <ListToolbar
+          left={
+            <div data-tour="page-visitors-stats">
+              <ListTabs tabs={TABS} value={tab} onChange={setTab} label="Filter visitors" />
             </div>
-
-            <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
-                Status
-              </label>
-              <select
-                value={filters.status}
-                onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
-                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[12px] outline-none focus:border-(--brand-line)"
-              >
-                <option value="">All</option>
-                <option value="active">Active (checked in)</option>
-                <option value="checked_out">Checked out</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
-                  From
-                </label>
-                <input
-                  type="date"
-                  value={filters.date_from}
-                  onChange={(e) => setFilters((f) => ({ ...f, date_from: e.target.value }))}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-2 py-2 text-[12px] outline-none focus:border-(--brand-line)"
-                />
+          }
+          right={
+            <>
+              <div data-tour="page-visitors-search" className="w-full sm:w-auto">
+                <ListSearch value={search} onChange={setSearch} placeholder="Search name or purpose" />
               </div>
-              <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
-                  To
-                </label>
-                <input
-                  type="date"
-                  value={filters.date_to}
-                  onChange={(e) => setFilters((f) => ({ ...f, date_to: e.target.value }))}
-                  className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-2 py-2 text-[12px] outline-none focus:border-(--brand-line)"
-                />
-              </div>
-            </div>
+              <DateRangeFilter
+                label="Time in"
+                from={filters.date_from}
+                to={filters.date_to}
+                onChange={({ from, to }) => setFilters({ date_from: from, date_to: to })}
+              />
+            </>
+          }
+        />
 
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={() => setFilters(EMPTY_FILTERS)}
-                className="flex-1 rounded-lg border border-[#E9EAEC] dark:border-[#262626] py-2 text-[12px] text-[#6B7280] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
-              >
-                Clear
-              </button>
-              <button
-                onClick={() => setShowFilter(false)}
-                className="flex-1 rounded-lg bg-(--brand) py-2 text-[12px] font-semibold text-white transition hover:bg-(--brand-hover)"
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
-        {loading ? (
+        {loading && logs.length === 0 ? (
           <div className="flex items-center justify-center py-16">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-(--brand-line) border-t-transparent" />
           </div>
-        ) : logs.length === 0 ? (
-          <EmptyState
-            icon={DoorOpen}
-            title="No visitors logged"
-            description="Try adjusting your search or filters, or log a new visitor."
-          />
+        ) : shown.length === 0 ? (
+          <EmptyState icon={DoorOpen} title="No visitors found" description="Try a different tab, search or date range, or log a new visitor." />
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Visitor Name</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Purpose</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Person to Visit</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Time In</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Status</th>
-                <th className="px-4 py-3" />
+              <tr className={THEAD_ROW}>
+                <th className={TH}>Visitor</th>
+                <th className={TH}>Purpose</th>
+                <th className={`${TH} hidden md:table-cell`}>Visiting</th>
+                <th className={TH}>Time in</th>
+                <th className={TH}>Status</th>
+                <th className="w-8 px-2 py-2.5"><span className="sr-only">Open</span></th>
               </tr>
             </thead>
             <tbody>
-              {logs.map((l) => (
-                <tr
-                  key={l.id}
-                  onClick={() => setSelectedId(l.id)}
-                  className="cursor-pointer border-b border-[#F4F5F7] dark:border-[#262626] transition last:border-b-0 hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
-                >
-                  <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937] dark:text-white">{l.visitor_name.toUpperCase()}</td>
-                  <td className="px-4 py-3 text-[12px] text-[#374151] dark:text-[#D4D4D4]">{l.purpose}</td>
-                  <td className="px-4 py-3 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{l.person_to_visit || "—"}</td>
-                  <td className="px-4 py-3 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{formatTime(l.time_in)}</td>
+              {shown.map((l) => (
+                <tr key={l.id} onClick={() => setSelectedId(l.id)} className={`${TR_HOVER} cursor-pointer align-top`}>
                   <td className="px-4 py-3">
-                    <StatusBadge status={l.time_out ? "CHECKED_OUT" : "ACTIVE"} />
+                    <p className="text-[13.5px] font-semibold text-[#1F2937] dark:text-white">{l.visitor_name}</p>
+                    {l.contact && <p className="mt-0.5 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{l.contact}</p>}
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    <ChevronRight size={15} className="ml-auto text-[#D1D5DB] dark:text-[#525252]" />
+                  <td className="px-4 py-3 text-[13px] text-[#1F2937] dark:text-[#E5E5E5]">{l.purpose}</td>
+                  <td className="hidden px-4 py-3 text-[13px] text-[#6B7280] dark:text-[#A3A3A3] md:table-cell">{l.person_to_visit || "—"}</td>
+                  <td className="px-4 py-3 text-[13px] tabular-nums text-[#6B7280] dark:text-[#A3A3A3]">
+                    {formatTime(l.time_in)}
+                    {l.time_out && <p className="mt-0.5 text-[12px]">Out {formatTime(l.time_out)}</p>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={l.time_out ? "CHECKED_OUT" : "ACTIVE"} label={l.time_out ? "Checked out" : "In the building"} />
+                  </td>
+                  <td className="px-2 py-3 text-right">
+                    <ChevronRight size={15} className="ml-auto text-[#C4C8CE] dark:text-[#525252]" />
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
-      </div>
+      </ListCard>
 
-      <VisitorLogSheet
-        visitorId={selectedId}
-        onClose={() => setSelectedId(null)}
-        onSaved={loadLogs}
-      />
+      <VisitorLogSheet visitorId={selectedId} onClose={() => setSelectedId(null)} onSaved={loadLogs} />
     </div>
   );
 }

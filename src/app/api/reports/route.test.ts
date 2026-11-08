@@ -78,7 +78,9 @@ describe('GET /api/reports?type=certificates — turnaround time', () => {
       .find((a: any) => a?.where?.status === 'RELEASED');
 
     expect(call).toBeDefined();
-    expect(call.select).toEqual({ certificate_type: true, requested_at: true, issued_at: true });
+    expect(call.select).toEqual({
+      certificate_type: true, requested_at: true, issued_at: true, processing_started_at: true, printed_at: true,
+    });
     expect(call.where.issued_at.gte).toEqual(new Date(2026, 9, 1));
     expect(call.where.issued_at.lte.getMonth()).toBe(9); // October
   });

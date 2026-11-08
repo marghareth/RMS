@@ -7,6 +7,7 @@ import { requirePermission } from "@/lib/session";
 import CertificatePDF from "@/lib/pdf/CertificatePDF";
 import { buildCertificatePdfProps } from "@/lib/pdf/buildCertificatePdfProps";
 import { withErrorHandling } from "@/lib/api-handler";
+import { parsePaper } from "@/lib/pdf/paper";
 
 // @react-pdf/renderer renders with a real Node canvas/font pipeline, which
 // isn't available on the Edge runtime — this route must run on Node.
@@ -35,8 +36,10 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
   });
   if (!template) return NextResponse.json({ error: "Template not found for this certificate type" }, { status: 404 });
 
+  // ?paper=A4|LETTER|FOLIO|LEGAL (Nov 2026) — chosen on the preview page.
+  const paper = parsePaper(new URL(req.url).searchParams.get("paper"));
   const props = await buildCertificatePdfProps(certificate, template);
-  const buffer = await renderToBuffer(createElement(CertificatePDF, props));
+  const buffer = await renderToBuffer(createElement(CertificatePDF, { ...props, paper }));
 
   // ?download=1 (Download PDF on the preview page, Nov 2026) saves the file
   // instead of opening it in the browser's PDF viewer. Named after the

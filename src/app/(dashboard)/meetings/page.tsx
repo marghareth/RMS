@@ -3,23 +3,9 @@
 
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Users2,
-  Gavel,
-  Megaphone,
-  CalendarClock,
-  Search,
-  SlidersHorizontal,
-  ChevronRight,
-  Plus,
-  X,
-  MapPin,
-  ListChecks,
-  Clock,
-  FileWarning,
-} from "lucide-react";
+import { Users2, Gavel, Megaphone, Search, SlidersHorizontal, ChevronRight, Plus, X, MapPin, ListChecks, Clock, FileWarning } from "lucide-react";
+import { ListSummary } from "@/components/shared/ListUI";
 import PageHeader from "@/components/shared/PageHeader";
-import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import StatusBadge from "@/components/shared/StatusBadge";
 import MeetingDetailSheet from "@/components/meetings/MeetingDetailSheet";
@@ -106,7 +92,7 @@ function TypeLabel({ type }: { type: MeetingRecordMock["meeting_type"] }) {
 function SectionHeading({ label, count }: { label: string; count?: number }) {
   return (
     <div className="flex items-center gap-2 border-b border-[#F4F5F7] bg-[#F9FAFB] px-5 py-2 dark:border-[#262626] dark:bg-[#141414]">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7280] dark:text-[#A3A3A3]">{label}</span>
+      <span className="text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">{label}</span>
       {count !== undefined && (
         <span className="rounded-full bg-[#E9EAEC] px-1.5 text-[10px] font-bold tabular-nums text-[#6B7280] dark:bg-[#262626] dark:text-[#A3A3A3]">
           {count}
@@ -205,7 +191,7 @@ export default function AssemblyListPage() {
     <div>
       <PageHeader
         title="Assembly / Meeting Records"
-        subtitle="SB meetings and barangay assemblies, with agenda items and minutes"
+        subtitle={<span data-tour="page-meetings-stats"><ListSummary items={[`${stats.sb} SB meetings`, `${stats.assembly} assemblies`, stats.upcoming > 0 && `${stats.upcoming} upcoming`, `${stats.thisYear} this year`]} /></span>}
         actions={
           (can("meetings:write") && (<button
             data-tour="page-meetings-add"
@@ -217,14 +203,6 @@ export default function AssemblyListPage() {
           </button>))
         }
       />
-
-      {/* Stat cards */}
-      <div data-tour="page-meetings-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="SB Meetings" value={stats.sb} sub="Sangguniang Barangay" icon={Gavel} color="blue" />
-        <StatCard label="Barangay Assemblies" value={stats.assembly} sub="Community-wide meetings" icon={Megaphone} color="green" />
-        <StatCard label="Upcoming" value={stats.upcoming} sub="Scheduled ahead" icon={CalendarClock} color="amber" />
-        <StatCard label="Recorded This Year" value={stats.thisYear} sub="Total meeting records" icon={Users2} color="red" />
-      </div>
 
       {/* Search + filters */}
       <div className="relative mb-4 flex items-center gap-2">
@@ -255,14 +233,14 @@ export default function AssemblyListPage() {
         {showFilter && (
           <div className="absolute right-0 top-full z-20 mt-2 w-72 space-y-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4 shadow-lg">
             <div className="mb-1 flex items-center justify-between">
-              <span className="text-[12px] font-bold uppercase tracking-wide text-[#1F2937] dark:text-white">Filters</span>
+              <span className="text-[13px] font-semibold text-[#1F2937] dark:text-white">Filters</span>
               <button onClick={() => setShowFilter(false)}>
                 <X size={14} className="text-[#9CA3AF] dark:text-[#A3A3A3]" />
               </button>
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
                 Meeting Type
               </label>
               <select
@@ -277,7 +255,7 @@ export default function AssemblyListPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
                 Status
               </label>
               <select
@@ -295,7 +273,7 @@ export default function AssemblyListPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
                 Location
               </label>
               <input
@@ -308,7 +286,7 @@ export default function AssemblyListPage() {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
                   From
                 </label>
                 <input
@@ -319,7 +297,7 @@ export default function AssemblyListPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
                   To
                 </label>
                 <input

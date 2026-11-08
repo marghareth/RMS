@@ -2,9 +2,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ListSummary } from "@/components/shared/ListUI";
 import { TrendingUp, Plus, X, Search } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
-import StatCard from "@/components/shared/StatCard";
+import PickListSelect from "@/components/shared/PickListSelect";
 import { fmtCurrency, fmtDate, RevenueRecord, FundSourceMini } from "@/lib/finance";
 import { readList } from "@/lib/fetch-json";
 import { useCan } from "@/lib/hooks/useCan";
@@ -101,7 +102,7 @@ export default function RevenueTrackingPage() {
       <div className="mb-5 flex items-start justify-between">
         <div>
           <h1 className="text-[22px] font-bold text-[#1F2937] dark:text-white">Revenue Tracking</h1>
-          <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">All collected revenue posted against the barangay&apos;s fund sources</p>
+          <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]" data-tour="page-revenues-stats"><ListSummary items={[`${fmtCurrency(total)} across ${items.length} ${items.length === 1 ? "entry" : "entries"}`, `${fmtCurrency(thisMonth)} this month`]} /></p>
         </div>
         {can("revenues:write") && (<button
           data-tour="page-revenues-add"
@@ -113,17 +114,12 @@ export default function RevenueTrackingPage() {
         </button>)}
       </div>
 
-      <div data-tour="page-revenues-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <StatCard label="Total (Filtered)" value={fmtCurrency(total)} sub={`${items.length} transaction(s)`} icon={TrendingUp} color="green" />
-        <StatCard label="This Month" value={fmtCurrency(thisMonth)} sub="Collected so far" icon={TrendingUp} color="blue" />
-      </div>
-
       {showForm && (
         <div className="mb-5 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-5">
           {error && <div className="mb-3 rounded-lg bg-red-50 dark:bg-red-500/15 px-3 py-2.5 text-[12px] text-red-600 dark:text-red-400">{error}</div>}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
             <div className="lg:col-span-2">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Source *</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Source *</label>
               <input
                 value={form.source}
                 onChange={(e) => setForm({ ...form, source: e.target.value })}
@@ -132,7 +128,7 @@ export default function RevenueTrackingPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Amount (₱) *</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Amount (₱) *</label>
               <input
                 type="number"
                 value={form.amount}
@@ -144,7 +140,7 @@ export default function RevenueTrackingPage() {
               <FieldError message={problemFor(moneyProblems, "amount")} />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Date *</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Date *</label>
               <input
                 type="date"
                 value={form.date}
@@ -155,8 +151,20 @@ export default function RevenueTrackingPage() {
               />
               <FieldError message={problemFor(moneyProblems, "date")} />
             </div>
+            <div data-tour="page-revenues-category">
+              <label htmlFor="revenue-category" className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Category</label>
+              <PickListSelect
+                id="revenue-category"
+                list="revenue-categories"
+                value={form.category}
+                onChange={(v) => setForm({ ...form, category: v })}
+                canEdit={can("revenues:write")}
+                dialogTitle="Edit revenue categories"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+              />
+            </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</label>
               <select
                 value={form.fund_source_id}
                 onChange={(e) => setForm({ ...form, fund_source_id: e.target.value })}
@@ -167,7 +175,7 @@ export default function RevenueTrackingPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">OR Number</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">OR Number</label>
               <input
                 value={form.or_number}
                 onChange={(e) => setForm({ ...form, or_number: e.target.value })}
@@ -221,19 +229,22 @@ export default function RevenueTrackingPage() {
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Date</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Source</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">OR #</th>
-                <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Amount</th>
+              <tr className="border-b border-[#F0F1F3] dark:border-[#262626]">
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Date</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Source</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Fund Source</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">OR #</th>
+                <th className="px-4 py-2.5 text-right text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Amount</th>
               </tr>
             </thead>
             <tbody>
               {items.map((r) => (
                 <tr key={r.id} className="border-b border-[#F4F5F7] dark:border-[#262626] transition last:border-b-0 hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]">
                   <td className="px-4 py-3 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{fmtDate(r.date)}</td>
-                  <td className="px-4 py-3 text-[12px] font-semibold text-[#1F2937] dark:text-white">{r.source}</td>
+                  <td className="px-4 py-3">
+                    <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">{r.source}</p>
+                    {r.category && <p className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{r.category}</p>}
+                  </td>
                   <td className="px-4 py-3 text-[12px] text-[#374151] dark:text-[#D4D4D4]">{r.fund_source?.name ?? "—"}</td>
                   <td className="px-4 py-3 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{r.or_number ?? "—"}</td>
                   <td className="px-4 py-3 text-right text-[12px] font-bold text-green-600 dark:text-green-400">{fmtCurrency(r.amount)}</td>

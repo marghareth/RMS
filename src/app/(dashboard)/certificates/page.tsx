@@ -3,23 +3,9 @@
 
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-  FileText,
-  FileEdit,
-  CalendarDays,
-  CalendarRange,
-  UserPlus,
-  Search,
-  SlidersHorizontal,
-  ChevronRight,
-  Plus,
-  X,
-  Printer,
-  CheckCheck,
-  Loader2,
-} from "lucide-react";
+import { FileText, FileEdit, Search, SlidersHorizontal, ChevronRight, Plus, X, Printer, CheckCheck, Loader2 } from "lucide-react";
+import { ListSummary } from "@/components/shared/ListUI";
 import PageHeader from "@/components/shared/PageHeader";
-import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import StatusBadge from "@/components/shared/StatusBadge";
 import CertificateDetailSheet from "@/components/certificates/CertificateDetailSheet";
@@ -181,7 +167,7 @@ export default function CertificatesListPage() {
     <div>
       <PageHeader
         title="Certificates"
-        subtitle="Issue and track barangay certificates"
+        subtitle={<span data-tour="page-certificates-stats"><ListSummary items={[`${stats.total} ${stats.total === 1 ? "certificate" : "certificates"}`, `${stats.thisMonth} this month`, `${stats.thisYear} this year`, stats.flagged > 0 && `${stats.flagged} walk-in, not yet in RBI`]} /></span>}
         actions={
           <div className="flex items-center gap-2">
             <button
@@ -203,14 +189,6 @@ export default function CertificatesListPage() {
         }
       />
 
-      {/* Stat cards */}
-      <div data-tour="page-certificates-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Issued" value={stats.total} sub="All-time records" icon={FileText} color="blue" />
-        <StatCard label="This Month" value={stats.thisMonth} sub="Issued this month" icon={CalendarDays} color="green" />
-        <StatCard label="This Year" value={stats.thisYear} sub="Issued this year" icon={CalendarRange} color="amber" />
-        <StatCard label="Walk-in / Flagged" value={stats.flagged} sub="Not yet in RBI" icon={UserPlus} color="red" />
-      </div>
-
       {/* Search + filters */}
       <div className="relative mb-4 flex items-center gap-2">
         <div data-tour="page-certificates-search" className="relative flex-1">
@@ -231,7 +209,7 @@ export default function CertificatesListPage() {
         >
           <SlidersHorizontal size={15} />
           {activeFilterCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 dark:bg-red-500 text-[9px] font-bold text-white">
               {activeFilterCount}
             </span>
           )}
@@ -240,14 +218,14 @@ export default function CertificatesListPage() {
         {showFilter && (
           <div className="absolute right-0 top-full z-20 mt-2 w-80 space-y-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4 shadow-lg">
             <div className="mb-1 flex items-center justify-between">
-              <span className="text-[12px] font-bold uppercase tracking-wide text-[#1F2937] dark:text-white">Filters</span>
+              <span className="text-[13px] font-semibold text-[#1F2937] dark:text-white">Filters</span>
               <button onClick={() => setShowFilter(false)}>
                 <X size={14} className="text-[#9CA3AF] dark:text-[#A3A3A3]" />
               </button>
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
                 Certificate Type
               </label>
               <select
@@ -266,7 +244,7 @@ export default function CertificatesListPage() {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
                   From
                 </label>
                 <input
@@ -277,7 +255,7 @@ export default function CertificatesListPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
                   To
                 </label>
                 <input
@@ -334,7 +312,7 @@ export default function CertificatesListPage() {
             <button
               onClick={handleBulkPrint}
               disabled={bulkPrinting}
-              className="flex items-center gap-1.5 rounded-lg border border-(--brand-tint-strong) dark:border-[#3B5A85] bg-white dark:bg-[#171717] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-(--brand-fg-strong) transition hover:bg-(--brand-tint) dark:hover:bg-[#1F1F1F] disabled:opacity-60"
+              className="flex items-center gap-1.5 rounded-lg border border-(--brand-tint-strong) dark:border-[#3B5A85] bg-white dark:bg-[#171717] px-3 py-1.5 text-[12.5px] font-semibold text-(--brand-fg-strong) transition hover:bg-(--brand-tint) dark:hover:bg-[#1F1F1F] disabled:opacity-60"
             >
               {bulkPrinting ? <Loader2 size={12} className="animate-spin" /> : <Printer size={12} />}
               Print Selected
@@ -342,7 +320,7 @@ export default function CertificatesListPage() {
             {can("certificates:write") && (<button
               onClick={handleBulkRelease}
               disabled={bulkReleasing}
-              className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-(--brand-hover) disabled:opacity-60"
+              className="flex items-center gap-1.5 rounded-lg bg-(--brand) px-3 py-1.5 text-[12.5px] font-semibold text-white transition hover:bg-(--brand-hover) disabled:opacity-60"
             >
               {bulkReleasing ? <Loader2 size={12} className="animate-spin" /> : <CheckCheck size={12} />}
               Release Selected
@@ -365,7 +343,7 @@ export default function CertificatesListPage() {
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
+              <tr className="border-b border-[#F0F1F3] dark:border-[#262626]">
                 <th className="w-10 px-4 py-3">
                   <input
                     type="checkbox"
@@ -377,12 +355,12 @@ export default function CertificatesListPage() {
                     className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040]"
                   />
                 </th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Cert No.</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Type</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Resident</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Purpose</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Status</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Issued</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Cert No.</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Type</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Resident</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Purpose</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Status</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Issued</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -403,7 +381,7 @@ export default function CertificatesListPage() {
                   </td>
                   <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937] dark:text-white">{c.certificate_no}</td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong)">
+                    <span className="text-[13px] text-[#374151] dark:text-[#D4D4D4]">
                       {certTypeLabel(c.certificate_type)}
                     </span>
                   </td>
@@ -411,7 +389,7 @@ export default function CertificatesListPage() {
                     <div className="flex items-center gap-1.5">
                       {c.resident ? residentFullName(c.resident) : c.manual_name}
                       {c.flagged_manual && (
-                        <span className="rounded-full bg-[#FEF3C7] dark:bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase text-[#D97706] dark:text-amber-400">
+                        <span className="text-[#D97706] dark:text-amber-400 inline-flex items-center gap-1.5 text-[12.5px] font-medium before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full before:bg-current before:content-['']">
                           Walk-in
                         </span>
                       )}

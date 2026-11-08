@@ -47,13 +47,16 @@ const s = StyleSheet.create({
     paddingVertical: 10,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-end",
   },
   idNumber: { fontSize: 10, fontWeight: 700, fontFamily: "Courier" },
   validUntil: { fontSize: 7, color: COLORS.grayLight, marginTop: 2 },
-  signatureBlock: { marginTop: 28, alignItems: "center" },
-  signatureLine: { width: 160, borderTop: `1 solid ${COLORS.ink}`, marginBottom: 3 },
-  signatureLabel: { fontSize: 7, color: COLORS.gray, textAlign: "center" },
+  // The captain signs on the card itself, on the right of the footer. The
+  // empty space above the line is where the wet signature goes.
+  signatureBlock: { width: 130, alignItems: "center", paddingTop: 22 },
+  signatureLine: { width: "100%", borderTop: `0.75 solid ${COLORS.ink}`, marginBottom: 3 },
+  signatureName: { fontSize: 8, fontWeight: 700, color: COLORS.ink, textAlign: "center" },
+  signatureLabel: { fontSize: 6.5, color: COLORS.gray, textAlign: "center", marginTop: 1 },
 });
 
 export interface BarangayIdPDFProps {
@@ -133,16 +136,15 @@ export default function BarangayIdPDF({
           <View style={s.footer}>
             <View>
               <Text style={s.idNumber}>{idNumber}</Text>
+              <Text style={s.validUntil}>Issued {issuedDateFormatted}</Text>
               <Text style={s.validUntil}>Valid until {validUntilFormatted}</Text>
             </View>
-            <Text style={s.validUntil}>Issued {issuedDateFormatted}</Text>
+            <View style={s.signatureBlock}>
+              <View style={s.signatureLine} />
+              <Text style={s.signatureName}>{captainName}</Text>
+              <Text style={s.signatureLabel}>{captainPosition}</Text>
+            </View>
           </View>
-        </View>
-
-        <View style={s.signatureBlock}>
-          <View style={s.signatureLine} />
-          <Text style={s.signatureLabel}>{captainName}</Text>
-          <Text style={s.signatureLabel}>{captainPosition}</Text>
         </View>
       </Page>
     </Document>
