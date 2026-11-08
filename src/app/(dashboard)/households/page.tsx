@@ -3,11 +3,12 @@
 
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Home, Search, Plus, ChevronRight, Download } from "lucide-react";
+import { Home, Search, Plus, ChevronRight } from "lucide-react";
 import { ListSummary } from "@/components/shared/ListUI";
+import ExportMenu, { type ExportFormat } from "@/components/shared/ExportMenu";
 import PageHeader from "@/components/shared/PageHeader";
 import EmptyState from "@/components/shared/EmptyState";
-import { memberFullName, buildBimsCsv, downloadCsv } from "@/lib/mock/households";
+import { memberFullName } from "@/lib/mock/households";
 import type { PurokMock, HouseholdMock } from "@/lib/mock/households";
 import HouseholdDetailSheet from "@/components/households/HouseholdDetailSheet";
 import { fetchJson } from "@/lib/fetch-json";
@@ -99,35 +100,36 @@ export default function HouseholdsListPage() {
     };
   }, [households]);
 
-  // Exports the FULL dataset (not just the current filtered/paginated page)
-  // so the BIMS submission is always complete.
-  //
-  // BUGFIX: this asked for limit=1000 in one request, but the API allows at
-  // most 100 per page, so the request was rejected and the export silently
-  // downloaded a CSV with only the header row. It now reads every page of
-  // 100, and if any request fails it says so instead of saving a partial or
-  // empty file.
-  async function handleExportCsv() {
+  // Export (Nov 2026): the same formatted Excel file as the Residents page,
+  // built on the server (/api/households/export) from the purok filter and
+  // search box shown here. Replaces the plain BIMS CSV. Admin and Secretary
+  // only (residents:export); every export is logged.
+  const canExport = can("residents:export");
+  async function handleExport(format: ExportFormat) {
     setExporting(true);
     setExportError(null);
     try {
-      const all: HouseholdMock[] = [];
-      const PAGE_SIZE = 100;
-      for (let page = 1; ; page++) {
-        const params = new URLSearchParams({ limit: String(PAGE_SIZE), page: String(page) });
-        if (purokFilter) params.set("purok_id", purokFilter);
-        const result = await fetchJson<{ households: HouseholdMock[]; total: number }>(`/api/households?${params}`);
-        if (!result.ok) throw new Error(result.detail);
-        const batch = result.data.households ?? [];
-        all.push(...batch);
-        if (batch.length < PAGE_SIZE || all.length >= (result.data.total ?? 0)) break;
+      const params = new URLSearchParams();
+      if (purokFilter) params.set("purok_id", purokFilter);
+      if (search.trim()) params.set("search", search.trim());
+      if (format === "pdf") params.set("format", "pdf");
+      const res = await fetch(`/api/households/export?${params}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Export failed. Try again.");
       }
-      const csv = buildBimsCsv(all);
-      const today = new Date().toISOString().slice(0, 10);
-      downloadCsv(`bims-households-${today}.csv`, csv);
+      const blob = await res.blob();
+      const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? `households.${format}`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
     } catch (e) {
-      console.error(e);
-      setExportError(e instanceof Error ? e.message : "Export failed.");
+      setExportError(e instanceof Error ? e.message : "Export failed. Try again.");
     } finally {
       setExporting(false);
     }
@@ -140,14 +142,17 @@ export default function HouseholdsListPage() {
         subtitle={<span><ListSummary items={[`${stats.total} ${stats.total === 1 ? "household" : "households"}`, `avg. ${stats.avgSize} members`, `${stats.puroksCovered} of ${puroks.length} puroks`, stats.withoutHead > 0 && `${stats.withoutHead} without a head`]} /></span>}
         actions={
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleExportCsv}
-              disabled={exporting}
-              className="flex items-center gap-2 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-4 py-2.5 text-[13px] font-bold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] disabled:opacity-60"
-            >
-              <Download size={14} />
-              {exporting ? "Exporting..." : "Export CSV (BIMS)"}
-            </button>
+            {canExport && (
+              <ExportMenu
+                dataTour="page-households-export"
+                onExport={handleExport}
+                exporting={exporting}
+                disabled={filtered.length === 0}
+                title={search.trim() || purokFilter ? "Export the households matching your search and purok" : "Export all households"}
+                excelHint="Every field, plus a sheet of members"
+                pdfHint="Household no., head, purok, address and members"
+              />
+            )}
             {can("households:write") && (<button
               data-tour="page-households-add"
               onClick={() => router.push("/households/new")}
@@ -162,7 +167,7 @@ export default function HouseholdsListPage() {
 
       {exportError && (
         <div role="alert" className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-400">
-          Couldn&apos;t export the BIMS CSV: {exportError} No file was saved.
+          Couldn&apos;t export households: {exportError} No file was saved.
         </div>
       )}
 

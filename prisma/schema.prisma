@@ -19,6 +19,12 @@ model User {
   is_active     Boolean  @default(true)
   created_at    DateTime @default(now())
 
+  // ── Name on printed reports (Nov 2026) ──
+  // Shown on the "Prepared by" line of printed pages instead of the
+  // username. Both optional; set on the user's account (Admin › Users).
+  full_name     String?  @db.VarChar(100)
+  position      String?  @db.VarChar(100)
+
   // ── TOTP multi-factor auth ──
   // mfa_secret is the base32 TOTP seed, only ever present once mfa_enabled
   // is true (or mid-setup, pending confirmation — see /api/account/mfa).

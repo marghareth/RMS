@@ -59,3 +59,29 @@ describe('GET /api/residents/export', () => {
     expect(res.status).toBe(400);
   });
 });
+describe('GET /api/residents/export?format=pdf', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (requirePermission as any).mockResolvedValue({ session: { user: { id: '1', username: 'admin', role: 'ADMIN' } } });
+    (prisma.resident.count as any).mockResolvedValue(1);
+    (prisma.resident.findMany as any).mockResolvedValue([
+      {
+        fname: 'Juan', lname: 'Dela Cruz', mname: 'Santos', name_extension: null, birthdate: new Date('1950-01-15'),
+        sex: 'MALE', civil_status: 'WIDOWED', place_of_birth: null, religion: null, employment_status: null,
+        educational_attainment: null, occupation: null, income_bracket: null, mobile: null, email: null,
+        purok: { name: 'Purok I' }, household: { household_no: 'HHNP100000001' },
+      },
+    ]);
+  });
+
+  it('returns a PDF with the same filters, and logs it as a PDF export', async () => {
+    const res = await GET(new NextRequest('http://localhost/api/residents/export?format=pdf&sex=MALE'));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toBe('application/pdf');
+    expect(res.headers.get('Content-Disposition')).toMatch(/residents-\d{4}-\d{2}-\d{2}\.pdf/);
+    const bytes = Buffer.from(await res.arrayBuffer());
+    expect(bytes.subarray(0, 5).toString()).toBe('%PDF-');
+    expect((prisma.resident.findMany as any).mock.calls[0][0].where.AND).toContainEqual({ sex: 'MALE' });
+    expect((logAudit as any).mock.calls[0][0].details).toContain('to PDF');
+  });
+});

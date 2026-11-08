@@ -184,8 +184,10 @@ export function DateRangeFilter({
 }) {
   const [open, setOpen] = useState(false);
   const active = (from ? 1 : 0) + (to ? 1 : 0);
+  // Read by PrintLetterhead so the printed report says which dates it covers.
+  const printFilter = active ? `${label}: ${from || "start"} to ${to || "today"}` : undefined;
   return (
-    <div className="relative">
+    <div className="relative" data-print-filter={printFilter}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

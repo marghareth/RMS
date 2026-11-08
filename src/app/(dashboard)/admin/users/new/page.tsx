@@ -22,6 +22,8 @@ export default function NewUserPage() {
   const actorIsAdmin = session?.user?.role === "ADMIN";
 
   const [username, setUsername] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [position, setPosition] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<Role | "">("");
@@ -51,7 +53,7 @@ export default function NewUserPage() {
       const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username.trim(), password, role }),
+        body: JSON.stringify({ username: username.trim(), password, role, full_name: fullName, position }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -92,12 +94,12 @@ export default function NewUserPage() {
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--brand-tint)">
             <UserPlus size={14} className="text-(--brand-fg-strong)" />
           </div>
-          <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Account Details</p>
+          <p className="text-[14px] font-semibold text-[#1F2937] dark:text-white">Account details</p>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+            <label className="mb-1.5 block text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
               Username
             </label>
             <input
@@ -108,8 +110,38 @@ export default function NewUserPage() {
             />
           </div>
 
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="new-full-name" className="mb-1.5 block text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
+                Full name
+              </label>
+              <input
+                id="new-full-name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                maxLength={100}
+                placeholder="e.g. Maria L. Santos"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+              />
+            </div>
+            <div>
+              <label htmlFor="new-position" className="mb-1.5 block text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
+                Position
+              </label>
+              <input
+                id="new-position"
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                maxLength={100}
+                placeholder="e.g. Barangay Secretary"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+              />
+            </div>
+            <p className="text-[12px] text-[#9CA3AF] dark:text-[#737373] sm:col-span-2">Printed on the “Prepared by” line of reports this person prints.</p>
+          </div>
+
           <div>
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+            <label className="mb-1.5 block text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
               Password
             </label>
             <div className="relative">
@@ -135,7 +167,7 @@ export default function NewUserPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+            <label className="mb-1.5 block text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
               Role
             </label>
             <select

@@ -69,7 +69,7 @@ export const GET = withErrorHandling(async (req: NextRequest, context) => {
   const { id: idParam } = await context!.params;
   const user = await prisma.user.findUnique({
     where: { id: parseInt(idParam) },
-    select: { id: true, username: true, role: true, is_active: true, created_at: true },
+    select: { id: true, username: true, full_name: true, position: true, role: true, is_active: true, created_at: true },
   });
 
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -116,12 +116,15 @@ export const PATCH = withErrorHandling(async (req: NextRequest, context) => {
   }
 
   const data: Prisma.UserUpdateInput = { role: resolvedRole, is_active: resolvedIsActive };
+  // Name and position are optional; omitted means "leave as-is", "" clears.
+  if (body.full_name !== undefined) data.full_name = body.full_name;
+  if (body.position !== undefined) data.position = body.position;
 
   const user = await prisma.$transaction(async (tx) => {
     const updated = await tx.user.update({
       where: { id },
       data,
-      select: { id: true, username: true, role: true, is_active: true },
+      select: { id: true, username: true, full_name: true, position: true, role: true, is_active: true },
     });
     await logAudit(
       {
