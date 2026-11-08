@@ -6,6 +6,8 @@ import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Save, Package } from "lucide-react";
 import { equipmentProblems, problemFor } from "@/lib/form-rules";
 import FieldError, { fieldErrorBorder } from "@/components/shared/FieldError";
+import PickListSelect from "@/components/shared/PickListSelect";
+import { useCan } from "@/lib/hooks/useCan";
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 type EquipmentStatus = "SERVICEABLE" | "UNSERVICEABLE" | "MISSING";
@@ -42,9 +44,12 @@ const CONDITION_OPTIONS = [
 ];
 
 // ─── FIELD COMPONENTS ─────────────────────────────────────────────────────────
+const SELECT_CLASS =
+  "w-full text-[13px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-4 py-2.5 focus:outline-none focus:border-(--brand-line) focus:ring-2 focus:ring-(--brand-tint) text-[#1F2937] dark:text-white bg-white dark:bg-[#171717] transition";
+
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="text-[10px] font-semibold text-[#6B7280] dark:text-[#A3A3A3] uppercase tracking-wide block mb-1.5">
+    <label className="text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3] block mb-1.5">
       {children}{required && <span className="text-red-500 dark:text-red-400 ml-0.5">*</span>}
     </label>
   );
@@ -119,7 +124,7 @@ function StatusCard({
     >
       <div className="flex items-center gap-2 mb-0.5">
         <span className={`w-2.5 h-2.5 rounded-full ${dot}`} />
-        <span className={`text-[12px] font-bold uppercase tracking-wide ${selected ? "text-(--brand-fg)" : "text-[#1F2937] dark:text-white"}`}>
+        <span className={`text-[13px] font-semibold ${selected ? "text-(--brand-fg)" : "text-[#1F2937] dark:text-white"}`}>
           {label}
         </span>
       </div>
@@ -130,6 +135,7 @@ function StatusCard({
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function EditEquipmentPage() {
+  const can = useCan();
   const router = useRouter();
   const params = useParams<{ id: string }>();
 
@@ -223,7 +229,7 @@ export default function EditEquipmentPage() {
           <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
         </button>
         <div>
-          <h1 className="text-[20px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">Edit Equipment</h1>
+          <h1 className="text-[22px] font-semibold text-[#1F2937] dark:text-white">Edit equipment</h1>
           <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Update equipment details</p>
         </div>
       </div>
@@ -276,12 +282,18 @@ export default function EditEquipmentPage() {
 
           {/* Type + Serial Number */}
           <div data-tour="page-equipment-edit-type" className="grid grid-cols-2 gap-4">
-            <TextInput
-              label="Type"
-              value={form.asset_type}
-              onChange={v => set("asset_type", v)}
-              placeholder="e.g. Furniture, Electronics, Tools"
-            />
+            <div>
+              <FieldLabel>Type</FieldLabel>
+              <PickListSelect
+                list="equipment-types"
+                value={form.asset_type}
+                onChange={v => set("asset_type", v)}
+                canEdit={can("equipment:write")}
+                dialogTitle="Edit equipment types"
+                placeholder="Choose a type"
+                className={SELECT_CLASS}
+              />
+            </div>
             <TextInput
               label="Serial Number"
               value={form.serial_number}

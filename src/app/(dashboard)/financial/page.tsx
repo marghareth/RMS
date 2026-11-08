@@ -3,21 +3,9 @@
 
 import { useMemo, useState, useEffect} from "react";
 import { useRouter } from "next/navigation";
-import {
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Wallet,
-  Search,
-  SlidersHorizontal,
-  Plus,
-  X,
-  BarChart3,
-  ArrowUpCircle,
-  ArrowDownCircle,
-} from "lucide-react";
+import { DollarSign, Search, SlidersHorizontal, Plus, X, BarChart3 } from "lucide-react";
+import { ListSummary } from "@/components/shared/ListUI";
 import PageHeader from "@/components/shared/PageHeader";
-import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import { FinancialRecordMock, formatCurrency, formatISODate } from "@/lib/mock/financial";
 import { useCan } from "@/lib/hooks/useCan";
@@ -102,7 +90,7 @@ export default function FinancialListPage() {
     <div>
       <PageHeader
         title="Financial Records"
-        subtitle="Track barangay income and expenses"
+        subtitle={<span data-tour="page-financial-stats"><ListSummary items={[`${formatCurrency(income)} income`, `${formatCurrency(expense)} expense`, `${formatCurrency(balance)} net`]} /></span>}
         actions={
           <div className="flex items-center gap-2">
             <button
@@ -124,19 +112,6 @@ export default function FinancialListPage() {
           </div>
         }
       />
-
-      {/* Stat cards */}
-      <div data-tour="page-financial-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Total Income" value={formatCurrency(income)} sub="Filtered period" icon={TrendingUp} color="green" />
-        <StatCard label="Total Expense" value={formatCurrency(expense)} sub="Filtered period" icon={TrendingDown} color="red" />
-        <StatCard
-          label="Net Balance"
-          value={formatCurrency(balance)}
-          sub={balance >= 0 ? "Surplus" : "Deficit"}
-          icon={Wallet}
-          color={balance >= 0 ? "blue" : "amber"}
-        />
-      </div>
 
       {/* Search + filters */}
       <div className="relative mb-4 flex items-center gap-2">
@@ -167,14 +142,14 @@ export default function FinancialListPage() {
         {showFilter && (
           <div className="absolute right-0 top-full z-20 mt-2 w-72 space-y-3 rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] p-4 shadow-lg">
             <div className="mb-1 flex items-center justify-between">
-              <span className="text-[12px] font-bold uppercase tracking-wide text-[#1F2937] dark:text-white">Filters</span>
+              <span className="text-[13px] font-semibold text-[#1F2937] dark:text-white">Filters</span>
               <button onClick={() => setShowFilter(false)}>
                 <X size={14} className="text-[#9CA3AF] dark:text-[#A3A3A3]" />
               </button>
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
                 Transaction Type
               </label>
               <select
@@ -190,7 +165,7 @@ export default function FinancialListPage() {
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
                   From
                 </label>
                 <input
@@ -201,7 +176,7 @@ export default function FinancialListPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+                <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
                   To
                 </label>
                 <input
@@ -249,12 +224,12 @@ export default function FinancialListPage() {
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Date</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Description</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Type</th>
-                <th className="px-4 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Amount</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Recorded By</th>
+              <tr className="border-b border-[#F0F1F3] dark:border-[#262626]">
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Date</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Description</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Type</th>
+                <th className="px-4 py-2.5 text-right text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Amount</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Recorded By</th>
               </tr>
             </thead>
             <tbody>
@@ -264,12 +239,10 @@ export default function FinancialListPage() {
                   <td className="px-4 py-3 text-[12px] text-[#374151] dark:text-[#D4D4D4]">{r.description}</td>
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                        r.transaction_type === "INCOME" ? "bg-[#D1FAE5] dark:bg-emerald-500/15 text-[#059669] dark:text-[#34D399]" : "bg-[#FEE2E2] dark:bg-red-500/15 text-[#DC2626] dark:text-[#F87171]"
+                      className={`inline-flex items-center gap-1.5 text-[12.5px] font-medium before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full before:bg-current before:content-[''] ${ r.transaction_type === "INCOME" ? "text-[#059669] dark:text-[#34D399]" : "text-[#DC2626] dark:text-[#F87171]"
                       }`}
                     >
-                      {r.transaction_type === "INCOME" ? <ArrowUpCircle size={11} /> : <ArrowDownCircle size={11} />}
-                      {r.transaction_type === "INCOME" ? "Income" : "Expense"}
+                                            {r.transaction_type === "INCOME" ? "Income" : "Expense"}
                     </span>
                   </td>
                   <td

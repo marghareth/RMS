@@ -8,9 +8,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Search, Printer, ChevronRight, FileText } from "lucide-react";
+import { CheckCircle2, Search, Printer, ChevronRight } from "lucide-react";
+import { ListSummary } from "@/components/shared/ListUI";
 import PageHeader from "@/components/shared/PageHeader";
-import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import {
   CertificateMock, certTypeLabel, residentFullName, formatISODate, formatISODateTime,
@@ -57,14 +57,8 @@ export default function DocumentReleasePage() {
     <div>
       <PageHeader
         title="Document Release"
-        subtitle="Records of certificates and documents already released to applicants"
+        subtitle={<span data-tour="page-document-release-stats"><ListSummary items={[`${today} released today`, `${items.length} shown`, unpaidReleased > 0 && `${unpaidReleased} released unpaid`]} /></span>}
       />
-
-      <div data-tour="page-document-release-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Released Today" value={today} sub="Handed out today" icon={CheckCircle2} color="green" />
-        <StatCard label="Total Released" value={items.length} sub="Matching current filters" icon={FileText} color="blue" />
-        <StatCard label="Unpaid on Release" value={unpaidReleased} sub="Released without full payment" icon={CheckCircle2} color="amber" />
-      </div>
 
       <div data-tour="page-document-release-filters" className="mb-4 flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-50">
@@ -101,12 +95,12 @@ export default function DocumentReleasePage() {
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Control #</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Type</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Applicant</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Payment</th>
-                <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Released</th>
+              <tr className="border-b border-[#F0F1F3] dark:border-[#262626]">
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Control #</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Type</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Applicant</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Payment</th>
+                <th className="px-4 py-2.5 text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">Released</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -119,7 +113,7 @@ export default function DocumentReleasePage() {
                 >
                   <td className="px-4 py-3 text-[12px] font-bold text-[#1F2937] dark:text-white">{c.certificate_no}</td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong)">
+                    <span className="text-[13px] text-[#374151] dark:text-[#D4D4D4]">
                       {certTypeLabel(c.certificate_type)}
                     </span>
                   </td>
@@ -128,12 +122,11 @@ export default function DocumentReleasePage() {
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                        c.payment_status === "PAID"
-                          ? "bg-green-50 dark:bg-green-500/15 text-green-600 dark:text-green-400"
+                      className={`inline-flex items-center gap-1.5 text-[12.5px] font-medium before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full before:bg-current before:content-[''] ${ c.payment_status === "PAID"
+                          ? "text-green-600 dark:text-green-400"
                           : c.payment_status === "WAIVED"
-                          ? "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-[#A3A3A3]"
-                          : "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                          ? "text-gray-500 dark:text-[#A3A3A3]"
+                          : "text-amber-600 dark:text-amber-400"
                       }`}
                     >
                       {PAYMENT_STATUS_LABELS[c.payment_status]}

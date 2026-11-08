@@ -147,19 +147,22 @@
   --brand-tint: #16224a;
   --brand-tint-strong: #1e2e5e;
 
-  /* Sidebar in dark mode: a deeper, quieter navy so it doesn't glare next
-     to the near-black page, and the current page is LIGHTER than the panel
-     (in light mode it's darker) so it still stands out. */
-  --nav-bg: #0b1633;
-  --nav-border: #1a2850;
-  --nav-text: #a9b6d9;
+  /* Sidebar in dark mode (Nov 2026): the same neutral near-black as the
+     rest of the dark theme instead of navy, which read as a separate
+     theme. Panel and dividers match the top bar (#111111 / #262626, see
+     Topbar.tsx); text and hover use the dark greys used across the app.
+     Blue is kept only as an accent — the current page's icon tile and the
+     logo — so the current page still stands out. */
+  --nav-bg: #111111;
+  --nav-border: #262626;
+  --nav-text: #b5b5b5;
   --nav-text-strong: #ffffff;
-  --nav-text-muted: #7385b3;
-  --nav-hover-bg: #13214a;
-  --nav-active-bg: #1e346f;
-  --nav-chip-bg: #15244d;
-  --nav-chip-active-bg: #2a4590;
-  --nav-logo: #7aa7ff;
+  --nav-text-muted: #737373;
+  --nav-hover-bg: #1c1c1c;
+  --nav-active-bg: #242424;
+  --nav-chip-bg: #1f1f1f;
+  --nav-chip-active-bg: #3358c9;
+  --nav-logo: #8da6ea;
 
   color-scheme: dark;
 }

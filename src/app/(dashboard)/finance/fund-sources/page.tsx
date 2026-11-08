@@ -2,6 +2,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import StatusBadge from "@/components/shared/StatusBadge";
+import { ListTabs } from "@/components/shared/ListUI";
 import { Landmark, Plus, X, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/shared/EmptyState";
 import FundSourceDetailSheet from "@/components/finance/FundSourceDetailSheet";
@@ -108,7 +110,7 @@ export default function FundSourcesPage() {
           {error && <div className="mb-3 rounded-lg bg-red-50 dark:bg-red-500/15 px-3 py-2.5 text-[12px] text-red-600 dark:text-red-400">{error}</div>}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="lg:col-span-2">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Name *</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Name *</label>
               <input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -119,7 +121,7 @@ export default function FundSourcesPage() {
               <FieldError message={problemFor(formProblems, "name")} />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Code</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Code</label>
               <input
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value })}
@@ -130,7 +132,7 @@ export default function FundSourcesPage() {
               <FieldError message={problemFor(formProblems, "code")} />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Starting Balance (₱)</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Starting Balance (₱)</label>
               <input
                 type="number"
                 value={form.original_balance}
@@ -142,7 +144,7 @@ export default function FundSourcesPage() {
               <FieldError message={problemFor(formProblems, "original_balance")} />
             </div>
             <div className="lg:col-span-4">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">Statutory Rule</label>
+              <label className="mb-1 block text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Statutory Rule</label>
               <input
                 value={form.statutory_rule}
                 onChange={(e) => setForm({ ...form, statutory_rule: e.target.value })}
@@ -165,18 +167,17 @@ export default function FundSourcesPage() {
         </div>
       )}
 
-      <div data-tour="page-fund-sources-tabs" className="mb-4 flex gap-1">
-        {(["", "ACTIVE", "INACTIVE"] as const).map((s) => (
-          <button
-            key={s || "ALL"}
-            onClick={() => setStatus(s)}
-            className={`rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide transition ${
-              status === s ? "bg-(--brand) text-white" : "bg-[#F4F5F7] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#E5E7EB] dark:hover:bg-[#262626]"
-            }`}
-          >
-            {s === "" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()}
-          </button>
-        ))}
+      <div data-tour="page-fund-sources-tabs" className="mb-4 border-b border-[#E9EAEC] dark:border-[#262626]">
+        <ListTabs
+          label="Show fund sources"
+          value={status || "ALL"}
+          onChange={(k) => setStatus(k === "ALL" ? "" : k)}
+          tabs={[
+            { key: "ALL", label: "All" },
+            { key: "ACTIVE", label: "Active" },
+            { key: "INACTIVE", label: "Inactive" },
+          ]}
+        />
       </div>
 
       {loading ? (
@@ -190,9 +191,9 @@ export default function FundSourcesPage() {
       ) : (
         <div data-tour="page-fund-sources-list" className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
           {/* Table header */}
-          <div className="grid grid-cols-[2fr_1fr_1fr_0.4fr] gap-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] px-5 py-2.5">
+          <div className="grid grid-cols-[2fr_1fr_1fr_0.4fr] gap-4 border-b border-[#F0F1F3] dark:border-[#262626] px-5 py-2.5">
             {["Fund Source", "Status", "Current Balance", ""].map((h) => (
-              <span key={h} className="text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">{h}</span>
+              <span key={h} className="text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">{h}</span>
             ))}
           </div>
 
@@ -215,13 +216,7 @@ export default function FundSourcesPage() {
               </div>
 
               {/* Status */}
-              <span
-                className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                  f.status === "ACTIVE" ? "bg-green-50 dark:bg-green-500/15 text-green-600 dark:text-green-400" : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-[#A3A3A3]"
-                }`}
-              >
-                {f.status === "ACTIVE" ? "Active" : "Inactive"}
-              </span>
+              <span><StatusBadge status={f.status === "ACTIVE" ? "ACTIVE" : "INACTIVE"} /></span>
 
               {/* Current Balance */}
               <span className="text-[13px] font-bold text-[#1F2937] dark:text-white">{fmtCurrency(f.current_balance)}</span>

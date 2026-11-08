@@ -1,4 +1,9 @@
 // FILE: src/app/(dashboard)/equipment/page.tsx
+//
+// REDESIGN (Nov 2026): same list look as the Users page (ListUI). The stat
+// cards became a summary line under the title; the ALL / OK / BROKEN /
+// MISSING buttons became status tabs with counts; statuses use the
+// app-wide dot style; the selected row is a light tint with a blue edge.
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,7 +14,8 @@ import {
 } from "lucide-react";
 import EquipmentDetailSheet from "@/components/equipment/EquipmentDetailSheet";
 import PageHeader from "@/components/shared/PageHeader";
-import StatCard from "@/components/shared/StatCard";
+import SharedStatusBadge from "@/components/shared/StatusBadge";
+import { ListTabs, ListSummary } from "@/components/shared/ListUI";
 import { fetchJson } from "@/lib/fetch-json";
 import { useCan } from "@/lib/hooks/useCan";
 
@@ -82,15 +88,9 @@ function hasOverdue(eq: Equipment) {
 }
 
 // ─── STATUS BADGE ─────────────────────────────────────────────────────────────
+// Nov 2026: the app-wide dot + text status style instead of an ALL-CAPS pill.
 function StatusBadge({ status }: { status: EquipmentStatus }) {
-  const cfg = STATUS_CONFIG[status];
-  const Icon = cfg.icon;
-  return (
-    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${cfg.bg} ${cfg.text}`}>
-      <Icon size={10} />
-      {cfg.label}
-    </span>
-  );
+  return <SharedStatusBadge status={status} label={STATUS_CONFIG[status]?.label} />;
 }
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
@@ -127,7 +127,9 @@ export default function EquipmentPage() {
   // render-time-reset pattern used on the certificate preview page, exempt
   // from the set-state-in-effect rule because it isn't inside useEffect.
   // See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
-  const queryKey = `${search}|${filterStatus}|${filterType}`;
+  // Status is filtered in the browser (Nov 2026) so the status tabs can show
+  // a count for every status; search and type still go to the server.
+  const queryKey = `${search}|${filterType}`;
   const [loadedKey, setLoadedKey] = useState(queryKey);
   if (queryKey !== loadedKey) {
     setLoadedKey(queryKey);
@@ -138,7 +140,6 @@ export default function EquipmentPage() {
     let cancelled = false;
     const params = new URLSearchParams();
     if (search)                          params.set("search", search);
-    if (filterStatus !== "ALL")          params.set("status", filterStatus);
     if (filterType)                      params.set("asset_type", filterType);
     loadEquipment(params).then((result) => {
       if (cancelled) return;
@@ -147,14 +148,13 @@ export default function EquipmentPage() {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [search, filterStatus, filterType]);
+  }, [search, filterType]);
 
   // Re-fetch after the detail sheet closes, in case a borrow/return there
   // changed a status this list is filtering/displaying (e.g. Overdue count).
   function reloadEquipment() {
     const params = new URLSearchParams();
     if (search)                 params.set("search", search);
-    if (filterStatus !== "ALL") params.set("status", filterStatus);
     if (filterType)              params.set("asset_type", filterType);
     loadEquipment(params).then((result) => {
       setEquipment(result.items);
@@ -170,7 +170,8 @@ export default function EquipmentPage() {
   // Derived rather than stored: falls back to the first item once real data
   // has loaded, without needing an effect (and its own setState-in-effect
   // pitfall) just to "auto-select the first row".
-  const selected = equipment.find(e => e.id === selectedId) ?? equipment[0] ?? null;
+  const shown = filterStatus === "ALL" ? equipment : equipment.filter(e => e.status === filterStatus);
+  const selected = shown.find(e => e.id === selectedId) ?? shown[0] ?? null;
 
   // ── Stats ─────────────────────────────────────────────────────────────────
   const totalItems      = equipment.length;
@@ -184,7 +185,20 @@ export default function EquipmentPage() {
       {/* ── Page header ── */}
       <PageHeader
         title="Inventory"
-        subtitle="Equipment management and borrow tracking"
+        subtitle={
+          loading && equipment.length === 0 ? (
+            "Equipment and borrowing"
+          ) : (
+            <span data-tour="page-equipment-stats"><ListSummary
+              items={[
+                `${totalItems} ${totalItems === 1 ? "item" : "items"}`,
+                `${serviceable} working`,
+                `${currentlyOut} borrowed now`,
+                overdueCount > 0 && `${overdueCount} overdue`,
+              ]}
+            /></span>
+          )
+        }
         actions={
           (can("equipment:write") && (<button
             data-tour="page-equipment-add"
@@ -196,14 +210,6 @@ export default function EquipmentPage() {
           </button>))
         }
       />
-
-      {/* ── Stat cards ── */}
-      <div data-tour="page-equipment-stats" className="grid grid-cols-4 gap-4">
-        <StatCard label="Total Equipment"    value={totalItems}   sub="item types"       icon={Package}       color="blue" />
-        <StatCard label="Serviceable"        value={serviceable}  sub="ready for use"    icon={CheckCircle2}  color="green" />
-        <StatCard label="Currently Borrowed" value={currentlyOut} sub="active borrows"   icon={Clock}         color="blue" />
-        <StatCard label="Overdue"            value={overdueCount} sub="past return date" icon={AlertTriangle} color="red" />
-      </div>
 
       {/* ── Main panel ── */}
       <div className="flex gap-5 min-h-125">
@@ -223,19 +229,18 @@ export default function EquipmentPage() {
               />
             </div>
             {/* Status filter tabs */}
-            <div data-tour="page-equipment-filters" className="flex gap-1">
-              {(["ALL", "SERVICEABLE", "UNSERVICEABLE", "MISSING"] as const).map(s => (
-                <button
-                  key={s}
-                  onClick={() => setFilterStatus(s)}
-                  className={`flex-1 text-[9px] font-bold py-1.5 rounded-lg uppercase tracking-wide transition
-                    ${filterStatus === s
-                      ? "bg-(--brand) text-white"
-                      : "bg-[#F4F5F7] dark:bg-[#262626] text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#E5E7EB] dark:hover:bg-[#333333]"}`}
-                >
-                  {s === "ALL" ? "All" : s === "SERVICEABLE" ? "OK" : s === "UNSERVICEABLE" ? "Broken" : "Missing"}
-                </button>
-              ))}
+            <div data-tour="page-equipment-filters" className="-mx-4 border-b border-[#E9EAEC] px-4 pt-1 dark:border-[#333333]">
+              <ListTabs
+                label="Filter by status"
+                value={filterStatus}
+                onChange={setFilterStatus}
+                tabs={[
+                  { key: "ALL", label: "All", count: equipment.length },
+                  { key: "SERVICEABLE", label: "Working", count: equipment.filter(e => e.status === "SERVICEABLE").length },
+                  { key: "UNSERVICEABLE", label: "Broken", count: equipment.filter(e => e.status === "UNSERVICEABLE").length },
+                  { key: "MISSING", label: "Missing", count: equipment.filter(e => e.status === "MISSING").length },
+                ]}
+              />
             </div>
             {assetTypes.length > 0 && (
               <select
@@ -268,13 +273,13 @@ export default function EquipmentPage() {
                   Try again
                 </button>
               </div>
-            ) : equipment.length === 0 ? (
+            ) : shown.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-2">
                 <Package size={28} className="text-[#D1D5DB] dark:text-[#404040]" />
                 <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No equipment found</p>
               </div>
             ) : (
-              equipment.map(eq => {
+              shown.map(eq => {
                 const active  = selected?.id === eq.id;
                 const out     = activeBorrowings(eq).length;
                 const overdue = hasOverdue(eq);
@@ -283,23 +288,23 @@ export default function EquipmentPage() {
                     key={eq.id}
                     onClick={() => setSelectedId(eq.id)}
                     className={`w-full text-left px-4 py-3 flex items-center gap-3 border-b border-[#F4F5F7] dark:border-[#262626] transition
-                      ${active ? "bg-(--brand)" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"}`}
+                      ${active ? "bg-(--brand-tint) shadow-[inset_3px_0_0_var(--brand)] dark:bg-(--brand)/15" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"}`}
                   >
                     {/* Thumbnail */}
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 overflow-hidden
-                      ${active ? "bg-(--brand-line) dark:bg-(--brand)" : "bg-[#F4F5F7] dark:bg-[#262626]"}`}>
+                      ${active ? "bg-white dark:bg-[#262626]" : "bg-[#F4F5F7] dark:bg-[#262626]"}`}>
                       {eq.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element -- inventory photos are user-supplied external URLs, not build-time assets
                         <img src={eq.image_url} alt="" className="h-full w-full object-cover" />
                       ) : (
-                        <Package size={16} className={active ? "text-white" : "text-[#9CA3AF] dark:text-[#A3A3A3]"} />
+                        <Package size={16} className={active ? "text-(--brand-fg)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"} />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-[13px] font-bold truncate ${active ? "text-white" : "text-[#1F2937] dark:text-white"}`}>
+                      <p className={`text-[13px] font-bold truncate ${active ? "text-(--brand-fg-strong) dark:text-white" : "text-[#1F2937] dark:text-white"}`}>
                         {eq.name}
                       </p>
-                      <p className={`text-[11px] mt-0.5 ${active ? "text-(--brand-fg-strong)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
+                      <p className={`text-[11px] mt-0.5 ${"text-[#4B5563] dark:text-[#A3A3A3]"}`}>
                         {eq.asset_type && `${eq.asset_type} · `}Qty: {eq.quantity}
                         {out > 0 && ` · ${out} borrowed`}
                         {overdue && " · ⚠ overdue"}
@@ -340,7 +345,7 @@ export default function EquipmentPage() {
                   )}
                 </div>
                 <div>
-                  <h2 className="text-[16px] font-black text-[#1F2937] dark:text-white uppercase tracking-wide">{selected.name}</h2>
+                  <h2 className="text-[18px] font-semibold text-[#1F2937] dark:text-white">{selected.name}</h2>
                   <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Equipment ID: #{String(selected.id).padStart(5, "0")}</p>
                 </div>
               </div>
@@ -381,7 +386,7 @@ export default function EquipmentPage() {
                 </span>],
               ].map(([label, value]) => (
                 <div key={String(label)} className="flex items-center gap-2">
-                  <span className="text-[11px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide min-w-27.5 shrink-0">{label}</span>
+                  <span className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3] min-w-27.5 shrink-0">{label}</span>
                   <span className="text-[#9CA3AF] dark:text-[#A3A3A3]">: </span>
                   <span>{value}</span>
                 </div>
@@ -390,14 +395,14 @@ export default function EquipmentPage() {
 
             {/* Valuation */}
             <div className="border-t border-[#E9EAEC] dark:border-[#262626] pt-5 mb-5">
-              <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white mb-3">Valuation</p>
+              <p className="text-[14px] font-semibold text-[#1F2937] dark:text-white mb-3">Valuation</p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-[#F9FAFB] dark:bg-[#111111] border border-[#F4F5F7] dark:border-[#262626] px-4 py-3">
-                  <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] uppercase font-semibold">Purchase Cost</p>
+                  <p className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Purchase Cost</p>
                   <p className="text-[15px] font-black text-[#1F2937] dark:text-white mt-0.5">{fmtCurrency(selected.purchase_cost)}</p>
                 </div>
                 <div className="rounded-xl bg-[#F9FAFB] dark:bg-[#111111] border border-[#F4F5F7] dark:border-[#262626] px-4 py-3">
-                  <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] uppercase font-semibold">Current Value</p>
+                  <p className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Current Value</p>
                   <p className="text-[15px] font-black text-[#1F2937] dark:text-white mt-0.5">{fmtCurrency(selected.current_value)}</p>
                 </div>
               </div>
@@ -406,15 +411,15 @@ export default function EquipmentPage() {
             {/* Assignment */}
             {(selected.assigned_to || selected.location) && (
               <div className="border-t border-[#E9EAEC] dark:border-[#262626] pt-5 mb-5">
-                <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white mb-3">Assignment</p>
+                <p className="text-[14px] font-semibold text-[#1F2937] dark:text-white mb-3">Assignment</p>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">Assigned To</span>
+                    <span className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Assigned To</span>
                     <span className="text-[#9CA3AF] dark:text-[#A3A3A3]">: </span>
                     <span className="text-[13px] text-[#374151] dark:text-[#D4D4D4]">{selected.assigned_to ?? "—"}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">Location</span>
+                    <span className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">Location</span>
                     <span className="text-[#9CA3AF] dark:text-[#A3A3A3]">: </span>
                     <span className="text-[13px] text-[#374151] dark:text-[#D4D4D4]">{selected.location ?? "—"}</span>
                   </div>
@@ -425,16 +430,16 @@ export default function EquipmentPage() {
             {/* Description */}
             {selected.description && (
               <div className="border-t border-[#E9EAEC] dark:border-[#262626] pt-5 mb-5">
-                <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white mb-3">Description</p>
+                <p className="text-[14px] font-semibold text-[#1F2937] dark:text-white mb-3">Description</p>
                 <p className="text-[13px] text-[#374151] dark:text-[#D4D4D4] leading-relaxed">{selected.description}</p>
               </div>
             )}
 
             {/* Metadata */}
             <div className="border-t border-[#E9EAEC] dark:border-[#262626] pt-5 mb-1">
-              <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white mb-3">Metadata</p>
+              <p className="text-[14px] font-semibold text-[#1F2937] dark:text-white mb-3">Metadata</p>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-semibold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide min-w-27.5 shrink-0">Added to Inventory</span>
+                <span className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3] min-w-27.5 shrink-0">Added to Inventory</span>
                 <span className="text-[#9CA3AF] dark:text-[#A3A3A3]">: </span>
                 <span className="text-[13px] text-[#374151] dark:text-[#D4D4D4]">
                   {new Date(selected.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
@@ -445,7 +450,7 @@ export default function EquipmentPage() {
             {/* Active borrowings */}
             <div data-tour="page-equipment-borrowed" className="border-t border-[#E9EAEC] dark:border-[#262626] pt-5">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">
+                <p className="text-[14px] font-semibold text-[#1F2937] dark:text-white">
                   Currently Borrowed
                 </p>
                 {can("equipment:write") && (<button

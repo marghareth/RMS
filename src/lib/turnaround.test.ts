@@ -119,3 +119,43 @@ describe('formatDuration', () => {
     [2 * DAY_MS + 40 * MIN, '2 d 1 h'],  // ...rounded to the nearest hour
   ])('%s -> %s', (ms, expected) => expect(formatDuration(ms as number | null)).toBe(expected));
 });
+describe('computeTurnaround — where the time goes', () => {
+  // Filed 9:00 Manila (01:00Z); started 9:10, printed 9:30, released 4 pm.
+  const filed = new Date('2026-10-05T01:00:00Z');
+  const at = (min: number) => new Date(filed.getTime() + min * MIN);
+  const row = (started: number | null, printed: number | null, released: number) => ({
+    certificate_type: 'RESIDENCY',
+    requested_at: filed,
+    processing_started_at: started === null ? null : at(started),
+    printed_at: printed === null ? null : at(printed),
+    issued_at: at(released),
+  });
+
+  it('splits each request into waiting, preparing and waiting for pickup', () => {
+    const r = computeTurnaround([row(10, 30, 420)]);
+    const by = Object.fromEntries(r.stages.map((s) => [s.key, s]));
+    expect(by.waiting.stats.medianMs).toBe(10 * MIN);
+    expect(by.preparing.stats.medianMs).toBe(20 * MIN);
+    expect(by.pickup.stats.medianMs).toBe(390 * MIN);
+    expect(by.pickup.sharePct).toBe(93);
+    expect(r.stagesTracked).toBe(1);
+  });
+
+  it('leaves rows without step times out of the split but keeps them in the totals', () => {
+    const r = computeTurnaround([row(10, 30, 60), row(null, null, 90)]);
+    expect(r.overall.count).toBe(2);
+    expect(r.stagesTracked).toBe(1);
+  });
+
+  it('treats a first print after release as printed at release', () => {
+    const r = computeTurnaround([row(10, 500, 60)]);
+    const pickup = r.stages.find((s) => s.key === 'pickup')!;
+    expect(pickup.stats.medianMs).toBe(0);
+  });
+
+  it('counts same-day releases in Philippine time', () => {
+    // 9:00 → 4 pm same day; and 9:00 → 9:00 next day (Manila).
+    const r = computeTurnaround([row(1, 2, 420), row(1, 2, 24 * 60)]);
+    expect(r.sameDayPct).toBe(50);
+  });
+});

@@ -1,8 +1,9 @@
 // FILE: src/app/(dashboard)/admin/puroks/page.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { MapPin, Plus, Pencil, Trash2, Check, X, Users, Home } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Plus } from "lucide-react";
+import { LIST_CARD, GRID_HEAD, GRID_HEAD_CELL, ListSearch, ListSummary, TextAction } from "@/components/shared/ListUI";
 import PageHeader from "@/components/shared/PageHeader";
 import { ADMIN_TUTORIALS } from "@/lib/adminTutorials";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
@@ -23,6 +24,8 @@ export default function PuroksAdminPage() {
   const [puroks,  setPuroks]  = useState<Purok[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
+
+  const [search, setSearch] = useState("");
 
   // Add-new state
   const [newName, setNewName] = useState("");
@@ -166,153 +169,157 @@ export default function PuroksAdminPage() {
     }
   }
 
+  const totals = useMemo(
+    () =>
+      puroks.reduce(
+        (t, p) => ({ residents: t.residents + (p._count?.residents ?? 0), households: t.households + (p._count?.households ?? 0) }),
+        { residents: 0, households: 0 }
+      ),
+    [puroks]
+  );
+  const shown = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return q ? puroks.filter((p) => p.name.toLowerCase().includes(q)) : puroks;
+  }, [puroks, search]);
+
+  const ROW = "grid grid-cols-[minmax(0,2fr)_1fr_1fr_minmax(9rem,auto)] items-center gap-4 px-4";
+
   return (
     <div>
       <PageHeader
         title="Puroks"
-        subtitle="Manage the puroks / zones used across residents, households, and filters."
+        subtitle={
+          <ListSummary
+            items={[
+              `${puroks.length} ${puroks.length === 1 ? "purok" : "puroks"}`,
+              `${totals.residents} residents`,
+              `${totals.households} households`,
+            ]}
+          />
+        }
         tutorial={ADMIN_TUTORIALS.puroks}
       />
 
-      {/* Add new purok */}
-      {can("settings:write") && (<div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#333333] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] p-4 mb-4 flex items-center gap-2">
-        <div className="relative flex-1">
-          <MapPin size={14} className="absolute left-3 top-4.75 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
-          <input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-            placeholder="New purok name (e.g. Purok 5)"
-            className={`w-full pl-9 pr-3 py-2.5 text-[13px] border border-[#E9EAEC] dark:border-[#333333] rounded-xl focus:outline-none focus:border-(--brand-line) placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] text-[#1F2937] dark:text-white transition ${newNameError ? fieldErrorBorder : ""}`}
-            aria-invalid={!!(newNameError)}
-          />
-          <FieldError message={newNameError} />
-        </div>
-        <button
-          onClick={handleAdd}
-          disabled={adding || !newName.trim()}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-(--brand) hover:bg-(--brand-hover) text-white text-[12px] font-bold transition shadow-sm disabled:opacity-50 shrink-0"
-        >
-          <Plus size={14} />
-          {adding ? "Adding…" : "Add Purok"}
-        </button>
-      </div>)}
-
       {error && (
-        <div className="mb-4 px-4 py-2.5 rounded-xl bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400 text-[12px] font-medium">
-          {error}
-        </div>
+        <p className="mb-3 text-[13px] text-[#DC2626] dark:text-[#F87171]">{error}</p>
       )}
 
-      {/* List */}
-      <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#333333] shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)] overflow-hidden">
+      <div className={LIST_CARD}>
+        {/* Toolbar: add a purok on the left, search on the right */}
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#E9EAEC] px-4 py-3 dark:border-[#262626]">
+          {can("settings:write") ? (
+            <div className="flex min-w-0 flex-1 items-start gap-2 sm:max-w-md">
+              <div className="min-w-0 flex-1">
+                <input
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                  placeholder="New purok name, e.g. Purok VI"
+                  aria-label="New purok name"
+                  className={`w-full rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-(--brand-line) dark:border-[#333333] dark:bg-[#171717] dark:text-white dark:placeholder:text-[#737373] ${newNameError ? fieldErrorBorder : ""}`}
+                  aria-invalid={!!newNameError}
+                />
+                <FieldError message={newNameError} />
+              </div>
+              <button
+                onClick={handleAdd}
+                disabled={adding || !newName.trim() || !!newNameError}
+                className="flex shrink-0 items-center gap-1.5 rounded-lg bg-(--brand) px-3.5 py-2 text-[13px] font-semibold text-white transition hover:bg-(--brand-hover) disabled:opacity-50"
+              >
+                <Plus size={14} />
+                {adding ? "Adding…" : "Add purok"}
+              </button>
+            </div>
+          ) : (
+            <span />
+          )}
+          <ListSearch value={search} onChange={setSearch} placeholder="Search purok" />
+        </div>
+
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-6 h-6 border-2 border-(--brand-line) border-t-transparent rounded-full animate-spin" />
-          </div>
+          <p className="px-4 py-12 text-center text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">Loading puroks…</p>
         ) : puroks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <div className="w-12 h-12 rounded-full bg-[#F4F5F7] dark:bg-[#262626] flex items-center justify-center">
-              <MapPin size={20} className="text-[#D1D5DB] dark:text-[#525252]" />
-            </div>
-            <div className="text-center">
-              <p className="text-[13px] font-semibold text-[#6B7280] dark:text-[#A3A3A3]">No puroks yet</p>
-              <p className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">Add your barangay&apos;s puroks above to get started</p>
-            </div>
+          <div className="px-4 py-12 text-center">
+            <p className="text-[13px] font-medium text-[#374151] dark:text-[#D4D4D4]">No puroks yet</p>
+            <p className="mt-0.5 text-[12.5px] text-[#9CA3AF] dark:text-[#A3A3A3]">Add your barangay&apos;s puroks above to get started.</p>
           </div>
+        ) : shown.length === 0 ? (
+          <p className="px-4 py-12 text-center text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">No purok matches that search.</p>
         ) : (
           <div>
-            <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-2.5 bg-[#F9FAFB] dark:bg-[#171717] border-b border-[#E9EAEC] dark:border-[#333333]">
-              {["Name", "Residents", "Households", ""].map((h) => (
-                <span key={h} className="text-[10px] font-bold text-[#9CA3AF] dark:text-[#A3A3A3] uppercase tracking-wide">{h}</span>
-              ))}
+            <div className={`${ROW} py-2.5 ${GRID_HEAD}`}>
+              <span className={GRID_HEAD_CELL}>Purok</span>
+              <span className={GRID_HEAD_CELL}>Residents</span>
+              <span className={GRID_HEAD_CELL}>Households</span>
+              <span />
             </div>
 
-            {puroks.map((p) => {
+            {shown.map((p) => {
               const isEditing = editingId === p.id;
-              const inUse = (p._count?.residents ?? 0) > 0 || (p._count?.households ?? 0) > 0;
+              const residents = p._count?.residents ?? 0;
+              const households = p._count?.households ?? 0;
+              const inUse = residents > 0 || households > 0;
+              const share = totals.residents > 0 ? Math.round((residents / totals.residents) * 100) : 0;
 
               return (
-                <div
-                  key={p.id}
-                  className="grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-3.5 items-center border-b border-[#F4F5F7] dark:border-[#262626] last:border-0"
-                >
-                  {/* Name / rename input */}
+                <div key={p.id} className={`${ROW} border-b border-[#F4F5F7] py-3 last:border-0 dark:border-[#262626]`}>
+                  {/* Name, or the rename box */}
                   <div className="min-w-0">
                     {isEditing ? (
                       <>
-                      <input
-                        autoFocus
-                        value={editingName}
-                        onChange={(e) => setEditingName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleRename(p.id);
-                          if (e.key === "Escape") cancelEditing();
-                        }}
-                        className={`w-full text-[13px] border border-(--brand-line) rounded-lg px-3 py-1.5 focus:outline-none text-[#1F2937] dark:text-white ${editingNameError ? fieldErrorBorder : ""}`}
-                        aria-invalid={!!(editingNameError)}
-                      />
-                      <FieldError message={editingNameError} />
+                        <input
+                          autoFocus
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleRename(p.id);
+                            if (e.key === "Escape") cancelEditing();
+                          }}
+                          aria-label={`Rename ${p.name}`}
+                          className={`w-full rounded-lg border border-(--brand-line) bg-white px-3 py-1.5 text-[13px] text-[#1F2937] outline-none dark:bg-[#171717] dark:text-white ${editingNameError ? fieldErrorBorder : ""}`}
+                          aria-invalid={!!editingNameError}
+                        />
+                        <FieldError message={editingNameError} />
                       </>
                     ) : (
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-(--brand-tint) flex items-center justify-center shrink-0">
-                          <MapPin size={14} className="text-(--brand-fg)" />
-                        </div>
-                        <p className="text-[13px] font-bold text-[#1F2937] dark:text-white truncate">{p.name}</p>
-                      </div>
+                      <>
+                        <p className="truncate text-[13.5px] font-semibold text-[#1F2937] dark:text-white">{p.name}</p>
+                        <p className="text-[12.5px] text-[#6B7280] dark:text-[#A3A3A3]">
+                          {inUse ? `${share}% of residents` : "Not used yet"}
+                        </p>
+                      </>
                     )}
                   </div>
 
-                  {/* Resident count */}
-                  <span className="flex items-center gap-1.5 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
-                    <Users size={13} className="text-[#9CA3AF] dark:text-[#A3A3A3]" />
-                    {p._count?.residents ?? 0}
-                  </span>
-
-                  {/* Household count */}
-                  <span className="flex items-center gap-1.5 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
-                    <Home size={13} className="text-[#9CA3AF] dark:text-[#A3A3A3]" />
-                    {p._count?.households ?? 0}
-                  </span>
+                  <span className="text-[13px] tabular-nums text-[#374151] dark:text-[#D4D4D4]">{residents}</span>
+                  <span className="text-[13px] tabular-nums text-[#374151] dark:text-[#D4D4D4]">{households}</span>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1.5 justify-end">
+                  <div className="flex items-center justify-end gap-1">
                     {isEditing ? (
                       <>
-                        <button
-                          onClick={() => handleRename(p.id)}
-                          disabled={saving || !editingName.trim()}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-green-600 dark:text-green-400 hover:bg-green-50 transition disabled:opacity-50"
-                          title="Save"
-                        >
-                          <Check size={15} />
-                        </button>
-                        <button
-                          onClick={cancelEditing}
-                          disabled={saving}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
-                          title="Cancel"
-                        >
-                          <X size={15} />
-                        </button>
+                        <TextAction onClick={() => handleRename(p.id)} disabled={saving || !editingName.trim() || !!editingNameError}>
+                          {saving ? "Saving…" : "Save"}
+                        </TextAction>
+                        <TextAction tone="muted" onClick={cancelEditing} disabled={saving}>
+                          Cancel
+                        </TextAction>
                       </>
                     ) : (
                       <>
-                        {can("settings:write") && (<button
-                          onClick={() => startEditing(p)}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#6B7280] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition"
-                          title="Rename"
-                        >
-                          <Pencil size={14} />
-                        </button>)}
-                        {can("settings:delete") && (<button
-                          onClick={() => { setDeleteTarget(p); setDeleteError(""); }}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-red-500 dark:text-red-400 hover:bg-red-50 transition"
-                          title={inUse ? "Still assigned to residents or households" : "Delete"}
-                        >
-                          <Trash2 size={14} />
-                        </button>)}
+                        {can("settings:write") && <TextAction onClick={() => startEditing(p)}>Rename</TextAction>}
+                        {can("settings:delete") && (
+                          <TextAction
+                            tone="danger"
+                            title={inUse ? "Still assigned to residents or households" : undefined}
+                            onClick={() => {
+                              setDeleteTarget(p);
+                              setDeleteError("");
+                            }}
+                          >
+                            Delete
+                          </TextAction>
+                        )}
                       </>
                     )}
                   </div>
@@ -325,13 +332,15 @@ export default function PuroksAdminPage() {
 
       <ConfirmDialog
         open={!!deleteTarget}
-        title="Delete Purok"
+        title="Delete purok"
         message={
           deleteError
             ? deleteError
-            : `Are you sure you want to delete "${deleteTarget?.name}"? This can't be undone.`
+            : (deleteTarget?._count?.residents ?? 0) + (deleteTarget?._count?.households ?? 0) > 0
+              ? `"${deleteTarget?.name}" still has ${deleteTarget?._count?.residents ?? 0} residents and ${deleteTarget?._count?.households ?? 0} households. Move them to another purok first, or the delete will be refused.`
+              : `Delete "${deleteTarget?.name}"? This can't be undone.`
         }
-        confirmLabel="Yes, Delete"
+        confirmLabel="Delete"
         cancelLabel="Cancel"
         variant="danger"
         loading={deleting}

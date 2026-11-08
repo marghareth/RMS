@@ -1,88 +1,94 @@
 // FILE: src/app/(dashboard)/reports/registries/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+// Special registries report: senior citizens, PWD and 4Ps beneficiaries.
+// Laid out like the other list pages: one summary line under the title,
+// tabs with counts, a quiet per-purok breakdown, then the full name list.
+
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, BookOpen, Download, Users, Heart, Accessibility } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, LabelList } from "recharts";
-import StatCard from "@/components/shared/StatCard";
+import { ArrowLeft, Download } from "lucide-react";
+import {
+  LIST_CARD,
+  THEAD_ROW,
+  TH,
+  TH_RIGHT,
+  TR,
+  ListTabs,
+  ListSearch,
+  ListToolbar,
+  ListSummary,
+} from "@/components/shared/ListUI";
 
-const MOCK = {
-  seniors: { total: 156, byPurok: [
-    { purok: "Purok I",   count: 38 },
-    { purok: "Purok II",  count: 32 },
-    { purok: "Purok III", count: 42 },
-    { purok: "Purok IV",  count: 24 },
-    { purok: "Purok V",   count: 20 },
-  ]},
-  pwd: { total: 43, byType: [
-    { type: "Visual Impairment",    count: 10 },
-    { type: "Hearing Impairment",   count: 8  },
-    { type: "Physical Disability",  count: 15 },
-    { type: "Intellectual",         count: 5  },
-    { type: "Psychosocial",         count: 3  },
-    { type: "Other",                count: 2  },
-  ], byPurok: [
-    { purok: "Purok I",   count: 10 },
-    { purok: "Purok II",  count: 9  },
-    { purok: "Purok III", count: 12 },
-    { purok: "Purok IV",  count: 8  },
-    { purok: "Purok V",   count: 4  },
-  ]},
-  fourPs: { total: 89, households: 24, byPurok: [
-    { purok: "Purok I",   count: 22 },
-    { purok: "Purok II",  count: 18 },
-    { purok: "Purok III", count: 24 },
-    { purok: "Purok IV",  count: 16 },
-    { purok: "Purok V",   count: 9  },
-  ]},
-  seniorList: [
-    { id: 1,  name: "dela Cruz, Josefa",  age: 72, purok: "Purok I",   sex: "Female" },
-    { id: 2,  name: "Santos, Ramon",      age: 68, purok: "Purok II",  sex: "Male"   },
-    { id: 3,  name: "Reyes, Natividad",   age: 81, purok: "Purok III", sex: "Female" },
-    { id: 4,  name: "Garcia, Domingo",    age: 65, purok: "Purok IV",  sex: "Male"   },
-    { id: 5,  name: "Lopez, Milagros",    age: 74, purok: "Purok II",  sex: "Female" },
-    { id: 6,  name: "Cruz, Venancio",     age: 79, purok: "Purok III", sex: "Male"   },
-  ],
-  pwdList: [
-    { id: 1, name: "Mendoza, Renato",   disability: "Physical Disability", purok: "Purok I",   sex: "Male"   },
-    { id: 2, name: "Flores, Dalisay",   disability: "Visual Impairment",   purok: "Purok II",  sex: "Female" },
-    { id: 3, name: "Aquino, Crisanto",  disability: "Hearing Impairment",  purok: "Purok III", sex: "Male"   },
-    { id: 4, name: "Ramos, Tessie",     disability: "Intellectual",        purok: "Purok IV",  sex: "Female" },
-    { id: 5, name: "Torres, Efren",     disability: "Physical Disability", purok: "Purok I",   sex: "Male"   },
-  ],
-};
-
-const PUROK_COLORS  = ["#0B6E4F","#3E5C76","#B45309","#B3261E","#6D4AFF"];
-const PWD_COLORS    = ["#0B6E4F","#3E5C76","#B45309","#B3261E","#6D4AFF","#9CA3AF"];
-
-function ChartCard({ title, children, className = "" }: { title: string; children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-5 ${className}`}>
-      <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white mb-4">{title}</p>
-      {children}
-    </div>
-  );
-}
-
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-white dark:bg-[#171717] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 shadow-lg text-[11px]">
-      <p className="font-bold text-[#1B2430] dark:text-white">{label ?? payload[0]?.name}</p>
-      <p className="text-[#0B6E4F] dark:text-[#34A37A]">{payload[0]?.value} persons</p>
-    </div>
-  );
+// ─── Types (shape of GET /api/reports?type=registries) ───────────────────────
+interface Count { purok: string; count: number }
+interface Person { id: number; name: string; age: number; purok: string; sex: string }
+interface PwdPerson extends Person { disability: string }
+interface RegistriesData {
+  seniors: { total: number; byPurok: Count[] };
+  pwd: { total: number; byType: { type: string; count: number }[]; byPurok: Count[] };
+  fourPs: { total: number; households: number; byPurok: Count[] };
+  seniorList: Person[];
+  pwdList: PwdPerson[];
+  fourPsList?: Person[];
 }
 
 type Tab = "seniors" | "pwd" | "fourps";
 
+const YEARS = (() => {
+  const now = new Date().getFullYear();
+  return [now, now - 1, now - 2];
+})();
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+// ─── Breakdown: one row per group with a thin bar, in a single brand color ──
+function Breakdown({
+  title,
+  rows,
+  total,
+}: {
+  title: string;
+  rows: { label: string; count: number }[];
+  total: number;
+}) {
+  const max = Math.max(1, ...rows.map((r) => r.count));
+  return (
+    <div className="min-w-0">
+      <p className="mb-2 text-[13px] font-semibold text-[#1F2937] dark:text-white">{title}</p>
+      {rows.length === 0 ? (
+        <p className="py-2 text-[12.5px] text-[#9CA3AF] dark:text-[#737373]">No one registered yet.</p>
+      ) : (
+        <ul>
+          {rows.map((r) => {
+            const share = total > 0 ? Math.round((r.count / total) * 100) : 0;
+            return (
+              <li key={r.label} className="grid grid-cols-[minmax(0,9rem)_1fr_2.5rem_2.75rem] items-center gap-3 py-1.5">
+                <span className="truncate text-[13px] text-[#374151] dark:text-[#D4D4D4]">{r.label}</span>
+                <span className="h-1.5 overflow-hidden rounded-full bg-[#F1F2F4] dark:bg-[#262626]">
+                  <span
+                    className="block h-full rounded-full bg-(--brand) dark:bg-[#60A5FA]"
+                    style={{ width: `${(r.count / max) * 100}%` }}
+                  />
+                </span>
+                <span className="text-right text-[13px] font-medium tabular-nums text-[#1F2937] dark:text-white">{r.count}</span>
+                <span className="text-right text-[12px] tabular-nums text-[#9CA3AF] dark:text-[#737373]">{share}%</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function RegistriesReportPage() {
   const router = useRouter();
-  const [tab,  setTab]  = useState<Tab>("seniors");
-  const [year, setYear] = useState(new Date().getFullYear().toString());
+  const [tab, setTab] = useState<Tab>("seniors");
+  const [year, setYear] = useState(String(new Date().getFullYear()));
+  const [search, setSearch] = useState("");
 
-  const [data, setData] = useState<typeof MOCK | null>(null);
+  const [data, setData] = useState<RegistriesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -96,10 +102,12 @@ export default function RegistriesReportPage() {
 
   useEffect(() => {
     let ignore = false;
-
     fetch(`/api/reports?type=registries&year=${year}`)
-      .then(r => r.json())
-      .then(json => {
+      .then((r) => {
+        if (!r.ok) throw new Error("Failed");
+        return r.json();
+      })
+      .then((json) => {
         if (ignore) return;
         setData(json);
         setLoading(false);
@@ -109,204 +117,207 @@ export default function RegistriesReportPage() {
         setError(true);
         setLoading(false);
       });
-
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [year]);
 
-  if (loading) {
+  // Rows for the current tab, filtered by the search box.
+  const people = useMemo(() => {
+    if (!data) return [] as (Person | PwdPerson)[];
+    const list: (Person | PwdPerson)[] =
+      tab === "seniors" ? data.seniorList : tab === "pwd" ? data.pwdList : data.fourPsList ?? [];
+    const q = search.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((p) =>
+      `${p.name} ${p.purok} ${"disability" in p ? p.disability : ""}`.toLowerCase().includes(q)
+    );
+  }, [data, tab, search]);
+
+  function exportPdf() {
+    const a = document.createElement("a");
+    a.href = `/api/pdf/report/registries?year=${year}`;
+    a.download = `registries-report-${year}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  const header = (
+    <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+      <div className="flex items-start gap-2">
+        <button
+          onClick={() => router.push("/reports")}
+          aria-label="Back to reports"
+          className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg text-[#6B7280] transition hover:bg-[#F4F5F7] dark:text-[#A3A3A3] dark:hover:bg-[#1F1F1F]"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        <div>
+          <h1 className="text-[22px] font-semibold leading-tight text-[#1B2430] dark:text-white">Special registries</h1>
+          <p className="mt-0.5 text-[13px] text-[#6B7280] dark:text-[#A3A3A3]">
+            {data ? (
+              <ListSummary
+                items={[
+                  plural(data.seniors.total, "senior citizen", "senior citizens"),
+                  `${data.pwd.total} PWD`,
+                  plural(data.fourPs.total, "4Ps beneficiary", "4Ps beneficiaries"),
+                  `registered by the end of ${year}`,
+                ]}
+              />
+            ) : (
+              "Senior citizens, PWD and 4Ps beneficiaries per purok"
+            )}
+          </p>
+        </div>
+      </div>
+      <div data-tour="page-reports-registries-controls" className="flex items-center gap-2 print:hidden">
+        <select
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+          aria-label="Year"
+          className="rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-[13px] text-[#1F2937] outline-none focus:border-(--brand-line) dark:border-[#333333] dark:bg-[#171717] dark:text-white"
+        >
+          {YEARS.map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={exportPdf}
+          className="flex items-center gap-2 rounded-lg bg-(--brand) px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-(--brand-hover)"
+        >
+          <Download size={14} /> Export PDF
+        </button>
+      </div>
+    </div>
+  );
+
+  if (loading || error || !data) {
     return (
-      <div className="flex items-center justify-center h-64 text-[13px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-        Loading registries…
+      <div>
+        {header}
+        <div className={`${LIST_CARD} flex h-48 items-center justify-center text-[13px]`}>
+          {loading ? (
+            <span className="text-[#9CA3AF] dark:text-[#A3A3A3]">Loading registries…</span>
+          ) : (
+            <span className="text-[#DC2626] dark:text-[#F87171]">Couldn&apos;t load registry data. Please try again.</span>
+          )}
+        </div>
       </div>
     );
   }
 
-  if (error || !data) {
-    return (
-      <div className="flex items-center justify-center h-64 text-[13px] text-red-500 dark:text-red-400">
-        Failed to load registry data. Please try again.
-      </div>
-    );
-  }
-
-  const TABS: { key: Tab; label: string; icon: any; count: number }[] = [
-    { key: "seniors", label: "Senior Citizens", icon: Users,          count: data.seniors.total },
-    { key: "pwd",     label: "PWD",             icon: Accessibility,  count: data.pwd.total },
-    { key: "fourps",  label: "4Ps Beneficiaries",icon: Heart,         count: data.fourPs.total },
-  ];
+  const purokRows = (rows: Count[]) => rows.map((r) => ({ label: r.purok, count: r.count }));
+  // Counted from the name list, so it always agrees with the table below.
+  const sexRows = (list: Person[]) => {
+    const m = new Map<string, number>();
+    for (const p of list) m.set(p.sex, (m.get(p.sex) ?? 0) + 1);
+    return Array.from(m, ([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
+  };
+  const isPwd = tab === "pwd";
 
   return (
     <div>
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button onClick={() => router.push("/reports")} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] transition">
-              <ArrowLeft size={18} className="text-[#6B7280] dark:text-[#A3A3A3]" />
-            </button>
-            <div className="flex items-center gap-3">
-              <div>
-                <h1 className="text-[22px] font-semibold leading-tight text-[#1B2430] dark:text-white">Special Registries</h1>
-                <p className="mt-0.5 text-[13px] text-[#6B7280] dark:text-[#A3A3A3]">Senior citizens, PWD, and 4Ps per purok</p>
+      {header}
+
+      <div className={LIST_CARD}>
+        <ListToolbar
+          left={
+            <div data-tour="page-reports-registries-tabs">
+              <ListTabs
+                label="Registry"
+                value={tab}
+                onChange={(k) => {
+                  setTab(k);
+                  setSearch("");
+                }}
+                tabs={[
+                  { key: "seniors", label: "Senior citizens", count: data.seniors.total },
+                  { key: "pwd", label: "PWD", count: data.pwd.total },
+                  { key: "fourps", label: "4Ps beneficiaries", count: data.fourPs.total },
+                ]}
+              />
+            </div>
+          }
+          right={<ListSearch value={search} onChange={setSearch} placeholder="Search name or purok" />}
+        />
+
+        <div data-tour="page-reports-registries-content">
+          {/* Breakdown */}
+          <div className="border-b border-[#F0F1F3] px-4 py-4 dark:border-[#262626]">
+            {tab === "seniors" && (
+              <div className="grid gap-6 md:grid-cols-2">
+                <Breakdown title="By purok" rows={purokRows(data.seniors.byPurok)} total={data.seniors.total} />
+                <Breakdown title="By sex" rows={sexRows(data.seniorList)} total={data.seniorList.length} />
               </div>
-            </div>
-          </div>
-          <div data-tour="page-reports-registries-controls" className="flex items-center gap-2">
-            <select value={year} onChange={e => setYear(e.target.value)}
-              className="text-[12px] border border-[#E9EAEC] dark:border-[#262626] rounded-xl px-3 py-2 focus:outline-none focus:border-(--brand-line) bg-white dark:bg-[#171717] text-[#1F2937] dark:text-white">
-              {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
-            <button
-              onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-(--brand) text-white text-[12px] font-bold hover:bg-(--brand-hover) transition print:hidden"
-            >
-              <Download size={13} /> Export PDF
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div data-tour="page-reports-registries-tabs" className="grid grid-cols-3 gap-4 mb-5">
-        {TABS.map(t => {
-          const Icon = t.icon;
-          return (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`relative rounded-xl border px-5 py-4 text-left transition
-                ${tab === t.key ? "border-(--brand-line) bg-(--brand-tint) dark:bg-[#0B1D33]" : "border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] hover:border-[#D1D5DB] dark:hover:border-[#404040]"}`}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Icon size={14} className={tab === t.key ? "text-(--brand-fg)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"} />
-                <span className={`text-[11px] font-semibold ${tab === t.key ? "text-(--brand-fg-strong)" : "text-[#6B7280] dark:text-[#A3A3A3]"}`}>{t.label}</span>
+            )}
+            {tab === "pwd" && (
+              <div className="grid gap-6 md:grid-cols-2">
+                <Breakdown title="By purok" rows={purokRows(data.pwd.byPurok)} total={data.pwd.total} />
+                <Breakdown
+                  title="By disability type"
+                  rows={data.pwd.byType.map((t) => ({ label: t.type, count: t.count }))}
+                  total={data.pwd.total}
+                />
               </div>
-              <p className="text-[28px] font-bold leading-none tabular-nums text-[#1B2430] dark:text-white">
-                {t.count}
-              </p>
-            </button>
-          );
-        })}
-      </div>
-
-      {tab === "seniors" && (
-        <div data-tour="page-reports-registries-content" className="space-y-5">
-          <ChartCard title="Senior Citizens by Purok">
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={data.seniors.byPurok} barSize={40} margin={{ top: 20 }}>
-                <XAxis dataKey="purok" tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148,163,184,0.08)" }} />
-                <Bar dataKey="count" radius={[5, 5, 0, 0]}>
-                  {data.seniors.byPurok.map((_, i) => <Cell key={i} fill={PUROK_COLORS[i]} />)}
-                  <LabelList dataKey="count" position="top" style={{ fontSize: 12, fontWeight: 700, fill: "#9CA3AF" }} />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-
-          <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-              <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white">Senior Citizen Registry</p>
-            </div>
-            <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
-              {["Name", "Age", "Purok", "Sex"].map(h => <span key={h} className="text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">{h}</span>)}
-            </div>
-            {data.seniorList.map((s, i) => (
-              <div key={s.id} className={`grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-5 py-3 border-b border-[#F4F5F7] dark:border-[#262626] items-center ${i % 2 !== 0 ? "bg-[#FAFAFA] dark:bg-[#171717]" : ""}`}>
-                <span className="text-[12px] font-semibold text-[#1B2430] dark:text-white">{s.name}</span>
-                <span className="text-[12px] tabular-nums text-[#374151] dark:text-[#D4D4D4]">{s.age}</span>
-                <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">{s.purok}</span>
-                <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">{s.sex}</span>
-              </div>
-            ))}
-            <div className="px-5 py-3 text-center">
-              <span className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Showing 6 of {data.seniors.total} · Export PDF for full list</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {tab === "pwd" && (
-        <div data-tour="page-reports-registries-content" className="space-y-5">
-          <div className="grid grid-cols-2 gap-5">
-            <ChartCard title="PWD by Disability Type">
-              <div className="flex items-center gap-3">
-                <ResponsiveContainer width="50%" height={150}>
-                  <PieChart>
-                    <Pie data={data.pwd.byType} dataKey="count" cx="50%" cy="50%" outerRadius={60} paddingAngle={2}>
-                      {data.pwd.byType.map((_, i) => <Cell key={i} fill={PWD_COLORS[i % PWD_COLORS.length]} />)}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="flex-1 space-y-1.5">
-                  {data.pwd.byType.map((t, i) => (
-                    <div key={t.type} className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: PWD_COLORS[i % PWD_COLORS.length] }} />
-                        <span className="text-[10px] text-[#6B7280] dark:text-[#A3A3A3]">{t.type}</span>
-                      </div>
-                      <span className="text-[11px] font-bold tabular-nums text-[#1B2430] dark:text-white">{t.count}</span>
-                    </div>
-                  ))}
+            )}
+            {tab === "fourps" && (
+              <>
+                <p className="mb-3 text-[12.5px] text-[#6B7280] dark:text-[#A3A3A3]">
+                  {plural(data.fourPs.total, "beneficiary", "beneficiaries")} in{" "}
+                  {plural(data.fourPs.households, "household", "households")}
+                </p>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Breakdown title="By purok" rows={purokRows(data.fourPs.byPurok)} total={data.fourPs.total} />
+                  <Breakdown title="By sex" rows={sexRows(data.fourPsList ?? [])} total={(data.fourPsList ?? []).length} />
                 </div>
-              </div>
-            </ChartCard>
-            <ChartCard title="PWD by Purok">
-              <div className="space-y-3 pt-2">
-                {data.pwd.byPurok.map((p, i) => (
-                  <div key={p.purok} className="flex items-center gap-3">
-                    <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3] min-w-20">{p.purok}</span>
-                    <div className="flex-1 h-2 bg-[#F4F5F7] dark:bg-[#262626] rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${(p.count / data.pwd.total) * 100}%`, background: PUROK_COLORS[i] }} />
-                    </div>
-                    <span className="text-[12px] font-bold tabular-nums text-[#1B2430] dark:text-white min-w-7 text-right">{p.count}</span>
-                  </div>
-                ))}
-              </div>
-            </ChartCard>
+              </>
+            )}
           </div>
 
-          <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717]">
-              <p className="text-[14px] font-semibold text-[#1B2430] dark:text-white">PWD Registry</p>
+          {/* Name list */}
+          {people.length === 0 ? (
+            <p className="px-4 py-10 text-center text-[13px] text-[#9CA3AF] dark:text-[#737373]">
+              {search ? "No one matches that search." : "No one is on this registry yet."}
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className={THEAD_ROW}>
+                    <th className={TH}>Name</th>
+                    {isPwd && <th className={TH}>Disability</th>}
+                    <th className={TH}>Purok</th>
+                    <th className={TH}>Sex</th>
+                    <th className={TH_RIGHT}>Age</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {people.map((p) => (
+                    <tr
+                      key={p.id}
+                      onClick={() => router.push(`/residents/${p.id}`)}
+                      className={`${TR} cursor-pointer transition hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]`}
+                    >
+                      <td className="px-4 py-3 text-[13px] font-semibold text-[#1F2937] dark:text-white">{p.name}</td>
+                      {isPwd && (
+                        <td className="px-4 py-3 text-[13px] text-[#374151] dark:text-[#D4D4D4]">
+                          {(p as PwdPerson).disability}
+                        </td>
+                      )}
+                      <td className="px-4 py-3 text-[13px] text-[#6B7280] dark:text-[#A3A3A3]">{p.purok}</td>
+                      <td className="px-4 py-3 text-[13px] text-[#6B7280] dark:text-[#A3A3A3]">{p.sex}</td>
+                      <td className="px-4 py-3 text-right text-[13px] tabular-nums text-[#374151] dark:text-[#D4D4D4]">{p.age}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div className="grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 px-5 py-2.5 bg-[#F4F5F7] dark:bg-[#262626] border-b border-[#E9EAEC] dark:border-[#262626]">
-              {["Name", "Disability Type", "Purok", "Sex"].map(h => <span key={h} className="text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">{h}</span>)}
-            </div>
-            {data.pwdList.map((p, i) => (
-              <div key={p.id} className={`grid grid-cols-[2fr_2fr_1fr_1fr] gap-4 px-5 py-3 border-b border-[#F4F5F7] dark:border-[#262626] items-center ${i % 2 !== 0 ? "bg-[#FAFAFA] dark:bg-[#171717]" : ""}`}>
-                <span className="text-[12px] font-semibold text-[#1B2430] dark:text-white">{p.name}</span>
-                <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">{p.disability}</span>
-                <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">{p.purok}</span>
-                <span className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3]">{p.sex}</span>
-              </div>
-            ))}
-            <div className="px-5 py-3 text-center">
-              <span className="text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Showing 5 of {data.pwd.total} · Export PDF for full list</span>
-            </div>
-          </div>
+          )}
         </div>
-      )}
-
-      {tab === "fourps" && (
-        <div data-tour="page-reports-registries-content" className="space-y-5">
-          <div className="grid grid-cols-2 gap-4 mb-2">
-            <StatCard label="Total Beneficiaries" value={data.fourPs.total} icon={Heart} color="green" />
-            <StatCard label="Registered Households" value={data.fourPs.households} icon={Users} color="blue" />
-          </div>
-
-          <ChartCard title="4Ps Beneficiaries by Purok">
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={data.fourPs.byPurok} barSize={40} margin={{ top: 20 }}>
-                <XAxis dataKey="purok" tick={{ fontSize: 11, fill: "#9CA3AF" }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(148,163,184,0.08)" }} />
-                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                  {data.fourPs.byPurok.map((_, i) => <Cell key={i} fill={PUROK_COLORS[i]} />)}
-                  <LabelList dataKey="count" position="top" style={{ fontSize: 12, fontWeight: 700, fill: "#9CA3AF" }} />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

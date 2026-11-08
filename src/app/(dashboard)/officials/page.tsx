@@ -19,8 +19,8 @@ import {
   FileText,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { ListSummary, ListTabs } from "@/components/shared/ListUI";
 import PageHeader from "@/components/shared/PageHeader";
-import StatCard from "@/components/shared/StatCard";
 import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import OfficialEditSheet from "@/components/officials/OfficialEditSheet";
@@ -39,7 +39,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string
     <div className="flex items-start gap-2.5 py-1.5">
       <Icon size={14} className="mt-0.5 shrink-0 text-[#9CA3AF] dark:text-[#A3A3A3]" />
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">{label}</p>
+        <p className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{label}</p>
         <p className="truncate text-[13px] text-[#1F2937] dark:text-white">{value || "—"}</p>
       </div>
     </div>
@@ -52,15 +52,14 @@ export default function OfficialsListPage() {
 
   const [officials, setOfficials] = useState<BrgyOfficialMock[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeOnly, setActiveOnly] = useState(true);
+  const [tab, setTab] = useState<"SERVING" | "INACTIVE" | "ALL">("SERVING");
 
   useEffect(() => {
     async function loadOfficials() {
       setLoading(true);
       try {
-        const params = new URLSearchParams();
-        if (activeOnly) params.set("is_active", "true");
-        const res = await fetch(`/api/officials?${params}`);
+        // Load every official and filter by tab here, so the tab counts stay accurate.
+        const res = await fetch(`/api/officials`);
         setOfficials(await readList(res)); // GET /api/officials returns a bare array
       } catch (e) {
         console.error(e);
@@ -69,7 +68,7 @@ export default function OfficialsListPage() {
       }
     }
     loadOfficials();
-  }, [activeOnly]);
+  }, []);
 
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(officials[0]?.id ?? null);
@@ -79,7 +78,8 @@ export default function OfficialsListPage() {
 
   const filtered = useMemo(() => {
     return officials.filter((o) => {
-      if (activeOnly && !o.is_active) return false;
+      if (tab === "SERVING" && !o.is_active) return false;
+      if (tab === "INACTIVE" && o.is_active) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         const hay = `${residentFullName(o.resident)} ${o.position}`.toLowerCase();
@@ -87,7 +87,7 @@ export default function OfficialsListPage() {
       }
       return true;
     });
-  }, [officials, search, activeOnly]);
+  }, [officials, search, tab]);
 
   const selected = officials.find((o) => o.id === selectedId) ?? null;
 
@@ -139,7 +139,7 @@ export default function OfficialsListPage() {
     <div>
       <PageHeader
         title="Barangay Officials"
-        subtitle="Directory of elected and appointed officials"
+        subtitle={<span data-tour="page-officials-stats"><ListSummary items={[`${stats.active} serving`, `${stats.total} on record`, stats.captain ? `Punong Barangay: ${residentFullName(stats.captain.resident)}` : "No active Punong Barangay"]} /></span>}
         actions={
           (can("officials:write") && (<button
             data-tour="page-officials-add"
@@ -152,41 +152,31 @@ export default function OfficialsListPage() {
         }
       />
 
-      {/* Stat cards */}
-      <div data-tour="page-officials-stats" className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard label="Total Officials" value={stats.total} sub="All records" icon={UserCheck} color="blue" />
-        <StatCard label="Active" value={stats.active} sub="Currently serving" icon={Power} color="green" />
-        <StatCard
-          label="Active Captain"
-          value={stats.captain ? residentFullName(stats.captain.resident) : "None assigned"}
-          sub="Auto-attached as cert. signatory"
-          icon={UserCheck}
-          color="amber"
-        />
-      </div>
-
       <div className="flex min-h-[calc(100vh-280px)] gap-5">
         {/* ── Left: list panel ── */}
         <div data-tour="page-officials-list" className="flex w-85 shrink-0 flex-col overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
-          <div className="border-b border-[#E9EAEC] dark:border-[#262626] px-4 pt-4 pb-3">
+          <div className="border-b border-[#E9EAEC] dark:border-[#262626] px-4 pt-4">
             <div data-tour="page-officials-search" className="relative mb-3">
               <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] dark:text-[#A3A3A3]" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search official"
-                className="w-full rounded-xl border border-transparent bg-[#F4F5F7] dark:bg-[#262626] py-2.5 pl-9 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line) focus:bg-white dark:focus:bg-[#171717]"
+                className="w-full rounded-lg border border-[#E5E7EB] bg-white py-2 pl-9 pr-3 text-[13px] text-[#1F2937] outline-none transition placeholder:text-[#9CA3AF] focus:border-(--brand-line) dark:border-[#333333] dark:bg-[#171717] dark:text-white dark:placeholder:text-[#737373]"
               />
             </div>
-            <label data-tour="page-officials-active" className="flex items-center gap-2 text-[11px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
-              <input
-                type="checkbox"
-                checked={activeOnly}
-                onChange={(e) => setActiveOnly(e.target.checked)}
-                className="h-3.5 w-3.5 rounded border-[#D1D5DB] dark:border-[#404040] text-(--brand-fg) focus:ring-(--brand-line)"
+            <div data-tour="page-officials-active">
+              <ListTabs
+                label="Show officials"
+                value={tab}
+                onChange={setTab}
+                tabs={[
+                  { key: "SERVING", label: "Serving", count: stats.active },
+                  { key: "INACTIVE", label: "Inactive", count: stats.total - stats.active },
+                  { key: "ALL", label: "All", count: stats.total },
+                ]}
               />
-              Active officials only
-            </label>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto">
@@ -204,20 +194,20 @@ export default function OfficialsListPage() {
                     key={o.id}
                     onClick={() => setSelectedId(o.id)}
                     className={`flex w-full items-center gap-3 border-b border-[#F4F5F7] dark:border-[#262626] px-4 py-3 text-left transition ${
-                      active ? "bg-(--brand)" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
+                      active ? "bg-(--brand-tint) shadow-[inset_3px_0_0_var(--brand)] dark:bg-(--brand)/15" : "hover:bg-[#F9FAFB] dark:hover:bg-[#1F1F1F]"
                     }`}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className={`truncate text-[13px] font-bold ${active ? "text-white" : "text-[#1F2937] dark:text-white"}`}>
+                      <p className={`truncate text-[13px] font-bold ${active ? "text-(--brand-fg-strong) dark:text-white" : "text-[#1F2937] dark:text-white"}`}>
                         {residentFullName(o.resident)}
                       </p>
-                      <p className={`mt-0.5 truncate text-[11px] ${active ? "text-(--brand-fg-strong)" : "text-[#9CA3AF] dark:text-[#A3A3A3]"}`}>
+                      <p className={`mt-0.5 truncate text-[11px] ${"text-[#4B5563] dark:text-[#A3A3A3]"}`}>
                         {o.position}
                         {o.purok_assignment && o.purok_assignment !== "At-Large" && ` · ${o.purok_assignment}`}
                         {!o.is_active && " · Inactive"}
                       </p>
                     </div>
-                    <ChevronRight size={14} className={active ? "text-white" : "text-[#D1D5DB] dark:text-[#525252]"} />
+                    <ChevronRight size={14} className={active ? "text-(--brand-fg)" : "text-[#C4C8CE] dark:text-[#525252]"} />
                   </button>
                 );
               })
@@ -245,11 +235,11 @@ export default function OfficialsListPage() {
                     {selected.resident.lname[0]}
                   </div>
                   <div>
-                    <h2 className="text-[16px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">
+                    <h2 className="text-[18px] font-semibold text-[#1F2937] dark:text-white">
                       {residentFullName(selected.resident)}
                     </h2>
                     <div className="mt-1 flex items-center gap-2">
-                      <span className="inline-flex items-center rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong)">
+                      <span className="text-[13px] text-[#374151] dark:text-[#D4D4D4]">
                         {selected.position}
                       </span>
                       <span
@@ -265,7 +255,7 @@ export default function OfficialsListPage() {
                 <div className="flex items-center gap-2">
                   {can("officials:write") && (<button
                     onClick={() => setEditId(selected.id)}
-                    className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
+                    className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[12.5px] font-semibold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F]"
                   >
                     <Pencil size={12} />
                     Edit
@@ -273,7 +263,7 @@ export default function OfficialsListPage() {
                   {can("officials:write") && (<button
                     onClick={() => handleToggleActive(selected)}
                     disabled={busy}
-                    className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] disabled:opacity-50"
+                    className="flex items-center gap-1.5 rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2 text-[12.5px] font-semibold text-[#374151] dark:text-[#D4D4D4] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] disabled:opacity-50"
                   >
                     <Power size={12} />
                     {selected.is_active ? "Deactivate" : "Activate"}
@@ -288,7 +278,7 @@ export default function OfficialsListPage() {
               </div>
 
               {/* Resident info */}
-              <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Personal Information</p>
+              <p className="mb-2 text-[14px] font-semibold text-[#1F2937] dark:text-white">Personal Information</p>
               <div className="mb-5 grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
                 <InfoRow icon={Cake} label="Date of Birth" value={formatISODate(selected.resident.birthdate)} />
                 <InfoRow icon={UserCheck} label="Age / Sex" value={`${calcAge(selected.resident.birthdate)} yrs · ${selected.resident.sex}`} />
@@ -299,7 +289,7 @@ export default function OfficialsListPage() {
               </div>
 
               {/* Official info */}
-              <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">Official Information</p>
+              <p className="mb-2 text-[14px] font-semibold text-[#1F2937] dark:text-white">Official Information</p>
               <div className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
                 <InfoRow icon={Phone} label="Contact No." value={selected.contact_no} />
                 <InfoRow icon={MapPin} label="Purok Assignment" value={selected.purok_assignment} />

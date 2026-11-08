@@ -20,8 +20,14 @@
 // left over a long weekend can double an average; the median shows the
 // typical wait and p90 the "slow end" without being skewed by it.
 //
-// Limitation: the schema has no timestamp for PENDING → PROCESSING, so total
-// turnaround can't be split into "waiting to be started" vs "being worked on".
+// Where the time goes (Nov 2026): requests filed since step timing was added
+// also carry processing_started_at and printed_at, so the total splits into
+//   waiting    filed → processing started   (in line, nobody has started it)
+//   preparing  processing started → printed (staff preparing the document)
+//   pickup     printed → released           (ready, requester hasn't come back)
+// Only rows with all four times in order are used for the split; older rows
+// still count in the totals. `sameDayPct` uses Philippine time (UTC+8), so a
+// request filed at 4 pm and released at 9 am the next day counts as next-day.
 //
 // Pure module (no Prisma / Node APIs): unit-testable and usable anywhere.
 
@@ -29,6 +35,17 @@ export interface TurnaroundInput {
   certificate_type: string;
   requested_at: Date;
   issued_at: Date | null;
+  processing_started_at?: Date | null;
+  printed_at?: Date | null;
+}
+
+export type StageKey = "waiting" | "preparing" | "pickup";
+
+export interface StageStats {
+  key: StageKey;
+  stats: DurationStats;
+  /** Share of all tracked time spent in this step, 0–100 (null if none tracked). */
+  sharePct: number | null;
 }
 
 /** Statistics over a set of durations (milliseconds). All null when there are none. */
@@ -48,7 +65,15 @@ export interface TurnaroundReport {
   byType: { type: string; stats: DurationStats }[];
   /** Rows left out because issued_at is missing or earlier than requested_at. */
   anomalies: number;
+  /** % released on the same calendar day (Philippine time) they were filed. */
+  sameDayPct: number | null;
+  /** How many released requests have every step time, i.e. feed `stages`. */
+  stagesTracked: number;
+  stages: StageStats[];
 }
+
+const MANILA_OFFSET_MS = 8 * 3_600_000;
+const manilaDay = (d: Date) => Math.floor((d.getTime() + MANILA_OFFSET_MS) / 86_400_000);
 
 export const HOUR_MS = 3_600_000;
 export const DAY_MS = 24 * HOUR_MS;
@@ -82,7 +107,9 @@ export function durationStats(durationsMs: number[]): DurationStats {
 export function computeTurnaround(rows: TurnaroundInput[]): TurnaroundReport {
   const all: number[] = [];
   const perType = new Map<string, number[]>();
+  const stageMs: Record<StageKey, number[]> = { waiting: [], preparing: [], pickup: [] };
   let anomalies = 0;
+  let sameDay = 0;
 
   for (const row of rows) {
     if (!row.issued_at) { anomalies++; continue; }
@@ -90,9 +117,28 @@ export function computeTurnaround(rows: TurnaroundInput[]): TurnaroundReport {
     if (!Number.isFinite(ms) || ms < 0) { anomalies++; continue; }
     all.push(ms);
     (perType.get(row.certificate_type) ?? perType.set(row.certificate_type, []).get(row.certificate_type)!).push(ms);
+    if (manilaDay(row.requested_at) === manilaDay(row.issued_at)) sameDay++;
+
+    // Step split, only when every time is present and in order. A first
+    // print after release (a reprint) counts as printed at release.
+    const started = row.processing_started_at;
+    if (!started || !row.printed_at) continue;
+    const printed = row.printed_at > row.issued_at ? row.issued_at : row.printed_at;
+    const t0 = row.requested_at.getTime(), t1 = started.getTime(), t2 = printed.getTime(), t3 = row.issued_at.getTime();
+    if (!(t0 <= t1 && t1 <= t2 && t2 <= t3)) continue;
+    stageMs.waiting.push(t1 - t0);
+    stageMs.preparing.push(t2 - t1);
+    stageMs.pickup.push(t3 - t2);
   }
 
   const withinOneDay = all.filter((ms) => ms <= DAY_MS).length;
+  const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+  const trackedTotal = sum(stageMs.waiting) + sum(stageMs.preparing) + sum(stageMs.pickup);
+  const stages: StageStats[] = (["waiting", "preparing", "pickup"] as StageKey[]).map((key) => ({
+    key,
+    stats: durationStats(stageMs[key]),
+    sharePct: trackedTotal > 0 ? Math.round((sum(stageMs[key]) / trackedTotal) * 100) : null,
+  }));
   return {
     overall: durationStats(all),
     withinOneDayPct: all.length === 0 ? null : Math.round((withinOneDay / all.length) * 1000) / 10,
@@ -100,6 +146,9 @@ export function computeTurnaround(rows: TurnaroundInput[]): TurnaroundReport {
       .map(([type, ms]) => ({ type, stats: durationStats(ms) }))
       .sort((a, b) => b.stats.count - a.stats.count || a.type.localeCompare(b.type)),
     anomalies,
+    sameDayPct: all.length === 0 ? null : Math.round((sameDay / all.length) * 1000) / 10,
+    stagesTracked: stageMs.waiting.length,
+    stages,
   };
 }
 
