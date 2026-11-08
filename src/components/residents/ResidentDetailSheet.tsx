@@ -7,6 +7,13 @@
 // for direct links/bookmarks), just re-homed so it can render inside
 // <Sheet> and be driven by a `residentId` prop from the residents list page.
 //
+// Redesign (Nov 2026): same quiet style as the Users list and the registry
+// panel. Name in normal case with one plain line under it, a summary row,
+// plain sections with two-column label/value rows (stored codes such as
+// 10K_20K or HIGH SCHOOL shown in words, empty fields as "Not recorded"),
+// the address shown once instead of split into ten rows, no pills, colored
+// badges or ALL-CAPS labels, and text links instead of icon buttons.
+//
 // "Edit" stays a real page navigation (a large multi-section form, not a
 // detail view) and "View All Household Members" stays a real page
 // navigation too, per the established cross-link convention.
@@ -14,7 +21,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Archive, Plus, X, Trash2, ExternalLink, Users } from "lucide-react";
+import { ExternalLink, Users } from "lucide-react";
 import { lifeEventProblems, sectorAgeProblem, problemFor } from "@/lib/form-rules";
 import FieldError from "@/components/shared/FieldError";
 import {
@@ -23,6 +30,7 @@ import {
 import EmptyState from "@/components/shared/EmptyState";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { useCan } from "@/lib/hooks/useCan";
+import { words } from "@/components/registries/RegistryEntryView";
 
 // ── TYPES ─────────────────────────────────────────────────────────────────────
 interface Purok     { id: number; name: string }
@@ -131,12 +139,6 @@ const SECTOR_TYPE_LABEL: Record<string, string> = {
 };
 const ALL_SECTOR_TYPES = Object.keys(SECTOR_TYPE_LABEL);
 
-const ACTION_COLOR: Record<string, "blue" | "green" | "amber" | "red"> = {
-  CREATE: "green",
-  UPDATE: "blue",
-  DELETE: "red",
-  ARCHIVE: "amber",
-};
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function calcAge(birthdate: string) {
@@ -147,7 +149,7 @@ function calcAge(birthdate: string) {
 }
 function formatDate(iso?: string | null) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }).toUpperCase();
+  return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 function formatDateTime(iso?: string | null) {
   if (!iso) return "—";
@@ -168,40 +170,91 @@ function fullAddress(r: Resident): string {
     r.region,
     r.zip_code,
   ].filter(Boolean);
-  return parts.length ? parts.join(", ") : "—";
+  return parts.length ? parts.join(", ") : "";
 }
 
-// ── SECTION ───────────────────────────────────────────────────────────────────
+// ── BUILDING BLOCKS ──────────────────────────────────────────────────────────
 function Section({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className="bg-white dark:bg-[#171717] rounded-xl border border-[#E9EAEC] dark:border-[#262626] p-4">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-[11px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">{title}</p>
+    <section className="border-t border-[#F0F1F3] pt-5 dark:border-[#262626]">
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <h3 className="text-[13.5px] font-semibold text-[#1F2937] dark:text-white">{title}</h3>
         {action}
       </div>
       {children}
-    </div>
+    </section>
   );
 }
 
-function Row({ label, value }: { label: string; value?: string | number | null }) {
+function Rows({ children }: { children: React.ReactNode }) {
+  return <dl className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">{children}</dl>;
+}
+
+function Row({ label, value, wide }: { label: string; value?: React.ReactNode; wide?: boolean }) {
+  const empty = value === null || value === undefined || value === "" || value === "—";
   return (
-    <div className="flex gap-2 py-1">
-      <span className="text-[11px] font-semibold text-[#374151] dark:text-[#D4D4D4] uppercase tracking-wide min-w-40 shrink-0">{label}</span>
-      <span className="text-[11px] text-[#374151] dark:text-[#D4D4D4]">: {value ?? "—"}</span>
+    <div className={`grid grid-cols-[8.5rem_1fr] gap-3 py-1.5 ${wide ? "sm:col-span-2" : ""}`}>
+      <dt className="text-[12.5px] text-[#6B7280] dark:text-[#A3A3A3]">{label}</dt>
+      <dd className={`min-w-0 wrap-break-word text-[13px] ${empty ? "text-[#C4C8CE] dark:text-[#525252]" : "text-[#1F2937] dark:text-[#E5E5E5]"}`}>
+        {empty ? "Not recorded" : value}
+      </dd>
     </div>
   );
 }
 
-function Badge({ label, color = "blue" }: { label: string; color?: "blue" | "green" | "amber" | "red" }) {
-  const cls = {
-    blue:  "bg-(--brand-tint-strong) dark:bg-(--brand-tint) text-(--brand-fg-strong) dark:text-(--brand-fg)",
-    green: "bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-400",
-    amber: "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400",
-    red:   "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400",
-  }[color];
-  return <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${cls}`}>{label}</span>;
+function Summary({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">{label}</p>
+      <p className="mt-0.5 truncate text-[14px] font-medium text-[#1F2937] dark:text-white">{value}</p>
+    </div>
+  );
 }
+
+/** Quiet text button, like Edit / Deactivate on the Users list. */
+function TextBtn({
+  children,
+  onClick,
+  danger,
+  disabled,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  danger?: boolean;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`rounded px-1 text-[12.5px] font-medium transition disabled:opacity-50 ${
+        danger
+          ? "text-[#6B7280] hover:text-[#DC2626] dark:text-[#A3A3A3] dark:hover:text-[#F87171]"
+          : "text-(--brand-fg) hover:underline"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Dot({ tone, children }: { tone: "red" | "amber" | "blue" | "green" | "gray"; children: React.ReactNode }) {
+  const c = { red: "bg-red-500", amber: "bg-amber-500", blue: "bg-(--brand)", green: "bg-green-500", gray: "bg-[#9CA3AF]" }[tone];
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[12.5px] text-[#374151] dark:text-[#D4D4D4]">
+      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${c}`} />
+      {children}
+    </span>
+  );
+}
+
+function shortDate(iso?: string | null) {
+  if (!iso) return null;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+const ACTION_WORD: Record<string, string> = { CREATE: "Added", UPDATE: "Edited", DELETE: "Deleted", ARCHIVE: "Archived", EXPORT: "Exported" };
 
 // ── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function ResidentDetailSheet({ residentId, onClose, onArchived }: ResidentDetailSheetProps) {
@@ -423,11 +476,47 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
       ].sort((a, b) => new Date(b.incident_date).getTime() - new Date(a.incident_date).getTime())
     : [];
 
+  const r = resident;
+  const records = r
+    ? [
+        {
+          title: "Certificates",
+          empty: "None issued yet",
+          items: r.certificates.map((c) => ({
+            key: `c${c.id}`,
+            main: words(c.certificate_type) ?? c.certificate_type,
+            sub: c.purpose,
+            date: shortDate(c.issued_at) ?? words(c.status ?? "Pending"),
+          })),
+        },
+        {
+          title: "Barangay IDs",
+          empty: "None issued yet",
+          items: r.barangay_ids.map((b) => ({ key: `b${b.id}`, main: b.id_number, sub: null, date: shortDate(b.issued_date) })),
+        },
+        {
+          title: "Health records",
+          empty: "None recorded",
+          items: r.health_records.map((h) => ({
+            key: `h${h.id}`,
+            main: words(h.record_type) ?? h.record_type,
+            sub: h.notes,
+            date: shortDate(h.recorded_at),
+          })),
+        },
+        {
+          title: "Vaccinations",
+          empty: "None recorded",
+          items: r.vaccinations.map((v) => ({ key: `v${v.id}`, main: v.vaccine_name, sub: null, date: shortDate(v.date_given) })),
+        },
+      ]
+    : [];
+
   return (
     <>
     <Sheet open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
       <SheetContent className="p-0">
-        {loading || notFound || !resident ? (
+        {loading || notFound || !r ? (
           <div className="flex h-full flex-col">
             <SheetHeader>
               <SheetTitle>{loading ? "Loading…" : "Resident not found"}</SheetTitle>
@@ -451,30 +540,35 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
           <div className="flex h-full flex-col">
             <SheetHeader>
               <div className="min-w-0">
-                <SheetTitle className="truncate uppercase tracking-wide">{displayName}</SheetTitle>
-                <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">{rbiId(resident.id)} · {resident.sex}</p>
+                <SheetTitle className="truncate text-[17px] font-semibold">{displayName}</SheetTitle>
+                <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12.5px] text-[#6B7280] dark:text-[#A3A3A3]">
+                  <span>{["RBI " + rbiId(r.id), `${calcAge(r.birthdate)} years old`, words(r.sex), r.purok?.name].filter(Boolean).join(" · ")}</span>
+                  {r.is_deceased && <Dot tone="gray">Deceased</Dot>}
+                  {r.is_archived && <Dot tone="amber">Archived</Dot>}
+                </p>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                {resident.is_archived && <Badge label="Archived" color="red" />}
-                {resident.is_deceased && <Badge label="Deceased" color="red" />}
-                {can("residents:write") && (<button
-                  onClick={() => router.push(`/residents/${resident.id}/edit`)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-(--brand) text-white text-[12px] font-bold hover:bg-(--brand-hover) transition"
-                >
-                  <Pencil size={13} /> Edit
-                </button>)}
-                {!resident.is_archived && (
-                  (can("residents:delete") && (<button
+              <div className="flex shrink-0 items-center gap-1">
+                {can("residents:write") && (
+                  <button
+                    onClick={() => router.push(`/residents/${r.id}/edit`)}
+                    className="rounded-lg bg-(--brand) px-3.5 py-1.5 text-[12.5px] font-semibold text-white transition hover:bg-(--brand-hover)"
+                  >
+                    Edit
+                  </button>
+                )}
+                {!r.is_archived && can("residents:delete") && (
+                  <button
                     onClick={() => setConfirmOpen(true)}
                     disabled={archiving}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-500 dark:text-red-400 text-[12px] font-bold hover:bg-red-50 transition"
+                    className="rounded-lg px-2.5 py-1.5 text-[12.5px] font-medium text-[#6B7280] transition hover:text-[#DC2626] disabled:opacity-50 dark:text-[#A3A3A3] dark:hover:text-[#F87171]"
                   >
-                    <Archive size={13} /> Archive
-                  </button>))
+                    Archive
+                  </button>
                 )}
                 <button
-                  onClick={() => router.push(`/residents/${resident.id}`)}
-                  title="Open full page"
+                  onClick={() => router.push(`/residents/${r.id}`)}
+                  title="Open as a full page"
+                  aria-label="Open as a full page"
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                 >
                   <ExternalLink size={15} />
@@ -484,390 +578,351 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
             </SheetHeader>
 
             <SheetBody>
-              {/* Content grid — single column so each section reads as one
-                  full-width card top-to-bottom instead of two cramped
-                  side-by-side columns; the sheet already scrolls, so
-                  there's no need to fit everything within one viewport. */}
-              <div className="flex flex-col gap-4">
+              <div className="space-y-5">
+                {/* Summary */}
+                <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+                  <Summary label="Born" value={formatDate(r.birthdate)} />
+                  <Summary label="Civil status" value={words(r.civil_status) ?? "—"} />
+                  <Summary label="Purok" value={r.purok?.name ?? "—"} />
+                  <Summary
+                    label="Household"
+                    value={
+                      r.household ? (
+                        <button
+                          onClick={() => router.push(`/households/${r.household!.id}`)}
+                          className="text-(--brand-fg) hover:underline"
+                        >
+                          {r.household.household_no}
+                        </button>
+                      ) : (
+                        "None"
+                      )
+                    }
+                  />
+                </div>
 
-                {/* 1. Personal Information */}
-                <Section title="Personal Information">
-                  <Row label="RBI ID"            value={rbiId(resident.id)} />
-                  <Row label="PhilSys Card No."  value={resident.philsys_card_no} />
-                  <Row label="Date of Birth"     value={formatDate(resident.birthdate)} />
-                  <Row label="Place of Birth"    value={resident.place_of_birth} />
-                  <Row label="Age"               value={calcAge(resident.birthdate)} />
-                  <Row label="Sex"               value={resident.sex} />
-                  <Row label="Gender"            value={resident.gender} />
-                  <Row label="Civil Status"      value={resident.civil_status.replace("_", "-")} />
-                  <Row label="Type of Resident"  value={resident.type_of_resident} />
-                  <Row label="Citizenship"       value={resident.citizenship} />
-                  <Row label="Nationality"       value={resident.nationality} />
-                  <Row label="Religion"          value={resident.religion} />
-                  <Row label="Mother's Maiden Name" value={resident.mothers_maiden_name} />
-                  <Row label="Mother's Residence at Birth" value={resident.residence_of_mother_upon_birth} />
+                {/* Personal */}
+                <Section title="Personal">
+                  <Rows>
+                    <Row label="Sex" value={words(r.sex)} />
+                    <Row label="Gender" value={words(r.gender)} />
+                    <Row label="Type of resident" value={words(r.type_of_resident)} />
+                    <Row label="Religion" value={words(r.religion)} />
+                    <Row label="Citizenship" value={words(r.citizenship)} />
+                    <Row label="Nationality" value={words(r.nationality)} />
+                    <Row label="Place of birth" value={r.place_of_birth} />
+                    <Row label="PhilSys card no." value={r.philsys_card_no} />
+                    <Row label="Mother’s maiden name" value={r.mothers_maiden_name} />
+                    <Row label="Mother’s residence at birth" value={r.residence_of_mother_upon_birth} />
+                  </Rows>
                 </Section>
 
-                {/* Socio-Economic */}
-                <Section title="Socio-Economic">
-                  <Row label="Educ. Attainment"  value={resident.educational_attainment} />
-                  <Row label="Employment Status" value={resident.employment_status} />
-                  <Row label="Occupation"        value={resident.occupation} />
-                  <Row label="Income Bracket"    value={resident.income_bracket} />
-                  <Row label="Sector"            value={resident.sector ?? "N/A"} />
+                {/* Contact and address */}
+                <Section title="Contact and address">
+                  <Rows>
+                    <Row label="Mobile" value={r.mobile} />
+                    <Row label="Email" value={r.email} />
+                    <Row label="Telephone" value={r.tel_no} />
+                    <Row label="ZIP code" value={r.zip_code} />
+                    <Row label="Address" value={fullAddress(r)} wide />
+                  </Rows>
                 </Section>
 
-                {/* 2. Contact Details */}
-                <Section title="Contact Details">
-                  <Row label="Email"    value={resident.email} />
-                  <Row label="Mobile"   value={resident.mobile} />
-                  <Row label="Tel. No"  value={resident.tel_no} />
+                {/* Work and income */}
+                <Section title="Work and income">
+                  <Rows>
+                    <Row label="Education" value={words(r.educational_attainment)} />
+                    <Row label="Employment" value={words(r.employment_status)} />
+                    <Row label="Occupation" value={words(r.occupation)} />
+                    <Row label="Monthly income" value={words(r.income_bracket)} />
+                    <Row label="Sector" value={r.sector && r.sector !== "N/A" ? words(r.sector) : null} />
+                  </Rows>
                 </Section>
 
-                {/* 3. Address */}
-                <Section title="Address">
-                  <Row label="Full Address"          value={fullAddress(resident)} />
-                  <Row label="House/Block/Lot No."   value={resident.house_block_lot_no} />
-                  <Row label="Street"                value={resident.street} />
-                  <Row label="Subdivision/Village"   value={resident.subdivision_village} />
-                  <Row label="Sitio/Purok"           value={resident.purok?.name} />
-                  <Row label="Barangay"              value={resident.barangay} />
-                  <Row label="City/Municipality"     value={resident.city_municipality} />
-                  <Row label="Province"              value={resident.province} />
-                  <Row label="Region"                value={resident.region} />
-                  <Row label="ZIP Code"              value={resident.zip_code} />
+                {/* Identity and voting */}
+                <Section title="Identity and voting">
+                  <Rows>
+                    <Row label="Ethnicity" value={r.ethnicity} />
+                    <Row label="Blood type" value={r.blood_type} />
+                    <Row label="Height" value={r.height_m != null ? `${r.height_m} m` : null} />
+                    <Row label="Weight" value={r.weight_kg != null ? `${r.weight_kg} kg` : null} />
+                    <Row label="Complexion" value={words(r.complexion)} />
+                    <Row
+                      label="Voter"
+                      value={
+                        r.is_registered_voter
+                          ? r.is_resident_voter
+                            ? "Registered here"
+                            : "Registered elsewhere"
+                          : "Not registered"
+                      }
+                    />
+                    <Row label="Last voted" value={r.last_voted_year} />
+                  </Rows>
                 </Section>
 
-                {/* 4. Identity Information */}
-                <Section title="Identity Information">
-                  <Row label="Ethnicity"    value={resident.ethnicity} />
-                  <Row label="Blood Type"   value={resident.blood_type} />
-                  <Row label="Height (m)"   value={resident.height_m != null ? String(resident.height_m) : null} />
-                  <Row label="Weight (kg)"  value={resident.weight_kg != null ? String(resident.weight_kg) : null} />
-                  <Row label="Complexion"   value={resident.complexion} />
-                </Section>
-
-                {/* 5. Voter Information */}
-                <Section title="Voter Information">
-                  <Row label="Registered Voter" value={resident.is_registered_voter ? "Yes" : "No"} />
-                  <Row label="Resident Voter"   value={resident.is_resident_voter ? "Yes" : "No"} />
-                  <Row label="Last Voted Year"  value={resident.last_voted_year} />
-                </Section>
-
-                {/* 6. Beneficiary Info */}
+                {/* Sectors and registries */}
                 <Section
-                  title={`Beneficiary Info (${resident.government_assistance.length})`}
+                  title="Sectors and registries"
                   action={
-                    assistanceFormOpen === null && (
-                      (can("residents:write") && (<button
-                        onClick={openAddAssistance}
-                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-(--brand-fg) hover:text-(--brand-fg-strong) dark:hover:text-(--brand-fg)"
-                      >
-                        <Plus size={12} /> Add Program
-                      </button>))
+                    !addingSector && availableSectorTypes.length > 0 && can("residents:write") && (
+                      <TextBtn onClick={() => setAddingSector(true)}>Add sector</TextBtn>
                     )
                   }
                 >
+                  {addingSector && (
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={newSector}
+                          onChange={(e) => { setNewSector(e.target.value); setSectorError(""); }}
+                          aria-label="Sector"
+                          className="flex-1 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12.5px] outline-none focus:border-(--brand-line)"
+                        >
+                          <option value="">Choose a sector</option>
+                          {availableSectorTypes.map((t) => (
+                            <option key={t} value={t}>{SECTOR_TYPE_LABEL[t]}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={handleAddSector}
+                          disabled={!newSector || sectorBusy}
+                          className="rounded-lg bg-(--brand) px-3 py-1.5 text-[12.5px] font-semibold text-white hover:bg-(--brand-hover) disabled:opacity-50"
+                        >
+                          Add
+                        </button>
+                        <TextBtn danger onClick={() => { setAddingSector(false); setNewSector(""); setSectorError(""); }}>
+                          Cancel
+                        </TextBtn>
+                      </div>
+                      <FieldError message={sectorError} />
+                    </div>
+                  )}
+                  <Rows>
+                    <Row
+                      label="Sectors"
+                      wide
+                      value={
+                        r.sectors.length ? (
+                          <span className="flex flex-wrap gap-x-4 gap-y-1">
+                            {r.sectors.map((s) => (
+                              <span key={s.id} className="inline-flex items-baseline gap-1.5">
+                                {SECTOR_TYPE_LABEL[s.sector_type] ?? s.sector_type}
+                                {can("residents:delete") && (
+                                  <button
+                                    onClick={() => handleRemoveSector(s.id)}
+                                    disabled={sectorBusy}
+                                    aria-label={`Remove ${SECTOR_TYPE_LABEL[s.sector_type] ?? s.sector_type}`}
+                                    className="text-[12px] text-[#9CA3AF] transition hover:text-[#DC2626] disabled:opacity-50 dark:text-[#737373]"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </span>
+                            ))}
+                          </span>
+                        ) : (
+                          "None"
+                        )
+                      }
+                    />
+                    <Row
+                      label="Registries"
+                      wide
+                      value={
+                        r.special_registries.length
+                          ? r.special_registries
+                              .map((sr) =>
+                                sr.registry_type === "FOUR_PS"
+                                  ? "4Ps beneficiary"
+                                  : sr.registry_type === "PWD"
+                                    ? `PWD${sr.disability_type ? ` (${sr.disability_type})` : ""}`
+                                    : "Senior citizen"
+                              )
+                              .join(" · ")
+                          : "None"
+                      }
+                    />
+                  </Rows>
+                </Section>
+
+                {/* Assistance programs */}
+                <Section
+                  title="Assistance programs"
+                  action={assistanceFormOpen === null && can("residents:write") && <TextBtn onClick={openAddAssistance}>Add program</TextBtn>}
+                >
                   {assistanceFormOpen !== null && (
-                    <div className="mb-3 rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-[#F9FAFB] dark:bg-[#171717] p-3 space-y-2">
+                    <div className="mb-3 space-y-2 rounded-lg border border-[#E9EAEC] p-3 dark:border-[#262626]">
                       <input
                         value={assistanceForm.program_name}
                         onChange={(e) => setAssistanceForm((f) => ({ ...f, program_name: e.target.value }))}
-                        placeholder="Program name (e.g. 4Ps)"
-                        className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-(--brand-line)"
+                        placeholder="Program name, e.g. 4Ps"
+                        aria-label="Program name"
+                        className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12.5px] outline-none focus:border-(--brand-line)"
                       />
                       <div className="grid grid-cols-2 gap-2">
                         <input
                           type="date"
                           value={assistanceForm.date_enrolled}
                           onChange={(e) => setAssistanceForm((f) => ({ ...f, date_enrolled: e.target.value }))}
-                          min={resident.birthdate?.slice(0, 10)}
+                          min={r.birthdate?.slice(0, 10)}
                           max={new Date().toLocaleDateString("en-CA")}
+                          aria-label="Date enrolled"
                           aria-invalid={!!enrolledError}
-                          className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-(--brand-line)"
+                          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12.5px] outline-none focus:border-(--brand-line)"
                         />
                         <input
                           value={assistanceForm.notes}
                           onChange={(e) => setAssistanceForm((f) => ({ ...f, notes: e.target.value }))}
                           placeholder="Notes (optional)"
-                          className="w-full rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-(--brand-line)"
+                          aria-label="Notes"
+                          className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12.5px] outline-none focus:border-(--brand-line)"
                         />
                       </div>
                       <FieldError message={enrolledError || assistanceError} />
                       <div className="flex justify-end gap-2">
-                        <button onClick={() => setAssistanceFormOpen(null)} className="text-[11px] font-bold text-[#6B7280] dark:text-[#A3A3A3] hover:text-[#1F2937] dark:hover:text-white">
-                          Cancel
-                        </button>
+                        <TextBtn danger onClick={() => setAssistanceFormOpen(null)}>Cancel</TextBtn>
                         <button
                           onClick={handleSaveAssistance}
                           disabled={assistanceBusy || !assistanceForm.program_name.trim() || !!enrolledError}
-                          className="rounded-md bg-(--brand) px-3 py-1.5 text-[11px] font-bold text-white hover:bg-(--brand-hover) disabled:opacity-50"
+                          className="rounded-lg bg-(--brand) px-3 py-1.5 text-[12.5px] font-semibold text-white hover:bg-(--brand-hover) disabled:opacity-50"
                         >
                           {assistanceBusy ? "Saving…" : "Save"}
                         </button>
                       </div>
                     </div>
                   )}
-
-                  {resident.government_assistance.length === 0 ? (
-                    <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No assistance programs on file</p>
+                  {r.government_assistance.length === 0 ? (
+                    <p className="text-[12.5px] text-[#9CA3AF] dark:text-[#737373]">None on file</p>
                   ) : (
-                    <div className="space-y-2">
-                      {resident.government_assistance.map((a) => (
-                        <div key={a.id} className="flex items-start justify-between gap-2 py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
+                    <ul>
+                      {r.government_assistance.map((a) => (
+                        <li key={a.id} className="flex items-baseline justify-between gap-3 border-b border-[#F4F5F7] py-2 last:border-0 dark:border-[#262626]">
                           <div className="min-w-0">
-                            <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">{a.program_name}</p>
-                            <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-                              Enrolled {formatDate(a.date_enrolled)}{a.notes ? ` · ${a.notes}` : ""}
+                            <p className="text-[13px] font-medium text-[#1F2937] dark:text-white">{a.program_name}</p>
+                            <p className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
+                              {a.date_enrolled ? `Enrolled ${shortDate(a.date_enrolled)}` : "Enrollment date not recorded"}
+                              {a.notes ? ` · ${a.notes}` : ""}
                             </p>
                           </div>
-                          <div className="flex shrink-0 gap-1">
-                            {can("residents:write") && (<button onClick={() => openEditAssistance(a)} className="flex h-6 w-6 items-center justify-center rounded text-[#9CA3AF] dark:text-[#A3A3A3] hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white">
-                              <Pencil size={11} />
-                            </button>)}
-                            {can("residents:delete") && (<button onClick={() => setAssistanceDeleteTarget(a)} className="flex h-6 w-6 items-center justify-center rounded text-[#9CA3AF] dark:text-[#A3A3A3] hover:bg-red-50 hover:text-red-600">
-                              <Trash2 size={11} />
-                            </button>)}
+                          <div className="flex shrink-0 gap-2">
+                            {can("residents:write") && <TextBtn onClick={() => openEditAssistance(a)}>Edit</TextBtn>}
+                            {can("residents:delete") && <TextBtn danger onClick={() => setAssistanceDeleteTarget(a)}>Remove</TextBtn>}
                           </div>
-                        </div>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   )}
                 </Section>
 
-                {/* 7. Sectoral Affiliations */}
+                {/* Household */}
                 <Section
-                  title="Sectoral Affiliations"
+                  title="Household"
                   action={
-                    !addingSector && availableSectorTypes.length > 0 && (
-                      (can("residents:write") && (<button
-                        onClick={() => setAddingSector(true)}
-                        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-(--brand-fg) hover:text-(--brand-fg-strong) dark:hover:text-(--brand-fg)"
-                      >
-                        <Plus size={12} /> Add Tag
-                      </button>))
+                    r.household && (
+                      <TextBtn onClick={() => router.push(`/households/${r.household!.id}`)}>
+                        View household ({r.household.members?.length ?? 0} {(r.household.members?.length ?? 0) === 1 ? "member" : "members"})
+                      </TextBtn>
                     )
                   }
                 >
-                  {addingSector && (
-                    <>
-                    <div className="mb-3 flex items-center gap-2">
-                      <select
-                        value={newSector}
-                        onChange={(e) => { setNewSector(e.target.value); setSectorError(""); }}
-                        className="flex-1 rounded-md border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717] px-2.5 py-1.5 text-[12px] outline-none focus:border-(--brand-line)"
-                      >
-                        <option value="">Select sector...</option>
-                        {availableSectorTypes.map((t) => (
-                          <option key={t} value={t}>{SECTOR_TYPE_LABEL[t]}</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={handleAddSector}
-                        disabled={!newSector || sectorBusy}
-                        className="rounded-md bg-(--brand) px-3 py-1.5 text-[11px] font-bold text-white hover:bg-(--brand-hover) disabled:opacity-50"
-                      >
-                        Add
-                      </button>
-                      <button onClick={() => { setAddingSector(false); setNewSector(""); }} className="text-[#9CA3AF] dark:text-[#A3A3A3] hover:text-[#374151] dark:hover:text-[#D4D4D4]">
-                        <X size={14} />
-                      </button>
-                    </div>
-                    <FieldError message={sectorError} />
-                    </>
-                  )}
-                  {resident.sectors.length === 0 ? (
-                    <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No sectoral affiliations tagged</p>
+                  {r.household ? (
+                    <Rows>
+                      <Row label="Household no." value={r.household.household_no} />
+                      <Row label="Housing" value={words(r.household.housing_type)} />
+                      <Row label="Water source" value={words(r.household.water_source)} />
+                      <Row label="Comfort room" value={words(r.household.comfort_room)} />
+                      <Row label="Address" value={r.household.address} wide />
+                    </Rows>
                   ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {resident.sectors.map((s) => (
-                        <span
-                          key={s.id}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-(--brand-tint) px-2.5 py-1 text-[11px] font-semibold text-(--brand-fg-strong) dark:text-(--brand-fg)"
-                        >
-                          {SECTOR_TYPE_LABEL[s.sector_type] ?? s.sector_type}
-                          {can("residents:delete") && (<button onClick={() => handleRemoveSector(s.id)} disabled={sectorBusy} className="hover:text-(--brand-fg-strong)">
-                            <X size={11} />
-                          </button>)}
-                        </span>
-                      ))}
-                    </div>
+                    <p className="text-[12.5px] text-[#9CA3AF] dark:text-[#737373]">Not linked to a household.</p>
                   )}
                 </Section>
 
-                {/* Special Registries */}
-                <Section title="Special Registries">
-                  {resident.special_registries.length === 0 ? (
-                    <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">Not in any special registry</p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {resident.special_registries.map(sr => (
-                        <div key={sr.id}>
-                          <Badge
-                            label={sr.registry_type === "FOUR_PS" ? "4Ps" : sr.registry_type.replace("_", " ")}
-                            color={sr.registry_type === "SENIOR_CITIZEN" ? "amber" : sr.registry_type === "PWD" ? "blue" : "green"}
-                          />
-                          {sr.disability_type && (
-                            <span className="text-[10px] text-[#6B7280] dark:text-[#A3A3A3] ml-1">({sr.disability_type})</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                {/* Records */}
+                <Section title="Records">
+                  <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
+                    {records.map((g) => (
+                      <div key={g.title} className="min-w-0">
+                        <p className="mb-1 text-[12.5px] font-medium text-[#374151] dark:text-[#D4D4D4]">
+                          {g.title} <span className="font-normal text-[#9CA3AF] dark:text-[#737373]">{g.items.length}</span>
+                        </p>
+                        {g.items.length === 0 ? (
+                          <p className="py-1 text-[12.5px] text-[#9CA3AF] dark:text-[#737373]">{g.empty}</p>
+                        ) : (
+                          <ul>
+                            {g.items.slice(0, 4).map((it) => (
+                              <li key={it.key} className="flex items-baseline justify-between gap-3 border-b border-[#F4F5F7] py-1.5 last:border-0 dark:border-[#262626]">
+                                <div className="min-w-0">
+                                  <p className="truncate text-[13px] text-[#1F2937] dark:text-[#E5E5E5]">{it.main}</p>
+                                  {it.sub && <p className="truncate text-[12px] text-[#9CA3AF] dark:text-[#737373]">{it.sub}</p>}
+                                </div>
+                                <span className="shrink-0 text-[12px] tabular-nums text-[#9CA3AF] dark:text-[#737373]">{it.date}</span>
+                              </li>
+                            ))}
+                            {g.items.length > 4 && (
+                              <li className="pt-1 text-[12px] text-[#9CA3AF] dark:text-[#737373]">and {g.items.length - 4} more</li>
+                            )}
+                          </ul>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </Section>
 
-                {/* 8. Household */}
-                <Section title="Household">
-                  <Row label="Current Purok"     value={resident.purok?.name} />
-                  <Row label="Household No."     value={resident.household?.household_no} />
-                  <Row label="House Address"     value={resident.household?.address} />
-                  <Row label="Housing Type"      value={resident.household?.housing_type} />
-                  <Row label="Water Source"      value={resident.household?.water_source} />
-                  <Row label="Comfort Room"      value={resident.household?.comfort_room} />
-                  {resident.household && (
-                    <div className="mt-2">
-                      <button
-                        onClick={() => router.push(`/households/${resident.household!.id}`)}
-                        className="text-[11px] font-bold text-(--brand-fg) hover:text-(--brand-fg-strong) uppercase tracking-wide"
-                      >
-                        View All Household Members ({resident.household.members?.length ?? 0})
-                      </button>
-                    </div>
-                  )}
-                </Section>
-
-                {/* 9. Document Requests */}
-                <Section title={`Document Requests (${resident.certificates.length})`}>
-                  {resident.certificates.length === 0 ? (
-                    <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No certificates issued yet</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {resident.certificates.slice(0, 5).map(c => (
-                        <div key={c.id} className="flex items-center justify-between py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
-                          <div>
-                            <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">
-                              {c.certificate_type.replace(/_/g, " ")}
-                            </p>
-                            <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{c.purpose}</p>
-                          </div>
-                          <span className="text-[10px] text-[#6B7280] dark:text-[#A3A3A3] shrink-0 ml-2">
-                            {c.issued_at ? new Date(c.issued_at).toLocaleDateString() : (c.status ?? "Pending")}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Section>
-
-                {/* 10. Blotter Records */}
-                <Section title={`Blotter Records (${blotterRecords.length})`}>
+                {/* Blotter */}
+                <Section title="Blotter cases" action={<span className="text-[12.5px] text-[#9CA3AF] dark:text-[#737373]">{blotterRecords.length}</span>}>
                   {blotterRecords.length === 0 ? (
-                    <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No blotter records</p>
+                    <p className="text-[12.5px] text-[#9CA3AF] dark:text-[#737373]">None</p>
                   ) : (
-                    <div className="space-y-2">
+                    <ul>
                       {blotterRecords.slice(0, 5).map((b) => (
-                        <div key={`${b.role}-${b.id}`} className="py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
-                          <div className="flex items-center justify-between">
-                            <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">{b.case_number}</p>
-                            <Badge label={b.role} color={b.role === "Complainant" ? "blue" : "amber"} />
-                          </div>
-                          <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3] mt-0.5">
-                            {b.incident_type} · {new Date(b.incident_date).toLocaleDateString()} · {b.status}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Section>
-
-                {/* Vaccinations */}
-                <Section title={`Vaccinations (${resident.vaccinations.length})`}>
-                  {resident.vaccinations.length === 0 ? (
-                    <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No vaccination records</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {resident.vaccinations.map(v => (
-                        <div key={v.id} className="flex items-center justify-between py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
-                          <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">{v.vaccine_name}</p>
-                          <span className="text-[10px] text-[#6B7280] dark:text-[#A3A3A3]">
-                            {new Date(v.date_given).toLocaleDateString()}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Section>
-
-                {/* Health Records */}
-                <Section title={`Health Records (${resident.health_records.length})`}>
-                  {resident.health_records.length === 0 ? (
-                    <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No health records</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {resident.health_records.slice(0, 5).map(hr => (
-                        <div key={hr.id} className="py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
-                          <div className="flex justify-between">
-                            <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">{hr.record_type}</p>
-                            <span className="text-[10px] text-[#6B7280] dark:text-[#A3A3A3]">
-                              {new Date(hr.recorded_at).toLocaleDateString()}
-                            </span>
-                          </div>
-                          {hr.notes && <p className="text-[11px] text-[#6B7280] dark:text-[#A3A3A3] mt-0.5">{hr.notes}</p>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Section>
-
-                {/* Barangay IDs */}
-                <Section title={`Barangay IDs (${resident.barangay_ids.length})`}>
-                  {resident.barangay_ids.length === 0 ? (
-                    <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No barangay ID issued</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {resident.barangay_ids.map(bid => (
-                        <div key={bid.id} className="flex justify-between py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
-                          <p className="text-[12px] font-semibold text-[#1F2937] dark:text-white">{bid.id_number}</p>
-                          <span className="text-[10px] text-[#6B7280] dark:text-[#A3A3A3]">
-                            {new Date(bid.issued_date).toLocaleDateString()}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Section>
-
-                {/* 11. Activity History */}
-                <Section title="Activity History">
-                  {resident.activity_history.length === 0 ? (
-                    <p className="text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">No recorded activity yet</p>
-                  ) : (
-                    <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
-                      {resident.activity_history.map((a) => (
-                        <div key={a.id} className="flex items-start gap-2 py-1 border-b border-[#F4F5F7] dark:border-[#262626] last:border-0">
-                          <Badge label={a.action} color={ACTION_COLOR[a.action] ?? "blue"} />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[11px] text-[#374151] dark:text-[#D4D4D4]">{a.details ?? `${a.action} on ${a.table_affected}`}</p>
-                            <p className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-                              {formatDateTime(a.performed_at)}{a.user ? ` · ${a.user.username}` : ""}
+                        <li
+                          key={`${b.role}-${b.id}`}
+                          className="flex items-baseline justify-between gap-3 border-b border-[#F4F5F7] py-2 last:border-0 dark:border-[#262626]"
+                        >
+                          <div className="min-w-0">
+                            <button
+                              onClick={() => router.push(`/blotter/${b.id}`)}
+                              className="font-mono text-[12.5px] font-medium text-(--brand-fg) hover:underline"
+                            >
+                              {b.case_number}
+                            </button>
+                            <p className="text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
+                              {[words(b.incident_type), shortDate(b.incident_date), words(b.status)].filter(Boolean).join(" · ")}
                             </p>
                           </div>
-                        </div>
+                          <Dot tone={b.role === "Complainant" ? "blue" : "amber"}>{b.role}</Dot>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   )}
                 </Section>
 
-              </div>
+                {/* Activity */}
+                <Section title="Activity">
+                  {r.activity_history.length === 0 ? (
+                    <p className="text-[12.5px] text-[#9CA3AF] dark:text-[#737373]">No recorded activity yet</p>
+                  ) : (
+                    <ul className="max-h-72 overflow-y-auto pr-1">
+                      {r.activity_history.map((a) => (
+                        <li key={a.id} className="border-b border-[#F4F5F7] py-2 last:border-0 dark:border-[#262626]">
+                          <p className="text-[13px] text-[#1F2937] dark:text-[#E5E5E5]">
+                            {a.details ?? `${ACTION_WORD[a.action] ?? words(a.action)} ${words(a.table_affected)?.toLowerCase() ?? ""}`}
+                          </p>
+                          <p className="text-[12px] text-[#9CA3AF] dark:text-[#737373]">
+                            {ACTION_WORD[a.action] ?? words(a.action)} · {formatDateTime(a.performed_at)}
+                            {a.user ? ` · ${a.user.username}` : ""}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </Section>
 
-              {/* Footer meta */}
-              <div className="mt-4 flex justify-end gap-4">
-                <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-                  Registered: {new Date(resident.created_at).toLocaleDateString()}
-                </span>
-                <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-                  Last updated: {new Date(resident.updated_at).toLocaleDateString()}
-                </span>
+                <p className="border-t border-[#F0F1F3] pt-4 text-[12px] text-[#9CA3AF] dark:border-[#262626] dark:text-[#737373]">
+                  Registered {shortDate(r.created_at)} · Last updated {shortDate(r.updated_at)}
+                </p>
               </div>
             </SheetBody>
           </div>
@@ -877,9 +932,9 @@ export default function ResidentDetailSheet({ residentId, onClose, onArchived }:
 
     <ConfirmDialog
       open={confirmOpen}
-      title="Archive Resident"
+      title="Archive resident?"
       message="This resident will be hidden from the main list. You can restore them later from the admin panel."
-      confirmLabel="Yes, Archive"
+      confirmLabel="Archive"
       cancelLabel="Cancel"
       variant="warning"
       loading={archiving}
