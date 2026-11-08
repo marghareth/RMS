@@ -2,7 +2,8 @@
 //
 // Nov 2026:
 //   - Export: downloads the residents this list is showing (same search and
-//     filters) as a formatted Excel file in the import template's layout.
+//     filters) as a formatted Excel file in the import template's layout,
+//     or as a PDF with the main columns (ExportMenu lets staff choose).
 //     Admin and Secretary only (residents:export); every export is logged.
 //   - "Register resident" is hidden from roles that can't add residents
 //     (it led to the access-denied page).
@@ -11,12 +12,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import ExportMenu, { type ExportFormat } from "@/components/shared/ExportMenu";
 import { useRouter } from "next/navigation";
 import { useSafeSession } from "@/lib/hooks/useSafeSession";
-import {
-  Search, SlidersHorizontal, ChevronRight,
-  Plus, X, Users, Mars, Venus, Upload, Download,
-} from "lucide-react";
+import { Search, SlidersHorizontal, ChevronRight, Plus, X, Users, Mars, Venus, Upload } from "lucide-react";
 import ResidentDetailSheet from "@/components/residents/ResidentDetailSheet";
 import { hasPermission } from "@/lib/permission";
 
@@ -155,17 +154,19 @@ export default function ResidentsPage() {
     return params;
   }, [search, filters]);
 
-  async function handleExport() {
+  async function handleExport(format: ExportFormat) {
     setExporting(true);
     setExportError("");
     try {
-      const res = await fetch(`/api/residents/export?${filterParams()}`);
+      const params = filterParams();
+      if (format === "pdf") params.set("format", "pdf");
+      const res = await fetch(`/api/residents/export?${params}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Export failed. Try again.");
       }
       const blob = await res.blob();
-      const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? "residents.xlsx";
+      const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? `residents.${format}`;
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -217,15 +218,15 @@ export default function ResidentsPage() {
         <div className="flex items-center gap-2">
           {exportError && <span className="text-[12px] text-[#DC2626] dark:text-[#F87171]">{exportError}</span>}
           {canExport && (
-            <button
-              onClick={handleExport}
-              disabled={exporting || total === 0}
+            <ExportMenu
+              onExport={handleExport}
+              exporting={exporting}
+              disabled={total === 0}
               title={activeFilters || search ? "Export the residents matching your search and filters" : "Export all residents"}
+              excelHint="Every field; can be edited and imported again"
+              pdfHint="Name, sex, age, birthdate, civil status, purok, household"
               className="flex items-center gap-2 px-3.5 h-9 rounded border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#111111] hover:bg-[#F9FAFB] dark:hover:bg-[#1A1A1A] text-[#374151] dark:text-[#E5E7EB] text-[13px] font-medium transition disabled:opacity-50"
-            >
-              <Download size={15} strokeWidth={1.8} />
-              {exporting ? "Exporting…" : "Export"}
-            </button>
+            />
           )}
           {canImport && (
             <button

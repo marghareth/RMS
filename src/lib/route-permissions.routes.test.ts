@@ -29,6 +29,7 @@ const SIGNED_IN_ONLY = new Set<string>([
   '/', // just redirects to /login
   '/account/security', // every user manages their own 2FA
   '/account/password', // every user changes their own password
+  '/account/profile', // every user sets their own name for printed reports
   '/admin', // landing page of links only; each linked page is gated
   // Older duplicate of /admin/backup. Its API (GET/POST /api/backup) still
   // requires backup:write, so no data is exposed — but the page should be

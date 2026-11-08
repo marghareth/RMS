@@ -29,11 +29,23 @@ const dateString = z.coerce.date();
 // ─── USERS ──────────────────────────────────────────────────────────────────
 export const roleEnum = z.enum(["ADMIN", "CAPTAIN", "SECRETARY", "KAGAWAD", "BHW", "ENCODER"]);
 
+// Optional text that may be cleared: "" or null → null.
+const optionalName = z
+  .string()
+  .trim()
+  .max(100, "Keep it under 100 characters")
+  .nullable()
+  .optional()
+  .transform((v) => (v === undefined ? undefined : v ? v : null));
+
 const userBaseSchema = z.object({
   username: nonEmptyString.max(50),
   password: z.string(),
   role: roleEnum,
   is_active: z.boolean().optional(),
+  // Printed on the "Prepared by" line of reports (Nov 2026).
+  full_name: optionalName,
+  position: optionalName,
 });
 
 // The initial password an Admin or Secretary sets follows the same rules as

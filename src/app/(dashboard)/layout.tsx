@@ -5,6 +5,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
 import TourOverlay from "@/components/onboarding/TourOverlay";
+import { PrintLetterhead, PrintSignOff } from "@/components/layout/PrintDocument";
 import BeginnerPromptModal from "@/components/onboarding/BeginnerPromptModal";
 // TEST: dashboard-only typeface trial (Manrope, in place of the site-wide
 // Inter). Self-hosted the same way Inter is — via a Fontsource variable
@@ -100,7 +101,11 @@ export default function DashboardLayout({
           </div>
           <main data-print="flow" className="flex-1 overflow-y-auto">
             <div data-print="content" className="mx-auto w-full max-w-7xl px-6 py-6 sm:px-8 sm:py-8">
-              {children}
+              {/* On paper only: letterhead with the filters in words, and
+                  Prepared by / Noted by lines (PrintDocument.tsx). */}
+              <PrintLetterhead />
+              <div data-print="page" className="contents">{children}</div>
+              <PrintSignOff />
             </div>
           </main>
         </div>

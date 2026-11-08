@@ -57,6 +57,9 @@ export interface UserMock {
   role: Role;
   is_active: boolean;
   created_at: string; // ISO date
+  /** Printed on the "Prepared by" line of reports (Nov 2026). */
+  full_name?: string | null;
+  position?: string | null;
   /** Two-factor sign-in turned on (GET /api/users, Nov 2026). */
   mfa_enabled?: boolean;
   /** Still on a temporary or admin-set password. */

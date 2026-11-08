@@ -25,7 +25,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   // their own password. Never the secrets themselves (mfa_secret, backup
   // codes, password_hash).
   const users = await prisma.user.findMany({
-    select: { id: true, username: true, role: true, is_active: true, created_at: true, mfa_enabled: true, must_change_password: true },
+    select: { id: true, username: true, full_name: true, position: true, role: true, is_active: true, created_at: true, mfa_enabled: true, must_change_password: true },
     orderBy: { username: "asc" },
   });
 
@@ -52,8 +52,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   // User row + audit row commit together (see logAudit in src/lib/audit.ts).
   const user = await prisma.$transaction(async (tx) => {
     const created = await tx.user.create({
-      data: { username: body.username, password_hash, role: body.role, must_change_password: true },
-      select: { id: true, username: true, role: true, is_active: true, created_at: true },
+      data: { username: body.username, password_hash, role: body.role, must_change_password: true, full_name: body.full_name ?? null, position: body.position ?? null },
+      select: { id: true, username: true, full_name: true, position: true, role: true, is_active: true, created_at: true },
     });
     await logAudit(
       {

@@ -33,6 +33,8 @@ export default function EditUserPage() {
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<Role | "">("");
   const [isActive, setIsActive] = useState(true);
+  const [fullName, setFullName] = useState("");
+  const [position, setPosition] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -46,6 +48,8 @@ export default function EditUserPage() {
         setOriginal(data);
         setRole(data.role);
         setIsActive(data.is_active);
+        setFullName(data.full_name ?? "");
+        setPosition(data.position ?? "");
       })
       .catch((e) => console.error(e))
       .finally(() => {
@@ -100,7 +104,7 @@ export default function EditUserPage() {
       const res = await fetch(`/api/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role, is_active: isActive }),
+        body: JSON.stringify({ role, is_active: isActive, full_name: fullName, position }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -139,18 +143,50 @@ export default function EditUserPage() {
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-(--brand-tint)">
             <UserCog size={14} className="text-(--brand-fg-strong)" />
           </div>
-          <p className="text-[13px] font-black uppercase tracking-wide text-[#1F2937] dark:text-white">Account Details</p>
+          <p className="text-[14px] font-semibold text-[#1F2937] dark:text-white">Account details</p>
         </div>
 
         <div className="space-y-4">
           <div className="rounded-lg bg-[#F9FAFB] dark:bg-[#171717] px-3 py-2.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">Username</p>
+            <p className="text-[12px] font-medium text-[#9CA3AF] dark:text-[#A3A3A3]">Username</p>
             <p className="text-[13px] text-[#1F2937] dark:text-white">{original.username}</p>
             <p className="mt-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">Usernames cannot be changed.</p>
           </div>
 
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="page-full-name" className="mb-1.5 block text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
+                Full name
+              </label>
+              <input
+                id="page-full-name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                disabled={lockedAdmin}
+                maxLength={100}
+                placeholder="e.g. Maria L. Santos"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+              />
+            </div>
+            <div>
+              <label htmlFor="page-position" className="mb-1.5 block text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
+                Position
+              </label>
+              <input
+                id="page-position"
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                disabled={lockedAdmin}
+                maxLength={100}
+                placeholder="e.g. Barangay Secretary"
+                className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#262626] px-3 py-2.5 text-[13px] outline-none focus:border-(--brand-line)"
+              />
+            </div>
+            <p className="text-[12px] text-[#9CA3AF] dark:text-[#737373] sm:col-span-2">Printed on the “Prepared by” line of reports this person prints.</p>
+          </div>
+
           <div>
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] dark:text-[#A3A3A3]">
+            <label className="mb-1.5 block text-[12px] font-medium text-[#6B7280] dark:text-[#A3A3A3]">
               Role
             </label>
             <select

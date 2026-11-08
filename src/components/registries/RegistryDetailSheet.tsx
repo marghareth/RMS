@@ -6,6 +6,10 @@
 // render inside <Sheet> and be driven by an `entryId` prop from the list
 // page. Mirrors the pattern set by BlotterCaseSheet.
 //
+// Redesign (Nov 2026): the body is RegistryEntryView, shared with the full
+// page. Header is the name with one plain line under it (no icon tile or
+// pill); Remove asks through ConfirmDialog instead of the browser pop-up.
+//
 // BUGFIX (Nov 2026): every entry showed "Entry not found" because
 // /api/registries/[id] was looking up a resident instead of the registry
 // entry (fixed in that route). Remove now checks registries:delete and
@@ -14,69 +18,26 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  User, Home, Heart, Syringe, FileText, CreditCard, BookOpen,
-  CalendarDays, Trash2, ExternalLink,
-} from "lucide-react";
+import { ExternalLink, FileText } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose, SheetBody, SheetFooter,
 } from "@/components/ui/sheet";
 import EmptyState from "@/components/shared/EmptyState";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { useCan } from "@/lib/hooks/useCan";
-
-// ─── TYPES ────────────────────────────────────────────────────────────────────
-type RegistryType = "SENIOR_CITIZEN" | "PWD" | "FOUR_PS";
-
-interface RegistryResident {
-  id: number;
-  fname: string;
-  lname: string;
-  mname: string | null;
-  name_extension: string | null;
-  birthdate: string;
-  place_of_birth: string | null;
-  sex: string;
-  civil_status: string;
-  citizenship: string;
-  religion: string | null;
-  employment_status: string | null;
-  educational_attainment: string | null;
-  occupation: string | null;
-  income_bracket: string | null;
-  sector: string | null;
-  purok: { id: number; name: string } | null;
-  household: {
-    id: number;
-    household_no: string;
-    address: string;
-    housing_type: string | null;
-    water_source: string | null;
-    comfort_room: string | null;
-    _count: { members: number };
-  } | null;
-  certificates: { id: number; certificate_type: string; issued_at: string }[];
-  barangay_ids: { id: number; id_number: string; issued_date: string }[];
-  health_records: { id: number; record_type: string; notes: string | null; recorded_at: string }[];
-  vaccinations: { id: number; vaccine_name: string; date_given: string }[];
-}
-
-interface RegistryEntry {
-  id: number;
-  resident_id: number;
-  registry_type: RegistryType;
-  disability_type: string | null;
-  is_4ps_beneficiary: boolean;
-  registered_at: string;
-  resident: RegistryResident;
-}
+import RegistryEntryView, {
+  REGISTRY_LABEL, displayName, entrySubtitle, type RegistryEntry,
+} from "@/components/registries/RegistryEntryView";
 
 interface RegistryDetailSheetProps {
   /** The registry entry to show, or null to keep the sheet closed. */
   entryId: number | null;
+  /** Registry name, e.g. "Senior Citizens" (used in messages). */
   title: string;
-  icon: LucideIcon;
-  iconBg: string;
+  /** Kept for callers; the redesigned header no longer shows an icon tile. */
+  icon?: LucideIcon;
+  iconBg?: string;
   /** e.g. "/registries/senior-citizens" — used for the "open full page" link. */
   listBase: string;
   onClose: () => void;
@@ -84,61 +45,8 @@ interface RegistryDetailSheetProps {
   onRemoved?: () => void;
 }
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-function calcAge(birthdate: string) {
-  const today = new Date();
-  const dob = new Date(birthdate);
-  let age = today.getFullYear() - dob.getFullYear();
-  if (today.getMonth() - dob.getMonth() < 0 || (today.getMonth() - dob.getMonth() === 0 && today.getDate() < dob.getDate())) age--;
-  return age;
-}
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }).toUpperCase();
-}
-function fmtShort(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-function rbiId(id: number) {
-  return `BM${String(id).padStart(7, "0")}`;
-}
-
-const REGISTRY_CFG: Record<RegistryType, { label: string; bg: string; border: string; text: string }> = {
-  SENIOR_CITIZEN: { label: "Senior Citizen", bg: "bg-amber-50 dark:bg-amber-500/15", border: "border-amber-100", text: "text-amber-700 dark:text-amber-400" },
-  PWD: { label: "PWD", bg: "bg-(--brand-tint)", border: "border-(--brand-tint-strong)", text: "text-(--brand-fg-strong) dark:text-(--brand-fg)" },
-  FOUR_PS: { label: "4Ps Beneficiary", bg: "bg-green-50 dark:bg-green-500/15", border: "border-green-100", text: "text-green-700 dark:text-green-400" },
-};
-
-// ─── SUBCOMPONENTS ────────────────────────────────────────────────────────────
-function InfoRow({ label, value }: { label: string; value?: string | number | null }) {
-  return (
-    <div className="flex gap-2 py-1.25">
-      <span className="min-w-30 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF] dark:text-[#A3A3A3]">
-        {label}
-      </span>
-      <span className="text-[11px] font-medium text-[#374151] dark:text-[#D4D4D4]">: {value ?? "—"}</span>
-    </div>
-  );
-}
-
-function SectionCard({
-  title, icon: Icon, iconBg, children,
-}: { title: string; icon: LucideIcon; iconBg: string; children: React.ReactNode }) {
-  return (
-    <div className="overflow-hidden rounded-xl border border-[#E9EAEC] dark:border-[#262626] bg-white dark:bg-[#171717]">
-      <div className="flex items-center gap-2.5 border-b border-[#E9EAEC] dark:border-[#262626] px-4 py-2.5">
-        <div className={`flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
-          <Icon size={12} className="text-white" />
-        </div>
-        <p className="text-[10.5px] font-black uppercase tracking-widest text-[#1F2937] dark:text-white">{title}</p>
-      </div>
-      <div className="px-4 py-2.5">{children}</div>
-    </div>
-  );
-}
-
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function RegistryDetailSheet({
-  entryId, title, icon: Icon, iconBg, listBase, onClose, onRemoved,
+  entryId, title, listBase, onClose, onRemoved,
 }: RegistryDetailSheetProps) {
   const can = useCan();
   const router = useRouter();
@@ -146,7 +54,9 @@ export default function RegistryDetailSheet({
 
   const [entry, setEntry] = useState<RegistryEntry | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [removeError, setRemoveError] = useState("");
 
   // Reset stale content synchronously when switching between entries while
   // the sheet stays mounted (same pattern as BlotterCaseSheet).
@@ -155,6 +65,7 @@ export default function RegistryDetailSheet({
     setSyncedEntryId(entryId);
     setEntry(null);
     setLoading(true);
+    setRemoveError("");
   } else if (entryId === null && syncedEntryId !== null) {
     setSyncedEntryId(null);
   }
@@ -172,37 +83,34 @@ export default function RegistryDetailSheet({
     return () => { cancelled = true; };
   }, [entryId]);
 
-  async function handleDelete() {
+  async function handleRemove() {
     if (!entry) return;
-    if (!confirm("Remove this resident from the registry? This cannot be undone.")) return;
     setDeleting(true);
+    setRemoveError("");
     try {
       // Removes the registry entry only — the resident's RBI record stays.
       const res = await fetch(`/api/registries/${entry.id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        alert(data?.message || data?.error || "Couldn't remove this resident from the registry. Please try again.");
+        setRemoveError(data?.message || data?.error || "Couldn't remove this resident from the registry. Please try again.");
+        setConfirming(false);
         return;
       }
+      setConfirming(false);
       onRemoved?.();
       onClose();
     } catch {
-      alert("Couldn't remove this resident from the registry. Please try again.");
+      setRemoveError("Couldn't remove this resident from the registry. Please try again.");
+      setConfirming(false);
     } finally {
       setDeleting(false);
     }
   }
 
-  const r = entry?.resident;
-  const cfg = entry ? REGISTRY_CFG[entry.registry_type] : null;
-  const displayName = r
-    ? `${r.lname}, ${r.fname}${r.name_extension ? " " + r.name_extension : ""}${r.mname ? " " + r.mname[0] + "." : ""}`
-    : "";
-
   return (
     <Sheet open={open} onOpenChange={(next) => { if (!next) onClose(); }}>
       <SheetContent className="p-0">
-        {loading || !entry || !r || !cfg ? (
+        {loading || !entry ? (
           <div className="flex h-full flex-col">
             <SheetHeader>
               <SheetTitle>{loading ? "Loading…" : "Entry not found"}</SheetTitle>
@@ -225,26 +133,19 @@ export default function RegistryDetailSheet({
         ) : (
           <div className="flex h-full flex-col">
             <SheetHeader>
-              <div className="flex min-w-0 items-center gap-3">
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
-                  <Icon size={16} className="text-white" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <SheetTitle>{displayName}</SheetTitle>
-                    <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${cfg.bg} ${cfg.border} ${cfg.text}`}>
-                      {cfg.label}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-[12px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-                    {rbiId(r.id)} · {title} Registry
-                  </p>
-                </div>
+              <div className="min-w-0">
+                <SheetTitle className="text-[17px] font-semibold">{displayName(entry.resident)}</SheetTitle>
+                <p className="mt-0.5 text-[12.5px] text-[#6B7280] dark:text-[#A3A3A3]">
+                  <span className="text-[#1F2937] dark:text-[#E5E5E5]">{REGISTRY_LABEL[entry.registry_type]}</span>
+                  {" · "}
+                  {entrySubtitle(entry)}
+                </p>
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 <button
                   onClick={() => router.push(`${listBase}/${entry.id}`)}
-                  title="Open full page"
+                  title="Open as a full page"
+                  aria-label="Open as a full page"
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] dark:text-[#A3A3A3] transition hover:bg-[#F4F5F7] dark:hover:bg-[#1F1F1F] hover:text-[#1F2937] dark:hover:text-white"
                 >
                   <ExternalLink size={15} />
@@ -253,187 +154,50 @@ export default function RegistryDetailSheet({
               </div>
             </SheetHeader>
 
-            <SheetBody className="space-y-4">
-              {/* Top banner */}
-              <div className={`grid grid-cols-2 gap-4 rounded-xl border px-5 py-4 sm:grid-cols-4 ${cfg.bg} ${cfg.border}`}>
-                <div>
-                  <p className={`text-[9px] font-semibold uppercase tracking-widest opacity-60 ${cfg.text}`}>Registry Type</p>
-                  <p className={`mt-0.5 text-[13px] font-bold ${cfg.text}`}>{cfg.label}</p>
-                </div>
-                <div>
-                  <p className={`text-[9px] font-semibold uppercase tracking-widest opacity-60 ${cfg.text}`}>Registered On</p>
-                  <p className={`mt-0.5 text-[13px] font-bold ${cfg.text}`}>{fmtDate(entry.registered_at)}</p>
-                </div>
-                <div>
-                  <p className={`text-[9px] font-semibold uppercase tracking-widest opacity-60 ${cfg.text}`}>Age</p>
-                  <p className={`mt-0.5 text-[13px] font-bold ${cfg.text}`}>{calcAge(r.birthdate)} years old</p>
-                </div>
-                {entry.registry_type === "PWD" && (
-                  <div>
-                    <p className={`text-[9px] font-semibold uppercase tracking-widest opacity-60 ${cfg.text}`}>Disability Type</p>
-                    <p className={`mt-0.5 text-[13px] font-bold ${cfg.text}`}>{entry.disability_type ?? "—"}</p>
-                  </div>
-                )}
-                {entry.registry_type === "FOUR_PS" && (
-                  <div>
-                    <p className={`text-[9px] font-semibold uppercase tracking-widest opacity-60 ${cfg.text}`}>4Ps Status</p>
-                    <p className={`mt-0.5 text-[13px] font-bold ${cfg.text}`}>
-                      {entry.is_4ps_beneficiary ? "Active Beneficiary" : "Inactive"}
-                    </p>
-                  </div>
-                )}
-                {entry.registry_type === "SENIOR_CITIZEN" && (
-                  <div>
-                    <p className={`text-[9px] font-semibold uppercase tracking-widest opacity-60 ${cfg.text}`}>Date of Birth</p>
-                    <p className={`mt-0.5 text-[13px] font-bold ${cfg.text}`}>{fmtDate(r.birthdate)}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Single-column card stack — was a 2-column grid split into
-                  "Column 1"/"Column 2" divs, which crammed two sections
-                  side by side and made each one hard to scan. The sheet
-                  already scrolls vertically, so stacking every section
-                  full-width and letting the user scroll is easier to read
-                  than fitting things side by side. */}
-              <div className="flex flex-col gap-4">
-                  <SectionCard title="Personal Information" icon={User} iconBg="bg-(--brand)">
-                    <InfoRow label="RBI ID" value={rbiId(r.id)} />
-                    <InfoRow label="Date of Birth" value={fmtDate(r.birthdate)} />
-                    <InfoRow label="Place of Birth" value={r.place_of_birth} />
-                    <InfoRow label="Sex" value={r.sex} />
-                    <InfoRow label="Civil Status" value={r.civil_status.replace("_", "-")} />
-                    <InfoRow label="Citizenship" value={r.citizenship} />
-                    <InfoRow label="Religion" value={r.religion} />
-                  </SectionCard>
-
-                  <SectionCard title="Socio-Economic" icon={BookOpen} iconBg="bg-purple-500">
-                    <InfoRow label="Employment" value={r.employment_status} />
-                    <InfoRow label="Education" value={r.educational_attainment} />
-                    <InfoRow label="Occupation" value={r.occupation} />
-                    <InfoRow label="Income" value={r.income_bracket} />
-                    <InfoRow label="Sector" value={r.sector ?? "N/A"} />
-                  </SectionCard>
-
-                  <SectionCard title="Registry Info" icon={CalendarDays} iconBg="bg-teal-500">
-                    <InfoRow label="Registry Type" value={cfg.label} />
-                    <InfoRow label="Registered On" value={fmtDate(entry.registered_at)} />
-                    {entry.disability_type && <InfoRow label="Disability" value={entry.disability_type} />}
-                    {entry.registry_type === "FOUR_PS" && (
-                      <InfoRow label="4Ps Status" value={entry.is_4ps_beneficiary ? "Active" : "Inactive"} />
-                    )}
-                  </SectionCard>
-
-                  <SectionCard title="Address & Household" icon={Home} iconBg="bg-amber-500 dark:bg-amber-500">
-                    <InfoRow label="Purok" value={r.purok?.name} />
-                    <InfoRow label="Household No." value={r.household?.household_no} />
-                    <InfoRow label="Address" value={r.household?.address} />
-                    <InfoRow label="Housing Type" value={r.household?.housing_type} />
-                    <InfoRow label="Water Source" value={r.household?.water_source} />
-                    <InfoRow label="CR" value={r.household?.comfort_room} />
-                    <InfoRow label="No. of Members" value={r.household?._count?.members ?? "—"} />
-                    {r.household && (
-                      <button
-                        onClick={() => router.push(`/households/${r.household!.id}`)}
-                        className="mt-1 text-[11px] font-bold text-(--brand-fg) transition hover:text-(--brand-fg-strong)"
-                      >
-                        View Household Members →
-                      </button>
-                    )}
-                  </SectionCard>
-
-                  <SectionCard title={`Certificates (${r.certificates.length})`} icon={FileText} iconBg="bg-green-500 dark:bg-green-500">
-                    {r.certificates.length === 0 ? (
-                      <p className="py-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">No certificates issued yet</p>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {r.certificates.slice(0, 4).map((c) => (
-                          <div key={c.id} className="flex items-center justify-between border-b border-[#F4F5F7] dark:border-[#262626] py-1 last:border-0">
-                            <p className="truncate pr-2 text-[11px] font-semibold text-[#1F2937] dark:text-white">
-                              {c.certificate_type.replace(/_/g, " ")}
-                            </p>
-                            <span className="shrink-0 text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{fmtShort(c.issued_at)}</span>
-                          </div>
-                        ))}
-                        {r.certificates.length > 4 && (
-                          <p className="pt-1 text-[10px] text-(--brand-fg)">+{r.certificates.length - 4} more</p>
-                        )}
-                      </div>
-                    )}
-                  </SectionCard>
-
-                  <SectionCard title={`Barangay IDs (${r.barangay_ids.length})`} icon={CreditCard} iconBg="bg-[#1F2937]">
-                    {r.barangay_ids.length === 0 ? (
-                      <p className="py-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">No barangay ID issued</p>
-                    ) : (
-                      r.barangay_ids.map((bid) => (
-                        <div key={bid.id} className="flex justify-between border-b border-[#F4F5F7] dark:border-[#262626] py-1.5 last:border-0">
-                          <p className="text-[12px] font-bold text-[#1F2937] dark:text-white">{bid.id_number}</p>
-                          <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{fmtShort(bid.issued_date)}</span>
-                        </div>
-                      ))
-                    )}
-                  </SectionCard>
-
-                  <SectionCard title={`Health Records (${r.health_records.length})`} icon={Heart} iconBg="bg-red-500 dark:bg-red-500">
-                    {r.health_records.length === 0 ? (
-                      <p className="py-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">No health records</p>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {r.health_records.slice(0, 5).map((hr) => (
-                          <div key={hr.id} className="border-b border-[#F4F5F7] dark:border-[#262626] py-1 last:border-0">
-                            <div className="flex justify-between">
-                              <p className="text-[11px] font-semibold text-[#1F2937] dark:text-white">{hr.record_type}</p>
-                              <span className="text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{fmtShort(hr.recorded_at)}</span>
-                            </div>
-                            {hr.notes && <p className="mt-0.5 truncate text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{hr.notes}</p>}
-                          </div>
-                        ))}
-                        {r.health_records.length > 5 && (
-                          <p className="pt-1 text-[10px] text-(--brand-fg)">+{r.health_records.length - 5} more</p>
-                        )}
-                      </div>
-                    )}
-                  </SectionCard>
-
-                  <SectionCard title={`Vaccinations (${r.vaccinations.length})`} icon={Syringe} iconBg="bg-(--brand)">
-                    {r.vaccinations.length === 0 ? (
-                      <p className="py-1 text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">No vaccination records</p>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {r.vaccinations.slice(0, 5).map((v) => (
-                          <div key={v.id} className="flex justify-between border-b border-[#F4F5F7] dark:border-[#262626] py-1 last:border-0">
-                            <p className="truncate pr-2 text-[11px] font-semibold text-[#1F2937] dark:text-white">{v.vaccine_name}</p>
-                            <span className="shrink-0 text-[10px] text-[#9CA3AF] dark:text-[#A3A3A3]">{fmtShort(v.date_given)}</span>
-                          </div>
-                        ))}
-                        {r.vaccinations.length > 5 && (
-                          <p className="pt-1 text-[10px] text-(--brand-fg)">+{r.vaccinations.length - 5} more</p>
-                        )}
-                      </div>
-                    )}
-                  </SectionCard>
-              </div>
+            <SheetBody>
+              {removeError && (
+                <p className="mb-4 text-[13px] text-[#DC2626] dark:text-[#F87171]">{removeError}</p>
+              )}
+              <RegistryEntryView entry={entry} />
             </SheetBody>
 
-            <SheetFooter>
-              {can("registries:delete") && (<button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex items-center gap-1.5 rounded-xl border border-red-200 px-4 py-2 text-[12px] font-bold text-red-500 dark:text-red-400 transition hover:bg-red-50 disabled:opacity-50"
-              >
-                <Trash2 size={13} /> Remove
-              </button>)}
+            <SheetFooter className="justify-between">
+              {can("registries:delete") ? (
+                <button
+                  onClick={() => setConfirming(true)}
+                  disabled={deleting}
+                  className="rounded-lg px-2 py-1.5 text-[13px] font-medium text-[#6B7280] transition hover:text-[#DC2626] disabled:opacity-50 dark:text-[#A3A3A3] dark:hover:text-[#F87171]"
+                >
+                  Remove from registry
+                </button>
+              ) : (
+                <span />
+              )}
               <button
-                onClick={() => router.push(`/residents/${r.id}`)}
-                className="flex items-center gap-1.5 rounded-xl bg-(--brand) px-5 py-2 text-[12px] font-bold text-white shadow-sm transition hover:bg-(--brand-hover)"
+                onClick={() => router.push(`/residents/${entry.resident.id}`)}
+                className="rounded-lg bg-(--brand) px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-(--brand-hover)"
               >
-                <User size={13} /> View Full RBI Profile
+                Open RBI profile
               </button>
             </SheetFooter>
           </div>
         )}
       </SheetContent>
+
+      <ConfirmDialog
+        open={confirming}
+        title="Remove from registry?"
+        message={
+          entry
+            ? `${displayName(entry.resident)} will be taken off the ${title} registry. Their RBI record and other records stay as they are.`
+            : ""
+        }
+        confirmLabel="Remove"
+        variant="danger"
+        loading={deleting}
+        onConfirm={handleRemove}
+        onCancel={() => setConfirming(false)}
+      />
     </Sheet>
   );
 }

@@ -89,7 +89,7 @@ export default function UsersListPage() {
     return users.filter((u) => {
       if (filter === "active" && !u.is_active) return false;
       if (filter === "inactive" && u.is_active) return false;
-      if (q && !`${u.username} ${roleLabel(u.role)}`.toLowerCase().includes(q)) return false;
+      if (q && !`${u.username} ${u.full_name ?? ""} ${u.position ?? ""} ${roleLabel(u.role)}`.toLowerCase().includes(q)) return false;
       return true;
     });
   }, [users, search, filter]);
@@ -188,7 +188,7 @@ export default function UsersListPage() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search username or role"
+              placeholder="Search name, username or role"
               className="w-full rounded-lg border border-[#E9EAEC] dark:border-[#333333] bg-white dark:bg-[#171717] py-2 pl-8 pr-3 text-[13px] text-[#1F2937] dark:text-white outline-none transition placeholder:text-[#9CA3AF] dark:placeholder:text-[#737373] focus:border-(--brand-line)"
             />
           </div>
@@ -222,6 +222,11 @@ export default function UsersListPage() {
                         {u.username}
                         {isMe && <span className="ml-2 text-[12px] font-normal text-[#6B7280] dark:text-[#A3A3A3]">(you)</span>}
                       </p>
+                      {(u.full_name || u.position) && (
+                        <p className="mt-0.5 text-[12px] text-[#6B7280] dark:text-[#A3A3A3]">
+                          {[u.full_name, u.position].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
                       {u.must_change_password && u.is_active && (
                         <p className="mt-0.5 text-[12px] text-amber-700 dark:text-amber-400">Hasn&apos;t chosen their own password yet</p>
                       )}
