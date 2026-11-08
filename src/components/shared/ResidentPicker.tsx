@@ -4,6 +4,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 
+/** "MALE" → "Male", for the line under each name. */
+function sexWord(sex: string | null | undefined) {
+  return sex ? sex.charAt(0) + sex.slice(1).toLowerCase() : "";
+}
+
 export interface PickedPurok {
   id: number;
   name: string;
@@ -116,7 +121,7 @@ export default function ResidentPicker({
         <div className="min-w-0">
           <p className="truncate text-[13px] font-semibold text-[#1F2937] dark:text-white">{fullName(value)}</p>
           <p className="truncate text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-            {value.sex} &middot; {age} yrs old &middot; {value.purok?.name ?? "No purok"}
+            {sexWord(value.sex)} &middot; {age} years old &middot; {value.purok?.name ?? "No purok"}
           </p>
         </div>
         {!disabled && (
@@ -180,7 +185,7 @@ export default function ResidentPicker({
                   <div className="min-w-0">
                     <p className="truncate text-[13px] font-semibold text-[#1F2937] dark:text-white">{fullName(r)}</p>
                     <p className="truncate text-[11px] text-[#9CA3AF] dark:text-[#A3A3A3]">
-                      {r.sex} &middot; {age} yrs old &middot; {r.purok?.name ?? "No purok"}
+                      {sexWord(r.sex)} &middot; {age} years old &middot; {r.purok?.name ?? "No purok"}
                     </p>
                   </div>
                   {belowMinAge && (
